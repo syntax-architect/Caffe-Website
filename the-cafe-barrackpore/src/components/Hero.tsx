@@ -11,7 +11,7 @@ export const Hero: React.FC = () => {
           transition={{ duration: 1.5, ease: 'easeOut' }}
           alt="The Cafe Barrackpore nocturnal lounge"
           className="w-full h-full object-cover object-center"
-          src="/images/cinematic_luxury_interior_photo_of_a_trendy_modern_cafe_lounge_named_the_cafe.png"
+          src="/images/hero.webp"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-surface-container-lowest/50 backdrop-blur-[2px]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary-container/10 via-secondary-container/15 to-transparent mix-blend-screen pointer-events-none"></div>

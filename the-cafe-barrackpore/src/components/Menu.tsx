@@ -113,6 +113,7 @@ export const Menu: React.FC = () => {
                 <div className="flex items-start justify-between gap-2">
                   {item.image && (
                     <img 
+                      loading="lazy"
                       alt={item.name}
                       className="w-20 h-20 rounded-lg object-cover flex-shrink-0 shadow-md border border-outline-variant/30"
                       src={item.image}

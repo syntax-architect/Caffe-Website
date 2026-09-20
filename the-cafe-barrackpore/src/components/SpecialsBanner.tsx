@@ -3,37 +3,37 @@ import React from 'react';
 export const SpecialsBanner: React.FC = () => {
   return (
     <>
-      <section classname="w-full py-space-lg bg-surface-container-low relative">
-  <div classname="max-w-[1320px] mx-auto px-gutter">
-    <div classname="rounded-xl bg-gradient-to-r from-surface-container via-surface-container-high to-surface-container p-space-lg lg:p-space-xl shadow-xl flex flex-col lg:flex-row items-center justify-between gap-space-lg">
-      <div classname="flex flex-col gap-space-xs max-w-xl text-center lg:text-left">
-        <div classname="inline-flex items-center justify-center lg:justify-start gap-space-xs">
-          <span classname="material-symbols-outlined text-primary text-xl">workspace_premium</span>
-          <span classname="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">House
+      <section className="w-full py-space-lg bg-surface-container-low relative">
+  <div className="max-w-[1320px] mx-auto px-gutter">
+    <div className="rounded-xl bg-gradient-to-r from-surface-container via-surface-container-high to-surface-container p-space-lg lg:p-space-xl shadow-xl flex flex-col lg:flex-row items-center justify-between gap-space-lg">
+      <div className="flex flex-col gap-space-xs max-w-xl text-center lg:text-left">
+        <div className="inline-flex items-center justify-center lg:justify-start gap-space-xs">
+          <span className="material-symbols-outlined text-primary text-xl">workspace_premium</span>
+          <span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">House
             Signature Combos</span>
         </div>
-        <h3 classname="font-headline-md text-headline-md text-on-surface font-semibold">Special Banquet &amp; Hangout
+        <h3 className="font-headline-md text-headline-md text-on-surface font-semibold">Special Banquet &amp; Hangout
           Platters</h3>
-        <p classname="font-body-sm text-body-sm text-on-surface-variant">Generous sharing platters with sizzling
+        <p className="font-body-sm text-body-sm text-on-surface-variant">Generous sharing platters with sizzling
           pan-Asian or smoky clay oven selections, made fresh to order.</p>
       </div>
-      <div classname="grid grid-cols-1 sm:grid-cols-3 gap-space-md w-full lg:w-auto">
-        <div classname="p-space-md rounded-xl bg-surface-container-lowest/80 backdrop-blur-md flex flex-col gap-1 min-w-[170px]">
-          <span classname="font-label-sm text-label-sm text-tertiary">CHINESE PLATTER</span>
-          <span classname="font-headline-sm text-headline-sm text-on-surface font-bold">₹380</span>
-          <span classname="font-body-sm text-body-sm text-on-surface-variant">Momos, Spring Roll &amp; Crispy Chilli
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-space-md w-full lg:w-auto">
+        <div className="p-space-md rounded-xl bg-surface-container-lowest/80 backdrop-blur-md flex flex-col gap-1 min-w-[170px]">
+          <span className="font-label-sm text-label-sm text-tertiary">CHINESE PLATTER</span>
+          <span className="font-headline-sm text-headline-sm text-on-surface font-bold">₹380</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant">Momos, Spring Roll &amp; Crispy Chilli
             Bites</span>
         </div>
-        <div classname="p-space-md rounded-xl bg-surface-container-lowest/80 backdrop-blur-md flex flex-col gap-1 min-w-[170px]">
-          <span classname="font-label-sm text-label-sm text-primary">TANDOORI PLATTER</span>
-          <span classname="font-headline-sm text-headline-sm text-on-surface font-bold">₹450</span>
-          <span classname="font-body-sm text-body-sm text-on-surface-variant">Smoky Kebabs, Mint Coulis &amp; Flaky
+        <div className="p-space-md rounded-xl bg-surface-container-lowest/80 backdrop-blur-md flex flex-col gap-1 min-w-[170px]">
+          <span className="font-label-sm text-label-sm text-primary">TANDOORI PLATTER</span>
+          <span className="font-headline-sm text-headline-sm text-on-surface font-bold">₹450</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant">Smoky Kebabs, Mint Coulis &amp; Flaky
             Naan</span>
         </div>
-        <div classname="p-space-md rounded-xl bg-surface-container-lowest/80 backdrop-blur-md flex flex-col gap-1 min-w-[170px]">
-          <span classname="font-label-sm text-label-sm text-secondary">RICE &amp; NOODLES BOWL</span>
-          <span classname="font-headline-sm text-headline-sm text-on-surface font-bold">₹240</span>
-          <span classname="font-body-sm text-body-sm text-on-surface-variant">With Chilli Chicken or Veg Manchurian
+        <div className="p-space-md rounded-xl bg-surface-container-lowest/80 backdrop-blur-md flex flex-col gap-1 min-w-[170px]">
+          <span className="font-label-sm text-label-sm text-secondary">RICE &amp; NOODLES BOWL</span>
+          <span className="font-headline-sm text-headline-sm text-on-surface font-bold">₹240</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant">With Chilli Chicken or Veg Manchurian
             Gravy</span>
         </div>
       </div>

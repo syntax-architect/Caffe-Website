@@ -64,7 +64,7 @@ export const CartDrawer: React.FC = () => {
                       exit={{ opacity: 0, scale: 0.9 }}
                       className="flex gap-4 p-3 rounded-xl bg-surface-container-low border border-outline-variant/20"
                     >
-                      <img src={item.image} alt={item.name} className="w-20 h-20 rounded-lg object-cover" />
+                      <img loading="lazy" src={item.image} alt={item.name} className="w-20 h-20 rounded-lg object-cover" />
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
                           <div className="flex justify-between items-start">
