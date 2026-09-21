@@ -15,7 +15,7 @@ export const CartDrawer: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsDrawerOpen(false)}
-            className="fixed inset-0 bg-surface-container-lowest/80 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-surface-container-lowest/80 z-[100]"
           />
           
           {/* Drawer */}
@@ -29,7 +29,7 @@ export const CartDrawer: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between p-space-md border-b border-outline-variant/30 bg-surface-container-low">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">shopping_bag</span>
+                <span className="material-symbols-outlined text-[#D4AF37]">shopping_bag</span>
                 <h2 className="font-headline-sm text-on-surface font-bold">Your Order</h2>
               </div>
               <button 
@@ -48,7 +48,7 @@ export const CartDrawer: React.FC = () => {
                   <p className="font-body-md">Your cart is empty.</p>
                   <button 
                     onClick={() => setIsDrawerOpen(false)}
-                    className="mt-4 px-6 py-2 rounded-xl bg-primary-container text-on-primary-container font-label-md font-bold"
+                    className="mt-4 px-6 py-2 rounded-xl bg-primary-container text-[#231914] font-label-md font-bold"
                   >
                     Explore Menu
                   </button>
@@ -77,11 +77,11 @@ export const CartDrawer: React.FC = () => {
                         </div>
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center gap-3 bg-surface-container px-2 py-1 rounded-lg">
-                            <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="text-on-surface hover:text-primary">
+                            <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="text-on-surface hover:text-[#D4AF37]">
                               <span className="material-symbols-outlined text-sm">remove</span>
                             </button>
                             <span className="font-label-md text-on-surface w-4 text-center">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="text-on-surface hover:text-primary">
+                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="text-on-surface hover:text-[#D4AF37]">
                               <span className="material-symbols-outlined text-sm">add</span>
                             </button>
                           </div>
@@ -107,7 +107,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
                 <div className="flex justify-between items-center text-on-surface pb-2">
                   <span className="font-headline-md font-bold">Total</span>
-                  <span className="font-headline-md font-bold text-primary">₹{cartTotal}</span>
+                  <span className="font-headline-md font-bold text-[#D4AF37]">₹{cartTotal}</span>
                 </div>
                 <div className="flex gap-2">
                   <button 
@@ -117,7 +117,7 @@ export const CartDrawer: React.FC = () => {
                     Clear
                   </button>
                   <button 
-                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-primary-container to-tertiary-container text-on-primary-container font-label-md font-bold shadow-[0_0_16px_rgba(249,115,22,0.35)] hover:shadow-[0_0_24px_rgba(249,115,22,0.55)] transition-all"
+                    className="flex-1 py-3 rounded-xl bg-[#D4AF37] text-[#231914] font-label-md font-bold  hover: transition-all"
                     onClick={() => {
                       alert('Proceeding to checkout...');
                       setIsDrawerOpen(false);

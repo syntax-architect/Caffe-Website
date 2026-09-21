@@ -1,93 +1,122 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { smoothScrollTo } from '../utils/scroll';
 
 export const Hero: React.FC = () => {
+  const handleNav = (e: React.MouseEvent, target: string) => {
+    e.preventDefault();
+    smoothScrollTo(target);
+  };
+
   return (
-    <section className="relative w-full -mt-20 overflow-hidden min-h-[92vh] flex items-center justify-center">
-      <div className="absolute inset-0 z-0">
-        <motion.img 
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1.05 }}
-          transition={{ duration: 1.5, ease: 'easeOut' }}
-          alt="The Cafe Barrackpore nocturnal lounge"
-          className="w-full h-full object-cover object-center"
-          src="/images/hero.webp"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-surface-container-lowest/50 backdrop-blur-[2px]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary-container/10 via-secondary-container/15 to-transparent mix-blend-screen pointer-events-none"></div>
-      </div>
-      
-      <div className="relative z-10 w-full max-w-[1320px] mx-auto px-gutter flex flex-col items-center text-center pt-20 pb-space-lg">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-surface-container-high/80 backdrop-blur-md shadow-lg shadow-black/40 mb-space-lg"
-        >
-          <div className="flex text-tertiary">
-            <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
-            <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
-            <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
-            <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
-            <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star_half</span>
-          </div>
-          <span className="font-label-md text-label-md text-on-surface font-semibold tracking-wide">4.6 (192 Google Reviews)</span>
-          <span className="text-on-surface-variant font-label-md">•</span>
-          <span className="font-label-md text-label-md text-primary tracking-wide">Barrackpore's Premier Hangout Lounge</span>
-        </motion.div>
-
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="font-display-lg text-display-lg max-w-4xl tracking-tight text-on-surface font-bold drop-shadow-2xl"
-        >
-          The Cafe <span className="bg-gradient-to-r from-primary-container via-tertiary to-primary bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(249,115,22,0.4)]">Barrackpore</span>
-        </motion.h1>
-
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="font-headline-sm text-headline-sm max-w-2xl mt-space-md text-on-surface-variant font-normal leading-relaxed"
-        >
-          Where Artisan Coffee Meets Handcrafted Cocktails & Gourmet Comfort Food.
-        </motion.p>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="flex flex-wrap items-center justify-center gap-space-md mt-space-xl"
-        >
-          <a className="px-space-xl py-space-md rounded-xl font-label-lg text-label-lg text-on-primary-container bg-gradient-to-r from-primary-container to-tertiary-container shadow-[0_0_24px_rgba(249,115,22,0.45)] hover:shadow-[0_0_36px_rgba(249,115,22,0.7)] transition-all flex items-center gap-space-xs group" href="#menu-section">
-            <span className="material-symbols-outlined group-hover:rotate-12 transition-transform">restaurant_menu</span>
-            <span>Explore Full Menu</span>
-          </a>
-          <a className="px-space-xl py-space-md rounded-xl font-label-lg text-label-lg text-secondary bg-surface-container-high/80 hover:bg-surface-bright shadow-lg backdrop-blur-xl transition-all flex items-center gap-space-xs" href="#reserve-section">
-            <span className="material-symbols-outlined text-secondary">calendar_month</span>
-            <span>Book a Table</span>
-          </a>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-space-sm sm:gap-space-md mt-space-xl max-w-3xl w-full"
-        >
-          {[
-            { icon: 'bolt', color: 'text-primary', text: 'Free High-Speed Wi-Fi' },
-            { icon: 'music_note', color: 'text-tertiary', text: 'Live Acoustic Weekends' },
-            { icon: 'local_bar', color: 'text-secondary', text: 'Mocktails & Sips' },
-            { icon: 'local_pizza', color: 'text-primary-container', text: 'Wood-Fired Crusts' }
-          ].map((badge, idx) => (
-            <div key={idx} className="flex items-center justify-center gap-space-xs px-space-md py-space-sm rounded-xl bg-surface-container-low/70 backdrop-blur-md shadow-md text-on-surface-variant">
-              <span className={`material-symbols-outlined ${badge.color} text-lg`}>{badge.icon}</span>
-              <span className="font-label-md text-label-md text-on-surface">{badge.text}</span>
+    <section className="relative w-full min-h-[92vh] flex items-center justify-center bg-[#231914] pt-32 pb-16 overflow-hidden">
+      <div className="w-full max-w-[1320px] mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center gap-12 lg:gap-16 relative z-10">
+        
+        {/* Left Side (60%) */}
+        <div className="w-full lg:w-[60%] flex flex-col items-center text-center lg:items-start lg:text-left">
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.8 }}
+            className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-8"
+          >
+            <div className="flex text-[#D4AF37]">
+              <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+              <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+              <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+              <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+              <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star_half</span>
             </div>
-          ))}
+            <span className="font-label-md text-sm text-[#E3DACD] tracking-wide">4.6 (192 Google Reviews)</span>
+          </motion.div>
+
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="font-headline-lg text-5xl md:text-6xl lg:text-[72px] leading-[0.95] text-[#E3DACD] font-medium tracking-tight mb-6"
+          >
+            The Cafe <br className="hidden md:block"/>
+            <span className="text-[#D4AF37] italic font-serif font-semibold">Barrackpore</span>
+          </motion.h1>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="font-body-lg text-lg md:text-xl text-[#E3DACD]/70 max-w-xl leading-relaxed mb-10 font-light"
+          >
+            Where artisan coffee meets handcrafted cocktails & gourmet comfort food in a strictly premium, nocturnal setting.
+          </motion.p>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.8 }}
+            className="flex flex-col sm:flex-row items-center gap-4 mb-14 w-full sm:w-auto"
+          >
+            <a 
+              className="w-full sm:w-auto px-8 py-4 rounded-md font-label-lg text-base text-[#231914] bg-[#D4AF37] hover:bg-[#ebd074] transition-colors flex items-center justify-center gap-2" 
+              href="#menu-section" 
+              onClick={(e) => handleNav(e, 'menu-section')}
+            >
+              <span>Explore Menu</span>
+            </a>
+            <a 
+              className="w-full sm:w-auto px-8 py-4 rounded-md font-label-lg text-base text-[#E3DACD] bg-transparent border border-[#D4AF37]/30 hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center gap-2" 
+              href="#reserve-section" 
+              onClick={(e) => handleNav(e, 'reserve-section')}
+            >
+              <span>Book a Table</span>
+            </a>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9, duration: 1 }}
+            className="flex flex-wrap items-center justify-center lg:justify-start gap-8"
+          >
+            <div className="flex items-center gap-2 text-[#E3DACD]/60">
+              <span className="material-symbols-outlined text-[#D4AF37] text-xl font-light">local_bar</span>
+              <span className="font-label-sm text-[13px] tracking-widest uppercase">Mocktails</span>
+            </div>
+            <div className="flex items-center gap-2 text-[#E3DACD]/60">
+              <span className="material-symbols-outlined text-[#D4AF37] text-xl font-light">local_pizza</span>
+              <span className="font-label-sm text-[13px] tracking-widest uppercase">Wood-Fired Pizza</span>
+            </div>
+            <div className="flex items-center gap-2 text-[#E3DACD]/60">
+              <span className="material-symbols-outlined text-[#D4AF37] text-xl font-light">music_note</span>
+              <span className="font-label-sm text-[13px] tracking-widest uppercase">Acoustic Weekends</span>
+            </div>
+          </motion.div>
+
+        </div>
+
+        {/* Right Side (40%) */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4, duration: 1 }}
+          className="w-full lg:w-[40%] flex justify-center lg:justify-end"
+        >
+          <div 
+            className="relative w-full max-w-[400px] lg:max-w-full aspect-[4/5]"
+            style={{ 
+              maskImage: 'radial-gradient(circle, black 60%, transparent 100%)',
+              WebkitMaskImage: 'radial-gradient(circle, black 60%, transparent 100%)'
+            }}
+          >
+            <div className="absolute inset-0 bg-[#231914]/20 z-10 mix-blend-overlay pointer-events-none"></div>
+            <img 
+              src="/images/hero-bar.webp" 
+              alt="Premium Lounge Bar" 
+              className="w-full h-full object-cover"
+            />
+          </div>
         </motion.div>
+
       </div>
     </section>
   );

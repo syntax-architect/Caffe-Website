@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 export const AboutVibe: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"]
+  });
+  
+  const yPos = useTransform(scrollYProgress, [0, 1], [-40, 40]);
 
   return (
     <>
-      <section className="w-full py-space-xl bg-surface-container-lowest relative overflow-hidden">
+      <section ref={sectionRef} id="about-and-vibe" className="w-full py-space-xl bg-surface-container-lowest relative overflow-hidden">
   <div className="max-w-[1320px] mx-auto px-gutter">
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-center">
       {/* Narrative Column */}
-      <div className="lg:col-span-6 flex flex-col gap-space-md">
-        <div className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary-container animate-ping" /><span className="font-label-sm text-label-sm text-primary uppercase tracking-widest font-semibold">The
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.7 }}
+        className="lg:col-span-6 flex flex-col gap-space-md"
+      >
+        <div className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary-container animate-ping" /><span className="font-label-sm text-label-sm text-[#D4AF37] uppercase tracking-widest font-semibold">The
             Atmosphere &amp; Essence</span></div>
         <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold">Cozy Elegance Meets <span className="text-tertiary">Pop-Art Energy</span></h2>
         <p className="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Step into Barrackpore's
@@ -21,30 +36,32 @@ export const AboutVibe: React.FC = () => {
           into a candlelit date night, catching up with old friends over aromatic pour-overs, or enjoying live
           Saturday acoustic serenades, every corner is designed to be your sanctuary of good taste and relaxed
           sophistication.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-sm mt-space-xs">
-          <div className="p-space-md rounded-xl bg-surface-container-low/80 backdrop-blur-md shadow-sm flex flex-col gap-space-xs border border-outline-variant/30">
-            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-primary text-xl">weekend</span><span className="font-label-md text-label-md text-on-surface font-semibold">Private Dining Booths</span>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-6">
+          <div className="py-6 px-2 bg-transparent flex flex-col gap-3 border-b border-white/10">
+            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-[#D4AF37] text-xl">weekend</span><span className="font-label-md text-label-md text-on-surface font-semibold">Private Dining Booths</span>
             </div><span className="font-body-sm text-body-sm text-on-surface-variant">Deep blue velvet luxury with
               bespoke low lighting.</span>
           </div>
-          <div className="p-space-md rounded-xl bg-surface-container-low/80 backdrop-blur-md shadow-sm flex flex-col gap-space-xs border border-outline-variant/30">
+          <div className="py-6 px-2 bg-transparent flex flex-col gap-3 border-b border-white/10">
             <div className="flex items-center gap-2"><span className="material-symbols-outlined text-tertiary text-xl">photo_camera</span><span className="font-label-md text-label-md text-on-surface font-semibold">Instagram Art Wall</span></div>
             <span className="font-body-sm text-body-sm text-on-surface-variant">Vibrant neon signage and iconic
               culinary aesthetic.</span>
           </div>
-          <div className="p-space-md rounded-xl bg-surface-container-low/80 backdrop-blur-md shadow-sm flex flex-col gap-space-xs border border-outline-variant/30">
+          <div className="py-6 px-2 bg-transparent flex flex-col gap-3 border-b border-white/10">
             <div className="flex items-center gap-2"><span className="material-symbols-outlined text-secondary text-xl">ramen_dining</span><span className="font-label-md text-label-md text-on-surface font-semibold">Continental &amp; Asian</span>
             </div><span className="font-body-sm text-body-sm text-on-surface-variant">Artisanal pizzas, hand-crafted
               momos &amp; mocktails.</span>
           </div>
-          <div className="p-space-md rounded-xl bg-surface-container-low/80 backdrop-blur-md shadow-sm flex flex-col gap-space-xs border border-outline-variant/30">
-            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-primary text-xl">local_cafe</span><span className="font-label-md text-label-md text-on-surface font-semibold">Late Night Brews</span></div>
+          <div className="py-6 px-2 bg-transparent flex flex-col gap-3 border-b border-white/10">
+            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-[#D4AF37] text-xl">local_cafe</span><span className="font-label-md text-label-md text-on-surface font-semibold">Late Night Brews</span></div>
             <span className="font-body-sm text-body-sm text-on-surface-variant">Brewed fresh till 11:30 PM with
               artisanal roasts.</span>
           </div>
         </div>
-        <div className="p-space-md rounded-xl bg-surface-container-high/60 border border-outline-variant/30 backdrop-blur-md flex flex-col gap-space-sm shadow-md">
-          <div className="flex items-center justify-between"><span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold flex items-center gap-1.5"><span className="material-symbols-outlined text-base">tune</span> Live Atmosphere Vibe Metrics</span><span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">Optimal
+        
+        <div className="py-8 px-2 bg-transparent border-b border-white/10 flex flex-col gap-8">
+          <div className="flex items-center justify-between"><span className="font-label-sm text-label-sm uppercase tracking-wider text-[#D4AF37] font-bold flex items-center gap-1.5"><span className="material-symbols-outlined text-base">tune</span> Live Atmosphere Vibe Metrics</span><span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">Optimal
               Ambience</span></div>
           <div className="grid grid-cols-2 gap-space-sm">
             <div className="flex flex-col gap-0.5"><span className="font-label-sm text-[11px] text-on-surface-variant/80 uppercase">Decibel Vibe</span><span className="font-body-sm text-body-sm font-semibold text-on-surface">Chill Lo-Fi &amp; Soul (~62
@@ -60,45 +77,54 @@ export const AboutVibe: React.FC = () => {
                 PM</span></div>
           </div>
         </div>
-        <div className="p-space-md rounded-xl bg-surface-container-high/80 border border-outline-variant/30 backdrop-blur-md flex items-center justify-between gap-space-md shadow-lg">
-          <div className="flex items-center gap-space-sm">
-            <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary animate-pulse">
+        
+        <div className="py-8 px-2 bg-transparent border-b border-white/10 flex items-center justify-between gap-8">
+          <div className="flex items-center gap-6">
+            <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-[#D4AF37] animate-pulse">
               <span className="material-symbols-outlined text-xl">graphic_eq</span></div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" /><span className="font-label-sm text-label-sm text-tertiary font-semibold uppercase tracking-wider">Lounge
                   Soundscape</span></div><span className="font-body-sm text-body-sm font-semibold text-on-surface">Lo-Fi Acoustic &amp; Velvet Jazz •
                 Live Audio</span>
             </div>
-          </div><button id="music-toggle-btn" onClick={() => setIsPlaying(!isPlaying)} data-playing={isPlaying} className="px-space-md py-1.5 rounded-lg bg-surface-container-low hover:bg-primary hover:text-on-primary text-primary transition-all font-label-sm text-label-sm flex items-center gap-1.5 shadow-sm ${isPlaying ? 'animate-pulse shadow-[0_0_15px_rgba(249,115,22,0.5)]' : ''}">
-    <span className="material-symbols-outlined text-base">${isPlaying ? 'pause_circle' : 'play_circle'}</span>
-    <span className="label-text font-semibold">${isPlaying ? 'Pause Vibe' : 'Play Vibe'}</span>
-  </button>
+          </div>
+          <button id="music-toggle-btn" onClick={() => setIsPlaying(!isPlaying)} data-playing={isPlaying} className={`px-space-md py-1.5 rounded-lg bg-surface-container-low hover:bg-primary hover:text-on-primary text-[#D4AF37] transition-all font-label-sm text-label-sm flex items-center gap-1.5 shadow-sm ${isPlaying ? 'animate-pulse ' : ''}`}>
+            <span className="material-symbols-outlined text-base">{isPlaying ? 'pause_circle' : 'play_circle'}</span>
+            <span className="label-text font-semibold">{isPlaying ? 'Pause Vibe' : 'Play Vibe'}</span>
+          </button>
         </div>
+        
         <div className="flex flex-wrap items-center gap-space-xs pt-1">
-          <div className="inline-flex items-center gap-1.5 px- space-sm py-1 px-2.5 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-medium border border-outline-variant/30">
-            <span className="material-symbols-outlined text-primary text-sm">bolt</span><span className="">High-Speed
+          <div className="inline-flex items-center gap-1.5 px-space-sm py-1 px-2.5 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-medium border border-outline-variant/30">
+            <span className="material-symbols-outlined text-[#D4AF37] text-sm">bolt</span><span className="">High-Speed
               Fibre Wi-Fi</span></div>
-          <div className="inline-flex items-center gap-1.5 px- space-sm py-1 px-2.5 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-medium border border-outline-variant/30">
+          <div className="inline-flex items-center gap-1.5 px-space-sm py-1 px-2.5 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-medium border border-outline-variant/30">
             <span className="material-symbols-outlined text-tertiary text-sm">power</span><span className="">Power Outlets
               at Every Booth</span></div>
-          <div className="inline-flex items-center gap-1.5 px- space-sm py-1 px-2.5 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-medium border border-outline-variant/30">
+          <div className="inline-flex items-center gap-1.5 px-space-sm py-1 px-2.5 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-medium border border-outline-variant/30">
             <span className="material-symbols-outlined text-secondary text-sm">local_parking</span><span className="">Valet &amp; 2-Wheeler Parking</span></div>
         </div>
-      </div>
+      </motion.div>
       {/* Visual Artistry Layout */}
-      <div className="lg:col-span-6 relative">
+      <motion.div 
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.9 }}
+        className="lg:col-span-6 relative"
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
           <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-64 sm:h-72 border border-outline-variant/30">
-            <img loading="lazy" alt="Midnight Velvet Booth Seating" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_0.webp" />
+            <motion.img loading="lazy" alt="Midnight Velvet Booth Seating" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_0.webp" style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
-              <span className="font-label-sm text-[11px] text-primary uppercase font-bold tracking-wider">Midnight
+              <span className="font-label-sm text-[11px] text-[#D4AF37] uppercase font-bold tracking-wider">Midnight
                 Velvet Booths</span>
               <p className="font-body-sm text-[12px] text-on-surface leading-tight mt-0.5">Intimate booth dining
                 crafted for unforgettable evenings.</p>
             </div>
           </div>
           <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-64 sm:h-72 border border-outline-variant/30">
-            <img loading="lazy" alt="Live Acoustic & Reading Nook" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_2.webp" />
+            <motion.img loading="lazy" alt="Live Acoustic & Reading Nook" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_2.webp" style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
               <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">Live
                 Acoustic Nook</span>
@@ -107,7 +133,7 @@ export const AboutVibe: React.FC = () => {
             </div>
           </div>
           <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-64 sm:h-72 border border-outline-variant/30">
-            <img loading="lazy" alt="Signature Brew Bar & Mixology" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_3.webp" />
+            <motion.img loading="lazy" alt="Signature Brew Bar & Mixology" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_3.webp" style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
               <span className="font-label-sm text-[11px] text-secondary uppercase font-bold tracking-wider">Signature
                 Brew Bar</span>
@@ -116,16 +142,16 @@ export const AboutVibe: React.FC = () => {
             </div>
           </div>
           <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-64 sm:h-72 border border-outline-variant/30">
-            <img loading="lazy" alt="Artisan Platters and Comfort Food" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_1.webp" />
+            <motion.img loading="lazy" alt="Artisan Platters and Comfort Food" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_1.webp" style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
-              <span className="font-label-sm text-[11px] text-primary-container uppercase font-bold tracking-wider">Gourmet
+              <span className="font-label-sm text-[11px] text-[#D4AF37]-container uppercase font-bold tracking-wider">Gourmet
                 Kitchen</span>
               <p className="font-body-sm text-[12px] text-on-surface leading-tight mt-0.5">Fresh wood-fired crusts
                 &amp; steamed delicacies.</p>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   </div>
 </section>

@@ -9,11 +9,46 @@ export const ScrollSequence: React.FC = () => {
     const context = canvas.getContext('2d');
     if (!context) return;
 
+    // Mathematically act like CSS object-fit: cover
+    const drawImageCover = (ctx: CanvasRenderingContext2D, img: HTMLImageElement, canvasWidth: number, canvasHeight: number) => {
+      const imgRatio = img.width / img.height;
+      const canvasRatio = canvasWidth / canvasHeight;
+      let renderWidth, renderHeight, xOffset, yOffset;
+
+      if (canvasRatio > imgRatio) {
+        renderWidth = canvasWidth;
+        renderHeight = canvasWidth / imgRatio;
+        xOffset = 0;
+        yOffset = (canvasHeight - renderHeight) / 2;
+      } else {
+        renderWidth = canvasHeight * imgRatio;
+        renderHeight = canvasHeight;
+        xOffset = (canvasWidth - renderWidth) / 2;
+        yOffset = 0;
+      }
+      ctx.drawImage(img, xOffset, yOffset, renderWidth, renderHeight);
+    };
+
     const frameCount = 40;
     const currentFrame = (index: number) => `/frames/ezgif-frame-${index.toString().padStart(3, '0')}.jpg`;
 
     const images: HTMLImageElement[] = [];
     let loadedImages = 0;
+
+    const resizeCanvas = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      context.scale(dpr, dpr);
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = 'high';
+      if (images[0] && images[0].complete) {
+        drawImageCover(context, images[0], window.innerWidth, window.innerHeight);
+      }
+    };
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
     for (let i = 1; i <= frameCount; i++) {
       const img = new Image();
@@ -21,8 +56,7 @@ export const ScrollSequence: React.FC = () => {
       img.onload = () => {
         loadedImages++;
         if (loadedImages === 1) {
-          // Draw first frame immediately
-          context.drawImage(img, 0, 0, canvas.width, canvas.height);
+          drawImageCover(context, img, window.innerWidth, window.innerHeight);
         }
       };
       images.push(img);
@@ -37,18 +71,17 @@ export const ScrollSequence: React.FC = () => {
       const sectionHeight = rect.height;
       const windowHeight = window.innerHeight;
 
-      // Calculate progress (0 to 1)
       const scrollableDistance = sectionHeight - windowHeight;
       let progress = -sectionTop / scrollableDistance;
-      
-      // Clamp between 0 and 1
       progress = Math.max(0, Math.min(1, progress));
       
       const frameIndex = Math.floor(progress * (frameCount - 1));
       
       if (images[frameIndex] && images[frameIndex].complete) {
         requestAnimationFrame(() => {
-          context.drawImage(images[frameIndex], 0, 0, canvas.width, canvas.height);
+          // Clear before draw just in case
+          context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+          drawImageCover(context, images[frameIndex], window.innerWidth, window.innerHeight);
         });
       }
 
@@ -88,35 +121,45 @@ export const ScrollSequence: React.FC = () => {
       }
     };
 
+    window.addEventListener('resize', resizeCanvas);
     window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Initial call
     setTimeout(handleScroll, 100);
 
     return () => {
+      window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
   return (
     <section id="scroll-sequence-section" className="relative w-full h-[400vh] bg-background">
-      <div className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
+      <div 
+        className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center"
+        style={{ maskImage: 'radial-gradient(circle, black 40%, transparent 100%)', WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 100%)' }}
+      >
         <canvas 
           ref={canvasRef}
           id="scroll-video-canvas" 
-          className="absolute inset-0 w-full h-full object-cover opacity-80" 
-          width={1920} 
-          height={1080} 
+          className="absolute inset-0 w-full h-full opacity-60"
+          style={{ filter: 'contrast(1.15) brightness(0.9)' }}
         />
-        {/* Overlay Gradient */}
+        
+        {/* Dark overlays to blend image into background */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-transparent" />
         
         {/* Floating text that appears during scroll */}
-        <div className="relative z-10 max-w-[1320px] mx-auto px-gutter w-full flex flex-col items-center justify-center text-center">
-          <h2 id="scroll-text-1" className="font-display-lg text-display-lg text-on-surface font-bold tracking-tight opacity-0 transition-all duration-500 translate-y-8 absolute w-full left-0">Crafted to <span className="text-primary">Perfection</span></h2>
-          <h2 id="scroll-text-2" className="font-display-lg text-display-lg text-on-surface font-bold tracking-tight opacity-0 transition-all duration-500 translate-y-8 absolute w-full left-0">Every Drop <span className="text-secondary">Matters</span></h2>
-          <h2 id="scroll-text-3" className="font-display-lg text-display-lg text-on-surface font-bold tracking-tight opacity-0 transition-all duration-500 translate-y-8 absolute w-full left-0">The True <span className="text-tertiary">Lounge</span> Experience</h2>
+        <div className="relative z-10 max-w-[1320px] mx-auto px-6 w-full flex flex-col items-center justify-center text-center">
+          <h2 id="scroll-text-1" className="font-headline-lg text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0">
+            Crafted to <span className="text-primary italic font-serif">Perfection</span>
+          </h2>
+          <h2 id="scroll-text-2" className="font-headline-lg text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0">
+            Every Drop <span className="text-primary italic font-serif">Matters</span>
+          </h2>
+          <h2 id="scroll-text-3" className="font-headline-lg text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0">
+            The True <span className="text-primary italic font-serif">Lounge</span> Experience
+          </h2>
         </div>
       </div>
     </section>
