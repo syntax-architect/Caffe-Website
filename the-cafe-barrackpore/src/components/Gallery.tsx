@@ -13,11 +13,11 @@ export const Gallery: React.FC = () => {
           className="mb-12 md:mb-16 text-center"
         >
           <div className="inline-flex items-center justify-center gap-2 mb-4">
-            <span className="material-symbols-outlined text-primary text-xl font-light">auto_awesome</span>
-            <span className="font-label-sm text-xs uppercase tracking-[0.2em] text-primary font-semibold">The Visuals</span>
+            <span className="material-symbols-outlined text-[#D4AF37] text-xl font-light">auto_awesome</span>
+            <span className="text-[#D4AF37] text-sm tracking-widest uppercase">The Visuals</span>
           </div>
-          <h2 className="font-headline-lg text-4xl md:text-5xl lg:text-6xl text-on-surface font-serif tracking-tight">
-            Moments <span className="italic font-light">Captured</span>
+          <h2 className="text-[#E3DACD] text-4xl md:text-5xl font-serif mb-12">
+            Moments Captured
           </h2>
         </motion.div>
 
@@ -65,7 +65,7 @@ export const Gallery: React.FC = () => {
             className="col-span-1 md:col-span-1 row-span-1 rounded-xl overflow-hidden group relative bg-surface-container"
           >
              <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
-             <img 
+             <img loading="lazy"
               src="/images/gallery-beans.jpg" 
               alt="Artisanal Coffee Beans"
               className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.03]"
@@ -81,7 +81,7 @@ export const Gallery: React.FC = () => {
             className="col-span-1 md:col-span-1 lg:col-span-1 row-span-1 rounded-xl overflow-hidden group relative bg-surface-container"
           >
              <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
-             <img 
+             <img loading="lazy"
               src="/images/gallery-guitar.jpg" 
               alt="Acoustic Weekend Guitar"
               className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.03]"
