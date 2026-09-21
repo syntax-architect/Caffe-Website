@@ -9,7 +9,7 @@ export const Hero: React.FC = () => {
   };
 
   return (
-    <section className="relative w-full h-[calc(100vh-5rem)] min-h-[600px] flex items-center justify-center bg-background overflow-hidden">
+    <section className="relative w-full min-h-[calc(100vh-6rem)] flex items-center justify-center bg-background overflow-hidden">
       <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 flex flex-col lg:flex-row items-center gap-10 lg:gap-16 relative z-10">
         
         {/* Left Side (60%) */}
@@ -102,7 +102,7 @@ export const Hero: React.FC = () => {
           className="w-full lg:w-[40%] flex justify-center lg:justify-end"
         >
           <div 
-            className="relative w-full max-w-[400px] lg:max-w-full h-[50vh] lg:h-[70vh] max-h-[700px]"
+            className="relative w-full max-w-[400px] lg:max-w-full h-[50vh] lg:h-[75vh] max-h-[75vh]"
             style={{ 
               maskImage: 'radial-gradient(circle, black 60%, transparent 100%)',
               WebkitMaskImage: 'radial-gradient(circle, black 60%, transparent 100%)'

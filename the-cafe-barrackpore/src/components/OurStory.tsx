@@ -16,8 +16,12 @@ export const OurStory: React.FC = () => {
           >
             <div className="absolute inset-0 bg-white/5" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-80 z-10 pointer-events-none" />
-            {/* Placeholder for real image */}
-            <div className="w-full h-full bg-surface-container-high transition-transform duration-700 group-hover:scale-[1.03]" />
+            {/* Real Image */}
+            <img loading="lazy" 
+              src="/images/story-pour.jpg" 
+              alt="Artisanal Espresso Pour" 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+            />
           </motion.div>
 
           {/* Right Side: Content */}

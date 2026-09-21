@@ -21,47 +21,71 @@ export const Gallery: React.FC = () => {
           </h2>
         </motion.div>
 
-        {/* Asymmetrical Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6 md:gap-8 auto-rows-[300px]">
+        {/* Asymmetrical Masonry Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 auto-rows-[250px] md:auto-rows-[300px]">
           
+          {/* Couple Image (Spans 2 Rows for portrait look) */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6 }}
-            className="col-span-1 md:col-span-2 row-span-1 rounded-2xl overflow-hidden bg-white/5 group relative"
+            className="col-span-1 md:col-span-1 row-span-2 rounded-xl overflow-hidden group relative bg-surface-container"
           >
-            <div className="w-full h-full bg-white/5 transition-transform duration-500 group-hover:scale-[1.02]" />
+            <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
+            <img loading="lazy" 
+              src="/images/gallery-couple.jpg" 
+              alt="Nightlife Couple"
+              className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.03]"
+            />
           </motion.div>
 
+          {/* Pizza Image */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="col-span-1 md:col-span-1 row-span-2 rounded-2xl overflow-hidden bg-white/5 group relative"
+            className="col-span-1 md:col-span-1 lg:col-span-2 row-span-1 rounded-xl overflow-hidden group relative bg-surface-container"
           >
-             <div className="w-full h-full bg-white/5 transition-transform duration-500 group-hover:scale-[1.02]" />
+             <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
+             <img loading="lazy" 
+              src="/images/gallery-pizza.jpg" 
+              alt="Wood-Fired Pizza"
+              className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.03]"
+            />
           </motion.div>
 
+          {/* Beans Image */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="col-span-1 md:col-span-1 row-span-1 rounded-2xl overflow-hidden bg-white/5 group relative"
+            className="col-span-1 md:col-span-1 row-span-1 rounded-xl overflow-hidden group relative bg-surface-container"
           >
-             <div className="w-full h-full bg-white/5 transition-transform duration-500 group-hover:scale-[1.02]" />
+             <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
+             <img 
+              src="/images/gallery-beans.jpg" 
+              alt="Artisanal Coffee Beans"
+              className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.03]"
+            />
           </motion.div>
 
+          {/* Guitar Image */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="col-span-1 md:col-span-1 row-span-1 rounded-2xl overflow-hidden bg-white/5 group relative"
+            className="col-span-1 md:col-span-1 lg:col-span-1 row-span-1 rounded-xl overflow-hidden group relative bg-surface-container"
           >
-             <div className="w-full h-full bg-white/5 transition-transform duration-500 group-hover:scale-[1.02]" />
+             <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
+             <img 
+              src="/images/gallery-guitar.jpg" 
+              alt="Acoustic Weekend Guitar"
+              className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.03]"
+            />
           </motion.div>
 
         </div>

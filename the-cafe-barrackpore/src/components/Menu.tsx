@@ -53,6 +53,7 @@ export const Menu: React.FC = () => {
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
               src={hoveredImage}
+              loading="lazy"
               alt="Menu Preview"
               className="hidden lg:block fixed z-[100] w-64 h-64 object-cover rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 pointer-events-none"
               style={{
