@@ -3,16 +3,33 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // Mock data provided by user
 const MOCK_MENU = [
-  {"id":"special-chicken-bun","category":"burgers","name":"Special Chicken On A Bun","diet":"nv","price":250,"description":"Signature cafe chicken patty with house sauce and fresh greens."},
-  {"id":"veggie-medley-burger","category":"burgers","name":"Veggie Medley Burger","diet":"veg","price":180,"description":"Crispy vegetable patty layered with fresh tomatoes and lettuce."},
-  {"id":"chicken-cheese-pizza","category":"pizzas","name":"Chicken Cheese Pizza","diet":"nv","price":250,"description":"Hand-tossed crust loaded with roasted chicken and melted cheese."},
-  {"id":"lemon-coriander-soup","category":"soups","name":"Lemon Coriander Soup","diet":"veg","price":150,"description":"Light, zesty, and refreshing clear soup with fresh coriander."}
+  {"id":"special-chicken-bun","category":"burgers","name":"Special Chicken On A Bun","diet":"nv","price":250,"description":"Signature cafe chicken patty with house sauce and fresh greens.", "image": "/images/components/comp_img_1.webp"},
+  {"id":"veggie-medley-burger","category":"burgers","name":"Veggie Medley Burger","diet":"veg","price":180,"description":"Crispy vegetable patty layered with fresh tomatoes and lettuce.", "image": "/images/components/comp_img_0.webp"},
+  {"id":"chicken-cheese-pizza","category":"pizzas","name":"Chicken Cheese Pizza","diet":"nv","price":250,"description":"Hand-tossed crust loaded with roasted chicken and melted cheese.", "image": "/images/components/comp_img_2.webp"},
+  {"id":"lemon-coriander-soup","category":"soups","name":"Lemon Coriander Soup","diet":"veg","price":150,"description":"Light, zesty, and refreshing clear soup with fresh coriander.", "image": "/images/components/comp_img_3.webp"}
 ];
 
 const CATEGORIES = ['All', 'Burgers', 'Pizzas', 'Soups'];
 
 export const Menu: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [hoveredImage, setHoveredImage] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  // Handle global mouse move when an image is hovered
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+
+    if (hoveredImage) {
+      window.addEventListener('mousemove', handleMouseMove);
+    }
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [hoveredImage]);
 
   const filteredMenu = MOCK_MENU.filter(item => {
     if (activeCategory === 'All') return true;
@@ -21,8 +38,29 @@ export const Menu: React.FC = () => {
 
   return (
     <section className="w-full py-24 bg-[#231914] scroll-mt-20" id="menu-section">
-      <div className="max-w-[1320px] mx-auto px-6 lg:px-12 flex flex-col gap-12">
+      <div className="max-w-[1320px] mx-auto px-6 lg:px-12 flex flex-col gap-12 relative">
         
+        {/* Floating Image (Desktop Only) */}
+        <AnimatePresence>
+          {hoveredImage && (
+            <motion.img
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              src={hoveredImage}
+              alt="Menu Preview"
+              className="hidden lg:block fixed z-[100] w-64 h-64 object-cover rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 pointer-events-none"
+              style={{
+                left: mousePos.x,
+                top: mousePos.y,
+                x: "-50%",
+                y: "-50%"
+              }}
+            />
+          )}
+        </AnimatePresence>
+
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -69,6 +107,11 @@ export const Menu: React.FC = () => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.5 }}
                 key={item.id}
+                onMouseEnter={(e) => {
+                  setMousePos({ x: e.clientX, y: e.clientY });
+                  setHoveredImage(item.image);
+                }}
+                onMouseLeave={() => setHoveredImage(null)}
                 className="flex flex-col py-8 px-4 bg-transparent border-b border-white/10 hover:-translate-y-1 hover:border-b-[#D4AF37]/50 transition-all duration-300 group"
               >
                 <div className="flex justify-between items-start mb-3">

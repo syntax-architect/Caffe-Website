@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import Lenis from 'lenis';
 import { CartProvider } from './context/CartContext';
 import { UIProvider } from './context/UIContext';
 import { Header } from './components/Header';
@@ -8,11 +10,32 @@ import { SpecialsBanner } from './components/SpecialsBanner';
 import { Menu } from './components/Menu';
 import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
+import { Preloader } from './components/Preloader';
 
 function App() {
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      touchMultiplier: 2,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+    return () => lenis.destroy();
+  }, []);
+
   return (
     <UIProvider>
       <CartProvider>
+        <Preloader />
         <div className="bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen">
           <Header />
           <main className="w-full pt-20">
