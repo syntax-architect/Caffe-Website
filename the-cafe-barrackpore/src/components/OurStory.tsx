@@ -1,0 +1,60 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+
+export const OurStory: React.FC = () => {
+  return (
+    <section className="w-full py-24 md:py-32 bg-background relative" id="our-story">
+      <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
+          {/* Left Side: Image */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="relative w-full h-[500px] md:h-[700px] rounded-2xl overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-white/5" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-80 z-10 pointer-events-none" />
+            {/* Placeholder for real image */}
+            <div className="w-full h-full bg-surface-container-high transition-transform duration-700 group-hover:scale-[1.03]" />
+          </motion.div>
+
+          {/* Right Side: Content */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="flex flex-col gap-6"
+          >
+            <div className="inline-flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-primary text-xl font-light">star</span>
+              <span className="font-label-sm text-xs uppercase tracking-[0.2em] text-primary font-semibold">Our Philosophy</span>
+            </div>
+            
+            <h2 className="font-headline-lg text-4xl md:text-5xl lg:text-6xl text-on-surface font-serif tracking-tight leading-tight">
+              Crafting Barrackpore’s finest <br className="hidden lg:block"/><span className="italic font-light">nocturnal escape</span>
+            </h2>
+            
+            <div className="w-20 h-[1px] bg-primary/30 my-2" />
+            
+            <p className="font-body-md text-base md:text-lg text-on-surface/70 leading-relaxed">
+              We believe that true luxury lies in the details. From sourcing the most vibrant, local ingredients from surrounding farms to hand-selecting the perfect acoustic backdrop, every element of our space is intentionally curated.
+            </p>
+            
+            <p className="font-body-md text-base md:text-lg text-on-surface/70 leading-relaxed mb-6">
+              This isn't just a cafe; it's a sanctuary designed for those who appreciate the art of slowing down. A place where deep conversations flow as freely as our signature pours.
+            </p>
+            
+            <div className="mt-4">
+              <span className="font-serif text-3xl md:text-4xl italic text-primary/80" style={{ fontFamily: 'var(--font-serif)' }}>
+                The Founders
+              </span>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+};

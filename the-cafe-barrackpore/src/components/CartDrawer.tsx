@@ -64,19 +64,19 @@ export const CartDrawer: React.FC = () => {
                       exit={{ opacity: 0, scale: 0.9 }}
                       className="flex gap-4 p-3 rounded-xl bg-surface-container-low border border-outline-variant/20"
                     >
-                      <img loading="lazy" src={item.image} alt={item.name} className="w-20 h-20 rounded-lg object-cover" />
-                      <div className="flex-1 flex flex-col justify-between">
+                      <img loading="lazy" src={item.image} alt={item.name} className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover shrink-0" />
+                      <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
-                          <div className="flex justify-between items-start">
-                            <h4 className="font-headline-sm text-sm font-semibold text-on-surface line-clamp-1">{item.name}</h4>
-                            <button onClick={() => removeFromCart(item.id)} className="text-on-surface-variant hover:text-error transition-colors">
+                          <div className="flex justify-between items-start gap-2">
+                            <h4 className="font-headline-sm text-sm font-semibold text-on-surface truncate">{item.name}</h4>
+                            <button onClick={() => removeFromCart(item.id)} className="text-on-surface-variant hover:text-error transition-colors shrink-0">
                               <span className="material-symbols-outlined text-sm">delete</span>
                             </button>
                           </div>
-                          <span className="font-body-sm text-tertiary font-bold">₹{item.price}</span>
+                          <span className="font-sans text-sm text-tertiary font-semibold tracking-tight">₹{item.price}</span>
                         </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center gap-3 bg-surface-container px-2 py-1 rounded-lg">
+                        <div className="flex items-center justify-between mt-2 gap-2">
+                          <div className="flex items-center gap-1 sm:gap-3 bg-surface-container px-1 sm:px-2 py-1 rounded-lg shrink-0">
                             <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="text-on-surface hover:text-[#D4AF37]">
                               <span className="material-symbols-outlined text-sm">remove</span>
                             </button>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
+import { useDevice } from '../hooks/useDevice';
 
 // Mock data provided by user
 const MOCK_MENU = [
@@ -14,22 +15,25 @@ const CATEGORIES = ['All', 'Burgers', 'Pizzas', 'Soups'];
 export const Menu: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const { isTouchDevice } = useDevice();
 
   // Handle global mouse move when an image is hovered
   React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
     };
 
-    if (hoveredImage) {
+    if (hoveredImage && !isTouchDevice) {
       window.addEventListener('mousemove', handleMouseMove);
     }
     
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [hoveredImage]);
+  }, [hoveredImage, isTouchDevice, mouseX, mouseY]);
 
   const filteredMenu = MOCK_MENU.filter(item => {
     if (activeCategory === 'All') return true;
@@ -37,8 +41,8 @@ export const Menu: React.FC = () => {
   });
 
   return (
-    <section className="w-full py-24 bg-[#231914] scroll-mt-20" id="menu-section">
-      <div className="max-w-[1320px] mx-auto px-6 lg:px-12 flex flex-col gap-12 relative">
+    <section className="w-full py-16 md:py-24 bg-[#231914] scroll-mt-20" id="menu-section">
+      <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12 flex flex-col gap-8 md:gap-12 relative">
         
         {/* Floating Image (Desktop Only) */}
         <AnimatePresence>
@@ -52,8 +56,8 @@ export const Menu: React.FC = () => {
               alt="Menu Preview"
               className="hidden lg:block fixed z-[100] w-64 h-64 object-cover rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 pointer-events-none"
               style={{
-                left: mousePos.x,
-                top: mousePos.y,
+                left: mouseX,
+                top: mouseY,
                 x: "-50%",
                 y: "-50%"
               }}
@@ -73,15 +77,15 @@ export const Menu: React.FC = () => {
               <span className="material-symbols-outlined text-[#D4AF37] text-xl font-light">menu_book</span>
               <span className="font-label-sm text-xs uppercase tracking-[0.2em] text-[#D4AF37] font-semibold">Gourmet Gastronomy</span>
             </div>
-            <h2 className="font-headline-lg text-4xl md:text-5xl text-[#E3DACD] font-medium tracking-tight">Curated Culinary Creations</h2>
+            <h2 className="font-headline-lg text-3xl md:text-4xl lg:text-5xl text-[#E3DACD] font-medium tracking-tight">Curated Culinary Creations</h2>
           </div>
           
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mt-4 md:mt-0">
             {CATEGORIES.map(category => (
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
-                className={`px-6 py-2.5 rounded-full font-label-md text-[13px] transition-all duration-300 border ${
+                className={`px-4 py-2 md:px-6 md:py-2.5 rounded-full font-label-md text-[12px] md:text-[13px] transition-all duration-300 border ${
                   activeCategory === category 
                   ? 'bg-[#D4AF37] text-[#231914] border-[#D4AF37]' 
                   : 'bg-transparent text-[#E3DACD]/70 border-white/20 hover:bg-[#D4AF37] hover:border-[#D4AF37] hover:text-[#231914]'
@@ -95,7 +99,7 @@ export const Menu: React.FC = () => {
 
         <motion.div 
           layout
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10"
         >
           <AnimatePresence>
             {filteredMenu.map((item) => (
@@ -108,11 +112,13 @@ export const Menu: React.FC = () => {
                 transition={{ duration: 0.5 }}
                 key={item.id}
                 onMouseEnter={(e) => {
-                  setMousePos({ x: e.clientX, y: e.clientY });
+                  if (isTouchDevice) return;
+                  mouseX.set(e.clientX);
+                  mouseY.set(e.clientY);
                   setHoveredImage(item.image);
                 }}
                 onMouseLeave={() => setHoveredImage(null)}
-                className="flex flex-col py-8 px-4 bg-transparent border-b border-white/10 hover:-translate-y-1 hover:border-b-[#D4AF37]/50 transition-all duration-300 group"
+                className="flex flex-col py-6 md:py-8 px-2 md:px-4 bg-transparent border-b border-white/10 hover:-translate-y-1 hover:border-b-[#D4AF37]/50 transition-all duration-300 group"
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3">
@@ -129,7 +135,7 @@ export const Menu: React.FC = () => {
                 </p>
                 
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
-                  <span className="font-serif text-2xl font-medium text-[#D4AF37]">₹{item.price}</span>
+                  <span className="font-sans text-2xl font-semibold tracking-tight text-[#D4AF37]">₹{item.price}</span>
                   <button 
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 text-[#E3DACD] hover:bg-[#D4AF37] hover:text-[#231914] transition-colors"
                     title="Add to order"

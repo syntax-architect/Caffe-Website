@@ -1,0 +1,9 @@
+{
+  "name": "caffe-bkp-root",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix the-cafe-barrackpore",
+    "build": "npm run build --prefix the-cafe-barrackpore",
+    "install:all": "npm install --prefix the-cafe-barrackpore"
+  }
+}

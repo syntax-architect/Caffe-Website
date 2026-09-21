@@ -14,9 +14,9 @@ export const AboutVibe: React.FC = () => {
 
   return (
     <>
-      <section ref={sectionRef} id="about-and-vibe" className="w-full py-space-xl bg-surface-container-lowest relative overflow-hidden">
-  <div className="max-w-[1320px] mx-auto px-gutter">
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-center">
+      <section ref={sectionRef} id="about-and-vibe" className="w-full py-16 md:py-space-xl bg-surface-container-lowest relative overflow-hidden">
+  <div className="max-w-[1320px] mx-auto px-4 md:px-gutter">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-space-xl items-center">
       {/* Narrative Column */}
       <motion.div 
         initial={{ opacity: 0, y: 30 }}
@@ -37,7 +37,7 @@ export const AboutVibe: React.FC = () => {
           Saturday acoustic serenades, every corner is designed to be your sanctuary of good taste and relaxed
           sophistication.</p>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mt-6">
           <div className="py-6 px-2 bg-transparent flex flex-col gap-3 border-b border-white/10">
             <div className="flex items-center gap-2"><span className="material-symbols-outlined text-[#D4AF37] text-xl">weekend</span><span className="font-label-md text-label-md text-on-surface font-semibold">Private Dining Booths</span>
             </div><span className="font-body-sm text-body-sm text-on-surface-variant">Deep blue velvet luxury with
@@ -63,7 +63,7 @@ export const AboutVibe: React.FC = () => {
         <div className="py-8 px-2 bg-transparent border-b border-white/10 flex flex-col gap-8">
           <div className="flex items-center justify-between"><span className="font-label-sm text-label-sm uppercase tracking-wider text-[#D4AF37] font-bold flex items-center gap-1.5"><span className="material-symbols-outlined text-base">tune</span> Live Atmosphere Vibe Metrics</span><span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">Optimal
               Ambience</span></div>
-          <div className="grid grid-cols-2 gap-space-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-space-sm">
             <div className="flex flex-col gap-0.5"><span className="font-label-sm text-[11px] text-on-surface-variant/80 uppercase">Decibel Vibe</span><span className="font-body-sm text-body-sm font-semibold text-on-surface">Chill Lo-Fi &amp; Soul (~62
                 dB)</span></div>
             <div className="flex flex-col gap-0.5"><span className="font-label-sm text-[11px] text-on-surface-variant/80 uppercase">Lighting
@@ -78,7 +78,7 @@ export const AboutVibe: React.FC = () => {
           </div>
         </div>
         
-        <div className="py-8 px-2 bg-transparent border-b border-white/10 flex items-center justify-between gap-8">
+        <div className="py-8 px-2 bg-transparent border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8">
           <div className="flex items-center gap-6">
             <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-[#D4AF37] animate-pulse">
               <span className="material-symbols-outlined text-xl">graphic_eq</span></div>
@@ -114,7 +114,7 @@ export const AboutVibe: React.FC = () => {
         className="lg:col-span-6 relative"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
-          <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-64 sm:h-72 border border-outline-variant/30">
+          <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-48 sm:h-64 lg:h-72 border border-outline-variant/30">
             <motion.img loading="lazy" alt="Midnight Velvet Booth Seating" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_0.webp" style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
               <span className="font-label-sm text-[11px] text-[#D4AF37] uppercase font-bold tracking-wider">Midnight
@@ -123,7 +123,7 @@ export const AboutVibe: React.FC = () => {
                 crafted for unforgettable evenings.</p>
             </div>
           </div>
-          <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-64 sm:h-72 border border-outline-variant/30">
+          <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-48 sm:h-64 lg:h-72 border border-outline-variant/30">
             <motion.img loading="lazy" alt="Live Acoustic & Reading Nook" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_2.webp" style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
               <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">Live
@@ -132,7 +132,7 @@ export const AboutVibe: React.FC = () => {
                 weekend serenades.</p>
             </div>
           </div>
-          <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-64 sm:h-72 border border-outline-variant/30">
+          <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-48 sm:h-64 lg:h-72 border border-outline-variant/30">
             <motion.img loading="lazy" alt="Signature Brew Bar & Mixology" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_3.webp" style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
               <span className="font-label-sm text-[11px] text-secondary uppercase font-bold tracking-wider">Signature
@@ -141,7 +141,7 @@ export const AboutVibe: React.FC = () => {
                 hand-shaken smoke mocktails.</p>
             </div>
           </div>
-          <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-64 sm:h-72 border border-outline-variant/30">
+          <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-48 sm:h-64 lg:h-72 border border-outline-variant/30">
             <motion.img loading="lazy" alt="Artisan Platters and Comfort Food" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_1.webp" style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
               <span className="font-label-sm text-[11px] text-[#D4AF37]-container uppercase font-bold tracking-wider">Gourmet
