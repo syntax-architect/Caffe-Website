@@ -93,7 +93,14 @@ export const Footer: React.FC = () => {
               </span>
             </a>
           </div>
-          <div className="flex items-center gap-space-xs pt-space-xs"><span className="material-symbols-outlined text-[#D4AF37] text-sm">phone_in_talk</span><a className="hover:text-[#D4AF37] transition-colors" href="tel:+9198300XXXXX">+91 98300 XXXXX</a></div>
+          <div className="flex items-center gap-space-xs pt-space-xs">
+            <span className="material-symbols-outlined text-[#D4AF37] text-sm">phone_in_talk</span>
+            <a className="hover:text-[#D4AF37] transition-colors" href="tel:08420507105">084205 07105</a>
+          </div>
+          <div className="flex items-center gap-space-xs pt-1">
+            <span className="material-symbols-outlined text-[#D4AF37] text-sm">forum</span>
+            <a className="hover:text-[#D4AF37] transition-colors" href="https://wa.me/918420507105" target="_blank" rel="noopener noreferrer">+91 84205 07105 (WhatsApp)</a>
+          </div>
           <div className="flex items-center gap-space-xs"><span className="material-symbols-outlined text-[#D4AF37] text-sm">mail</span><span className="text-on-surface-variant">concierge@thecafebkp.com</span></div>
         </div>
       </div>
