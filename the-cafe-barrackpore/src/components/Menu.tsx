@@ -21,6 +21,7 @@ export const Menu: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [menuItems, setMenuItems] = useState<MenuItemData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(6);
 
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
   const mouseX = useMotionValue(0);
@@ -67,9 +68,17 @@ export const Menu: React.FC = () => {
     };
   }, [hoveredImage, isTouchDevice, mouseX, mouseY]);
 
+  // Reset visible count when category changes
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [activeCategory]);
+
   const filteredMenu = menuItems.filter(item => {
     return item.category?.toLowerCase() === activeCategory.toLowerCase();
   });
+
+  const displayedMenu = filteredMenu.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredMenu.length;
 
   return (
     <section className="w-full py-16 md:py-24 bg-[#231914] scroll-mt-20" id="menu-section">
@@ -139,7 +148,7 @@ export const Menu: React.FC = () => {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10"
           >
             <AnimatePresence>
-              {filteredMenu.map((item) => (
+              {displayedMenu.map((item) => (
                 <motion.div
                   layout
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -199,6 +208,21 @@ export const Menu: React.FC = () => {
                 </motion.div>
               ))}
             </AnimatePresence>
+          </motion.div>
+        )}
+
+        {!isLoading && hasMore && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex justify-center mt-4 md:mt-8"
+          >
+            <button
+              onClick={() => setVisibleCount(prev => prev + 6)}
+              className="px-8 py-3 rounded-full border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#231914] transition-all duration-300 font-label-md tracking-wider uppercase"
+            >
+              Load More
+            </button>
           </motion.div>
         )}
 
