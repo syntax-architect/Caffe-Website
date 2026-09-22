@@ -20,6 +20,15 @@ const Footer = lazy(() => import('./components/Footer').then(module => ({ defaul
 
 function App() {
   useEffect(() => {
+    // MASSIVE OPTIMIZATION: Do not initialize Lenis smooth scrolling on touch devices.
+    // Native mobile scrolling is already smooth, and running requestAnimationFrame
+    // endlessly on an old phone drains battery and causes main thread lag.
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    if (isTouchDevice) {
+      return;
+    }
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),

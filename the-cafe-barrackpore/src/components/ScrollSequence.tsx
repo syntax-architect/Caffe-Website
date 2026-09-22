@@ -64,8 +64,15 @@ export const ScrollSequence: React.FC = () => {
     images[0] = firstImg;
 
     // 2. Defer loading the remaining 119 frames to prevent clogging the network queue
-    // which was causing other important images on the phone to load very slowly.
     const loadRemainingFrames = () => {
+      // MASSIVE OPTIMIZATION: On mobile devices or touch screens, do not load 120 images.
+      // This saves 15MB of RAM and prevents 120 network requests from freezing a 4G connection.
+      const isMobile = window.innerWidth < 768 || 'ontouchstart' in window;
+      if (isMobile) {
+        console.log("Mobile device detected: bypassing heavy scroll sequence frame loading.");
+        return;
+      }
+
       let currentIndex = 2;
       
       const loadChunk = () => {
@@ -80,7 +87,7 @@ export const ScrollSequence: React.FC = () => {
         currentIndex = chunkLimit;
         
         if (currentIndex <= frameCount) {
-          setTimeout(loadChunk, 150); // Small pause to let other network requests breathe
+          setTimeout(loadChunk, 250); // Increased pause to 250ms to let 4G connections breathe
         }
       };
       
@@ -89,9 +96,9 @@ export const ScrollSequence: React.FC = () => {
 
     // Wait for the initial page load to finish before pulling the heavy sequence
     if (document.readyState === 'complete') {
-      setTimeout(loadRemainingFrames, 500);
+      setTimeout(loadRemainingFrames, 1000); // Wait a full second after load before starting
     } else {
-      window.addEventListener('load', () => setTimeout(loadRemainingFrames, 500));
+      window.addEventListener('load', () => setTimeout(loadRemainingFrames, 1000));
     }
 
     let ticking = false;
