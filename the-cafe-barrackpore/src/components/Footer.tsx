@@ -62,8 +62,7 @@ export const Footer: React.FC = () => {
           Contact</h4>
         <div className="flex flex-col gap-space-xs font-body-sm text-body-sm">
           <div className="flex items-start gap-space-xs"><span className="material-symbols-outlined text-[#D4AF37] text-sm mt-1">location_on</span>
-            <p className="text-on-surface-variant">S.N. Banerjee Road, Cantonment Area, Barrackpore, Kolkata, West Bengal
-              700120</p>
+            <p className="text-on-surface-variant">1st floor 2, Jayanti Cinema Multiplex, 2, Barrackpore Trunk Rd, Barrackpore, West Bengal 700120</p>
           </div>
           <div className="flex items-center gap-space-xs pt-space-xs"><span className="material-symbols-outlined text-[#D4AF37] text-sm">phone_in_talk</span><a className="hover:text-[#D4AF37] transition-colors" href="tel:+9198300XXXXX">+91 98300 XXXXX</a></div>
           <div className="flex items-center gap-space-xs"><span className="material-symbols-outlined text-[#D4AF37] text-sm">mail</span><span className="text-on-surface-variant">concierge@thecafebkp.com</span></div>

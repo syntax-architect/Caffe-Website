@@ -87,10 +87,10 @@ const MOCK_MENU = [
   { id: "combo-3", category: "Main Course & Platters", name: "Combo 3", diet: "nv", price: 380, description: "Egg Rice/Noodles + Kung Pao Chicken + Wings", image: "/images/components/comp_img_1.webp" }
 ];
 
-const CATEGORIES = ['All', 'Soups', 'Salads', 'Burgers & Sandwiches', 'Pizzas & Pasta', 'Momos', 'Quick Bites', 'Beverages', 'Main Course & Platters'];
+const CATEGORIES = ['Soups', 'Salads', 'Burgers & Sandwiches', 'Pizzas & Pasta', 'Momos', 'Quick Bites', 'Beverages', 'Main Course & Platters'];
 
 export const Menu: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [activeCategory, setActiveCategory] = useState<string>(CATEGORIES[0]);
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -113,7 +113,6 @@ export const Menu: React.FC = () => {
   }, [hoveredImage, isTouchDevice, mouseX, mouseY]);
 
   const filteredMenu = MOCK_MENU.filter(item => {
-    if (activeCategory === 'All') return true;
     return item.category.toLowerCase() === activeCategory.toLowerCase();
   });
 
