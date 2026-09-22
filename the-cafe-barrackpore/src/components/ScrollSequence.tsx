@@ -1,12 +1,17 @@
 import React, { useEffect, useRef } from 'react';
+import { useDevice } from '../hooks/useDevice';
 
 export const ScrollSequence: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const text1Ref = useRef<HTMLHeadingElement>(null);
   const text2Ref = useRef<HTMLHeadingElement>(null);
   const text3Ref = useRef<HTMLHeadingElement>(null);
+  const { isTouchDevice, isMobile } = useDevice();
+  const isMobileView = isTouchDevice || isMobile;
 
   useEffect(() => {
+    if (isMobileView) return; // Completely skip canvas logic on mobile
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const context = canvas.getContext('2d');
@@ -65,14 +70,6 @@ export const ScrollSequence: React.FC = () => {
 
     // 2. Defer loading the remaining 119 frames to prevent clogging the network queue
     const loadRemainingFrames = () => {
-      // MASSIVE OPTIMIZATION: On mobile devices or touch screens, do not load 120 images.
-      // This saves 15MB of RAM and prevents 120 network requests from freezing a 4G connection.
-      const isMobile = window.innerWidth < 768 || 'ontouchstart' in window;
-      if (isMobile) {
-        console.log("Mobile device detected: bypassing heavy scroll sequence frame loading.");
-        return;
-      }
-
       let currentIndex = 2;
       
       const loadChunk = () => {
@@ -87,16 +84,15 @@ export const ScrollSequence: React.FC = () => {
         currentIndex = chunkLimit;
         
         if (currentIndex <= frameCount) {
-          setTimeout(loadChunk, 250); // Increased pause to 250ms to let 4G connections breathe
+          setTimeout(loadChunk, 250); 
         }
       };
       
       loadChunk();
     };
 
-    // Wait for the initial page load to finish before pulling the heavy sequence
     if (document.readyState === 'complete') {
-      setTimeout(loadRemainingFrames, 1000); // Wait a full second after load before starting
+      setTimeout(loadRemainingFrames, 1000); 
     } else {
       window.addEventListener('load', () => setTimeout(loadRemainingFrames, 1000));
     }
@@ -122,14 +118,12 @@ export const ScrollSequence: React.FC = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           if (images[frameIndex] && images[frameIndex].complete) {
-            // Only redraw canvas if the frame actually changed
             if (frameIndex !== lastFrameIndex) {
               context.clearRect(0, 0, window.innerWidth, window.innerHeight);
               drawImageCover(context, images[frameIndex], window.innerWidth, window.innerHeight);
               lastFrameIndex = frameIndex;
             }
             
-            // Handle text overlays
             if (text1Ref.current) {
               if (progress > 0.1 && progress < 0.3) {
                 text1Ref.current.style.opacity = '1';
@@ -181,37 +175,61 @@ export const ScrollSequence: React.FC = () => {
       window.removeEventListener('resize', handleResizeDebounced);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [isMobileView]);
 
   return (
-    <section id="scroll-sequence-section" className="relative w-full h-[380vh] bg-background">
+    <section id="scroll-sequence-section" className={`relative w-full ${isMobileView ? 'h-[100vh]' : 'h-[380vh]'} bg-background`}>
       <div 
         className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center"
         style={{ maskImage: 'radial-gradient(circle, black 40%, transparent 100%)', WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 100%)' }}
       >
-        <canvas 
-          ref={canvasRef}
-          id="scroll-video-canvas" 
-          className="absolute inset-0 w-full h-full opacity-60"
-          style={{ filter: 'contrast(1.25) brightness(0.9) saturate(1.1)' }}
-        />
-        <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+        {isMobileView ? (
+          <img 
+            src="/images/cinematic_luxury_interior_photo_of_a_trendy_modern_cafe_lounge_named_the_cafe.webp"
+            alt="The Cafe Barrackpore Interior"
+            className="absolute inset-0 w-full h-full object-cover opacity-80"
+          />
+        ) : (
+          <canvas 
+            ref={canvasRef}
+            id="scroll-video-canvas" 
+            className="absolute inset-0 w-full h-full opacity-60"
+            style={{ filter: 'contrast(1.25) brightness(0.9) saturate(1.1)' }}
+          />
+        )}
+        
+        {!isMobileView && (
+          <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+        )}
         
         {/* Dark overlays to blend image into background */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-transparent" />
         
         {/* Floating text that appears during scroll */}
-        <div className="relative z-10 max-w-[1320px] mx-auto px-4 sm:px-6 w-full flex flex-col items-center justify-center text-center">
-          <h2 ref={text1Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
-            Crafted to <span className="text-primary italic font-serif">Perfection</span>
-          </h2>
-          <h2 ref={text2Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
-            Every Drop <span className="text-primary italic font-serif">Matters</span>
-          </h2>
-          <h2 ref={text3Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
-            The True <span className="text-primary italic font-serif">Lounge</span> Experience
-          </h2>
+        <div className="relative z-10 max-w-[1320px] mx-auto px-4 sm:px-6 w-full flex flex-col items-center justify-center text-center h-full">
+          {isMobileView ? (
+             <div className="flex flex-col gap-8 items-center justify-center h-full">
+               <h2 className="font-headline-lg text-4xl text-[#E3DACD] font-medium tracking-tight px-4">
+                 Crafted to <span className="text-primary italic font-serif">Perfection</span>
+               </h2>
+               <h2 className="font-headline-lg text-4xl text-[#E3DACD] font-medium tracking-tight px-4">
+                 Every Drop <span className="text-primary italic font-serif">Matters</span>
+               </h2>
+             </div>
+          ) : (
+            <>
+              <h2 ref={text1Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
+                Crafted to <span className="text-primary italic font-serif">Perfection</span>
+              </h2>
+              <h2 ref={text2Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
+                Every Drop <span className="text-primary italic font-serif">Matters</span>
+              </h2>
+              <h2 ref={text3Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
+                The True <span className="text-primary italic font-serif">Lounge</span> Experience
+              </h2>
+            </>
+          )}
         </div>
       </div>
     </section>
