@@ -67,7 +67,13 @@ export const CartDrawer: React.FC = () => {
                       exit={{ opacity: 0, scale: 0.9 }}
                       className="flex gap-4 p-3 rounded-xl bg-surface-container-low border border-outline-variant/20"
                     >
-                      <img loading="lazy" src={item.image} alt={item.name} className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover shrink-0" />
+                      {item.image ? (
+                        <img loading="lazy" src={item.image} alt={item.name} className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover shrink-0" />
+                      ) : (
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-surface-container flex items-center justify-center shrink-0 border border-outline-variant/30">
+                          <span className="material-symbols-outlined text-[#D4AF37]/50 text-2xl">restaurant</span>
+                        </div>
+                      )}
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                           <div className="flex justify-between items-start gap-2">
