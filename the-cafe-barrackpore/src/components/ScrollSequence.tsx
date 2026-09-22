@@ -2,6 +2,9 @@ import React, { useEffect, useRef } from 'react';
 
 export const ScrollSequence: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const text1Ref = useRef<HTMLHeadingElement>(null);
+  const text2Ref = useRef<HTMLHeadingElement>(null);
+  const text3Ref = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -13,20 +16,21 @@ export const ScrollSequence: React.FC = () => {
     const drawImageCover = (ctx: CanvasRenderingContext2D, img: HTMLImageElement, canvasWidth: number, canvasHeight: number) => {
       const imgRatio = img.width / img.height;
       const canvasRatio = canvasWidth / canvasHeight;
-      let renderWidth, renderHeight, xOffset, yOffset;
+      
+      let sWidth = img.width;
+      let sHeight = img.height;
+      let sX = 0;
+      let sY = 0;
 
       if (canvasRatio > imgRatio) {
-        renderWidth = canvasWidth;
-        renderHeight = canvasWidth / imgRatio;
-        xOffset = 0;
-        yOffset = (canvasHeight - renderHeight) / 2;
+        sHeight = img.width / canvasRatio;
+        sY = (img.height - sHeight) / 2;
       } else {
-        renderWidth = canvasHeight * imgRatio;
-        renderHeight = canvasHeight;
-        xOffset = (canvasWidth - renderWidth) / 2;
-        yOffset = 0;
+        sWidth = img.height * canvasRatio;
+        sX = (img.width - sWidth) / 2;
       }
-      ctx.drawImage(img, xOffset, yOffset, renderWidth, renderHeight);
+
+      ctx.drawImage(img, sX, sY, sWidth, sHeight, 0, 0, canvasWidth, canvasHeight);
     };
 
     const frameCount = 120;
@@ -50,17 +54,48 @@ export const ScrollSequence: React.FC = () => {
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    for (let i = 1; i <= frameCount; i++) {
-      const img = new Image();
-      img.src = currentFrame(i);
-      img.onload = () => {
-        loadedImages++;
-        if (loadedImages === 1) {
-          drawImageCover(context, img, window.innerWidth, window.innerHeight);
+    // 1. Load the first frame immediately so the canvas isn't empty
+    const firstImg = new Image();
+    firstImg.src = currentFrame(1);
+    firstImg.onload = () => {
+      loadedImages++;
+      drawImageCover(context, firstImg, window.innerWidth, window.innerHeight);
+    };
+    images[0] = firstImg;
+
+    // 2. Defer loading the remaining 119 frames to prevent clogging the network queue
+    // which was causing other important images on the phone to load very slowly.
+    const loadRemainingFrames = () => {
+      let currentIndex = 2;
+      
+      const loadChunk = () => {
+        const chunkLimit = Math.min(currentIndex + 10, frameCount + 1); // Load 10 frames at a time
+        for (let i = currentIndex; i < chunkLimit; i++) {
+          const img = new Image();
+          img.decoding = 'async';
+          img.src = currentFrame(i);
+          img.onload = () => loadedImages++;
+          images[i - 1] = img;
+        }
+        currentIndex = chunkLimit;
+        
+        if (currentIndex <= frameCount) {
+          setTimeout(loadChunk, 150); // Small pause to let other network requests breathe
         }
       };
-      images.push(img);
+      
+      loadChunk();
+    };
+
+    // Wait for the initial page load to finish before pulling the heavy sequence
+    if (document.readyState === 'complete') {
+      setTimeout(loadRemainingFrames, 500);
+    } else {
+      window.addEventListener('load', () => setTimeout(loadRemainingFrames, 500));
     }
+
+    let ticking = false;
+    let lastFrameIndex = -1;
 
     const handleScroll = () => {
       const section = document.getElementById('scroll-sequence-section');
@@ -77,47 +112,50 @@ export const ScrollSequence: React.FC = () => {
       
       const frameIndex = Math.floor(progress * (frameCount - 1));
       
-      if (images[frameIndex] && images[frameIndex].complete) {
-        requestAnimationFrame(() => {
-          // Clear before draw just in case
-          context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-          drawImageCover(context, images[frameIndex], window.innerWidth, window.innerHeight);
-          
-          // Handle text overlays based on progress inside rAF to avoid DOM thrashing
-          const t1 = document.getElementById('scroll-text-1');
-          const t2 = document.getElementById('scroll-text-2');
-          const t3 = document.getElementById('scroll-text-3');
-          
-          if (t1) {
-            if (progress > 0.1 && progress < 0.3) {
-              t1.style.opacity = '1';
-              t1.style.transform = 'translateY(0)';
-            } else {
-              t1.style.opacity = '0';
-              t1.style.transform = 'translateY(2rem)';
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (images[frameIndex] && images[frameIndex].complete) {
+            // Only redraw canvas if the frame actually changed
+            if (frameIndex !== lastFrameIndex) {
+              context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+              drawImageCover(context, images[frameIndex], window.innerWidth, window.innerHeight);
+              lastFrameIndex = frameIndex;
+            }
+            
+            // Handle text overlays
+            if (text1Ref.current) {
+              if (progress > 0.1 && progress < 0.3) {
+                text1Ref.current.style.opacity = '1';
+                text1Ref.current.style.transform = 'translateY(0)';
+              } else {
+                text1Ref.current.style.opacity = '0';
+                text1Ref.current.style.transform = 'translateY(2rem)';
+              }
+            }
+            
+            if (text2Ref.current) {
+              if (progress > 0.4 && progress < 0.6) {
+                text2Ref.current.style.opacity = '1';
+                text2Ref.current.style.transform = 'translateY(0)';
+              } else {
+                text2Ref.current.style.opacity = '0';
+                text2Ref.current.style.transform = 'translateY(2rem)';
+              }
+            }
+            
+            if (text3Ref.current) {
+              if (progress > 0.7 && progress < 0.9) {
+                text3Ref.current.style.opacity = '1';
+                text3Ref.current.style.transform = 'translateY(0)';
+              } else {
+                text3Ref.current.style.opacity = '0';
+                text3Ref.current.style.transform = 'translateY(2rem)';
+              }
             }
           }
-          
-          if (t2) {
-            if (progress > 0.4 && progress < 0.6) {
-              t2.style.opacity = '1';
-              t2.style.transform = 'translateY(0)';
-            } else {
-              t2.style.opacity = '0';
-              t2.style.transform = 'translateY(2rem)';
-            }
-          }
-          
-          if (t3) {
-            if (progress > 0.7 && progress < 0.9) {
-              t3.style.opacity = '1';
-              t3.style.transform = 'translateY(0)';
-            } else {
-              t3.style.opacity = '0';
-              t3.style.transform = 'translateY(2rem)';
-            }
-          }
+          ticking = false;
         });
+        ticking = true;
       }
     };
 
@@ -157,13 +195,13 @@ export const ScrollSequence: React.FC = () => {
         
         {/* Floating text that appears during scroll */}
         <div className="relative z-10 max-w-[1320px] mx-auto px-4 sm:px-6 w-full flex flex-col items-center justify-center text-center">
-          <h2 id="scroll-text-1" className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
+          <h2 ref={text1Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
             Crafted to <span className="text-primary italic font-serif">Perfection</span>
           </h2>
-          <h2 id="scroll-text-2" className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
+          <h2 ref={text2Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
             Every Drop <span className="text-primary italic font-serif">Matters</span>
           </h2>
-          <h2 id="scroll-text-3" className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
+          <h2 ref={text3Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
             The True <span className="text-primary italic font-serif">Lounge</span> Experience
           </h2>
         </div>

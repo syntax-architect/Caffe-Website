@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 export const OurStory: React.FC = () => {
   return (
-    <section className="w-full py-24 md:py-32 bg-background relative" id="our-story">
+    <section className="w-full py-16 lg:py-32 bg-background relative" id="our-story">
       <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
           {/* Left Side: Image */}

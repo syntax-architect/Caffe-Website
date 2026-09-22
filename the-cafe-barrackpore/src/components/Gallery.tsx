@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 export const Gallery: React.FC = () => {
   return (
-    <section className="w-full py-24 md:py-32 bg-background relative" id="gallery">
+    <section className="w-full py-16 lg:py-32 bg-background relative" id="gallery">
       <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -22,7 +22,7 @@ export const Gallery: React.FC = () => {
         </motion.div>
 
         {/* Asymmetrical Masonry Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 auto-rows-[250px] md:auto-rows-[300px]">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-8 auto-rows-[auto] md:auto-rows-[300px]">
           
           {/* Couple Image (Spans 2 Rows for portrait look) */}
           <motion.div 
@@ -30,7 +30,7 @@ export const Gallery: React.FC = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6 }}
-            className="col-span-1 md:col-span-1 row-span-2 rounded-xl overflow-hidden group relative bg-surface-container"
+            className="col-span-1 md:col-span-1 md:row-span-2 h-[300px] md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
           >
             <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
             <img loading="lazy" 
@@ -46,7 +46,7 @@ export const Gallery: React.FC = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="col-span-1 md:col-span-1 lg:col-span-2 row-span-1 rounded-xl overflow-hidden group relative bg-surface-container"
+            className="col-span-1 md:col-span-1 lg:col-span-2 md:row-span-1 h-[300px] md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
           >
              <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
              <img loading="lazy" 
@@ -62,7 +62,7 @@ export const Gallery: React.FC = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="col-span-1 md:col-span-1 row-span-1 rounded-xl overflow-hidden group relative bg-surface-container"
+            className="col-span-1 md:col-span-1 md:row-span-1 h-[300px] md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
           >
              <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
              <img loading="lazy"
@@ -78,7 +78,7 @@ export const Gallery: React.FC = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="col-span-1 md:col-span-1 lg:col-span-1 row-span-1 rounded-xl overflow-hidden group relative bg-surface-container"
+            className="col-span-1 md:col-span-1 lg:col-span-1 md:row-span-1 h-[300px] md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
           >
              <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
              <img loading="lazy"

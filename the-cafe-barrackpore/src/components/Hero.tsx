@@ -102,7 +102,7 @@ export const Hero: React.FC = () => {
           className="w-full lg:w-[40%] flex justify-center lg:justify-end"
         >
           <div 
-            className="relative w-full max-w-[400px] lg:max-w-full h-[50vh] lg:h-[75vh] max-h-[75vh]"
+            className="relative w-full max-w-[400px] lg:max-w-full h-[45vh] lg:h-[75vh] max-h-[45vh] lg:max-h-[75vh]"
             style={{ 
               maskImage: 'radial-gradient(circle, black 60%, transparent 100%)',
               WebkitMaskImage: 'radial-gradient(circle, black 60%, transparent 100%)'

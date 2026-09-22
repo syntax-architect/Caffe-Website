@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 export const VIPClub: React.FC = () => {
   return (
-    <section className="w-full py-24 md:py-32 bg-black/40 border-y border-white/5 relative" id="vip-club">
+    <section className="w-full py-16 lg:py-32 bg-black/40 border-y border-white/5 relative" id="vip-club">
       <div className="max-w-[800px] mx-auto px-4 md:px-6 text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
