@@ -209,19 +209,34 @@ export const Menu: React.FC = () => {
           </motion.div>
         )}
 
-        {!isLoading && hasMore && (
+        {(!isLoading && (hasMore || visibleCount > 6)) && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex justify-center mt-4 md:mt-8"
+            className="flex justify-center gap-4 mt-4 md:mt-8"
           >
-            <button
-              type="button"
-              onClick={() => setVisibleCount(prev => prev + 6)}
-              className="px-8 py-3 rounded-full border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#231914] transition-all duration-300 font-label-md tracking-wider uppercase"
-            >
-              Load More
-            </button>
+            {visibleCount > 6 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setVisibleCount(6);
+                  document.getElementById('menu-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-8 py-3 rounded-full border border-white/20 text-[#E3DACD]/70 hover:bg-white/5 hover:text-[#E3DACD] transition-all duration-300 font-label-md tracking-wider uppercase"
+              >
+                Show Less
+              </button>
+            )}
+            
+            {hasMore && (
+              <button
+                type="button"
+                onClick={() => setVisibleCount(prev => prev + 6)}
+                className="px-8 py-3 rounded-full border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#231914] transition-all duration-300 font-label-md tracking-wider uppercase"
+              >
+                Load More
+              </button>
+            )}
           </motion.div>
         )}
 
