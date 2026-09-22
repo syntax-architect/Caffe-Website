@@ -135,8 +135,8 @@ export const Menu: React.FC = () => {
               style={{
                 left: mouseX,
                 top: mouseY,
-                x: "-50%",
-                y: "-50%"
+                x: "20px",
+                y: "20px"
               }}
             />
           )}
