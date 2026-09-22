@@ -1,4 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import Lenis from 'lenis';
 import { CartProvider } from './context/CartContext';
 import { UIProvider } from './context/UIContext';
@@ -51,18 +52,22 @@ function App() {
             <div className="fixed top-3/4 left-[15%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-[#D4AF37]/5 blur-[80px] sm:blur-[140px] pointer-events-none -z-10" />
             <Hero />
             <ScrollSequence />
-            <Suspense fallback={<div className="h-32 w-full flex items-center justify-center text-primary">Loading...</div>}>
-              <AboutVibe />
-              <OurStory />
-              <Gallery />
-              <VIPClub />
-              <SpecialsBanner />
-              <Menu />
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<div className="h-32 w-full flex items-center justify-center text-[#D4AF37]">Loading...</div>}>
+                <AboutVibe />
+                <OurStory />
+                <Gallery />
+                <VIPClub />
+                <SpecialsBanner />
+                <Menu />
+              </Suspense>
+            </ErrorBoundary>
           </main>
-          <Suspense fallback={<div className="h-32 w-full flex items-center justify-center text-primary">Loading...</div>}>
-            <Footer />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<div className="h-32 w-full flex items-center justify-center text-[#D4AF37]">Loading...</div>}>
+              <Footer />
+            </Suspense>
+          </ErrorBoundary>
           <CartDrawer />
           <div 
             className="pointer-events-none fixed inset-0 z-[100] opacity-[0.03]"
