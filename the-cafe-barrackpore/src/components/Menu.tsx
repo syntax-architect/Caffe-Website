@@ -144,13 +144,11 @@ export const Menu: React.FC = () => {
           </div>
         ) : (
           <motion.div 
-            layout
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10"
           >
             <AnimatePresence>
               {displayedMenu.map((item) => (
                 <motion.div
-                  layout
                   initial={{ opacity: 0, scale: 0.95 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, margin: "-50px" }}
@@ -218,6 +216,7 @@ export const Menu: React.FC = () => {
             className="flex justify-center mt-4 md:mt-8"
           >
             <button
+              type="button"
               onClick={() => setVisibleCount(prev => prev + 6)}
               className="px-8 py-3 rounded-full border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#231914] transition-all duration-300 font-label-md tracking-wider uppercase"
             >
