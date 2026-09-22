@@ -1,9 +1,11 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
+import { useUI } from '../context/UIContext';
 
 export const CartDrawer: React.FC = () => {
   const { items, isDrawerOpen, setIsDrawerOpen, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart();
+  const { showModal } = useUI();
 
   return (
     <AnimatePresence>
@@ -119,8 +121,11 @@ export const CartDrawer: React.FC = () => {
                   <button 
                     className="flex-1 py-3 rounded-xl bg-[#D4AF37] text-[#231914] font-label-md font-bold  hover: transition-all"
                     onClick={() => {
-                      alert('Proceeding to checkout...');
                       setIsDrawerOpen(false);
+                      showModal(
+                        'Checkout Unavailable',
+                        'Online checkout is currently disabled while we integrate our delivery partners. Please visit the cafe or call us to place your order!'
+                      );
                     }}
                   >
                     Checkout (₹{cartTotal})

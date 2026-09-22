@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import { useDevice } from '../hooks/useDevice';
+import { useCart } from '../context/CartContext';
+import { useUI } from '../context/UIContext';
 
 // Mock data provided by user
 const MOCK_MENU = [
@@ -95,6 +97,8 @@ export const Menu: React.FC = () => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const { isTouchDevice } = useDevice();
+  const { addToCart } = useCart();
+  const { showToast } = useUI();
 
   // Handle global mouse move when an image is hovered
   React.useEffect(() => {
@@ -214,9 +218,18 @@ export const Menu: React.FC = () => {
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
                   <span className="font-sans text-2xl font-semibold tracking-tight text-[#D4AF37]">₹{item.price}</span>
                   <button 
-                    className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 text-[#E3DACD] hover:bg-[#D4AF37] hover:text-[#231914] transition-colors"
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 text-[#E3DACD] hover:bg-[#D4AF37] hover:text-[#231914] transition-colors relative z-10"
                     title="Add to order"
-                    onClick={() => console.log('Add to cart clicked:', item.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        image: item.image
+                      });
+                      showToast(`Added ${item.name} to order`);
+                    }}
                   >
                     <span className="material-symbols-outlined text-lg">add</span>
                   </button>
