@@ -1,9 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { smoothScrollTo } from '../utils/scroll';
-import { siteConfig } from '../data/siteConfig';
+import { siteConfig as fallbackConfig } from '../data/siteConfig';
+import { client } from '../lib/sanityClient';
+import imageUrlBuilder from '@sanity/image-url';
+
+const builder = imageUrlBuilder(client);
+function urlFor(source: any) {
+  return builder.image(source);
+}
 
 export const Hero: React.FC = () => {
+  const [image, setImage] = useState({ src: fallbackConfig.hero.image, alt: fallbackConfig.hero.alt });
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const config = await client.fetch(`*[_type == "siteConfig"][0]{ heroImage }`);
+        if (config?.heroImage) {
+          setImage({
+            src: urlFor(config.heroImage).width(1200).auto('format').quality(80).url(),
+            alt: 'Hero Image'
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching Sanity config:", error);
+      }
+    };
+    fetchConfig();
+  }, []);
   const handleNav = (e: React.MouseEvent, target: string) => {
     e.preventDefault();
     smoothScrollTo(target);
@@ -111,8 +136,8 @@ export const Hero: React.FC = () => {
           >
             <div className="absolute inset-0 bg-[#231914]/20 z-10 mix-blend-overlay pointer-events-none"></div>
             <img 
-              src={siteConfig.hero.image} 
-              alt={siteConfig.hero.alt} 
+              src={image.src} 
+              alt={image.alt} 
               className="w-full h-full object-cover object-bottom"
             />
           </div>

@@ -1,6 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { siteConfig } from '../data/siteConfig';
+import { siteConfig as fallbackConfig } from '../data/siteConfig';
+import { client } from '../lib/sanityClient';
+import imageUrlBuilder from '@sanity/image-url';
+
+const builder = imageUrlBuilder(client);
+function urlFor(source: any) {
+  return builder.image(source);
+}
 
 const AnimatedText = ({ text }: { text: string }) => {
   const container = useRef<HTMLParagraphElement>(null);
@@ -32,6 +39,25 @@ const AnimatedText = ({ text }: { text: string }) => {
 };
 
 export const OurStory: React.FC = () => {
+  const [image, setImage] = useState({ src: fallbackConfig.ourStory.image, alt: fallbackConfig.ourStory.alt });
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const config = await client.fetch(`*[_type == "siteConfig"][0]{ ourStoryImage }`);
+        if (config?.ourStoryImage) {
+          setImage({
+            src: urlFor(config.ourStoryImage).width(1200).auto('format').quality(80).url(),
+            alt: 'Our Story'
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching Sanity config:", error);
+      }
+    };
+    fetchConfig();
+  }, []);
+
   return (
     <section className="w-full py-16 lg:py-32 bg-background relative" id="our-story">
       <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12">
@@ -48,8 +74,8 @@ export const OurStory: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-80 z-10 pointer-events-none" />
             {/* Real Image */}
             <img loading="lazy"
-              src={siteConfig.ourStory.image} 
-              alt={siteConfig.ourStory.alt} 
+              src={image.src} 
+              alt={image.alt} 
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
             />
           </motion.div>

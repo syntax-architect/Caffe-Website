@@ -15,7 +15,7 @@ export const AboutVibe: React.FC = () => {
         const config = await client.fetch(`*[_type == "siteConfig"][0]{ aboutVibeImages }`);
         if (config?.aboutVibeImages && config.aboutVibeImages.length === 4) {
           setImages(config.aboutVibeImages.map((img: any, index: number) => ({
-            src: urlFor(img.image).url(),
+            src: urlFor(img.image).width(800).auto('format').quality(80).url(),
             alt: img.alt || fallbackConfig.aboutVibe.images[index].alt
           })));
         }

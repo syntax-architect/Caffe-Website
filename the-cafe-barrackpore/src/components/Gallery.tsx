@@ -12,7 +12,7 @@ export const Gallery: React.FC = () => {
         const config = await client.fetch(`*[_type == "siteConfig"][0]{ galleryImages }`);
         if (config?.galleryImages && config.galleryImages.length === 4) {
           setImages(config.galleryImages.map((img: any, index: number) => ({
-            src: urlFor(img).url(),
+            src: urlFor(img).width(800).auto('format').quality(80).url(),
             alt: fallbackConfig.gallery.images[index].alt
           })));
         }
