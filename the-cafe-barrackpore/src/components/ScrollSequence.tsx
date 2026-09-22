@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useDevice } from '../hooks/useDevice';
 
 export const ScrollSequence: React.FC = () => {

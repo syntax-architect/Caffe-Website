@@ -82,7 +82,7 @@ export const Footer: React.FC = () => {
           <div className="flex items-start gap-space-xs">
             <span className="material-symbols-outlined text-[#D4AF37] text-sm mt-1 shrink-0">location_on</span>
             <a 
-              href="https://maps.app.goo.gl/beaiJJ4i7puFqrxp6" 
+              href="https://maps.app.goo.gl/PVcpgEMsn2xTHfwXA?g_st=ac" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-on-surface-variant hover:text-[#D4AF37] transition-colors group flex flex-col items-start"
