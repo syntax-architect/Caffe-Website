@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { siteConfig } from '../data/siteConfig';
 
 const AnimatedText = ({ text }: { text: string }) => {
   const container = useRef<HTMLParagraphElement>(null);
@@ -46,9 +47,9 @@ export const OurStory: React.FC = () => {
             <div className="absolute inset-0 bg-white/5" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-80 z-10 pointer-events-none" />
             {/* Real Image */}
-            <img loading="lazy" 
-              src="/images/story-pour.jpg" 
-              alt="Artisanal Espresso Pour" 
+            <img loading="lazy"
+              src={siteConfig.ourStory.image} 
+              alt={siteConfig.ourStory.alt} 
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
             />
           </motion.div>

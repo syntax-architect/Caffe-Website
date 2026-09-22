@@ -1,7 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { siteConfig as fallbackConfig } from '../data/siteConfig';
+import { client, urlFor } from '../lib/sanityClient';
 
 export const Gallery: React.FC = () => {
+  const [images, setImages] = useState(fallbackConfig.gallery.images);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const config = await client.fetch(`*[_type == "siteConfig"][0]{ galleryImages }`);
+        if (config?.galleryImages && config.galleryImages.length === 4) {
+          setImages(config.galleryImages.map((img: any, index: number) => ({
+            src: urlFor(img).url(),
+            alt: fallbackConfig.gallery.images[index].alt
+          })));
+        }
+      } catch (error) {
+        console.error("Error fetching gallery images from Sanity:", error);
+      }
+    };
+    fetchConfig();
+  }, []);
+
   return (
     <section className="w-full py-16 lg:py-32 bg-background relative" id="gallery">
       <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12">
@@ -34,8 +55,8 @@ export const Gallery: React.FC = () => {
           >
             <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
             <img loading="lazy" 
-              src="/images/gallery-couple.jpg" 
-              alt="Nightlife Couple"
+              src={images[0]?.src} 
+              alt={images[0]?.alt}
               className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.03]"
             />
           </motion.div>
@@ -50,8 +71,8 @@ export const Gallery: React.FC = () => {
           >
              <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
              <img loading="lazy" 
-              src="/images/gallery-pizza.jpg" 
-              alt="Wood-Fired Pizza"
+              src={images[1]?.src} 
+              alt={images[1]?.alt}
               className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.03]"
             />
           </motion.div>
@@ -66,8 +87,8 @@ export const Gallery: React.FC = () => {
           >
              <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
              <img loading="lazy"
-              src="/images/gallery-beans.jpg" 
-              alt="Artisanal Coffee Beans"
+              src={images[2]?.src} 
+              alt={images[2]?.alt}
               className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.03]"
             />
           </motion.div>
@@ -82,8 +103,8 @@ export const Gallery: React.FC = () => {
           >
              <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
              <img loading="lazy"
-              src="/images/gallery-guitar.jpg" 
-              alt="Acoustic Weekend Guitar"
+              src={images[3]?.src} 
+              alt={images[3]?.alt}
               className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.03]"
             />
           </motion.div>

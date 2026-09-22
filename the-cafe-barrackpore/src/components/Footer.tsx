@@ -94,7 +94,7 @@ export const Footer: React.FC = () => {
       </div>
     </div>
     <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 font-label-sm text-xs text-on-surface-variant/80 text-center md:text-left">
-      <p>© 2025 The Cafe Barrackpore. All culinary rights reserved.</p>
+      <p>© {new Date().getFullYear()} The Cafe Barrackpore. All culinary rights reserved.</p>
       <div className="flex flex-wrap items-center justify-center gap-4 md:gap-space-md"><a className="hover:text-[#D4AF37] transition-colors" href="#" onClick={(e) => handleDummy(e, 'Legal / Info', 'Detailed information regarding this policy will be uploaded before the official launch. Please contact management for immediate queries.')}>Privacy
           Policy</a><a className="hover:text-[#D4AF37] transition-colors" href="#" onClick={(e) => handleDummy(e, 'Legal / Info', 'Detailed information regarding this policy will be uploaded before the official launch. Please contact management for immediate queries.')}>Terms of Hospitality</a><a className="hover:text-[#D4AF37] transition-colors" href="#" onClick={(e) => handleDummy(e, 'Legal / Info', 'Detailed information regarding this policy will be uploaded before the official launch. Please contact management for immediate queries.')}>Hygiene &amp; Safety</a></div>
     </div>

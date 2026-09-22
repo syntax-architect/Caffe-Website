@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { smoothScrollTo } from '../utils/scroll';
+import { siteConfig } from '../data/siteConfig';
 
 export const Hero: React.FC = () => {
   const handleNav = (e: React.MouseEvent, target: string) => {
@@ -110,8 +111,8 @@ export const Hero: React.FC = () => {
           >
             <div className="absolute inset-0 bg-[#231914]/20 z-10 mix-blend-overlay pointer-events-none"></div>
             <img 
-              src="/images/hero-bar.webp" 
-              alt="Premium Lounge Bar" 
+              src={siteConfig.hero.image} 
+              alt={siteConfig.hero.alt} 
               className="w-full h-full object-cover object-bottom"
             />
           </div>

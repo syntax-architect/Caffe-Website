@@ -1,12 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { siteConfig as fallbackConfig } from '../data/siteConfig';
+import { client, urlFor } from '../lib/sanityClient';
 
 export const AboutVibe: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [images, setImages] = useState(fallbackConfig.aboutVibe.images);
   const sectionRef = useRef<HTMLElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const config = await client.fetch(`*[_type == "siteConfig"][0]{ aboutVibeImages }`);
+        if (config?.aboutVibeImages && config.aboutVibeImages.length === 4) {
+          setImages(config.aboutVibeImages.map((img: any, index: number) => ({
+            src: urlFor(img.image).url(),
+            alt: img.alt || fallbackConfig.aboutVibe.images[index].alt
+          })));
+        }
+      } catch (error) {
+        console.error("Error fetching about vibe images from Sanity:", error);
+      }
+    };
+    fetchConfig();
+
     audioRef.current = new Audio('https://assets.mixkit.co/music/preview/mixkit-chill-bro-494.mp3');
     audioRef.current.volume = 0.4;
 
@@ -153,7 +171,7 @@ export const AboutVibe: React.FC = () => {
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
           <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-48 sm:h-64 lg:h-72 border border-outline-variant/30">
-            <motion.img loading="lazy" alt="Midnight Velvet Booth Seating" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_0.webp" style={{ y: yPos, scale: 1.15 }} />
+            <motion.img loading="lazy" alt={images[0].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[0].src} style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
               <span className="font-label-sm text-[11px] text-[#D4AF37] uppercase font-bold tracking-wider">Midnight
                 Velvet Booths</span>
@@ -162,7 +180,7 @@ export const AboutVibe: React.FC = () => {
             </div>
           </div>
           <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-48 sm:h-64 lg:h-72 border border-outline-variant/30">
-            <motion.img loading="lazy" alt="Live Acoustic & Reading Nook" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_2.webp" style={{ y: yPos, scale: 1.15 }} />
+            <motion.img loading="lazy" alt={images[1].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[1].src} style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
               <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">Live
                 Acoustic Nook</span>
@@ -171,7 +189,7 @@ export const AboutVibe: React.FC = () => {
             </div>
           </div>
           <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-48 sm:h-64 lg:h-72 border border-outline-variant/30">
-            <motion.img loading="lazy" alt="Signature Brew Bar & Mixology" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_3.webp" style={{ y: yPos, scale: 1.15 }} />
+            <motion.img loading="lazy" alt={images[2].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[2].src} style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
               <span className="font-label-sm text-[11px] text-secondary uppercase font-bold tracking-wider">Signature
                 Brew Bar</span>
@@ -180,7 +198,7 @@ export const AboutVibe: React.FC = () => {
             </div>
           </div>
           <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-48 sm:h-64 lg:h-72 border border-outline-variant/30">
-            <motion.img loading="lazy" alt="Artisan Platters and Comfort Food" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="/images/components/comp_img_1.webp" style={{ y: yPos, scale: 1.15 }} />
+            <motion.img loading="lazy" alt={images[3].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[3].src} style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
               <span className="font-label-sm text-[11px] text-[#D4AF37]-container uppercase font-bold tracking-wider">Gourmet
                 Kitchen</span>
