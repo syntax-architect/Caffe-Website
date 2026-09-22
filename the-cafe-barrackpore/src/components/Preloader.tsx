@@ -30,7 +30,7 @@ export const Preloader: React.FC = () => {
             className="flex flex-col items-center gap-6"
           >
             <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border border-white/10 flex items-center justify-center bg-[#231914] overflow-hidden drop-shadow-[0_0_25px_rgba(212,175,55,0.2)]">
-              <img src={logoUrl} alt="The Cafe Logo" className="w-full h-full object-contain" />
+              <img src={logoUrl} alt="The Cafe Logo" className="w-full h-full object-contain" fetchPriority="high" decoding="sync" />
             </div>
             {/* We can keep the text below, but maybe smaller or omit it since the logo has text */}
             <h1 className="font-headline-lg text-2xl md:text-3xl text-[#E3DACD] font-medium tracking-widest uppercase mt-2">

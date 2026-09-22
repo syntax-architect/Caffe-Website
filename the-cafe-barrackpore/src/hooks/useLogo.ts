@@ -8,7 +8,7 @@ function urlFor(source: any) {
 }
 
 export function useLogo() {
-  const [logoUrl, setLogoUrl] = useState('/logo.png');
+  const [logoUrl, setLogoUrl] = useState(() => localStorage.getItem('cafe_logo') || '/logo.png');
 
   useEffect(() => {
     let mounted = true;
@@ -16,7 +16,9 @@ export function useLogo() {
       try {
         const config = await client.fetch(`*[_type == "siteConfig"][0]{ logo }`);
         if (config?.logo && mounted) {
-          setLogoUrl(urlFor(config.logo).width(400).auto('format').quality(80).url());
+          const url = urlFor(config.logo).width(400).auto('format').quality(80).url();
+          setLogoUrl(url);
+          localStorage.setItem('cafe_logo', url);
         }
       } catch (error) {
         console.error("Error fetching logo from Sanity:", error);
