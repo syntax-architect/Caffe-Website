@@ -1,31 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { client } from '../lib/sanityClient';
-import imageUrlBuilder from '@sanity/image-url';
-
-const builder = imageUrlBuilder(client);
-function urlFor(source: any) {
-  return builder.image(source);
-}
+import { useLogo } from '../hooks/useLogo';
 
 export const Preloader: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
-  const [logoUrl, setLogoUrl] = useState('/logo.png');
+  const logoUrl = useLogo();
 
   useEffect(() => {
-    // Fetch logo from Sanity
-    const fetchLogo = async () => {
-      try {
-        const config = await client.fetch(`*[_type == "siteConfig"][0]{ logo }`);
-        if (config?.logo) {
-          setLogoUrl(urlFor(config.logo).width(400).url());
-        }
-      } catch (error) {
-        console.error("Error fetching logo from Sanity:", error);
-      }
-    };
-    fetchLogo();
-
     const timer = setTimeout(() => {
       setIsVisible(false);
     }, 1500); // 1.5 seconds loading sequence

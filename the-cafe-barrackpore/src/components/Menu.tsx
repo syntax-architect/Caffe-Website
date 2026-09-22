@@ -153,7 +153,7 @@ export const Menu: React.FC = () => {
                     mouseX.set(e.clientX);
                     mouseY.set(e.clientY);
                     try {
-                      setHoveredImage(urlFor(item.image).url());
+                      setHoveredImage(urlFor(item.image).width(800).auto('format').quality(80).url());
                     } catch (e) {
                       setHoveredImage(null);
                     }
@@ -188,7 +188,7 @@ export const Menu: React.FC = () => {
                           id: item._id,
                           name: item.name,
                           price: item.price,
-                          image: item.image ? urlFor(item.image).url() : undefined
+                          image: item.image ? urlFor(item.image).width(400).auto('format').quality(80).url() : undefined
                         } as any);
                         showToast(`Added ${item.name} to order`);
                       }}
