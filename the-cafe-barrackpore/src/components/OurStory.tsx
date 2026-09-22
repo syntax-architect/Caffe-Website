@@ -9,6 +9,21 @@ function urlFor(source: any) {
   return builder.image(source);
 }
 
+const AnimatedWord = ({ word, index, totalWords, scrollYProgress }: { word: string, index: number, totalWords: number, scrollYProgress: any }) => {
+  const start = index / totalWords;
+  const end = start + (1 / totalWords);
+  const opacity = useTransform(scrollYProgress, [start, end], [0.2, 1]);
+  const lowerWord = word.toLowerCase();
+  const isHighlight = lowerWord.includes("luxury") || lowerWord.includes("acoustic") || lowerWord.includes("signature") || lowerWord.includes("pours");
+  const color = isHighlight ? "#D4AF37" : "#E3DACD";
+  
+  return (
+    <motion.span style={{ opacity, color }} className="transition-colors duration-300">
+      {word}
+    </motion.span>
+  );
+};
+
 const AnimatedText = ({ text }: { text: string }) => {
   const container = useRef<HTMLParagraphElement>(null);
   const { scrollYProgress } = useScroll({
@@ -20,20 +35,9 @@ const AnimatedText = ({ text }: { text: string }) => {
   
   return (
     <p ref={container} className="font-body-md text-base md:text-lg leading-relaxed flex flex-wrap gap-x-[0.25em] gap-y-1 mb-6">
-      {words.map((word, i) => {
-        const start = i / words.length;
-        const end = start + (1 / words.length);
-        const opacity = useTransform(scrollYProgress, [start, end], [0.2, 1]);
-        const lowerWord = word.toLowerCase();
-        const isHighlight = lowerWord.includes("luxury") || lowerWord.includes("acoustic") || lowerWord.includes("signature") || lowerWord.includes("pours");
-        const color = isHighlight ? "#D4AF37" : "#E3DACD";
-        
-        return (
-          <motion.span key={i} style={{ opacity, color }} className="transition-colors duration-300">
-            {word}
-          </motion.span>
-        );
-      })}
+      {words.map((word, i) => (
+        <AnimatedWord key={i} word={word} index={i} totalWords={words.length} scrollYProgress={scrollYProgress} />
+      ))}
     </p>
   );
 };

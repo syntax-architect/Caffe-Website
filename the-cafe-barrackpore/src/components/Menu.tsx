@@ -68,10 +68,7 @@ export const Menu: React.FC = () => {
     };
   }, [hoveredImage, isTouchDevice, mouseX, mouseY]);
 
-  // Reset visible count when category changes
-  useEffect(() => {
-    setVisibleCount(6);
-  }, [activeCategory]);
+
 
   const filteredMenu = menuItems.filter(item => {
     return item.category?.toLowerCase() === activeCategory.toLowerCase();
@@ -125,7 +122,10 @@ export const Menu: React.FC = () => {
             {categories.map(category => (
               <button
                 key={category}
-                onClick={() => setActiveCategory(category)}
+                onClick={() => {
+                  setActiveCategory(category);
+                  setVisibleCount(6);
+                }}
                 className={`px-4 py-2 md:px-6 md:py-2.5 rounded-full font-label-md text-[12px] md:text-[13px] transition-all duration-300 border ${
                   activeCategory === category 
                   ? 'bg-[#D4AF37] text-[#231914] border-[#D4AF37]' 
@@ -161,7 +161,7 @@ export const Menu: React.FC = () => {
                     mouseY.set(e.clientY);
                     try {
                       setHoveredImage(urlFor(item.image).width(800).auto('format').quality(80).url());
-                    } catch (e) {
+                    } catch {
                       setHoveredImage(null);
                     }
                   }}
