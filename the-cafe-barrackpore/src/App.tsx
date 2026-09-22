@@ -1,19 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import Lenis from 'lenis';
 import { CartProvider } from './context/CartContext';
 import { UIProvider } from './context/UIContext';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { ScrollSequence } from './components/ScrollSequence';
-import { AboutVibe } from './components/AboutVibe';
-import { OurStory } from './components/OurStory';
-import { Gallery } from './components/Gallery';
-import { VIPClub } from './components/VIPClub';
-import { SpecialsBanner } from './components/SpecialsBanner';
-import { Menu } from './components/Menu';
-import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
 import { Preloader } from './components/Preloader';
+
+// Lazy load below-the-fold components
+const AboutVibe = lazy(() => import('./components/AboutVibe').then(module => ({ default: module.AboutVibe })));
+const OurStory = lazy(() => import('./components/OurStory').then(module => ({ default: module.OurStory })));
+const Gallery = lazy(() => import('./components/Gallery').then(module => ({ default: module.Gallery })));
+const VIPClub = lazy(() => import('./components/VIPClub').then(module => ({ default: module.VIPClub })));
+const SpecialsBanner = lazy(() => import('./components/SpecialsBanner').then(module => ({ default: module.SpecialsBanner })));
+const Menu = lazy(() => import('./components/Menu').then(module => ({ default: module.Menu })));
+const Footer = lazy(() => import('./components/Footer').then(module => ({ default: module.Footer })));
 
 function App() {
   useEffect(() => {
@@ -49,14 +51,18 @@ function App() {
             <div className="fixed top-3/4 left-[15%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-[#D4AF37]/5 blur-[80px] sm:blur-[140px] pointer-events-none -z-10" />
             <Hero />
             <ScrollSequence />
-            <AboutVibe />
-            <OurStory />
-            <Gallery />
-            <VIPClub />
-            <SpecialsBanner />
-            <Menu />
+            <Suspense fallback={<div className="h-32 w-full flex items-center justify-center text-primary">Loading...</div>}>
+              <AboutVibe />
+              <OurStory />
+              <Gallery />
+              <VIPClub />
+              <SpecialsBanner />
+              <Menu />
+            </Suspense>
           </main>
-          <Footer />
+          <Suspense fallback={<div className="h-32 w-full flex items-center justify-center text-primary">Loading...</div>}>
+            <Footer />
+          </Suspense>
           <CartDrawer />
           <div 
             className="pointer-events-none fixed inset-0 z-[100] opacity-[0.03]"
