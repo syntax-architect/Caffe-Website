@@ -177,9 +177,9 @@ export const ScrollSequence: React.FC = () => {
   }, []);
 
   return (
-    <section id="scroll-sequence-section" className="relative w-full h-[800vh] bg-background">
+    <section id="scroll-sequence-section" className="relative w-full h-[380vh] bg-background">
       <div 
-        className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center"
+        className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center"
         style={{ maskImage: 'radial-gradient(circle, black 40%, transparent 100%)', WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 100%)' }}
       >
         <canvas 

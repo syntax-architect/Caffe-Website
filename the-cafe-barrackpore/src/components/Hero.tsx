@@ -9,7 +9,7 @@ export const Hero: React.FC = () => {
   };
 
   return (
-    <section className="relative w-full min-h-[calc(100vh-6rem)] flex items-center justify-center bg-background overflow-hidden">
+    <section className="relative w-full min-h-[calc(100dvh-6rem)] flex items-center justify-center bg-background overflow-hidden">
       <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 flex flex-col lg:flex-row items-center gap-10 lg:gap-16 relative z-10">
         
         {/* Left Side (60%) */}
@@ -57,14 +57,14 @@ export const Hero: React.FC = () => {
             className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-10 sm:mb-14 w-full sm:w-auto"
           >
             <a 
-              className="w-full sm:w-auto px-8 py-4 rounded-md font-label-lg text-base text-[#231914] bg-[#D4AF37] hover:bg-[#ebd074] transition-colors flex items-center justify-center gap-2" 
+              className="w-full sm:w-auto px-8 py-4 rounded-full uppercase tracking-wider text-xs sm:text-sm font-semibold text-[#231914] bg-[#D4AF37] hover:bg-[#ebd074] transition-colors flex items-center justify-center gap-2" 
               href="#menu-section" 
               onClick={(e) => handleNav(e, 'menu-section')}
             >
               <span>Explore Menu</span>
             </a>
             <a 
-              className="w-full sm:w-auto px-8 py-4 rounded-md font-label-lg text-base text-[#E3DACD] bg-transparent border border-[#D4AF37]/30 hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center gap-2" 
+              className="w-full sm:w-auto px-8 py-4 rounded-full uppercase tracking-wider text-xs sm:text-sm font-semibold text-[#E3DACD] bg-transparent border border-[#D4AF37]/30 hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center gap-2" 
               href="#reserve-section" 
               onClick={(e) => handleNav(e, 'reserve-section')}
             >

@@ -1,5 +1,34 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+
+const AnimatedText = ({ text }: { text: string }) => {
+  const container = useRef<HTMLParagraphElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: container,
+    offset: ["start 85%", "center 50%"]
+  });
+
+  const words = text.split(" ");
+  
+  return (
+    <p ref={container} className="font-body-md text-base md:text-lg leading-relaxed flex flex-wrap gap-x-[0.25em] gap-y-1 mb-6">
+      {words.map((word, i) => {
+        const start = i / words.length;
+        const end = start + (1 / words.length);
+        const opacity = useTransform(scrollYProgress, [start, end], [0.2, 1]);
+        const lowerWord = word.toLowerCase();
+        const isHighlight = lowerWord.includes("luxury") || lowerWord.includes("acoustic") || lowerWord.includes("signature") || lowerWord.includes("pours");
+        const color = isHighlight ? "#D4AF37" : "#E3DACD";
+        
+        return (
+          <motion.span key={i} style={{ opacity, color }} className="transition-colors duration-300">
+            {word}
+          </motion.span>
+        );
+      })}
+    </p>
+  );
+};
 
 export const OurStory: React.FC = () => {
   return (
@@ -43,13 +72,9 @@ export const OurStory: React.FC = () => {
             
             <div className="w-20 h-[1px] bg-primary/30 my-2" />
             
-            <p className="font-body-md text-base md:text-lg text-on-surface/70 leading-relaxed">
-              We believe that true luxury lies in the details. From sourcing the most vibrant, local ingredients from surrounding farms to hand-selecting the perfect acoustic backdrop, every element of our space is intentionally curated.
-            </p>
+            <AnimatedText text="We believe that true luxury lies in the details. From sourcing the most vibrant, local ingredients from surrounding farms to hand-selecting the perfect acoustic backdrop, every element of our space is intentionally curated." />
             
-            <p className="font-body-md text-base md:text-lg text-on-surface/70 leading-relaxed mb-6">
-              This isn't just a cafe; it's a sanctuary designed for those who appreciate the art of slowing down. A place where deep conversations flow as freely as our signature pours.
-            </p>
+            <AnimatedText text="This isn't just a cafe; it's a sanctuary designed for those who appreciate the art of slowing down. A place where deep conversations flow as freely as our signature pours." />
             
             <div className="mt-4">
               <span className="font-serif text-3xl md:text-4xl italic text-primary/80" style={{ fontFamily: 'var(--font-serif)' }}>

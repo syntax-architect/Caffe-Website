@@ -23,7 +23,7 @@ const MOCK_MENU = [
   { id: "veggie-medley-burger", category: "Burgers & Sandwiches", name: "Veggie Medley Burger", diet: "veg", price: 180, description: "Crispy vegetable patty layered with fresh tomatoes and lettuce.", image: "/images/components/comp_img_0.webp" },
   { id: "paneer-burger-1patty", category: "Burgers & Sandwiches", name: "Paneer Burger (1 patty)", diet: "veg", price: 200, description: "Spiced paneer patty.", image: "/images/components/comp_img_0.webp" },
   { id: "paneer-burger-2patty", category: "Burgers & Sandwiches", name: "Paneer Burger (2 patty)", diet: "veg", price: 220, description: "Double spiced paneer patty.", image: "/images/components/comp_img_0.webp" },
-  { id: "special-chicken-bun", category: "Burgers & Sandwiches", name: "Special Chicken On A Bun", diet: "nv", price: 250, description: "Signature cafe chicken patty with house sauce.", image: "/images/components/comp_img_1.webp" },
+  { id: "special-chicken-bun", category: "Burgers & Sandwiches", name: "Special Chicken On A Bun", diet: "nv", price: 250, description: "Signature cafe chicken patty with house sauce.", tastingNotes: "Flame-seared smoky chicken, umami relish & aged cheddar", image: "/images/components/comp_img_1.webp" },
   { id: "cheese-blast-sandwich", category: "Burgers & Sandwiches", name: "Cheese Blast Sandwich", diet: "veg", price: 150, description: "Loaded with melted cheese.", image: "/images/components/comp_img_2.webp" },
   { id: "veg-sweet-corn-sandwich", category: "Burgers & Sandwiches", name: "Veg Sweet Corn Sandwich", diet: "veg", price: 180, description: "(Add on- paneer)", image: "/images/components/comp_img_0.webp" },
   { id: "chicken-cheese-toastie", category: "Burgers & Sandwiches", name: "Chicken Cheese Toastie", diet: "nv", price: 220, description: "Toasted chicken and cheese.", image: "/images/components/comp_img_1.webp" },
@@ -33,7 +33,7 @@ const MOCK_MENU = [
 
   // Pizzas & Pasta
   { id: "margherita-pizza", category: "Pizzas & Pasta", name: "Margherita Pizza", diet: "veg", price: 180, description: "Classic cheese and tomato pizza.", image: "/images/components/comp_img_2.webp" },
-  { id: "chicken-cheese-pizza", category: "Pizzas & Pasta", name: "Chicken Cheese Pizza", diet: "nv", price: 250, description: "Hand-tossed crust loaded with roasted chicken.", image: "/images/components/comp_img_2.webp" },
+  { id: "chicken-cheese-pizza", category: "Pizzas & Pasta", name: "Chicken Cheese Pizza", diet: "nv", price: 250, description: "Hand-tossed crust loaded with roasted chicken.", tastingNotes: "San Marzano acidity, blistered wood-smoke crust & sweet basil", image: "/images/components/comp_img_2.webp" },
   { id: "white-sauce-pasta-veg", category: "Pizzas & Pasta", name: "White Sauce Pasta (Veg)", diet: "veg", price: 180, description: "Creamy white sauce pasta.", image: "/images/components/comp_img_2.webp" },
   { id: "white-sauce-pasta-chicken", category: "Pizzas & Pasta", name: "White Sauce Pasta (Chicken)", diet: "nv", price: 200, description: "Creamy white sauce pasta with chicken.", image: "/images/components/comp_img_2.webp" },
   { id: "red-sauce-pasta-veg", category: "Pizzas & Pasta", name: "Red Sauce Pasta (Veg)", diet: "veg", price: 200, description: "Tangy red tomato sauce pasta.", image: "/images/components/comp_img_2.webp" },
@@ -42,7 +42,7 @@ const MOCK_MENU = [
   // Momos
   { id: "veg-steam-momo", category: "Momos", name: "Veg Steam Momo", diet: "veg", price: 150, description: "Steamed vegetable dumplings.", image: "/images/components/comp_img_1.webp" },
   { id: "chicken-steam-momo", category: "Momos", name: "Chicken Steam Momo", diet: "nv", price: 280, description: "Steamed chicken dumplings.", image: "/images/components/comp_img_1.webp" },
-  { id: "chicken-pahadi-momo-steam", category: "Momos", name: "Chicken Pahadi Momo (Steam)", diet: "nv", price: 200, description: "Pahadi spiced chicken dumplings.", image: "/images/components/comp_img_1.webp" },
+  { id: "chicken-pahadi-momo-steam", category: "Momos", name: "Chicken Pahadi Momo (Steam)", diet: "nv", price: 200, description: "Pahadi spiced chicken dumplings.", tastingNotes: "Himalayan wild herbs, roasted charred chili & crushed coriander", image: "/images/components/comp_img_1.webp" },
   { id: "chicken-pahadi-momo-fried", category: "Momos", name: "Chicken Pahadi Momo (Fried)", diet: "nv", price: 220, description: "Crispy fried pahadi spiced dumplings.", image: "/images/components/comp_img_1.webp" },
   { id: "chicken-pahadi-momo-pan-fried", category: "Momos", name: "Chicken Pahadi Momo (Pan Fried)", diet: "nv", price: 250, description: "Pan fried in spicy sauce.", image: "/images/components/comp_img_1.webp" },
 
@@ -64,13 +64,13 @@ const MOCK_MENU = [
 
   // Beverages
   { id: "masala-cold-drinks", category: "Beverages", name: "Masala Cold Drinks", diet: "veg", price: 100, description: "Spiced refreshing cold drink.", image: "/images/components/comp_img_3.webp" },
-  { id: "lime-corial", category: "Beverages", name: "Lime Corial", diet: "veg", price: 120, description: "Sweet and tangy lime drink.", image: "/images/components/comp_img_3.webp" },
+  { id: "lime-cordial", category: "Beverages", name: "Lime Cordial", diet: "veg", price: 120, description: "Sweet and tangy lime drink.", image: "/images/components/comp_img_3.webp" },
   { id: "basil-lemon-mojito", category: "Beverages", name: "Basil Lemon Mojito", diet: "veg", price: 150, description: "Fresh basil and lemon.", image: "/images/components/comp_img_3.webp" },
-  { id: "blue-curacoa-lemonade", category: "Beverages", name: "Blue Curacoa Lemonade", diet: "veg", price: 150, description: "Vibrant blue citrus lemonade.", image: "/images/components/comp_img_3.webp" },
+  { id: "blue-curacao-lemonade", category: "Beverages", name: "Blue Curaçao Lemonade", diet: "veg", price: 150, description: "Vibrant blue citrus lemonade.", tastingNotes: "Vibrant candied citrus, crushed garden mint & crisp fizz", image: "/images/components/comp_img_3.webp" },
   { id: "sunset-paradise", category: "Beverages", name: "Sunset Paradise", diet: "veg", price: 200, description: "Tropical sunset drink.", image: "/images/components/comp_img_3.webp" },
   { id: "the-summer-in-the-glass", category: "Beverages", name: "The Summer In The Glass", diet: "veg", price: 200, description: "Refreshing summer cooler.", image: "/images/components/comp_img_3.webp" },
   { id: "masala-tea", category: "Beverages", name: "Masala Tea", diet: "veg", price: 120, description: "Indian spiced tea.", image: "/images/components/comp_img_3.webp" },
-  { id: "cappucino", category: "Beverages", name: "Cappucino", diet: "veg", price: 120, description: "Classic espresso and milk foam.", image: "/images/components/comp_img_3.webp" },
+  { id: "cappuccino", category: "Beverages", name: "Cappuccino", diet: "veg", price: 120, description: "Classic espresso and milk foam.", tastingNotes: "Single-origin Chikmagalur Arabica, dark cacao & velvet crema", image: "/images/components/comp_img_3.webp" },
   { id: "oreo-shake", category: "Beverages", name: "Oreo Shake", diet: "veg", price: 150, description: "Thick shake with crushed Oreos.", image: "/images/components/comp_img_3.webp" },
   { id: "kitkat-shake", category: "Beverages", name: "Kitkat Shake", diet: "veg", price: 150, description: "Thick shake with crushed Kitkat.", image: "/images/components/comp_img_3.webp" },
   { id: "butterscotch-shake", category: "Beverages", name: "Butterscotch Shake", diet: "veg", price: 180, description: "Caramel and butterscotch shake.", image: "/images/components/comp_img_3.webp" },
@@ -213,10 +213,15 @@ export const Menu: React.FC = () => {
                 
                 <p className="font-body-md text-sm text-[#E3DACD]/60 flex-grow leading-relaxed mb-6">
                   {item.description}
+                  {item.tastingNotes && (
+                    <span className="font-mono text-[10px] sm:text-[11px] tracking-wider uppercase text-[#D4AF37]/80 flex items-center gap-1 mt-2 break-words">
+                      ✦ {item.tastingNotes}
+                    </span>
+                  )}
                 </p>
                 
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
-                  <span className="font-sans text-2xl font-semibold tracking-tight text-[#D4AF37]">₹{item.price}</span>
+                  <span className="font-serif text-2xl font-normal text-[#D4AF37]"><span className="text-sm align-top mr-0.5 opacity-70 font-sans">₹</span>{item.price}</span>
                   <button 
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 text-[#E3DACD] hover:bg-[#D4AF37] hover:text-[#231914] transition-colors relative z-10"
                     title="Add to order"

@@ -1,9 +1,22 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
 export const AboutVibe: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio('https://assets.mixkit.co/music/preview/mixkit-chill-bro-494.mp3');
+    audioRef.current.volume = 0.4;
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -25,7 +38,7 @@ export const AboutVibe: React.FC = () => {
         transition={{ duration: 0.7 }}
         className="lg:col-span-6 flex flex-col gap-space-md"
       >
-        <div className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary-container animate-ping" /><span className="font-label-sm text-label-sm text-[#D4AF37] uppercase tracking-widest font-semibold">The
+        <div className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary-container animate-pulse" /><span className="font-label-sm text-label-sm text-[#D4AF37] uppercase tracking-widest font-semibold">The
             Atmosphere &amp; Essence</span></div>
         <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold">Cozy Elegance Meets <span className="text-tertiary">Pop-Art Energy</span></h2>
         <p className="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Step into Barrackpore's
@@ -83,15 +96,40 @@ export const AboutVibe: React.FC = () => {
             <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-[#D4AF37] animate-pulse">
               <span className="material-symbols-outlined text-xl">graphic_eq</span></div>
             <div className="flex flex-col">
-              <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" /><span className="font-label-sm text-label-sm text-tertiary font-semibold uppercase tracking-wider">Lounge
-                  Soundscape</span></div><span className="font-body-sm text-body-sm font-semibold text-on-surface">Lo-Fi Acoustic &amp; Velvet Jazz •
-                Live Audio</span>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-label-sm text-label-sm text-tertiary font-semibold uppercase tracking-wider flex items-center">
+                  Lounge Soundscape
+                  <div className="flex items-end gap-[2px] h-3 ml-3 overflow-hidden">
+                    <div className={`w-0.5 bg-[#D4AF37] rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_1s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '0ms' }} />
+                    <div className={`w-0.5 bg-[#D4AF37] rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_0.8s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '200ms' }} />
+                    <div className={`w-0.5 bg-[#D4AF37] rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_1.2s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '400ms' }} />
+                    <div className={`w-0.5 bg-[#D4AF37] rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_0.9s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '100ms' }} />
+                  </div>
+                </span>
+              </div>
+              <span className="font-body-sm text-body-sm font-semibold text-on-surface mt-1">Lo-Fi Acoustic &amp; Velvet Jazz • Live Audio</span>
             </div>
           </div>
-          <button id="music-toggle-btn" onClick={() => setIsPlaying(!isPlaying)} data-playing={isPlaying} className={`px-space-md py-1.5 rounded-lg bg-surface-container-low hover:bg-primary hover:text-on-primary text-[#D4AF37] transition-all font-label-sm text-label-sm flex items-center gap-1.5 shadow-sm ${isPlaying ? 'animate-pulse ' : ''}`}>
-            <span className="material-symbols-outlined text-base">{isPlaying ? 'pause_circle' : 'play_circle'}</span>
-            <span className="label-text font-semibold">{isPlaying ? 'Pause Vibe' : 'Play Vibe'}</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full bg-[#110C09] border border-white/20 flex items-center justify-center relative shadow-md ${isPlaying ? 'animate-[spin_3s_linear_infinite]' : ''}`}>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></div>
+              <div className="absolute inset-1 rounded-full border border-white/10 border-t-transparent pointer-events-none"></div>
+              <div className="absolute inset-2 rounded-full border border-white/5 border-b-transparent pointer-events-none"></div>
+            </div>
+            <button id="music-toggle-btn" onClick={() => {
+              if (isPlaying) {
+                audioRef.current?.pause();
+                setIsPlaying(false);
+              } else {
+                audioRef.current?.play();
+                setIsPlaying(true);
+              }
+            }} data-playing={isPlaying} className={`px-space-md py-1.5 rounded-lg bg-surface-container-low hover:bg-primary hover:text-on-primary text-[#D4AF37] transition-all font-label-sm text-label-sm flex items-center gap-1.5 shadow-sm ${isPlaying ? 'animate-pulse ' : ''}`}>
+              <span className="material-symbols-outlined text-base">{isPlaying ? 'pause_circle' : 'play_circle'}</span>
+              <span className="label-text font-semibold">{isPlaying ? 'Pause Vibe' : 'Play Vibe'}</span>
+            </button>
+          </div>
         </div>
         
         <div className="flex flex-wrap items-center gap-space-xs pt-1">

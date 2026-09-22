@@ -24,6 +24,7 @@ function App() {
       gestureOrientation: 'vertical',
       smoothWheel: true,
       touchMultiplier: 2,
+      syncTouch: false,
     });
 
     function raf(time: number) {
@@ -42,6 +43,10 @@ function App() {
         <div className="bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen">
           <Header />
           <main className="w-full pt-20">
+            {/* Ambient Golden Mesh Lighting */}
+            <div className="fixed top-1/4 left-[-10%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-[#D4AF37]/5 blur-[80px] sm:blur-[140px] pointer-events-none -z-10" />
+            <div className="fixed top-2/4 right-[-10%] w-64 h-64 sm:w-[400px] sm:h-[400px] rounded-full bg-[#9d4300]/8 blur-[70px] sm:blur-[120px] pointer-events-none -z-10" />
+            <div className="fixed top-3/4 left-[15%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-[#D4AF37]/5 blur-[80px] sm:blur-[140px] pointer-events-none -z-10" />
             <Hero />
             <ScrollSequence />
             <AboutVibe />
