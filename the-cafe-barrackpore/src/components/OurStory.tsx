@@ -41,7 +41,7 @@ export const OurStory: React.FC = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
-            className="relative w-full h-[500px] md:h-[700px] rounded-2xl overflow-hidden group"
+            className="relative w-full h-96 sm:h-[500px] md:h-[700px] rounded-2xl overflow-hidden group"
           >
             <div className="absolute inset-0 bg-white/5" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-80 z-10 pointer-events-none" />
@@ -76,9 +76,12 @@ export const OurStory: React.FC = () => {
             
             <AnimatedText text="This isn't just a cafe; it's a sanctuary designed for those who appreciate the art of slowing down. A place where deep conversations flow as freely as our signature pours." />
             
-            <div className="mt-4">
-              <span className="font-serif text-3xl md:text-4xl italic text-primary/80" style={{ fontFamily: 'var(--font-serif)' }}>
-                The Founders
+            <div className="mt-8 flex flex-col items-start border-t border-primary/20 pt-6">
+              <span className="font-serif text-3xl md:text-4xl italic text-primary font-medium" style={{ fontFamily: 'var(--font-serif)' }}>
+                Arindam & Suman
+              </span>
+              <span className="font-label-sm uppercase tracking-[0.2em] text-[#E3DACD]/60 mt-2 text-[10px] sm:text-xs">
+                Founders, The Cafe Barrackpore
               </span>
             </div>
           </motion.div>

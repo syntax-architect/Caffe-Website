@@ -30,7 +30,7 @@ export const Gallery: React.FC = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6 }}
-            className="col-span-1 md:col-span-1 md:row-span-2 h-[300px] md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
+            className="col-span-1 md:col-span-1 md:row-span-2 w-full h-72 sm:h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
           >
             <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
             <img loading="lazy" 
@@ -46,7 +46,7 @@ export const Gallery: React.FC = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="col-span-1 md:col-span-1 lg:col-span-2 md:row-span-1 h-[300px] md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
+            className="col-span-1 md:col-span-1 lg:col-span-2 md:row-span-1 w-full h-72 sm:h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
           >
              <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
              <img loading="lazy" 
@@ -62,7 +62,7 @@ export const Gallery: React.FC = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="col-span-1 md:col-span-1 md:row-span-1 h-[300px] md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
+            className="col-span-1 md:col-span-1 md:row-span-1 w-full h-72 sm:h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
           >
              <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
              <img loading="lazy"
@@ -78,7 +78,7 @@ export const Gallery: React.FC = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="col-span-1 md:col-span-1 lg:col-span-1 md:row-span-1 h-[300px] md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
+            className="col-span-1 md:col-span-1 lg:col-span-1 md:row-span-1 w-full h-72 sm:h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
           >
              <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
              <img loading="lazy"

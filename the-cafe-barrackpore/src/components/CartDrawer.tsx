@@ -27,6 +27,7 @@ export const CartDrawer: React.FC = () => {
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed top-0 right-0 h-full w-full max-w-md bg-surface border-l border-outline-variant/30 shadow-2xl z-[101] flex flex-col"
+            data-lenis-prevent
           >
             {/* Header */}
             <div className="flex items-center justify-between p-space-md border-b border-outline-variant/30 bg-surface-container-low">
@@ -43,7 +44,7 @@ export const CartDrawer: React.FC = () => {
             </div>
 
             {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto p-space-md flex flex-col gap-space-sm">
+            <div className="flex-1 overflow-y-auto min-h-0 p-space-md flex flex-col gap-space-sm">
               {items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-on-surface-variant gap-4">
                   <span className="material-symbols-outlined text-6xl opacity-50">remove_shopping_cart</span>

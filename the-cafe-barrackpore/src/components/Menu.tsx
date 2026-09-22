@@ -207,14 +207,14 @@ export const Menu: React.FC = () => {
                       className={`w-1.5 h-1.5 rounded-full opacity-70 ${item.diet === 'veg' ? 'bg-green-400' : 'bg-red-400'}`} 
                       title={item.diet === 'veg' ? 'Vegetarian' : 'Non-Vegetarian'}
                     />
-                    <h3 className="font-headline-sm text-xl text-[#E3DACD] font-medium group-hover:text-[#D4AF37] transition-colors">{item.name}</h3>
+                    <h3 className="font-headline-sm text-xl text-[#E3DACD] font-medium group-hover:text-[#D4AF37] transition-colors pr-2">{item.name}</h3>
                   </div>
                 </div>
                 
                 <p className="font-body-md text-sm text-[#E3DACD]/60 flex-grow leading-relaxed mb-6">
                   {item.description}
                   {item.tastingNotes && (
-                    <span className="font-mono text-[10px] sm:text-[11px] tracking-wider uppercase text-[#D4AF37]/80 flex items-center gap-1 mt-2 break-words">
+                    <span className="font-mono text-[10px] sm:text-[11px] tracking-wider uppercase text-[#D4AF37]/80 flex items-center gap-1 mt-2 break-words leading-snug">
                       ✦ {item.tastingNotes}
                     </span>
                   )}

@@ -74,8 +74,19 @@ export const Footer: React.FC = () => {
         <h4 className="font-label-lg text-label-lg text-on-surface font-semibold uppercase tracking-wider">Visit &amp;
           Contact</h4>
         <div className="flex flex-col gap-space-xs font-body-sm text-body-sm">
-          <div className="flex items-start gap-space-xs"><span className="material-symbols-outlined text-[#D4AF37] text-sm mt-1">location_on</span>
-            <p className="text-on-surface-variant">1st floor 2, Jayanti Cinema Multiplex, 2, Barrackpore Trunk Rd, Barrackpore, West Bengal 700120</p>
+          <div className="flex items-start gap-space-xs">
+            <span className="material-symbols-outlined text-[#D4AF37] text-sm mt-1 shrink-0">location_on</span>
+            <a 
+              href="https://www.google.com/maps/search/?api=1&query=The+Cafe,+Jayanti+Cinema+Multiplex,+Barrackpore" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-on-surface-variant hover:text-[#D4AF37] transition-colors group flex flex-col items-start"
+            >
+              <span>1st floor 2, Jayanti Cinema Multiplex, 2, Barrackpore Trunk Rd, Barrackpore, West Bengal 700120</span>
+              <span className="inline-flex items-center gap-1 font-label-md text-[10px] uppercase tracking-wider text-[#D4AF37] mt-2 opacity-80 group-hover:opacity-100 border border-[#D4AF37]/30 px-3 py-1.5 rounded-full">
+                Get Directions <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+              </span>
+            </a>
           </div>
           <div className="flex items-center gap-space-xs pt-space-xs"><span className="material-symbols-outlined text-[#D4AF37] text-sm">phone_in_talk</span><a className="hover:text-[#D4AF37] transition-colors" href="tel:+9198300XXXXX">+91 98300 XXXXX</a></div>
           <div className="flex items-center gap-space-xs"><span className="material-symbols-outlined text-[#D4AF37] text-sm">mail</span><span className="text-on-surface-variant">concierge@thecafebkp.com</span></div>
