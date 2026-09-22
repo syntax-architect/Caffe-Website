@@ -227,12 +227,7 @@ export const Menu: React.FC = () => {
                     title="Add to order"
                     onClick={(e) => {
                       e.stopPropagation();
-                      addToCart({
-                        id: item.id,
-                        name: item.name,
-                        price: item.price,
-                        image: item.image
-                      });
+                      addToCart(item);
                       showToast(`Added ${item.name} to order`);
                     }}
                   >
