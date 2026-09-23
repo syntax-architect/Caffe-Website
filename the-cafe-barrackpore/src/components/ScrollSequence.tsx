@@ -5,16 +5,24 @@ export const ScrollSequence: React.FC = () => {
   const text1Ref = useRef<HTMLHeadingElement>(null);
   const text2Ref = useRef<HTMLHeadingElement>(null);
   const text3Ref = useRef<HTMLHeadingElement>(null);
-  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+  const checkIsMobile = () => {
+    if (typeof window === 'undefined') return false;
+    const hasTouch = window.matchMedia('(pointer: coarse)').matches;
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isNarrow = window.innerWidth < 768;
+    return hasTouch || isMobileUA || isNarrow;
+  };
+
+  const [isMobile, setIsMobile] = React.useState(checkIsMobile());
   
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(checkIsMobile());
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
   useEffect(() => {
-    const isMobileRef = window.innerWidth < 768;
+    const isMobileRef = checkIsMobile();
     const frameCount = isMobileRef ? 60 : 120;
     let lastFrameIndex = -1;
     let images: HTMLImageElement[] = [];
@@ -47,8 +55,8 @@ export const ScrollSequence: React.FC = () => {
         ? `/frames-mobile/ezgif-frame-${index.toString().padStart(3, '0')}.jpg` 
         : `/frames/ezgif-frame-${index.toString().padStart(3, '0')}.jpg`;
 
-    let cachedWinWidth = window.innerWidth;
-    let cachedWinHeight = window.innerHeight;
+    let cachedWinWidth = -1;
+    let cachedWinHeight = -1;
 
     const handleResize = () => {
       const newWidth = window.innerWidth;
