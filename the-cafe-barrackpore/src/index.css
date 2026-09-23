@@ -22,3 +22,21 @@
 @keyframes eq { 0% { height: 2px; } 50% { height: 12px; } 100% { height: 6px; } }
 
 html, body { overflow-x: clip; width: 100%; position: relative; }
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-background/60 backdrop-blur-md sm:backdrop-blur-xl border border-white/10 shadow-xl sm:shadow-2xl shadow-black/80;
+  }
+  
+  .glass-nav {
+    @apply bg-background/70 backdrop-blur-md sm:backdrop-blur-xl border-b border-white/10;
+  }
+
+  .btn-premium {
+    @apply bg-gradient-to-r from-[#D4AF37] to-[#F5D058] text-black shadow-[0_0_15px_rgba(212,175,55,0.2)] hover:shadow-[0_0_25px_rgba(245,208,88,0.4)] hover:brightness-110 transition-all duration-300;
+  }
+
+  .btn-outline-premium {
+    @apply bg-transparent border border-[#D4AF37]/40 text-on-surface hover:border-[#F5D058] hover:bg-[#D4AF37]/10 hover:shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300;
+  }
+}

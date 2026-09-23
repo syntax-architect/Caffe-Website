@@ -111,7 +111,7 @@ export const OurStory: React.FC = () => {
               <span className="font-serif text-3xl md:text-4xl italic text-primary font-medium" style={{ fontFamily: 'var(--font-serif)' }}>
                 Arindam & Suman
               </span>
-              <span className="font-label-sm uppercase tracking-[0.2em] text-[#E3DACD]/60 mt-2 text-[10px] sm:text-xs">
+              <span className="font-label-sm uppercase tracking-[0.2em] text-on-surface/60 mt-2 text-[10px] sm:text-xs">
                 Founders, The Cafe Barrackpore
               </span>
             </div>

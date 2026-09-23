@@ -7,7 +7,9 @@ import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { ScrollSequence } from './components/ScrollSequence';
 import { CartDrawer } from './components/CartDrawer';
+import { ReservationDrawer } from './components/ReservationDrawer';
 import { Preloader } from './components/Preloader';
+import { MetaTags } from './components/MetaTags';
 
 // Lazy load below-the-fold components
 const AboutVibe = lazy(() => import('./components/AboutVibe').then(module => ({ default: module.AboutVibe })));
@@ -58,15 +60,16 @@ function App() {
 
   return (
     <UIProvider>
+      <MetaTags />
       <CartProvider>
         <Preloader />
         <div className="bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen">
           <Header />
           <main className="w-full pt-20">
-            {/* Ambient Golden Mesh Lighting */}
-            <div className="fixed top-1/4 left-[-10%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-[#D4AF37]/5 blur-[80px] sm:blur-[140px] pointer-events-none -z-10" />
-            <div className="fixed top-2/4 right-[-10%] w-64 h-64 sm:w-[400px] sm:h-[400px] rounded-full bg-[#9d4300]/8 blur-[70px] sm:blur-[120px] pointer-events-none -z-10" />
-            <div className="fixed top-3/4 left-[15%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-[#D4AF37]/5 blur-[80px] sm:blur-[140px] pointer-events-none -z-10" />
+            {/* Ambient Golden Mesh Lighting - Hidden on mobile to save GPU */}
+            <div className="fixed top-1/4 left-[-10%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-[#D4AF37]/5 blur-[80px] sm:blur-[140px] pointer-events-none -z-10 hidden sm:block" />
+            <div className="fixed top-2/4 right-[-10%] w-64 h-64 sm:w-[400px] sm:h-[400px] rounded-full bg-[#9d4300]/8 blur-[70px] sm:blur-[120px] pointer-events-none -z-10 hidden sm:block" />
+            <div className="fixed top-3/4 left-[15%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-[#D4AF37]/5 blur-[80px] sm:blur-[140px] pointer-events-none -z-10 hidden sm:block" />
             <Hero />
             <ScrollSequence />
             <ErrorBoundary>
@@ -86,8 +89,9 @@ function App() {
             </Suspense>
           </ErrorBoundary>
           <CartDrawer />
+          <ReservationDrawer />
           <div 
-            className="pointer-events-none fixed inset-0 z-[100] opacity-[0.03]"
+            className="pointer-events-none fixed inset-0 z-[100] opacity-[0.03] hidden sm:block"
             style={{ 
               backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
               transform: 'translateZ(0)',

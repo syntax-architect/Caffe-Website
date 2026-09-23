@@ -141,23 +141,6 @@ export const ScrollSequence: React.FC = () => {
     let animationFrameId: number;
     let isVisible = true;
 
-    // Cache static dimensions to avoid layout thrashing on scroll
-    let sectionTop = 0;
-    let sectionHeight = 0;
-
-    const updateDimensions = () => {
-      if (!section) return;
-      
-      // On mobile, ignore height-only resize events to prevent layout thrashing
-      if (isMobileRef && window.innerWidth === cachedWinWidth && sectionHeight > 0) {
-        return;
-      }
-      
-      const rect = section.getBoundingClientRect();
-      sectionTop = rect.top + window.scrollY; // Absolute document position
-      sectionHeight = rect.height;
-    };
-
     // Use IntersectionObserver to pause rendering when the section is not in view
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -168,20 +151,21 @@ export const ScrollSequence: React.FC = () => {
     const section = document.getElementById('scroll-sequence-section');
     if (section) {
       observer.observe(section);
-      updateDimensions();
     }
 
     const handleScroll = () => {
-      if (!isVisible) return;
-      const scrollableDistance = sectionHeight - cachedWinHeight;
+      if (!isVisible || !section) return;
+      // Dynamically calculate bounding rect to avoid stale position bugs from lazy-loaded elements
+      const rect = section.getBoundingClientRect();
+      const scrollableDistance = rect.height - window.innerHeight;
+      
       if (scrollableDistance > 0) {
-        const currentTop = sectionTop - window.scrollY;
-        targetProgress = Math.max(0, Math.min(1, -currentTop / scrollableDistance));
+        // rect.top is the distance from viewport top to section top.
+        // It becomes negative as we scroll down into the section.
+        targetProgress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
       }
     };
 
-    // Listen to resize to update dimensions
-    window.addEventListener('resize', updateDimensions);
     window.addEventListener('scroll', handleScroll, { passive: true });
     
     // Initial setup
@@ -237,7 +221,6 @@ export const ScrollSequence: React.FC = () => {
     return () => {
       if (section) observer.unobserve(section);
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('resize', updateDimensions);
       window.removeEventListener('scroll', handleScroll);
       window.cancelAnimationFrame(animationFrameId);
     };
@@ -270,13 +253,13 @@ export const ScrollSequence: React.FC = () => {
         
         {/* Floating text that appears during scroll */}
         <div className="relative z-10 max-w-[1320px] mx-auto px-4 sm:px-6 w-full flex flex-col items-center justify-center text-center h-full">
-          <h2 ref={text1Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
+          <h2 ref={text1Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-on-surface font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
             Crafted to <span className="text-primary italic font-serif">Perfection</span>
           </h2>
-          <h2 ref={text2Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
+          <h2 ref={text2Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-on-surface font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
             Every Drop <span className="text-primary italic font-serif">Matters</span>
           </h2>
-          <h2 ref={text3Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
+          <h2 ref={text3Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-on-surface font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
             The True <span className="text-primary italic font-serif">Lounge</span> Experience
           </h2>
         </div>

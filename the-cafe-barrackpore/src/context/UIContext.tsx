@@ -5,11 +5,14 @@ interface UIContextType {
   showModal: (title: string, content: string | ReactNode) => void;
   closeModal: () => void;
   showToast: (message: string) => void;
+  isReservationOpen: boolean;
+  setIsReservationOpen: (value: boolean) => void;
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
 
 export const UIProvider = ({ children }: { children: ReactNode }) => {
+  const [isReservationOpen, setIsReservationOpen] = useState(false);
   const [modalState, setModalState] = useState<{ isOpen: boolean; title: string; content: ReactNode | string }>({
     isOpen: false,
     title: '',
@@ -32,7 +35,7 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <UIContext.Provider value={{ showModal, closeModal, showToast }}>
+    <UIContext.Provider value={{ showModal, closeModal, showToast, isReservationOpen, setIsReservationOpen }}>
       {children}
       
       {/* Toast */}

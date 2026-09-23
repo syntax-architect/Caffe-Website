@@ -56,7 +56,7 @@ export const AboutVibe: React.FC = () => {
         transition={{ duration: 0.7 }}
         className="lg:col-span-6 flex flex-col gap-space-md"
       >
-        <div className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary-container animate-pulse" /><span className="font-label-sm text-label-sm text-[#D4AF37] uppercase tracking-widest font-semibold">The
+        <div className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary-container animate-pulse" /><span className="font-label-sm text-label-sm text-primary uppercase tracking-widest font-semibold">The
             Atmosphere &amp; Essence</span></div>
         <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold">Cozy Elegance Meets <span className="text-tertiary">Pop-Art Energy</span></h2>
         <p className="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Step into Barrackpore's
@@ -70,7 +70,7 @@ export const AboutVibe: React.FC = () => {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mt-6">
           <div className="py-6 px-2 bg-transparent flex flex-col gap-3 border-b border-white/10">
-            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-[#D4AF37] text-xl">weekend</span><span className="font-label-md text-label-md text-on-surface font-semibold">Private Dining Booths</span>
+            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-primary text-xl">weekend</span><span className="font-label-md text-label-md text-on-surface font-semibold">Private Dining Booths</span>
             </div><span className="font-body-sm text-body-sm text-on-surface-variant">Deep blue velvet luxury with
               bespoke low lighting.</span>
           </div>
@@ -85,14 +85,14 @@ export const AboutVibe: React.FC = () => {
               momos &amp; mocktails.</span>
           </div>
           <div className="py-6 px-2 bg-transparent flex flex-col gap-3 border-b border-white/10">
-            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-[#D4AF37] text-xl">local_cafe</span><span className="font-label-md text-label-md text-on-surface font-semibold">Late Night Brews</span></div>
+            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-primary text-xl">local_cafe</span><span className="font-label-md text-label-md text-on-surface font-semibold">Late Night Brews</span></div>
             <span className="font-body-sm text-body-sm text-on-surface-variant">Brewed fresh till 11:30 PM with
               artisanal roasts.</span>
           </div>
         </div>
         
         <div className="py-8 px-2 bg-transparent border-b border-white/10 flex flex-col gap-8">
-          <div className="flex items-center justify-between"><span className="font-label-sm text-label-sm uppercase tracking-wider text-[#D4AF37] font-bold flex items-center gap-1.5"><span className="material-symbols-outlined text-base">tune</span> Live Atmosphere Vibe Metrics</span><span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">Optimal
+          <div className="flex items-center justify-between"><span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold flex items-center gap-1.5"><span className="material-symbols-outlined text-base">tune</span> Live Atmosphere Vibe Metrics</span><span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">Optimal
               Ambience</span></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-space-sm">
             <div className="flex flex-col gap-0.5"><span className="font-label-sm text-[11px] text-on-surface-variant/80 uppercase">Decibel Vibe</span><span className="font-body-sm text-body-sm font-semibold text-on-surface">Chill Lo-Fi &amp; Soul (~62
@@ -111,7 +111,7 @@ export const AboutVibe: React.FC = () => {
         
         <div className="py-8 px-2 bg-transparent border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8">
           <div className="flex items-center gap-6">
-            <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-[#D4AF37] animate-pulse">
+            <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary animate-pulse">
               <span className="material-symbols-outlined text-xl">graphic_eq</span></div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
@@ -119,10 +119,10 @@ export const AboutVibe: React.FC = () => {
                 <span className="font-label-sm text-label-sm text-tertiary font-semibold uppercase tracking-wider flex items-center">
                   Lounge Soundscape
                   <div className="flex items-end gap-[2px] h-3 ml-3 overflow-hidden">
-                    <div className={`w-0.5 bg-[#D4AF37] rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_1s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '0ms' }} />
-                    <div className={`w-0.5 bg-[#D4AF37] rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_0.8s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '200ms' }} />
-                    <div className={`w-0.5 bg-[#D4AF37] rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_1.2s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '400ms' }} />
-                    <div className={`w-0.5 bg-[#D4AF37] rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_0.9s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '100ms' }} />
+                    <div className={`w-0.5 bg-primary rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_1s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '0ms' }} />
+                    <div className={`w-0.5 bg-primary rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_0.8s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '200ms' }} />
+                    <div className={`w-0.5 bg-primary rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_1.2s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '400ms' }} />
+                    <div className={`w-0.5 bg-primary rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_0.9s_ease-in-out_infinite_alternate]' : 'h-0.5'}`} style={{ animationDelay: '100ms' }} />
                   </div>
                 </span>
               </div>
@@ -130,8 +130,8 @@ export const AboutVibe: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-full bg-[#110C09] border border-white/20 flex items-center justify-center relative shadow-md ${isPlaying ? 'animate-[spin_3s_linear_infinite]' : ''}`}>
-              <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></div>
+            <div className={`w-8 h-8 rounded-full bg-surface-container-lowest border border-white/20 flex items-center justify-center relative shadow-md ${isPlaying ? 'animate-[spin_3s_linear_infinite]' : ''}`}>
+              <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
               <div className="absolute inset-1 rounded-full border border-white/10 border-t-transparent pointer-events-none"></div>
               <div className="absolute inset-2 rounded-full border border-white/5 border-b-transparent pointer-events-none"></div>
             </div>
@@ -143,7 +143,7 @@ export const AboutVibe: React.FC = () => {
                 audioRef.current?.play();
                 setIsPlaying(true);
               }
-            }} data-playing={isPlaying} className={`px-space-md py-1.5 rounded-lg bg-surface-container-low hover:bg-primary hover:text-on-primary text-[#D4AF37] transition-all font-label-sm text-label-sm flex items-center gap-1.5 shadow-sm ${isPlaying ? 'animate-pulse ' : ''}`}>
+            }} data-playing={isPlaying} className={`px-space-md py-1.5 rounded-lg bg-surface-container-low hover:bg-primary hover:text-on-primary text-primary transition-all font-label-sm text-label-sm flex items-center gap-1.5 shadow-sm ${isPlaying ? 'animate-pulse ' : ''}`}>
               <span className="material-symbols-outlined text-base">{isPlaying ? 'pause_circle' : 'play_circle'}</span>
               <span className="label-text font-semibold">{isPlaying ? 'Pause Vibe' : 'Play Vibe'}</span>
             </button>
@@ -152,7 +152,7 @@ export const AboutVibe: React.FC = () => {
         
         <div className="flex flex-wrap items-center gap-space-xs pt-1">
           <div className="inline-flex items-center gap-1.5 px-space-sm py-1 px-2.5 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-medium border border-outline-variant/30">
-            <span className="material-symbols-outlined text-[#D4AF37] text-sm">bolt</span><span className="">High-Speed
+            <span className="material-symbols-outlined text-primary text-sm">bolt</span><span className="">High-Speed
               Fibre Wi-Fi</span></div>
           <div className="inline-flex items-center gap-1.5 px-space-sm py-1 px-2.5 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-medium border border-outline-variant/30">
             <span className="material-symbols-outlined text-tertiary text-sm">power</span><span className="">Power Outlets
@@ -173,7 +173,7 @@ export const AboutVibe: React.FC = () => {
           <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-48 sm:h-64 lg:h-72 border border-outline-variant/30">
             <motion.img loading="lazy" alt={images[0].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[0].src} style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
-              <span className="font-label-sm text-[11px] text-[#D4AF37] uppercase font-bold tracking-wider">Midnight
+              <span className="font-label-sm text-[11px] text-primary uppercase font-bold tracking-wider">Midnight
                 Velvet Booths</span>
               <p className="font-body-sm text-[12px] text-on-surface leading-tight mt-0.5">Intimate booth dining
                 crafted for unforgettable evenings.</p>
@@ -200,7 +200,7 @@ export const AboutVibe: React.FC = () => {
           <div className="group relative rounded-xl overflow-hidden shadow-2xl bg-surface-container h-48 sm:h-64 lg:h-72 border border-outline-variant/30">
             <motion.img loading="lazy" alt={images[3].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[3].src} style={{ y: yPos, scale: 1.15 }} />
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-space-md">
-              <span className="font-label-sm text-[11px] text-[#D4AF37]-container uppercase font-bold tracking-wider">Gourmet
+              <span className="font-label-sm text-[11px] text-primary-container uppercase font-bold tracking-wider">Gourmet
                 Kitchen</span>
               <p className="font-body-sm text-[12px] text-on-surface leading-tight mt-0.5">Fresh wood-fired crusts
                 &amp; steamed delicacies.</p>

@@ -1,11 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
-import { useUI } from '../context/UIContext';
+import { clientDetails } from '../config/client';
 
 export const CartDrawer: React.FC = () => {
   const { items, isDrawerOpen, setIsDrawerOpen, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart();
-  const { showModal } = useUI();
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
 
   React.useEffect(() => {
@@ -41,7 +40,7 @@ export const CartDrawer: React.FC = () => {
                 setIsDrawerOpen(false);
               }
             }}
-            className={`fixed bg-surface shadow-2xl z-[101] flex flex-col ${
+            className={`fixed glass-panel z-[101] flex flex-col ${
               isMobile 
                 ? 'bottom-0 left-0 w-full h-[85vh] rounded-t-3xl border-t border-outline-variant/30' 
                 : 'top-0 right-0 h-full w-full max-w-md border-l border-outline-variant/30'
@@ -58,7 +57,7 @@ export const CartDrawer: React.FC = () => {
             {/* Header */}
             <div className={`flex items-center justify-between p-space-md border-b border-outline-variant/30 bg-surface-container-low ${isMobile ? 'pt-2' : ''}`}>
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#D4AF37]">shopping_bag</span>
+                <span className="material-symbols-outlined text-primary">shopping_bag</span>
                 <h2 className="font-headline-sm text-on-surface font-bold">Your Order</h2>
               </div>
               <button 
@@ -77,7 +76,7 @@ export const CartDrawer: React.FC = () => {
                   <p className="font-body-md">Your cart is empty.</p>
                   <button 
                     onClick={() => setIsDrawerOpen(false)}
-                    className="mt-4 px-6 py-2 rounded-xl bg-primary-container text-[#231914] font-label-md font-bold"
+                    className="mt-4 px-6 py-2 rounded-xl bg-primary-container text-background font-label-md font-bold"
                   >
                     Explore Menu
                   </button>
@@ -87,7 +86,6 @@ export const CartDrawer: React.FC = () => {
                   {items.map((item) => (
                     <motion.div 
                       key={item.id}
-                      layout
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.9 }}
@@ -97,7 +95,7 @@ export const CartDrawer: React.FC = () => {
                         <img loading="lazy" src={item.image} alt={item.name} className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover shrink-0" />
                       ) : (
                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-surface-container flex items-center justify-center shrink-0 border border-outline-variant/30">
-                          <span className="material-symbols-outlined text-[#D4AF37]/50 text-2xl">restaurant</span>
+                          <span className="material-symbols-outlined text-primary/50 text-2xl">restaurant</span>
                         </div>
                       )}
                       <div className="flex-1 flex flex-col justify-between min-w-0">
@@ -112,11 +110,11 @@ export const CartDrawer: React.FC = () => {
                         </div>
                         <div className="flex items-center justify-between mt-2 gap-2">
                           <div className="flex items-center gap-1 sm:gap-3 bg-surface-container px-1 sm:px-2 py-1 rounded-lg shrink-0">
-                            <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="text-on-surface hover:text-[#D4AF37]">
+                            <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="text-on-surface hover:text-primary">
                               <span className="material-symbols-outlined text-sm">remove</span>
                             </button>
                             <span className="font-label-md text-on-surface w-4 text-center">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="text-on-surface hover:text-[#D4AF37]">
+                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="text-on-surface hover:text-primary">
                               <span className="material-symbols-outlined text-sm">add</span>
                             </button>
                           </div>
@@ -142,7 +140,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
                 <div className="flex justify-between items-center text-on-surface pb-2">
                   <span className="font-headline-md font-bold">Total</span>
-                  <span className="font-headline-md font-bold text-[#D4AF37] tabular-nums">₹{cartTotal}</span>
+                  <span className="font-headline-md font-bold text-primary tabular-nums">₹{cartTotal}</span>
                 </div>
                 <div className="flex gap-2">
                   <button 
@@ -152,16 +150,18 @@ export const CartDrawer: React.FC = () => {
                     Clear
                   </button>
                   <button 
-                    className="flex-1 py-3 rounded-xl bg-[#D4AF37] text-[#231914] font-label-md font-bold  hover: transition-all"
+                    className="flex-1 py-3 rounded-xl btn-premium font-label-md font-bold flex items-center justify-center gap-2"
                     onClick={() => {
+                      const orderList = items.map(item => `- ${item.quantity}x ${item.name}`).join('%0A');
+                      const text = `🌟 New Order Request 🌟%0A%0AItems:%0A${orderList}%0A%0ATotal: ₹${cartTotal}%0A%0APlease let me know how long it will take for pickup/delivery!`;
+                      const cleanPhone = clientDetails.whatsapp.replace(/\D/g, '');
+                      window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
                       setIsDrawerOpen(false);
-                      showModal(
-                        'Checkout Unavailable',
-                        'Online checkout is currently disabled while we integrate our delivery partners. Please visit the cafe or call us to place your order!'
-                      );
+                      clearCart();
                     }}
                   >
-                    Checkout (<span className="tabular-nums">₹{cartTotal}</span>)
+                    <span>Checkout on WhatsApp</span>
+                    <span className="material-symbols-outlined text-[18px]">send</span>
                   </button>
                 </div>
               </div>

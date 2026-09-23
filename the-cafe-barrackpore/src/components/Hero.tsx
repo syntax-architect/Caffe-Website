@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { smoothScrollTo } from '../utils/scroll';
+import { useUI } from '../context/UIContext';
 import { siteConfig as fallbackConfig } from '../data/siteConfig';
 import { client } from '../lib/sanityClient';
 import imageUrlBuilder from '@sanity/image-url';
+import { clientDetails } from '../config/client';
 
 const builder = imageUrlBuilder(client);
 function urlFor(source: any) {
@@ -11,6 +13,7 @@ function urlFor(source: any) {
 }
 
 export const Hero: React.FC = () => {
+  const { setIsReservationOpen } = useUI();
   const [image, setImage] = useState({ src: fallbackConfig.hero.image, alt: fallbackConfig.hero.alt });
 
   useEffect(() => {
@@ -47,31 +50,31 @@ export const Hero: React.FC = () => {
             transition={{ delay: 0.1, duration: 0.8 }}
             className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-8"
           >
-            <div className="flex text-[#D4AF37]">
+            <div className="flex text-primary">
               <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
               <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
               <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
               <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
               <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star_half</span>
             </div>
-            <span className="font-label-md text-sm text-[#E3DACD] tracking-wide">4.6 (192 Google Reviews)</span>
+            <span className="font-label-md text-sm text-on-surface tracking-wide">4.6 (192 Google Reviews)</span>
           </motion.div>
 
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="font-headline-lg text-4xl sm:text-5xl md:text-6xl lg:text-[72px] leading-[0.95] text-[#E3DACD] font-medium tracking-tight mb-4 sm:mb-6"
+            className="font-headline-lg text-4xl sm:text-5xl md:text-6xl lg:text-[72px] leading-[0.95] text-on-surface font-medium tracking-tight mb-4 sm:mb-6"
           >
-            The Cafe <br className="hidden md:block"/>
-            <span className="text-[#D4AF37] italic font-serif font-semibold">Barrackpore</span>
+            {clientDetails.businessName} <br className="hidden md:block"/>
+            <span className="text-primary italic font-serif font-semibold">{clientDetails.shortName}</span>
           </motion.h1>
 
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="font-body-lg text-base sm:text-lg md:text-xl text-[#E3DACD]/70 max-w-xl leading-relaxed mb-8 sm:mb-10 font-light"
+            className="font-body-lg text-base sm:text-lg md:text-xl text-on-surface/70 max-w-xl leading-relaxed mb-8 sm:mb-10 font-light"
           >
             Where artisan coffee meets handcrafted cocktails & gourmet comfort food in a strictly premium, nocturnal setting.
           </motion.p>
@@ -85,7 +88,7 @@ export const Hero: React.FC = () => {
             <motion.a 
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              className="w-full sm:w-auto px-8 py-4 rounded-full uppercase tracking-wider text-xs sm:text-sm font-semibold text-[#231914] bg-[#D4AF37] hover:bg-[#ebd074] transition-colors flex items-center justify-center gap-2 cursor-pointer" 
+              className="w-full sm:w-auto px-8 py-4 rounded-full uppercase tracking-wider text-xs sm:text-sm font-semibold btn-premium flex items-center justify-center gap-2 cursor-pointer" 
               href="#menu-section" 
               onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleNav(e, 'menu-section')}
             >
@@ -94,9 +97,9 @@ export const Hero: React.FC = () => {
             <motion.a 
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              className="w-full sm:w-auto px-8 py-4 rounded-full uppercase tracking-wider text-xs sm:text-sm font-semibold text-[#E3DACD] bg-transparent border border-[#D4AF37]/30 hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center gap-2 cursor-pointer" 
-              href="#reserve-section" 
-              onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleNav(e, 'reserve-section')}
+              className="w-full sm:w-auto px-8 py-4 rounded-full uppercase tracking-wider text-xs sm:text-sm font-semibold btn-outline-premium flex items-center justify-center gap-2 cursor-pointer" 
+              href="#" 
+              onClick={(e: React.MouseEvent<HTMLAnchorElement>) => { e.preventDefault(); setIsReservationOpen(true); }}
             >
               <span>Book a Table</span>
             </motion.a>
@@ -108,16 +111,16 @@ export const Hero: React.FC = () => {
             transition={{ delay: 0.9, duration: 1 }}
             className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-8"
           >
-            <div className="flex items-center gap-2 text-[#E3DACD]/60">
-              <span className="material-symbols-outlined text-[#D4AF37] text-xl font-light">local_bar</span>
+            <div className="flex items-center gap-2 text-on-surface/60">
+              <span className="material-symbols-outlined text-primary text-xl font-light">local_bar</span>
               <span className="font-label-sm text-[13px] tracking-widest uppercase">Mocktails</span>
             </div>
-            <div className="flex items-center gap-2 text-[#E3DACD]/60">
-              <span className="material-symbols-outlined text-[#D4AF37] text-xl font-light">local_pizza</span>
+            <div className="flex items-center gap-2 text-on-surface/60">
+              <span className="material-symbols-outlined text-primary text-xl font-light">local_pizza</span>
               <span className="font-label-sm text-[13px] tracking-widest uppercase">Wood-Fired Pizza</span>
             </div>
-            <div className="flex items-center gap-2 text-[#E3DACD]/60">
-              <span className="material-symbols-outlined text-[#D4AF37] text-xl font-light">music_note</span>
+            <div className="flex items-center gap-2 text-on-surface/60">
+              <span className="material-symbols-outlined text-primary text-xl font-light">music_note</span>
               <span className="font-label-sm text-[13px] tracking-widest uppercase">Acoustic Weekends</span>
             </div>
           </motion.div>
@@ -138,7 +141,7 @@ export const Hero: React.FC = () => {
               WebkitMaskImage: 'radial-gradient(circle, black 60%, transparent 100%)'
             }}
           >
-            <div className="absolute inset-0 bg-[#231914]/20 z-10 mix-blend-overlay pointer-events-none"></div>
+            <div className="absolute inset-0 bg-background/20 z-10 mix-blend-overlay pointer-events-none"></div>
             <img 
               src={image.src} 
               alt={image.alt} 
