@@ -36,7 +36,7 @@ export const CartDrawer: React.FC = () => {
             drag={isMobile ? "y" : false}
             dragConstraints={isMobile ? { top: 0 } : undefined}
             dragElastic={isMobile ? 0.2 : undefined}
-            onDragEnd={(e, info) => {
+            onDragEnd={(_e, info) => {
               if (isMobile && info.offset.y > 100) {
                 setIsDrawerOpen(false);
               }

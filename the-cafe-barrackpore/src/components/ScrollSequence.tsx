@@ -174,7 +174,7 @@ export const ScrollSequence: React.FC = () => {
           
           // Only update text opacity when the visual frame actually changes
           // to prevent unnecessary layout/style calculations 60 times a second
-          const updateText = (ref: React.RefObject<HTMLHeadingElement>, show: boolean) => {
+          const updateText = (ref: React.RefObject<HTMLHeadingElement | null>, show: boolean) => {
             if (ref.current) {
               const isShowing = ref.current.style.opacity === '1';
               if (show && !isShowing) {
