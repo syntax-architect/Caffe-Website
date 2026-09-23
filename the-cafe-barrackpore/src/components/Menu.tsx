@@ -146,16 +146,17 @@ export const Menu: React.FC = () => {
           </div>
         ) : (
           <motion.div 
+            layout
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10"
           >
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {displayedMenu.map((item) => (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.5 }}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.4, type: "spring", bounce: 0.2 }}
                   key={item._id}
                   onMouseEnter={(e) => {
                     if (isTouchDevice || !item.image) return;
@@ -226,7 +227,11 @@ export const Menu: React.FC = () => {
                 type="button"
                 onClick={() => {
                   setVisibleCount(6);
-                  document.getElementById('menu-section')?.scrollIntoView({ behavior: 'smooth' });
+                  const menuEl = document.getElementById('menu-section');
+                  if (menuEl) {
+                    const y = menuEl.getBoundingClientRect().top + window.scrollY - 80;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                  }
                 }}
                 className="px-8 py-3 rounded-full border border-white/20 text-[#E3DACD]/70 hover:bg-white/5 hover:text-[#E3DACD] transition-all duration-300 font-label-md tracking-wider uppercase"
               >

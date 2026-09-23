@@ -20,6 +20,14 @@ const Footer = lazy(() => import('./components/Footer').then(module => ({ defaul
 
 function App() {
   useEffect(() => {
+    // Prevent browser from restoring scroll position on reload
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     // MASSIVE OPTIMIZATION: Do not initialize Lenis smooth scrolling on touch devices.
     // Native mobile scrolling is already smooth, and running requestAnimationFrame
     // endlessly on an old phone drains battery and causes main thread lag.

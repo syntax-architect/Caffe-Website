@@ -48,10 +48,15 @@ export const ScrollSequence: React.FC = () => {
         : `/frames/ezgif-frame-${index.toString().padStart(3, '0')}.jpg`;
     let loadedImages = 0;
 
+    let cachedWinWidth = window.innerWidth;
+    let cachedWinHeight = window.innerHeight;
+
     const resizeCanvas = () => {
+      cachedWinWidth = window.innerWidth;
+      cachedWinHeight = window.innerHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 2); // Cap DPR at 2 for performance
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
+      canvas.width = cachedWinWidth * dpr;
+      canvas.height = cachedWinHeight * dpr;
       context.scale(dpr, dpr);
       context.imageSmoothingEnabled = true;
       // Use lower smoothing quality on mobile for better performance
@@ -59,7 +64,7 @@ export const ScrollSequence: React.FC = () => {
         context.imageSmoothingQuality = 'high';
       }
       if (images[0] && images[0].complete) {
-        drawImageCover(context, images[0], window.innerWidth, window.innerHeight);
+        drawImageCover(context, images[0], cachedWinWidth, cachedWinHeight);
       }
     };
     
@@ -70,7 +75,7 @@ export const ScrollSequence: React.FC = () => {
     firstImg.src = currentFrame(1);
     firstImg.onload = () => {
       loadedImages++;
-      drawImageCover(context, firstImg, window.innerWidth, window.innerHeight);
+      drawImageCover(context, firstImg, cachedWinWidth, cachedWinHeight);
     };
     images[0] = firstImg;
 
@@ -120,6 +125,17 @@ export const ScrollSequence: React.FC = () => {
     let animationFrameId: number;
     let isVisible = true;
 
+    // Cache static dimensions to avoid layout thrashing on scroll
+    let sectionTop = 0;
+    let sectionHeight = 0;
+
+    const updateDimensions = () => {
+      if (!section) return;
+      const rect = section.getBoundingClientRect();
+      sectionTop = rect.top + window.scrollY; // Absolute document position
+      sectionHeight = rect.height;
+    };
+
     // Use IntersectionObserver to pause rendering when the section is not in view
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -128,27 +144,26 @@ export const ScrollSequence: React.FC = () => {
     }, { threshold: 0, rootMargin: '200px' });
     
     const section = document.getElementById('scroll-sequence-section');
-    if (section) observer.observe(section);
+    if (section) {
+      observer.observe(section);
+      updateDimensions();
+    }
 
     const handleScroll = () => {
-      if (!section || !isVisible) return;
-      const rect = section.getBoundingClientRect();
-      const scrollableDistance = rect.height - window.innerHeight;
+      if (!isVisible) return;
+      const scrollableDistance = sectionHeight - cachedWinHeight;
       if (scrollableDistance > 0) {
-        targetProgress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
+        const currentTop = sectionTop - window.scrollY;
+        targetProgress = Math.max(0, Math.min(1, -currentTop / scrollableDistance));
       }
     };
 
+    // Listen to resize to update dimensions
+    window.addEventListener('resize', updateDimensions);
     window.addEventListener('scroll', handleScroll, { passive: true });
     
     // Initial setup
-    if (section) {
-      const rect = section.getBoundingClientRect();
-      const scrollableDistance = rect.height - window.innerHeight;
-      if (scrollableDistance > 0) {
-        targetProgress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
-      }
-    }
+    handleScroll();
     currentProgress = targetProgress;
 
     const renderLoop = () => {
@@ -170,7 +185,7 @@ export const ScrollSequence: React.FC = () => {
       
       if (images[frameIndex] && images[frameIndex].complete) {
         if (frameIndex !== lastFrameIndex) {
-          drawImageCover(context, images[frameIndex], window.innerWidth, window.innerHeight);
+          drawImageCover(context, images[frameIndex], cachedWinWidth, cachedWinHeight);
           lastFrameIndex = frameIndex;
           
           // Only update text opacity when the visual frame actually changes
