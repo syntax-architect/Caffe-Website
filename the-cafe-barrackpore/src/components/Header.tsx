@@ -29,7 +29,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-10">
           <a className="flex items-center gap-3 group" href="#" onClick={(e) => handleNavClick(e, 'root')}>
             <div className="w-10 h-10 rounded-full border border-white/10 bg-[#231914] flex items-center justify-center transition-all group-hover:border-[#D4AF37]/50 overflow-hidden drop-shadow-[0_0_10px_rgba(212,175,55,0.1)]">
-              <img src="/logo.png" alt="The Cafe Logo" className="w-full h-full object-contain" fetchPriority="high" decoding="sync" />
+              <img src="/logo.webp" alt="The Cafe Logo" className="w-full h-full object-contain" fetchPriority="high" decoding="sync" />
             </div>
             <div className="flex flex-col">
               <span className="font-headline-sm text-base sm:text-lg tracking-tight text-[#E3DACD] font-medium group-hover:text-[#D4AF37] transition-colors">The Cafe</span>

@@ -34,7 +34,7 @@ export const Footer: React.FC = () => {
       <div className="col-span-2 lg:col-span-1 flex flex-col gap-space-md">
         <div className="flex items-center gap-space-sm">
           <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center overflow-hidden drop-shadow-[0_0_10px_rgba(212,175,55,0.1)]">
-            <img src="/logo.png" alt="The Cafe Logo" className="w-full h-full object-contain" />
+            <img src="/logo.webp" alt="The Cafe Logo" className="w-full h-full object-contain" />
           </div>
           <span className="font-headline-sm text-headline-sm text-on-surface font-semibold">The Cafe Barrackpore</span>
         </div>
