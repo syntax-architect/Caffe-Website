@@ -209,7 +209,7 @@ export const ScrollSequence: React.FC = () => {
     <section 
       id="scroll-sequence-section" 
       className="relative w-full bg-background"
-      style={{ height: isMobile ? 'calc(100vh + 2000px)' : 'calc(100vh + 3200px)' }}
+      style={{ height: isMobile ? 'calc(100vh + 1200px)' : 'calc(100vh + 3200px)' }}
     >
       <div 
         className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-black"
