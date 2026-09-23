@@ -139,8 +139,10 @@ export const Menu: React.FC = () => {
         </motion.div>
 
         {isLoading ? (
-          <div className="py-20 flex justify-center text-[#D4AF37]">
-            <span className="material-symbols-outlined animate-spin text-4xl">refresh</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="animate-pulse bg-white/5 border border-white/10 rounded-xl h-64"></div>
+            ))}
           </div>
         ) : (
           <motion.div 
@@ -185,8 +187,10 @@ export const Menu: React.FC = () => {
                   </p>
                   
                   <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
-                    <span className="font-serif text-2xl font-normal text-[#D4AF37]"><span className="text-sm align-top mr-0.5 opacity-70 font-sans">₹</span>{item.price}</span>
-                    <button 
+                    <span className="font-serif text-2xl font-normal text-[#D4AF37] tabular-nums"><span className="text-sm align-top mr-0.5 opacity-70 font-sans">₹</span>{item.price}</span>
+                    <motion.button 
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
                       className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 text-[#E3DACD] hover:bg-[#D4AF37] hover:text-[#231914] transition-colors relative z-10"
                       title="Add to order"
                       onClick={(e) => {
@@ -201,7 +205,7 @@ export const Menu: React.FC = () => {
                       }}
                     >
                       <span className="material-symbols-outlined text-lg">add</span>
-                    </button>
+                    </motion.button>
                   </div>
                 </motion.div>
               ))}
@@ -216,7 +220,9 @@ export const Menu: React.FC = () => {
             className="flex justify-center gap-4 mt-4 md:mt-8"
           >
             {visibleCount > 6 && (
-              <button
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 type="button"
                 onClick={() => {
                   setVisibleCount(6);
@@ -225,17 +231,19 @@ export const Menu: React.FC = () => {
                 className="px-8 py-3 rounded-full border border-white/20 text-[#E3DACD]/70 hover:bg-white/5 hover:text-[#E3DACD] transition-all duration-300 font-label-md tracking-wider uppercase"
               >
                 Show Less
-              </button>
+              </motion.button>
             )}
             
             {hasMore && (
-              <button
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 type="button"
                 onClick={() => setVisibleCount(prev => prev + 6)}
                 className="px-8 py-3 rounded-full border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#231914] transition-all duration-300 font-label-md tracking-wider uppercase"
               >
                 Load More
-              </button>
+              </motion.button>
             )}
           </motion.div>
         )}

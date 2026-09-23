@@ -108,7 +108,7 @@ export const CartDrawer: React.FC = () => {
                               <span className="material-symbols-outlined text-sm">delete</span>
                             </button>
                           </div>
-                          <span className="font-sans text-sm text-tertiary font-semibold tracking-tight">₹{item.price}</span>
+                          <span className="font-sans text-sm text-tertiary font-semibold tracking-tight tabular-nums">₹{item.price}</span>
                         </div>
                         <div className="flex items-center justify-between mt-2 gap-2">
                           <div className="flex items-center gap-1 sm:gap-3 bg-surface-container px-1 sm:px-2 py-1 rounded-lg shrink-0">
@@ -120,7 +120,7 @@ export const CartDrawer: React.FC = () => {
                               <span className="material-symbols-outlined text-sm">add</span>
                             </button>
                           </div>
-                          <span className="font-label-md text-on-surface font-semibold">₹{item.price * item.quantity}</span>
+                          <span className="font-label-md text-on-surface font-semibold tabular-nums">₹{item.price * item.quantity}</span>
                         </div>
                       </div>
                     </motion.div>
@@ -134,7 +134,7 @@ export const CartDrawer: React.FC = () => {
               <div className="p-space-md border-t border-outline-variant/30 bg-surface-container-low flex flex-col gap-4">
                 <div className="flex justify-between items-center text-on-surface">
                   <span className="font-body-md text-on-surface-variant">Subtotal</span>
-                  <span className="font-headline-sm font-bold">₹{cartTotal}</span>
+                  <span className="font-headline-sm font-bold tabular-nums">₹{cartTotal}</span>
                 </div>
                 <div className="flex justify-between items-center text-on-surface pb-4 border-b border-outline-variant/20">
                   <span className="font-body-md text-on-surface-variant">Taxes & Fees</span>
@@ -142,7 +142,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
                 <div className="flex justify-between items-center text-on-surface pb-2">
                   <span className="font-headline-md font-bold">Total</span>
-                  <span className="font-headline-md font-bold text-[#D4AF37]">₹{cartTotal}</span>
+                  <span className="font-headline-md font-bold text-[#D4AF37] tabular-nums">₹{cartTotal}</span>
                 </div>
                 <div className="flex gap-2">
                   <button 
@@ -161,7 +161,7 @@ export const CartDrawer: React.FC = () => {
                       );
                     }}
                   >
-                    Checkout (₹{cartTotal})
+                    Checkout (<span className="tabular-nums">₹{cartTotal}</span>)
                   </button>
                 </div>
               </div>

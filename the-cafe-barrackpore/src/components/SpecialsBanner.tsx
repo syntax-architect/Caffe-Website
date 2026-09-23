@@ -20,19 +20,19 @@ export const SpecialsBanner: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-space-md w-full lg:w-auto">
         <div className="p-5 sm:p-space-md rounded-xl bg-surface-container-lowest/80 flex flex-col gap-1 min-w-[170px]">
           <span className="font-label-sm text-label-sm text-tertiary">CHINESE PLATTER</span>
-          <span className="font-serif font-normal text-2xl tracking-tight text-[#D4AF37]"><span className="text-sm align-top mr-0.5 opacity-80">₹</span>380</span>
+          <span className="font-serif font-normal text-2xl tracking-tight text-[#D4AF37] tabular-nums"><span className="text-sm align-top mr-0.5 opacity-80">₹</span>380</span>
           <span className="font-body-sm text-body-sm text-on-surface-variant">Momos, Spring Roll &amp; Crispy Chilli
             Bites</span>
         </div>
         <div className="p-space-md rounded-xl bg-surface-container-lowest/80 flex flex-col gap-1 min-w-[170px]">
           <span className="font-label-sm text-label-sm text-tertiary">TANDOORI PLATTER</span>
-          <span className="font-serif font-normal text-2xl tracking-tight text-[#D4AF37]"><span className="text-sm align-top mr-0.5 opacity-80">₹</span>450</span>
+          <span className="font-serif font-normal text-2xl tracking-tight text-[#D4AF37] tabular-nums"><span className="text-sm align-top mr-0.5 opacity-80">₹</span>450</span>
           <span className="font-body-sm text-body-sm text-on-surface-variant">Smoky Kebabs, Mint Coulis &amp; Flaky
             Naan</span>
         </div>
         <div className="p-space-md rounded-xl bg-surface-container-lowest/80 flex flex-col gap-1 min-w-[170px]">
           <span className="font-label-sm text-label-sm text-tertiary">RICE &amp; NOODLES BOWL</span>
-          <span className="font-serif font-normal text-2xl tracking-tight text-[#D4AF37]"><span className="text-sm align-top mr-0.5 opacity-80">₹</span>240</span>
+          <span className="font-serif font-normal text-2xl tracking-tight text-[#D4AF37] tabular-nums"><span className="text-sm align-top mr-0.5 opacity-80">₹</span>240</span>
           <span className="font-body-sm text-body-sm text-on-surface-variant">With Chilli Chicken or Veg Manchurian
             Gravy</span>
         </div>
