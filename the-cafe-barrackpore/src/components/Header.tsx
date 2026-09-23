@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
-import { useLogo } from '../hooks/useLogo';
 
 export const Header: React.FC = () => {
   const { cartCount, setIsDrawerOpen } = useCart();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const logoUrl = useLogo();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -31,7 +29,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-10">
           <a className="flex items-center gap-3 group" href="#" onClick={(e) => handleNavClick(e, 'root')}>
             <div className="w-10 h-10 rounded-full border border-white/10 bg-[#231914] flex items-center justify-center transition-all group-hover:border-[#D4AF37]/50 overflow-hidden drop-shadow-[0_0_10px_rgba(212,175,55,0.1)]">
-              <img src={logoUrl} alt="The Cafe Logo" className="w-full h-full object-contain" fetchPriority="high" decoding="sync" />
+              <img src="/logo.png" alt="The Cafe Logo" className="w-full h-full object-contain" fetchPriority="high" decoding="sync" />
             </div>
             <div className="flex flex-col">
               <span className="font-headline-sm text-base sm:text-lg tracking-tight text-[#E3DACD] font-medium group-hover:text-[#D4AF37] transition-colors">The Cafe</span>

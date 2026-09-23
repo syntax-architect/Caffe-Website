@@ -171,8 +171,8 @@ export const Menu: React.FC = () => {
                   onMouseLeave={() => setHoveredImage(null)}
                   className="flex flex-col py-6 md:py-8 px-2 md:px-4 bg-transparent border-b border-white/10 hover:-translate-y-1 hover:border-b-[#D4AF37]/50 transition-all duration-300 group"
                 >
-                  <div className="flex items-baseline gap-2 mb-2 w-full">
-                    <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex justify-between items-baseline gap-4 mb-2 border-b border-white/5 pb-2">
+                    <div className="flex items-center gap-2">
                       {item.dietType !== 'none' && (
                         <div 
                           className={`w-1.5 h-1.5 rounded-full opacity-70 ${item.dietType === 'veg' ? 'bg-green-400' : 'bg-red-400'}`} 
@@ -181,7 +181,6 @@ export const Menu: React.FC = () => {
                       )}
                       <h3 className="font-headline-sm text-lg text-[#E3DACD] group-hover:text-[#D4AF37] transition-colors">{item.name}</h3>
                     </div>
-                    <div className="flex-grow border-b border-dotted border-white/20 mx-2 relative -top-1" />
                     <span className="font-serif text-xl text-[#D4AF37] tabular-nums shrink-0">₹{item.price}</span>
                   </div>
                   
