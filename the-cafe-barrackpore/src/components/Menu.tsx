@@ -121,7 +121,7 @@ export const Menu: React.FC = () => {
             <h2 className="font-headline-lg text-3xl md:text-4xl lg:text-5xl text-on-surface font-medium tracking-tight">Curated Culinary Creations</h2>
           </div>
           
-          <div className="flex flex-col items-end gap-4 mt-4 md:mt-0">
+          <div className="flex flex-col items-start md:items-end gap-4 mt-4 md:mt-0 w-full md:w-auto">
             {/* Pure Veg Toggle */}
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
@@ -144,7 +144,7 @@ export const Menu: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="flex flex-wrap justify-start md:justify-end gap-2">
               {categories.map(category => (
                 <button
                   key={category}

@@ -62,14 +62,14 @@ export const Gallery: React.FC = () => {
             <div className={`elfsight-app-${clientDetails.elfsightId}`} data-elfsight-app-lazy></div>
           </div>
         ) : (
-          <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 pb-8 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:auto-rows-[300px]">
+          <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 pb-8 px-4 scroll-px-4 md:px-0 md:scroll-px-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:auto-rows-[300px]">
             {/* Couple Image (Spans 2 Rows for portrait look) */}
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6 }}
-              className="w-[85vw] shrink-0 snap-center md:col-span-1 md:row-span-2 md:w-full h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
+              className="w-[80vw] shrink-0 snap-start md:col-span-1 md:row-span-2 md:w-full h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
             >
               <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
               <img loading="lazy" 
@@ -85,7 +85,7 @@ export const Gallery: React.FC = () => {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="w-[85vw] shrink-0 snap-center md:col-span-1 lg:col-span-2 md:row-span-1 md:w-full h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
+              className="w-[80vw] shrink-0 snap-start md:col-span-1 lg:col-span-2 md:row-span-1 md:w-full h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
             >
                <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
                <img loading="lazy" 
@@ -101,7 +101,7 @@ export const Gallery: React.FC = () => {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="w-[85vw] shrink-0 snap-center md:col-span-1 md:row-span-1 md:w-full h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
+              className="w-[80vw] shrink-0 snap-start md:col-span-1 md:row-span-1 md:w-full h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
             >
                <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
                <img loading="lazy"
@@ -117,7 +117,7 @@ export const Gallery: React.FC = () => {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="w-[85vw] shrink-0 snap-center md:col-span-1 lg:col-span-1 md:row-span-1 md:w-full h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
+              className="w-[80vw] shrink-0 snap-start md:col-span-1 lg:col-span-1 md:row-span-1 md:w-full h-80 md:h-full rounded-xl overflow-hidden group relative bg-surface-container"
             >
                <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none group-hover:bg-transparent transition-colors duration-700" />
                <img loading="lazy"
