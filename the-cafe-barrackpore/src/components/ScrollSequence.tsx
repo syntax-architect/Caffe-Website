@@ -46,7 +46,6 @@ export const ScrollSequence: React.FC = () => {
       isMobileRef 
         ? `/frames-mobile/ezgif-frame-${index.toString().padStart(3, '0')}.jpg` 
         : `/frames/ezgif-frame-${index.toString().padStart(3, '0')}.jpg`;
-    let loadedImages = 0;
 
     let cachedWinWidth = window.innerWidth;
     let cachedWinHeight = window.innerHeight;
@@ -90,7 +89,6 @@ export const ScrollSequence: React.FC = () => {
     const firstImg = new Image();
     firstImg.src = currentFrame(1);
     firstImg.onload = () => {
-      loadedImages++;
       drawImageCover(context, firstImg, cachedWinWidth, cachedWinHeight);
     };
     images[0] = firstImg;
@@ -120,7 +118,6 @@ export const ScrollSequence: React.FC = () => {
           };
           
           img.onload = () => {
-            loadedImages++;
             onImageDone();
           };
           img.onerror = onImageDone;

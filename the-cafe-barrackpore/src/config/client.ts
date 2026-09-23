@@ -7,7 +7,7 @@ export const clientDetails = {
   whatsapp: "+918420507105",
   email: "contact@thecafe.com",
   address: "Barrackpore Trunk Road, West Bengal",
-  googleMapsLink: "https://share.google/mAfX6gmsAoVhmRuJd",
+  googleMapsLink: "https://maps.app.goo.gl/6N1csn9kKtCY7By97",
   instagramLink: "https://www.instagram.com/the_cafe_barrackpore?stkn=dmxjN2xuZGhtbTMw",
   facebookLink: "#",
   zomatoLink: "#",
