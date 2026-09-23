@@ -51,25 +51,41 @@ export const ScrollSequence: React.FC = () => {
     let cachedWinWidth = window.innerWidth;
     let cachedWinHeight = window.innerHeight;
 
-    const resizeCanvas = () => {
-      cachedWinWidth = window.innerWidth;
-      cachedWinHeight = window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2); // Cap DPR at 2 for performance
-      canvas.width = cachedWinWidth * dpr;
-      canvas.height = cachedWinHeight * dpr;
-      context.scale(dpr, dpr);
-      context.imageSmoothingEnabled = true;
-      // Use lower smoothing quality on mobile for better performance
-      if (!isMobileRef) {
-        context.imageSmoothingQuality = 'high';
+    const handleResize = () => {
+      const newWidth = window.innerWidth;
+      const newHeight = window.innerHeight;
+      
+      // On mobile, scrolling causes the address bar to hide/show, triggering resize events.
+      // We only want to resize the canvas if the width changes (orientation change) 
+      // to avoid massive stuttering from canvas reallocation during scroll.
+      if (isMobileRef && newWidth === cachedWinWidth) {
+        return;
       }
-      if (images[0] && images[0].complete) {
-        drawImageCover(context, images[0], cachedWinWidth, cachedWinHeight);
+      
+      cachedWinWidth = newWidth;
+      cachedWinHeight = newHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2); // Cap DPR at 2 for performance
+      
+      // Only set canvas dimensions if they actually changed to avoid clearing the context
+      if (canvas.width !== cachedWinWidth * dpr || canvas.height !== cachedWinHeight * dpr) {
+        canvas.width = cachedWinWidth * dpr;
+        canvas.height = cachedWinHeight * dpr;
+        context.scale(dpr, dpr);
+        context.imageSmoothingEnabled = true;
+        
+        // Use lower smoothing quality on mobile for better performance
+        if (!isMobileRef) {
+          context.imageSmoothingQuality = 'high';
+        }
+        
+        if (images[0] && images[0].complete) {
+          drawImageCover(context, images[0], cachedWinWidth, cachedWinHeight);
+        }
       }
     };
     
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    window.addEventListener('resize', handleResize);
+    handleResize();
 
     const firstImg = new Image();
     firstImg.src = currentFrame(1);
@@ -131,6 +147,12 @@ export const ScrollSequence: React.FC = () => {
 
     const updateDimensions = () => {
       if (!section) return;
+      
+      // On mobile, ignore height-only resize events to prevent layout thrashing
+      if (isMobileRef && window.innerWidth === cachedWinWidth && sectionHeight > 0) {
+        return;
+      }
+      
       const rect = section.getBoundingClientRect();
       sectionTop = rect.top + window.scrollY; // Absolute document position
       sectionHeight = rect.height;
@@ -214,7 +236,8 @@ export const ScrollSequence: React.FC = () => {
 
     return () => {
       if (section) observer.unobserve(section);
-      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', updateDimensions);
       window.removeEventListener('scroll', handleScroll);
       window.cancelAnimationFrame(animationFrameId);
     };

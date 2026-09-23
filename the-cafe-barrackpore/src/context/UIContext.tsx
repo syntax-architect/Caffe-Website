@@ -39,10 +39,10 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            initial={{ opacity: 0, y: -20, x: '-50%' }}
+            initial={{ opacity: 0, y: 20, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, y: -20, x: '-50%' }}
-            className="fixed top-24 left-1/2 z-[100] pointer-events-none"
+            exit={{ opacity: 0, y: 20, x: '-50%' }}
+            className="fixed bottom-24 left-1/2 z-[100] pointer-events-none"
           >
             <div className="flex items-center gap-2 px-6 py-3 rounded-full bg-surface-container-highest/90 border border-primary/30 shadow-[0_4px_24px_rgba(0,0,0,0.4)] text-on-surface font-label-md">
               <span className="material-symbols-outlined text-primary text-lg">info</span>

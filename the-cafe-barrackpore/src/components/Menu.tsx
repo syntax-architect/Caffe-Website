@@ -171,28 +171,28 @@ export const Menu: React.FC = () => {
                   onMouseLeave={() => setHoveredImage(null)}
                   className="flex flex-col py-6 md:py-8 px-2 md:px-4 bg-transparent border-b border-white/10 hover:-translate-y-1 hover:border-b-[#D4AF37]/50 transition-all duration-300 group"
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-baseline gap-2 mb-2 w-full">
+                    <div className="flex items-center gap-2 shrink-0">
                       {item.dietType !== 'none' && (
                         <div 
                           className={`w-1.5 h-1.5 rounded-full opacity-70 ${item.dietType === 'veg' ? 'bg-green-400' : 'bg-red-400'}`} 
                           title={item.dietType === 'veg' ? 'Vegetarian' : 'Non-Vegetarian'}
                         />
                       )}
-                      <h3 className="font-headline-sm text-xl text-[#E3DACD] font-medium group-hover:text-[#D4AF37] transition-colors pr-2">{item.name}</h3>
+                      <h3 className="font-headline-sm text-lg text-[#E3DACD] group-hover:text-[#D4AF37] transition-colors">{item.name}</h3>
                     </div>
+                    <div className="flex-grow border-b border-dotted border-white/20 mx-2 relative -top-1" />
+                    <span className="font-serif text-xl text-[#D4AF37] tabular-nums shrink-0">₹{item.price}</span>
                   </div>
                   
-                  <p className="font-body-md text-sm text-[#E3DACD]/60 flex-grow leading-relaxed mb-6">
-                    {item.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
-                    <span className="font-serif text-2xl font-normal text-[#D4AF37] tabular-nums"><span className="text-sm align-top mr-0.5 opacity-70 font-sans">₹</span>{item.price}</span>
+                  <div className="flex items-end justify-between gap-4 mt-auto">
+                    <p className="font-body-md text-sm text-[#E3DACD]/60 leading-relaxed pr-4">
+                      {item.description}
+                    </p>
                     <motion.button 
                       whileTap={{ scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                      className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 text-[#E3DACD] hover:bg-[#D4AF37] hover:text-[#231914] transition-colors relative z-10"
+                      className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 text-[#E3DACD] hover:bg-[#D4AF37] hover:text-[#231914] transition-colors relative z-10 shrink-0"
                       title="Add to order"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -205,7 +205,7 @@ export const Menu: React.FC = () => {
                         showToast(`Added ${item.name} to order`);
                       }}
                     >
-                      <span className="material-symbols-outlined text-lg">add</span>
+                      <span className="material-symbols-outlined text-base">add</span>
                     </motion.button>
                   </div>
                 </motion.div>
