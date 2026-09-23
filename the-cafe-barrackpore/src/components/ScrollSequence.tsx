@@ -14,9 +14,10 @@ export const ScrollSequence: React.FC = () => {
   }, []);
   
   useEffect(() => {
+    const isMobileRef = window.innerWidth < 768;
+    const frameCount = isMobileRef ? 60 : 120;
     let lastFrameIndex = -1;
     let images: HTMLImageElement[] = [];
-    const frameCount = 120;
     
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -40,7 +41,7 @@ export const ScrollSequence: React.FC = () => {
       ctx.drawImage(img, sX, sY, sWidth, sHeight, 0, 0, canvasWidth, canvasHeight);
     };
 
-    const isMobileRef = window.innerWidth < 768;
+
     const currentFrame = (index: number) => 
       isMobileRef 
         ? `/frames-mobile/ezgif-frame-${index.toString().padStart(3, '0')}.jpg` 
