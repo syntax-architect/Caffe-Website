@@ -6,6 +6,13 @@ import { useUI } from '../context/UIContext';
 export const CartDrawer: React.FC = () => {
   const { items, isDrawerOpen, setIsDrawerOpen, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart();
   const { showModal } = useUI();
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <AnimatePresence>
@@ -20,17 +27,36 @@ export const CartDrawer: React.FC = () => {
             className="fixed inset-0 bg-surface-container-lowest/80 z-[100]"
           />
           
-          {/* Drawer */}
+          {/* Drawer / Bottom Sheet */}
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            initial={isMobile ? { y: '100%' } : { x: '100%' }}
+            animate={isMobile ? { y: 0 } : { x: 0 }}
+            exit={isMobile ? { y: '100%' } : { x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-surface border-l border-outline-variant/30 shadow-2xl z-[101] flex flex-col"
+            drag={isMobile ? "y" : false}
+            dragConstraints={isMobile ? { top: 0 } : undefined}
+            dragElastic={isMobile ? 0.2 : undefined}
+            onDragEnd={(e, info) => {
+              if (isMobile && info.offset.y > 100) {
+                setIsDrawerOpen(false);
+              }
+            }}
+            className={`fixed bg-surface shadow-2xl z-[101] flex flex-col ${
+              isMobile 
+                ? 'bottom-0 left-0 w-full h-[85vh] rounded-t-3xl border-t border-outline-variant/30' 
+                : 'top-0 right-0 h-full w-full max-w-md border-l border-outline-variant/30'
+            }`}
             data-lenis-prevent
           >
+            {/* Drag Handle for Mobile */}
+            {isMobile && (
+              <div className="w-full flex justify-center pt-3 pb-1 bg-surface-container-low rounded-t-3xl cursor-grab active:cursor-grabbing">
+                <div className="w-12 h-1.5 bg-outline-variant/50 rounded-full" />
+              </div>
+            )}
+
             {/* Header */}
-            <div className="flex items-center justify-between p-space-md border-b border-outline-variant/30 bg-surface-container-low">
+            <div className={`flex items-center justify-between p-space-md border-b border-outline-variant/30 bg-surface-container-low ${isMobile ? 'pt-2' : ''}`}>
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#D4AF37]">shopping_bag</span>
                 <h2 className="font-headline-sm text-on-surface font-bold">Your Order</h2>

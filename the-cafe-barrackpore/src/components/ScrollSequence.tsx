@@ -5,9 +5,15 @@ export const ScrollSequence: React.FC = () => {
   const text1Ref = useRef<HTMLHeadingElement>(null);
   const text2Ref = useRef<HTMLHeadingElement>(null);
   const text3Ref = useRef<HTMLHeadingElement>(null);
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
   
   useEffect(() => {
-    let ticking = false;
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  useEffect(() => {
     let lastFrameIndex = -1;
     let images: HTMLImageElement[] = [];
     const frameCount = 120;
@@ -34,16 +40,23 @@ export const ScrollSequence: React.FC = () => {
       ctx.drawImage(img, sX, sY, sWidth, sHeight, 0, 0, canvasWidth, canvasHeight);
     };
 
-    const currentFrame = (index: number) => `/frames/ezgif-frame-${index.toString().padStart(3, '0')}.jpg`;
+    const isMobileRef = window.innerWidth < 768;
+    const currentFrame = (index: number) => 
+      isMobileRef 
+        ? `/frames-mobile/ezgif-frame-${index.toString().padStart(3, '0')}.jpg` 
+        : `/frames/ezgif-frame-${index.toString().padStart(3, '0')}.jpg`;
     let loadedImages = 0;
 
     const resizeCanvas = () => {
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2); // Cap DPR at 2 for performance
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
       context.scale(dpr, dpr);
       context.imageSmoothingEnabled = true;
-      context.imageSmoothingQuality = 'high';
+      // Use lower smoothing quality on mobile for better performance
+      if (!isMobileRef) {
+        context.imageSmoothingQuality = 'high';
+      }
       if (images[0] && images[0].complete) {
         drawImageCover(context, images[0], window.innerWidth, window.innerHeight);
       }
@@ -63,17 +76,33 @@ export const ScrollSequence: React.FC = () => {
     const loadRemainingFrames = () => {
       let currentIndex = 2;
       const loadChunk = () => {
-        const chunkLimit = Math.min(currentIndex + 10, frameCount + 1);
+        // Use a smaller chunk size to prevent network and decode spiking on mobile
+        const chunkLimit = Math.min(currentIndex + 4, frameCount + 1);
+        let loadedInChunk = 0;
+        const totalInChunk = chunkLimit - currentIndex;
+        
         for (let i = currentIndex; i < chunkLimit; i++) {
           const img = new Image();
-          img.decoding = 'async';
+          img.decoding = 'async'; // Prevents decode from blocking the main thread
           img.src = currentFrame(i);
-          img.onload = () => loadedImages++;
+          
+          const onImageDone = () => {
+            loadedInChunk++;
+            if (loadedInChunk === totalInChunk) {
+              currentIndex = chunkLimit;
+              if (currentIndex <= frameCount) {
+                // Yield to main thread before loading next chunk
+                setTimeout(loadChunk, 30);
+              }
+            }
+          };
+          
+          img.onload = () => {
+            loadedImages++;
+            onImageDone();
+          };
+          img.onerror = onImageDone;
           images[i - 1] = img;
-        }
-        currentIndex = chunkLimit;
-        if (currentIndex <= frameCount) {
-          setTimeout(loadChunk, 250); 
         }
       };
       loadChunk();
@@ -85,71 +114,105 @@ export const ScrollSequence: React.FC = () => {
       window.addEventListener('load', () => setTimeout(loadRemainingFrames, 1000));
     }
     
+    let targetProgress = 0;
+    let currentProgress = 0;
+    let animationFrameId: number;
+    let isVisible = true;
+
+    // Use IntersectionObserver to pause rendering when the section is not in view
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        isVisible = entry.isIntersecting;
+      });
+    }, { threshold: 0, rootMargin: '200px' });
+    
+    const section = document.getElementById('scroll-sequence-section');
+    if (section) observer.observe(section);
+
     const handleScroll = () => {
-      const section = document.getElementById('scroll-sequence-section');
-      if (!section) return;
+      if (!section || !isVisible) return;
       const rect = section.getBoundingClientRect();
       const scrollableDistance = rect.height - window.innerHeight;
-      let progress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
-      const frameIndex = Math.floor(progress * (frameCount - 1));
-      
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          if (images[frameIndex] && images[frameIndex].complete) {
-            if (frameIndex !== lastFrameIndex) {
-              context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-              drawImageCover(context, images[frameIndex], window.innerWidth, window.innerHeight);
-              lastFrameIndex = frameIndex;
-            }
-            
-            if (text1Ref.current) {
-              if (progress > 0.1 && progress < 0.3) {
-                text1Ref.current.style.opacity = '1';
-                text1Ref.current.style.transform = 'translateY(0)';
-              } else {
-                text1Ref.current.style.opacity = '0';
-                text1Ref.current.style.transform = 'translateY(2rem)';
-              }
-            }
-            if (text2Ref.current) {
-              if (progress > 0.4 && progress < 0.6) {
-                text2Ref.current.style.opacity = '1';
-                text2Ref.current.style.transform = 'translateY(0)';
-              } else {
-                text2Ref.current.style.opacity = '0';
-                text2Ref.current.style.transform = 'translateY(2rem)';
-              }
-            }
-            if (text3Ref.current) {
-              if (progress > 0.7 && progress < 0.9) {
-                text3Ref.current.style.opacity = '1';
-                text3Ref.current.style.transform = 'translateY(0)';
-              } else {
-                text3Ref.current.style.opacity = '0';
-                text3Ref.current.style.transform = 'translateY(2rem)';
-              }
-            }
-          }
-          ticking = false;
-        });
-        ticking = true;
+      if (scrollableDistance > 0) {
+        targetProgress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    setTimeout(handleScroll, 100);
+    
+    // Initial setup
+    if (section) {
+      const rect = section.getBoundingClientRect();
+      const scrollableDistance = rect.height - window.innerHeight;
+      if (scrollableDistance > 0) {
+        targetProgress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
+      }
+    }
+    currentProgress = targetProgress;
+
+    const renderLoop = () => {
+      animationFrameId = window.requestAnimationFrame(renderLoop);
+      
+      // Stop processing if component is unmounted or not visible
+      if (!isVisible) return;
+      
+      // Calculate diff to see if we need to update
+      const diff = targetProgress - currentProgress;
+      
+      // If we are close enough to target, don't waste CPU cycles recalculating
+      if (Math.abs(diff) < 0.0005) return;
+
+      // Lerp progress for smooth playback, reducing mobile lag and jitter
+      currentProgress += diff * 0.15; // Faster lerp for snappier response
+      
+      const frameIndex = Math.floor(currentProgress * (frameCount - 1));
+      
+      if (images[frameIndex] && images[frameIndex].complete) {
+        if (frameIndex !== lastFrameIndex) {
+          drawImageCover(context, images[frameIndex], window.innerWidth, window.innerHeight);
+          lastFrameIndex = frameIndex;
+          
+          // Only update text opacity when the visual frame actually changes
+          // to prevent unnecessary layout/style calculations 60 times a second
+          const updateText = (ref: React.RefObject<HTMLHeadingElement>, show: boolean) => {
+            if (ref.current) {
+              const isShowing = ref.current.style.opacity === '1';
+              if (show && !isShowing) {
+                ref.current.style.opacity = '1';
+                ref.current.style.transform = 'translateY(0)';
+              } else if (!show && (isShowing || ref.current.style.opacity === '')) {
+                ref.current.style.opacity = '0';
+                ref.current.style.transform = 'translateY(2rem)';
+              }
+            }
+          };
+
+          updateText(text1Ref, currentProgress > 0.1 && currentProgress < 0.3);
+          updateText(text2Ref, currentProgress > 0.4 && currentProgress < 0.6);
+          updateText(text3Ref, currentProgress > 0.7 && currentProgress < 0.9);
+        }
+      }
+    };
+    
+    renderLoop();
 
     return () => {
+      if (section) observer.unobserve(section);
       window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('scroll', handleScroll);
+      window.cancelAnimationFrame(animationFrameId);
     };
   }, []);
 
   return (
-    <section id="scroll-sequence-section" className="relative w-full h-[150vh] md:h-[380vh] bg-background">
+    <section 
+      id="scroll-sequence-section" 
+      className="relative w-full bg-background"
+      style={{ height: isMobile ? 'calc(100vh + 2000px)' : 'calc(100vh + 3200px)' }}
+    >
       <div 
         className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-black"
-        style={{ maskImage: 'radial-gradient(circle, black 40%, transparent 100%)', WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 100%)' }}
+        style={isMobile ? {} : { maskImage: 'radial-gradient(circle, black 40%, transparent 100%)', WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 100%)' }}
       >
         {/* Canvas Frame Sequence (Used on both mobile and desktop) */}
         <canvas 
@@ -168,13 +231,13 @@ export const ScrollSequence: React.FC = () => {
         
         {/* Floating text that appears during scroll */}
         <div className="relative z-10 max-w-[1320px] mx-auto px-4 sm:px-6 w-full flex flex-col items-center justify-center text-center h-full">
-          <h2 ref={text1Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
+          <h2 ref={text1Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
             Crafted to <span className="text-primary italic font-serif">Perfection</span>
           </h2>
-          <h2 ref={text2Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
+          <h2 ref={text2Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
             Every Drop <span className="text-primary italic font-serif">Matters</span>
           </h2>
-          <h2 ref={text3Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4">
+          <h2 ref={text3Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#E3DACD] font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
             The True <span className="text-primary italic font-serif">Lounge</span> Experience
           </h2>
         </div>
