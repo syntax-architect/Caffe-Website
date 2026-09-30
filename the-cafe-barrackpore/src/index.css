@@ -2,10 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 @layer base {
-  html, body { margin: 0; padding: 0; }
-  body { overscroll-behavior: none; }
+  html, body { 
+    margin: 0; 
+    padding: 0; 
+    -webkit-tap-highlight-color: transparent;
+  }
+  html { 
+    scroll-padding-top: 5.5rem; 
+  }
+  body { 
+    overscroll-behavior-y: none; 
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
   main > :first-child { margin-top: 0 !important; }
   main > :last-child { margin-bottom: 0 !important; }
+
+  /* Zero 300ms tap delay on mobile devices */
+  a, button, input, select, textarea {
+    touch-action: manipulation;
+  }
 }
 
 ::-webkit-scrollbar { display: none; }
@@ -25,18 +41,39 @@ html, body { overflow-x: clip; width: 100%; position: relative; }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-background/60 backdrop-blur-md sm:backdrop-blur-xl border border-white/10 shadow-xl sm:shadow-2xl shadow-black/80;
+    @apply bg-background/80 backdrop-blur-md sm:backdrop-blur-xl border border-white/10 shadow-xl sm:shadow-2xl shadow-black/80;
   }
   
   .glass-nav {
-    @apply bg-background/70 backdrop-blur-md sm:backdrop-blur-xl border-b border-white/10;
+    @apply bg-[#130C08] border-b border-[#D4AF37]/20 shadow-xl shadow-black/70;
   }
 
   .btn-premium {
-    @apply bg-gradient-to-r from-[#D4AF37] to-[#F5D058] text-black shadow-[0_0_15px_rgba(212,175,55,0.2)] hover:shadow-[0_0_25px_rgba(245,208,88,0.4)] hover:brightness-110 transition-all duration-300;
+    @apply inline-flex items-center justify-center bg-[#D4AF37] hover:bg-[#dfba41] active:bg-[#c49f2c] text-[#18110c] font-sans font-semibold tracking-wider uppercase shadow-[0_4px_16px_rgba(212,175,55,0.22)] hover:shadow-[0_6px_22px_rgba(212,175,55,0.35)] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#231914];
   }
 
   .btn-outline-premium {
-    @apply bg-transparent border border-[#D4AF37]/40 text-on-surface hover:border-[#F5D058] hover:bg-[#D4AF37]/10 hover:shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300;
+    @apply inline-flex items-center justify-center bg-transparent border border-[#D4AF37]/40 text-[#E3DACD] hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 hover:text-white active:bg-[#D4AF37]/20 font-sans font-semibold tracking-wider uppercase transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#231914];
+  }
+
+  .editorial-eyebrow {
+    @apply font-sans text-[11px] sm:text-[12px] uppercase tracking-[0.25em] text-[#D4AF37] font-semibold;
+  }
+
+  .badge-gold {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30;
+  }
+
+  .badge-soldout {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-stone-800/80 text-stone-400 border border-stone-700/60;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

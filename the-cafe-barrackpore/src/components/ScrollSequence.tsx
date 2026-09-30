@@ -50,10 +50,12 @@ export const ScrollSequence: React.FC = () => {
     };
 
 
-    const currentFrame = (index: number) => 
-      isMobileRef 
-        ? `/frames-mobile/ezgif-frame-${index.toString().padStart(3, '0')}.jpg` 
-        : `/frames/ezgif-frame-${index.toString().padStart(3, '0')}.jpg`;
+    const currentFrame = (index: number) => {
+      const pad = index.toString().padStart(3, '0');
+      return isMobileRef
+        ? `/frames-mobile/ezgif-frame-${pad}.webp`
+        : `/frames/ezgif-frame-${pad}.jpg`;
+    };
 
     let cachedWinWidth = -1;
     let cachedWinHeight = -1;
@@ -71,12 +73,14 @@ export const ScrollSequence: React.FC = () => {
       
       cachedWinWidth = newWidth;
       cachedWinHeight = newHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2); // Cap DPR at 2 for performance
+      const dpr = isMobileRef ? 1 : Math.min(window.devicePixelRatio || 1, 1.5); // Cap DPR at 1 on mobile to save GPU memory and eliminate throttling
       
       // Only set canvas dimensions if they actually changed to avoid clearing the context
       if (canvas.width !== cachedWinWidth * dpr || canvas.height !== cachedWinHeight * dpr) {
         canvas.width = cachedWinWidth * dpr;
         canvas.height = cachedWinHeight * dpr;
+        // Reset transform to identity before applying new scale to prevent cumulative scaling
+        context.setTransform(1, 0, 0, 1, 0, 0);
         context.scale(dpr, dpr);
         context.imageSmoothingEnabled = true;
         
@@ -85,7 +89,7 @@ export const ScrollSequence: React.FC = () => {
           context.imageSmoothingQuality = 'high';
         }
         
-        if (images[0] && images[0].complete) {
+        if (images[0] && images[0].complete && images[0].naturalWidth > 0) {
           drawImageCover(context, images[0], cachedWinWidth, cachedWinHeight);
         }
       }
@@ -94,110 +98,156 @@ export const ScrollSequence: React.FC = () => {
     window.addEventListener('resize', handleResize);
     handleResize();
 
-    const firstImg = new Image();
-    firstImg.src = currentFrame(1);
-    firstImg.onload = () => {
-      drawImageCover(context, firstImg, cachedWinWidth, cachedWinHeight);
-    };
-    images[0] = firstImg;
-
-    const loadRemainingFrames = () => {
-      let currentIndex = 2;
-      const loadChunk = () => {
-        // Use a smaller chunk size to prevent network and decode spiking on mobile
-        const chunkLimit = Math.min(currentIndex + 4, frameCount + 1);
-        let loadedInChunk = 0;
-        const totalInChunk = chunkLimit - currentIndex;
-        
-        for (let i = currentIndex; i < chunkLimit; i++) {
-          const img = new Image();
-          img.decoding = 'async'; // Prevents decode from blocking the main thread
-          img.src = currentFrame(i);
-          
-          const onImageDone = () => {
-            loadedInChunk++;
-            if (loadedInChunk === totalInChunk) {
-              currentIndex = chunkLimit;
-              if (currentIndex <= frameCount) {
-                // Yield to main thread before loading next chunk
-                setTimeout(loadChunk, 30);
-              }
-            }
-          };
-          
-          img.onload = () => {
-            onImageDone();
-          };
-          img.onerror = onImageDone;
-          images[i - 1] = img;
+    // Helper to instantiate and manage a frame image with WebP-to-JPEG fallback
+    const ensureFrame = (index: number, priority = false): HTMLImageElement => {
+      const zeroIdx = index - 1;
+      if (images[zeroIdx]) {
+        return images[zeroIdx]!;
+      }
+      const img = new Image();
+      img.decoding = 'async';
+      if (priority && 'fetchPriority' in img) {
+        (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = 'high';
+      }
+      const primarySrc = currentFrame(index);
+      img.src = primarySrc;
+      img.onerror = () => {
+        // Gracefully fallback to .jpg if .webp ever fails to load
+        if (primarySrc.endsWith('.webp')) {
+          img.src = primarySrc.replace('.webp', '.jpg');
         }
       };
-      loadChunk();
+      images[zeroIdx] = img;
+      return img;
     };
 
-    if (document.readyState === 'complete') {
-      setTimeout(loadRemainingFrames, 1000); 
-    } else {
-      window.addEventListener('load', () => setTimeout(loadRemainingFrames, 1000));
-    }
-    
-    let targetProgress = 0;
-    let currentProgress = 0;
-    let animationFrameId: number;
-    let isVisible = true;
+    // PHASE A: Load initial frame immediately and paint as soon as ready
+    const firstImg = ensureFrame(1, true);
+    firstImg.onload = () => {
+      if (canvasRef.current && firstImg.naturalWidth > 0) {
+        drawImageCover(context, firstImg, cachedWinWidth, cachedWinHeight);
+      }
+    };
+    // Prime the next two frames so first scroll movement is instant
+    ensureFrame(2, true);
+    ensureFrame(3, true);
 
-    // Use IntersectionObserver to pause rendering when the section is not in view
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        isVisible = entry.isIntersecting;
-      });
-    }, { threshold: 0, rootMargin: '200px' });
-    
-    const section = document.getElementById('scroll-sequence-section');
-    if (section) {
-      observer.observe(section);
-    }
+    // Chunks loader for Phase B and Phase C
+    let phaseBStarted = false;
+    let phaseCStarted = false;
+    let nextPreloadIndex = 4;
 
-    const handleScroll = () => {
-      if (!isVisible || !section) return;
-      // Dynamically calculate bounding rect to avoid stale position bugs from lazy-loaded elements
-      const rect = section.getBoundingClientRect();
-      const scrollableDistance = rect.height - window.innerHeight;
-      
-      if (scrollableDistance > 0) {
-        // rect.top is the distance from viewport top to section top.
-        // It becomes negative as we scroll down into the section.
-        targetProgress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
+    const loadChunk = (endIndex: number, onComplete?: () => void) => {
+      if (nextPreloadIndex > endIndex || nextPreloadIndex > frameCount) {
+        onComplete?.();
+        return;
+      }
+
+      const chunkSize = isMobileRef ? 4 : 6;
+      const chunkLimit = Math.min(nextPreloadIndex + chunkSize, endIndex + 1);
+      let loadedInChunk = 0;
+      const totalInChunk = chunkLimit - nextPreloadIndex;
+
+      for (let i = nextPreloadIndex; i < chunkLimit; i++) {
+        const img = ensureFrame(i);
+        const onDone = () => {
+          loadedInChunk++;
+          if (loadedInChunk === totalInChunk) {
+            nextPreloadIndex = chunkLimit;
+            if (nextPreloadIndex <= endIndex && nextPreloadIndex <= frameCount) {
+              setTimeout(() => loadChunk(endIndex, onComplete), 25);
+            } else {
+              onComplete?.();
+            }
+          }
+        };
+        if (img.complete && img.naturalWidth > 0) {
+          onDone();
+        } else {
+          img.addEventListener('load', onDone, { once: true });
+          img.addEventListener('error', onDone, { once: true });
+        }
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Initial setup
-    handleScroll();
-    currentProgress = targetProgress;
+    // PHASE B: Preload first block when approaching viewport within 800px
+    const startPhaseB = () => {
+      if (phaseBStarted) return;
+      phaseBStarted = true;
+      const phaseBLimit = isMobileRef ? 20 : 30;
+      loadChunk(phaseBLimit, () => {
+        if (isVisible) {
+          startPhaseC();
+        }
+      });
+    };
+
+    // PHASE C: Background preload remaining frames when section is active in viewport
+    const startPhaseC = () => {
+      if (phaseCStarted) return;
+      phaseCStarted = true;
+      loadChunk(frameCount);
+    };
+
+    let targetProgress = 0;
+    let currentProgress = 0;
+    let animationFrameId: number | null = null;
+    let isRunning = false;
+    let isVisible = false;
 
     const renderLoop = () => {
-      animationFrameId = window.requestAnimationFrame(renderLoop);
+      if (!isVisible) {
+        isRunning = false;
+        return;
+      }
       
-      // Stop processing if component is unmounted or not visible
-      if (!isVisible) return;
-      
-      // Calculate diff to see if we need to update
       const diff = targetProgress - currentProgress;
-      
-      // If we are close enough to target, don't waste CPU cycles recalculating
-      if (Math.abs(diff) < 0.0005) return;
+      if (Math.abs(diff) < 0.0005) {
+        currentProgress = targetProgress;
+        isRunning = false;
+        return;
+      }
 
       // Lerp progress for smooth playback, reducing mobile lag and jitter
-      currentProgress += diff * 0.15; // Faster lerp for snappier response
+      currentProgress += diff * 0.18; // Snappy, reactive lerp
       
-      const frameIndex = Math.floor(currentProgress * (frameCount - 1));
+      const targetIndex = Math.floor(currentProgress * (frameCount - 1));
+      let renderIndex = targetIndex;
+
+      // Closest-available-frame fallback: prevents blank frames if scrolling faster than preload
+      if (!images[renderIndex] || !images[renderIndex]?.complete || images[renderIndex]?.naturalWidth === 0) {
+        let closestIndex = -1;
+        let minDistance = Infinity;
+
+        // Search backwards first (since earlier frames loaded first)
+        for (let i = targetIndex - 1; i >= 0; i--) {
+          if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
+            closestIndex = i;
+            minDistance = targetIndex - i;
+            break;
+          }
+        }
+
+        // Search forwards if needed
+        for (let i = targetIndex + 1; i < frameCount; i++) {
+          if (i - targetIndex >= minDistance) break;
+          if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
+            closestIndex = i;
+            break;
+          }
+        }
+
+        if (closestIndex !== -1) {
+          renderIndex = closestIndex;
+        } else if (images[0] && images[0]?.complete && images[0]!.naturalWidth > 0) {
+          renderIndex = 0;
+        }
+      }
       
-      if (images[frameIndex] && images[frameIndex].complete) {
-        if (frameIndex !== lastFrameIndex) {
-          drawImageCover(context, images[frameIndex], cachedWinWidth, cachedWinHeight);
-          lastFrameIndex = frameIndex;
+      if (images[renderIndex] && images[renderIndex]?.complete && images[renderIndex]!.naturalWidth > 0) {
+        if (renderIndex !== lastFrameIndex) {
+          drawImageCover(context, images[renderIndex]!, cachedWinWidth, cachedWinHeight);
+          lastFrameIndex = renderIndex;
           
           // Only update text opacity when the visual frame actually changes
           // to prevent unnecessary layout/style calculations 60 times a second
@@ -219,15 +269,98 @@ export const ScrollSequence: React.FC = () => {
           updateText(text3Ref, currentProgress > 0.7 && currentProgress < 0.9);
         }
       }
+
+      // Continue animating until target reached
+      animationFrameId = window.requestAnimationFrame(renderLoop);
     };
+
+    const triggerRender = () => {
+      if (!isRunning && isVisible) {
+        isRunning = true;
+        animationFrameId = window.requestAnimationFrame(renderLoop);
+      }
+    };
+
+    // Phase B trigger: Approach observer (800px margin before section reaches viewport)
+    const section = document.getElementById('scroll-sequence-section');
+    const approachObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          startPhaseB();
+        }
+      },
+      { threshold: 0, rootMargin: '800px 0px 800px 0px' }
+    );
+
+    // Phase C & render visibility observer
+    const visibilityObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          isVisible = entry.isIntersecting;
+          if (entry.isIntersecting) {
+            startPhaseB();
+            startPhaseC();
+            triggerRender();
+          }
+        });
+      },
+      { threshold: 0, rootMargin: '200px' }
+    );
+
+    if (section) {
+      approachObserver.observe(section);
+      visibilityObserver.observe(section);
+    }
+
+    const handleScroll = () => {
+      if (!isVisible || !section) return;
+      const rect = section.getBoundingClientRect();
+      const scrollableDistance = rect.height - window.innerHeight;
+      
+      if (scrollableDistance > 0) {
+        targetProgress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
+
+        // Prioritize buffered loading around current scroll position if user scrolls ahead
+        const targetFrame = Math.floor(targetProgress * (frameCount - 1)) + 1;
+        const startWindow = Math.max(1, targetFrame - 2);
+        const endWindow = Math.min(frameCount, targetFrame + 6);
+        for (let f = startWindow; f <= endWindow; f++) {
+          ensureFrame(f);
+        }
+
+        triggerRender();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
-    renderLoop();
+    // Initial setup
+    handleScroll();
+    currentProgress = targetProgress;
+    triggerRender();
 
     return () => {
-      if (section) observer.unobserve(section);
+      if (section) {
+        approachObserver.unobserve(section);
+        visibilityObserver.unobserve(section);
+      }
+      approachObserver.disconnect();
+      visibilityObserver.disconnect();
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleScroll);
-      window.cancelAnimationFrame(animationFrameId);
+      if (animationFrameId) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+
+      // Clean up image memory references to prevent leaks
+      images.forEach((img) => {
+        if (img) {
+          img.onload = null;
+          img.onerror = null;
+          img.src = '';
+        }
+      });
+      images = [];
     };
   }, []);
 
@@ -235,7 +368,7 @@ export const ScrollSequence: React.FC = () => {
     <section 
       id="scroll-sequence-section" 
       className="relative w-full bg-background"
-      style={{ height: isMobile ? 'calc(100vh + 800px)' : 'calc(100vh + 3200px)' }}
+      style={{ height: isMobile ? 'calc(100dvh + 700px)' : 'calc(100vh + 3200px)' }}
     >
       <div 
         className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-black"

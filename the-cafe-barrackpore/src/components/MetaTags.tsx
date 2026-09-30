@@ -1,27 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { client, urlFor } from '../lib/sanityClient';
+import React, { useEffect } from 'react';
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 export const MetaTags: React.FC = () => {
-  const [seo, setSeo] = useState<{title?: string, description?: string, image?: string} | null>(null);
-
-  useEffect(() => {
-    const fetchSeo = async () => {
-      try {
-        const config = await client.fetch(`*[_type == "siteConfig"][0]{ seoTitle, seoDescription, seoImage }`);
-        if (config) {
-          const imgUrl = config.seoImage ? urlFor(config.seoImage).width(1200).height(630).url() : undefined;
-          setSeo({
-            title: config.seoTitle,
-            description: config.seoDescription,
-            image: imgUrl
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching SEO config:", error);
-      }
-    };
-    fetchSeo();
-  }, []);
+  const { seo } = useSiteConfig();
 
   useEffect(() => {
     if (!seo) return;

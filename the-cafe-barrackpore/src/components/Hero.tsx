@@ -1,152 +1,176 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { smoothScrollTo } from '../utils/scroll';
 import { useUI } from '../context/UIContext';
-import { siteConfig as fallbackConfig } from '../data/siteConfig';
-import { client } from '../lib/sanityClient';
-import imageUrlBuilder from '@sanity/image-url';
-import { clientDetails } from '../config/client';
-
-const builder = imageUrlBuilder(client);
-function urlFor(source: any) {
-  return builder.image(source);
-}
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 export const Hero: React.FC = () => {
   const { setIsReservationOpen } = useUI();
-  const [image, setImage] = useState({ src: fallbackConfig.hero.image, alt: fallbackConfig.hero.alt });
+  const { hero } = useSiteConfig();
 
-  useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const config = await client.fetch(`*[_type == "siteConfig"][0]{ heroImage }`);
-        if (config?.heroImage) {
-          setImage({
-            src: urlFor(config.heroImage).width(1200).auto('format').quality(80).url(),
-            alt: 'Hero Image'
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching Sanity config:", error);
-      }
-    };
-    fetchConfig();
-  }, []);
   const handleNav = (e: React.MouseEvent, target: string) => {
     e.preventDefault();
     smoothScrollTo(target);
   };
 
   return (
-    <section className="relative w-full min-h-[calc(100dvh-6rem)] flex items-center justify-center bg-background overflow-hidden">
-      <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 flex flex-col lg:flex-row items-center gap-10 lg:gap-16 relative z-10">
+    <section 
+      id="hero-section" 
+      className="relative w-full min-h-[calc(100dvh-5rem)] lg:h-[calc(100vh-5rem)] flex items-center justify-center bg-background overflow-hidden py-4 sm:py-6 lg:py-8"
+    >
+      {/* Ambient Radial Glow Background - Hidden on mobile to save GPU */}
+      <div 
+        className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#D4AF37]/5 rounded-full blur-[120px] pointer-events-none hidden sm:block" 
+        aria-hidden="true" 
+      />
+      <div 
+        className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#3D2517]/20 rounded-full blur-[100px] pointer-events-none hidden sm:block" 
+        aria-hidden="true" 
+      />
+
+      <div className="w-full max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-14 relative z-10 h-full">
         
-        {/* Left Side (60%) */}
-        <div className="w-full lg:w-[60%] flex flex-col items-center text-center lg:items-start lg:text-left">
+        {/* Left Column — Editorial Narrative & Action Engine (58%) */}
+        <div className="w-full lg:w-[58%] flex flex-col items-center text-center lg:items-start lg:text-left justify-center">
           
+          {/* Refined Minimalist Eyebrow Tag */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.8 }}
-            className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-8"
+            transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-[#D4AF37]/30 bg-[#160E0A]/90 backdrop-blur-md mb-4 sm:mb-5 shadow-[0_2px_12px_rgba(0,0,0,0.5)]"
           >
-            <div className="flex text-primary">
-              <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
-              <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
-              <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
-              <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
-              <span className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star_half</span>
-            </div>
-            <span className="font-label-md text-sm text-on-surface tracking-wide">4.6 (192 Google Reviews)</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] shadow-[0_0_8px_#D4AF37] animate-pulse" />
+            <span className="font-sans text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-[#EAE0D5] font-medium">
+              Cantonment Barrackpore &bull; Artisanal Gastronomy
+            </span>
           </motion.div>
 
+          {/* Wide Editorial Headline (Strict 2-Line Architecture) */}
           <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="font-headline-lg text-4xl sm:text-5xl md:text-6xl lg:text-[72px] leading-[0.95] text-on-surface font-medium tracking-tight mb-4 sm:mb-6"
+            transition={{ delay: 0.2, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="font-serif text-3xl sm:text-4xl lg:text-[44px] xl:text-[50px] leading-[1.12] text-on-surface font-normal tracking-tight mb-3 sm:mb-4 w-full max-w-2xl text-balance"
           >
-            {clientDetails.businessName} <br className="hidden md:block"/>
-            <span className="text-primary italic font-serif font-semibold">{clientDetails.shortName}</span>
+            {hero.headline ? (
+              <span>{hero.headline}</span>
+            ) : (
+              <>
+                Step Into Barrackpore’s <br className="hidden sm:inline" />
+                <span className="text-primary italic font-light">Trendsetting Dining Retreat</span>
+              </>
+            )}
           </motion.h1>
 
+          {/* Editorial Subtitle / Value Proposition (< 20 Words) */}
           <motion.p 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="font-body-lg text-base sm:text-lg md:text-xl text-on-surface/70 max-w-xl leading-relaxed mb-8 sm:mb-10 font-light"
+            transition={{ delay: 0.3, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="font-sans text-xs sm:text-sm md:text-[15px] text-on-surface/80 max-w-lg leading-relaxed mb-6 sm:mb-7 font-light text-balance"
           >
-            Where artisan coffee meets handcrafted cocktails & gourmet comfort food in a strictly premium, nocturnal setting.
+            {hero.subtext || "Where artisan coffee meets handcrafted mocktails & wood-fired comfort food in a strictly premium, nocturnal setting."}
           </motion.p>
 
+          {/* Island CTA & Button-in-Button Architecture */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.8 }}
-            className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-10 sm:mb-14 w-full sm:w-auto"
+            transition={{ delay: 0.4, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col sm:flex-row items-center gap-3.5 mb-6 sm:mb-7 w-full sm:w-auto"
           >
+            {/* Primary CTA with Nested Trailing Icon Pill */}
             <motion.a 
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              className="w-full sm:w-auto px-8 py-4 rounded-full uppercase tracking-wider text-xs sm:text-sm font-semibold btn-premium flex items-center justify-center gap-2 cursor-pointer" 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               href="#menu-section" 
               onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleNav(e, 'menu-section')}
+              className="group relative inline-flex items-center justify-between pl-6 pr-2 py-1.5 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-semibold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.28)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all duration-300 cursor-pointer w-full sm:w-auto"
             >
-              <span>Explore Menu</span>
+              <span className="pr-4">Explore Menu</span>
+              <span className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
+                <span className="material-symbols-outlined text-[15px] text-[#120B08]">arrow_forward</span>
+              </span>
             </motion.a>
-            <motion.a 
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              className="w-full sm:w-auto px-8 py-4 rounded-full uppercase tracking-wider text-xs sm:text-sm font-semibold btn-outline-premium flex items-center justify-center gap-2 cursor-pointer" 
-              href="#" 
-              onClick={(e: React.MouseEvent<HTMLAnchorElement>) => { e.preventDefault(); setIsReservationOpen(true); }}
+
+            {/* Secondary CTA: Soft Glass Table Reservation Pill */}
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsReservationOpen(true)}
+              className="group inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-full border border-[#D4AF37]/35 bg-[#160E0A]/70 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/70 text-[#EAE0D5] font-medium text-xs tracking-wider uppercase backdrop-blur-sm transition-all duration-300 shadow-sm cursor-pointer w-full sm:w-auto"
             >
-              <span>Book a Table</span>
-            </motion.a>
+              <span className="material-symbols-outlined text-[16px] text-primary transition-transform duration-300 group-hover:scale-110">table_restaurant</span>
+              <span>Reserve a Table</span>
+            </motion.button>
           </motion.div>
 
+          {/* Architectural Atmosphere Baseline */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.9, duration: 1 }}
-            className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-8"
+            transition={{ delay: 0.5, duration: 0.7 }}
+            className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 pt-3 border-t border-white/10 w-full text-on-surface/65"
           >
-            <div className="flex items-center gap-2 text-on-surface/60">
-              <span className="material-symbols-outlined text-primary text-xl font-light">local_bar</span>
-              <span className="font-label-sm text-[13px] tracking-widest uppercase">Mocktails</span>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/70" />
+              <span className="font-sans text-[11px] tracking-wider uppercase font-medium">Lounge Mocktails</span>
             </div>
-            <div className="flex items-center gap-2 text-on-surface/60">
-              <span className="material-symbols-outlined text-primary text-xl font-light">local_pizza</span>
-              <span className="font-label-sm text-[13px] tracking-widest uppercase">Wood-Fired Pizza</span>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/70" />
+              <span className="font-sans text-[11px] tracking-wider uppercase font-medium">Wood-Fired Crusts</span>
             </div>
-            <div className="flex items-center gap-2 text-on-surface/60">
-              <span className="material-symbols-outlined text-primary text-xl font-light">music_note</span>
-              <span className="font-label-sm text-[13px] tracking-widest uppercase">Acoustic Weekends</span>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/70" />
+              <span className="font-sans text-[11px] tracking-wider uppercase font-medium">Acoustic Weekends</span>
             </div>
           </motion.div>
 
         </div>
 
-        {/* Right Side (40%) */}
+        {/* Right Column — Double-Bezel Architectural Visual (42%) */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4, duration: 1 }}
-          className="w-full lg:w-[40%] flex justify-center lg:justify-end"
+          transition={{ delay: 0.25, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full lg:w-[42%] flex justify-center lg:justify-end"
         >
-          <div 
-            className="relative w-full max-w-[400px] lg:max-w-full h-[45vh] lg:h-[75vh] max-h-[45vh] lg:max-h-[75vh]"
-            style={{ 
-              maskImage: 'radial-gradient(circle, black 60%, transparent 100%)',
-              WebkitMaskImage: 'radial-gradient(circle, black 60%, transparent 100%)'
-            }}
-          >
-            <div className="absolute inset-0 bg-background/20 z-10 mix-blend-overlay pointer-events-none"></div>
-            <img 
-              src={image.src} 
-              alt={image.alt} 
-              className="w-full h-full object-cover object-bottom"
-            />
+          {/* Double-Bezel Outer Hardware Shell */}
+          <div className="p-2 sm:p-2.5 rounded-[2rem] bg-gradient-to-b from-[#2A1C14]/50 via-[#1C120D]/60 to-[#120B08]/90 border border-[#D4AF37]/25 shadow-[0_25px_60px_rgba(0,0,0,0.85)] backdrop-blur-md">
+            
+            {/* Double-Bezel Inner Core */}
+            <div className="relative w-full max-w-[340px] sm:max-w-[390px] lg:max-w-[430px] aspect-[4/5] max-h-[380px] sm:max-h-[430px] lg:max-h-[460px] rounded-[calc(2rem-0.5rem)] overflow-hidden border border-[#D4AF37]/20 bg-[#140D09] shadow-[inset_0_1px_2px_rgba(255,255,255,0.15)] group">
+              
+              {/* Soft Ambient Inner Vignette */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-black/25 opacity-75 z-10 pointer-events-none" />
+              
+              {/* Heritage Location Badge */}
+              <div className="absolute top-3.5 right-3.5 z-20 px-3 py-1 rounded-full bg-[#120B08]/85 backdrop-blur-md border border-[#D4AF37]/35 text-[9px] uppercase tracking-widest text-primary font-semibold shadow-md">
+                Est. Cantonment
+              </div>
+
+              {/* Frosted Telemetry Console Pill (Google Rating + Operating Hours) */}
+              <div className="absolute bottom-3.5 left-3.5 right-3.5 z-20 flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#140D09]/90 backdrop-blur-md border border-[#D4AF37]/25 shadow-lg pointer-events-none">
+                <div className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[#D4AF37] text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  <span className="font-sans text-xs font-semibold text-white">4.6</span>
+                  <span className="font-sans text-[10px] text-white/60 tracking-wider uppercase">(192 Reviews)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse" />
+                  <span className="font-sans text-[10px] text-[#D4AF37] tracking-wider uppercase font-medium">Daily &bull; 11am-11:30pm</span>
+                </div>
+              </div>
+
+              {/* Food / Beverage Photography */}
+              <img 
+                src={hero.src} 
+                alt={hero.alt || "Artisanal beverage at The Café Barrackpore"} 
+                className="w-full h-full object-cover object-center group-hover:scale-[1.04] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                fetchPriority="high"
+              />
+            </div>
           </div>
         </motion.div>
 
@@ -154,3 +178,4 @@ export const Hero: React.FC = () => {
     </section>
   );
 };
+
