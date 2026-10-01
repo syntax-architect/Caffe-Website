@@ -308,13 +308,14 @@ export const Menu: React.FC = () => {
                         setActiveCategory(category);
                         setVisibleCount(6);
                       }}
-                      className={`px-4 py-2 rounded-full font-sans text-xs uppercase tracking-wider transition-all duration-200 whitespace-nowrap cursor-pointer border ${
+                      className={`px-3.5 sm:px-4 py-2 rounded-full font-sans text-xs uppercase tracking-wider transition-all duration-200 whitespace-nowrap cursor-pointer border flex items-center gap-1.5 active:scale-95 ${
                         isActive 
-                        ? 'bg-primary text-[#18110c] border-primary font-semibold shadow-[0_2px_10px_rgba(212,175,55,0.25)]' 
-                        : 'bg-transparent text-on-surface/70 border-white/10 hover:border-primary/40 hover:text-white'
+                        ? 'bg-gradient-to-r from-primary to-[#F3E5AB] text-[#18110c] border-primary font-bold shadow-[0_2px_12px_rgba(212,175,55,0.35)]' 
+                        : 'bg-[#140D09]/80 text-on-surface/75 border-white/10 hover:border-primary/40 hover:text-white'
                       }`}
                     >
-                      {category}
+                      <span className="material-symbols-outlined text-[15px]">{getCategoryIcon(category)}</span>
+                      <span>{category}</span>
                     </button>
                   );
                 })}
@@ -368,7 +369,7 @@ export const Menu: React.FC = () => {
                       setHoveredImage(resolvedHighRes || null);
                     }}
                     onMouseLeave={() => setHoveredImage(null)}
-                    className={`relative p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#1C120D] via-[#160E0A] to-[#120B08] border border-[#8B6B23]/30 hover:border-[#D4AF37] shadow-lg hover:shadow-[0_12px_32px_rgba(212,175,55,0.18)] transition-all duration-300 group flex flex-col justify-between gap-4 overflow-hidden ${
+                    className={`relative p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-[#1C120D] via-[#160E0A] to-[#120B08] border border-[#8B6B23]/35 hover:border-[#D4AF37] shadow-lg hover:shadow-[0_12px_32px_rgba(212,175,55,0.18)] transition-all duration-300 group flex flex-col justify-between gap-3.5 sm:gap-4 overflow-hidden active:scale-[0.99] ${
                       available
                         ? 'cursor-pointer'
                         : 'opacity-65 grayscale-[30%] bg-[#130B07] border-stone-800/60'

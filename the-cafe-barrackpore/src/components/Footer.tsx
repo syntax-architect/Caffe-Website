@@ -29,7 +29,7 @@ export const Footer: React.FC = () => {
         aria-hidden="true" 
       />
 
-      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 pt-20 md:pt-28 pb-8 md:pb-12 relative z-10">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 pt-16 md:pt-28 pb-28 md:pb-12 relative z-10">
         
         {/* Top Hospitality Callout Banner with Double-Bezel Enclosure */}
         <div className="rounded-[2.5rem] p-1.5 sm:p-2 bg-gradient-to-r from-[#221610] via-[#180F0B] to-[#120B08] ring-1 ring-[#D4AF37]/25 shadow-2xl mb-14 md:mb-20">

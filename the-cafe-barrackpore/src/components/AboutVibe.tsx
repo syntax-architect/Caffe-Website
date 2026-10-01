@@ -94,79 +94,79 @@ export const AboutVibe: React.FC = () => {
                 Whether sinking into a candlelit date night, catching up with friends over single-origin pour-overs, or enjoying live weekend acoustic sessions, every detail is curated for relaxed sophistication.
               </p>
               
-              {/* 4 Feature Amenities Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-base">weekend</span>
-                    <span className="font-serif text-xs sm:text-sm text-on-surface font-medium">Private Velvet Booths</span>
+              {/* 4 Feature Amenities Grid (2x2 Luxury Double-Bezel Cards on Mobile) */}
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 pt-1">
+                <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-[#1C120D] to-[#120B08] border border-[#D4AF37]/25 shadow-md flex flex-col gap-1 active:scale-[0.98] transition-transform">
+                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-base">weekend</span>
                   </div>
-                  <span className="font-sans text-[11px] text-on-surface/60">Tufted comfort with bespoke low-candlelight.</span>
+                  <span className="font-serif text-xs sm:text-sm text-on-surface font-medium mt-1">Private Velvet Booths</span>
+                  <span className="font-sans text-[10px] sm:text-[11px] text-on-surface/60 line-clamp-2">Tufted comfort with bespoke low-candlelight.</span>
                 </div>
                 
-                <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-base">photo_camera</span>
-                    <span className="font-serif text-xs sm:text-sm text-on-surface font-medium">Instagram Art Wall</span>
+                <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-[#1C120D] to-[#120B08] border border-[#D4AF37]/25 shadow-md flex flex-col gap-1 active:scale-[0.98] transition-transform">
+                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-base">photo_camera</span>
                   </div>
-                  <span className="font-sans text-[11px] text-on-surface/60">Iconic neon accents &amp; curated visual moments.</span>
+                  <span className="font-serif text-xs sm:text-sm text-on-surface font-medium mt-1">Instagram Art Wall</span>
+                  <span className="font-sans text-[10px] sm:text-[11px] text-on-surface/60 line-clamp-2">Iconic neon accents &amp; curated visual moments.</span>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-base">ramen_dining</span>
-                    <span className="font-serif text-xs sm:text-sm text-on-surface font-medium">Continental &amp; Asian</span>
+                <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-[#1C120D] to-[#120B08] border border-[#D4AF37]/25 shadow-md flex flex-col gap-1 active:scale-[0.98] transition-transform">
+                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-base">ramen_dining</span>
                   </div>
-                  <span className="font-sans text-[11px] text-on-surface/60">Artisanal pizzas, gourmet dim sums &amp; sips.</span>
+                  <span className="font-serif text-xs sm:text-sm text-on-surface font-medium mt-1">Continental &amp; Asian</span>
+                  <span className="font-sans text-[10px] sm:text-[11px] text-on-surface/60 line-clamp-2">Artisanal pizzas, gourmet dim sums &amp; sips.</span>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-base">local_cafe</span>
-                    <span className="font-serif text-xs sm:text-sm text-on-surface font-medium">Late Night Kitchen</span>
+                <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-[#1C120D] to-[#120B08] border border-[#D4AF37]/25 shadow-md flex flex-col gap-1 active:scale-[0.98] transition-transform">
+                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-base">local_cafe</span>
                   </div>
-                  <span className="font-sans text-[11px] text-on-surface/60">Craft pours &amp; comfort food till 11:30 PM.</span>
+                  <span className="font-serif text-xs sm:text-sm text-on-surface font-medium mt-1">Late Night Kitchen</span>
+                  <span className="font-sans text-[10px] sm:text-[11px] text-on-surface/60 line-clamp-2">Craft pours &amp; comfort food till 11:30 PM.</span>
                 </div>
               </div>
             </motion.div>
 
-            {/* Right Visual Artistry Layout (6 cols) */}
+            {/* Right Visual Artistry Layout (2x2 Grid on Mobile, Staggered on Desktop) */}
             <motion.div 
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.8 }}
-              className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4"
+              className="lg:col-span-6 grid grid-cols-2 gap-2.5 sm:gap-4"
             >
-              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-52 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500">
+              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-44 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500">
                 <motion.img loading="lazy" alt={images[0].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[0].src} style={isDesktop ? { y: yPos, scale: 1.15 } : {}} />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-4">
-                  <span className="font-serif text-xs sm:text-sm font-medium text-primary">Midnight Velvet Booths</span>
-                  <p className="font-sans text-[11px] text-on-surface/75 mt-0.5">Intimate dining crafted for memorable evenings.</p>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-2.5 sm:p-4">
+                  <span className="font-serif text-[11px] sm:text-sm font-medium text-primary">Midnight Booths</span>
+                  <p className="font-sans text-[9px] sm:text-[11px] text-on-surface/75 mt-0.5 line-clamp-1 sm:line-clamp-none">Intimate dining crafted for evenings.</p>
                 </div>
               </div>
 
-              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-52 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500 sm:translate-y-3">
+              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-44 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500 sm:translate-y-3">
                 <motion.img loading="lazy" alt={images[1].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[1].src} style={isDesktop ? { y: yPos, scale: 1.15 } : {}} />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-4">
-                  <span className="font-serif text-xs sm:text-sm font-medium text-primary">Acoustic Weekend Nook</span>
-                  <p className="font-sans text-[11px] text-on-surface/75 mt-0.5">Warm vinyl acoustics &amp; live Saturday serenades.</p>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-2.5 sm:p-4">
+                  <span className="font-serif text-[11px] sm:text-sm font-medium text-primary">Acoustic Nook</span>
+                  <p className="font-sans text-[9px] sm:text-[11px] text-on-surface/75 mt-0.5 line-clamp-1 sm:line-clamp-none">Warm vinyl &amp; live serenades.</p>
                 </div>
               </div>
 
-              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-52 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500">
+              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-44 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500">
                 <motion.img loading="lazy" alt={images[2].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[2].src} style={isDesktop ? { y: yPos, scale: 1.15 } : {}} />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-4">
-                  <span className="font-serif text-xs sm:text-sm font-medium text-primary">Artisanal Espresso Bar</span>
-                  <p className="font-sans text-[11px] text-on-surface/75 mt-0.5">Specialty beans, pour-overs &amp; smoked mocktails.</p>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-2.5 sm:p-4">
+                  <span className="font-serif text-[11px] sm:text-sm font-medium text-primary">Espresso Bar</span>
+                  <p className="font-sans text-[9px] sm:text-[11px] text-on-surface/75 mt-0.5 line-clamp-1 sm:line-clamp-none">Specialty beans &amp; pour-overs.</p>
                 </div>
               </div>
 
-              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-52 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500 sm:translate-y-3">
+              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-44 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500 sm:translate-y-3">
                 <motion.img loading="lazy" alt={images[3].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[3].src} style={isDesktop ? { y: yPos, scale: 1.15 } : {}} />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-4">
-                  <span className="font-serif text-xs sm:text-sm font-medium text-primary">Gourmet Comfort Food</span>
-                  <p className="font-sans text-[11px] text-on-surface/75 mt-0.5">Wood-fired thin crusts &amp; authentic Asian bites.</p>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-2.5 sm:p-4">
+                  <span className="font-serif text-[11px] sm:text-sm font-medium text-primary">Comfort Bites</span>
+                  <p className="font-sans text-[9px] sm:text-[11px] text-on-surface/75 mt-0.5 line-clamp-1 sm:line-clamp-none">Wood-fired thin crusts &amp; dim sums.</p>
                 </div>
               </div>
             </motion.div>

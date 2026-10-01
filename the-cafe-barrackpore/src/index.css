@@ -67,6 +67,20 @@ html, body { overflow-x: clip; width: 100%; position: relative; }
   .badge-soldout {
     @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-stone-800/80 text-stone-400 border border-stone-700/60;
   }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .text-gold-gradient {
+    background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #C5A028 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

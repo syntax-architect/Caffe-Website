@@ -8,6 +8,7 @@ import { Hero } from './components/Hero';
 import { ScrollSequence } from './components/ScrollSequence';
 import { Preloader } from './components/Preloader';
 import { MetaTags } from './components/MetaTags';
+import { MobileActionDock } from './components/MobileActionDock';
 
 import { SiteConfigProvider } from './context/SiteConfigContext';
 
@@ -112,6 +113,7 @@ function App() {
               <CartDrawer />
               <ReservationDrawer />
             </Suspense>
+            <MobileActionDock />
             <div 
               className="pointer-events-none fixed inset-0 z-[100] opacity-[0.03] hidden sm:block"
               style={{ 

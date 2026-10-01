@@ -33,42 +33,42 @@ export const VIPClub: React.FC = () => {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="rounded-[2.5rem] p-1.5 sm:p-2 bg-gradient-to-r from-[#D4AF37]/35 via-[#F3E5AB]/40 to-[#D4AF37]/35 shadow-[0_30px_70px_rgba(0,0,0,0.8)]"
         >
-          <div className="rounded-[calc(2.5rem-0.5rem)] bg-gradient-to-b from-[#180F0B] via-[#130C08] to-[#0E0805] p-8 sm:p-12 lg:p-16 border border-white/5 flex flex-col items-center text-center gap-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
+          <div className="rounded-[calc(2.5rem-0.5rem)] bg-gradient-to-b from-[#180F0B] via-[#130C08] to-[#0E0805] p-5 sm:p-12 lg:p-16 border border-white/5 flex flex-col items-center text-center gap-6 sm:gap-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
             
             {/* Crest Emblem */}
-            <div className="w-14 h-14 rounded-full border border-[#D4AF37]/40 bg-[#160E0A] flex items-center justify-center text-primary shadow-[0_0_20px_rgba(212,175,55,0.18)]">
-              <span className="material-symbols-outlined text-2xl font-light">hotel_class</span>
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-[#D4AF37]/40 bg-[#160E0A] flex items-center justify-center text-primary shadow-[0_0_20px_rgba(212,175,55,0.18)]">
+              <span className="material-symbols-outlined text-xl sm:text-2xl font-light">hotel_class</span>
             </div>
 
             {/* Typography Header */}
-            <div className="flex flex-col gap-3 max-w-xl">
+            <div className="flex flex-col gap-2 sm:gap-3 max-w-xl">
               <span className="editorial-eyebrow">Connoisseurs' Privileges</span>
-              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-on-surface font-normal tracking-tight text-balance">
+              <h2 className="font-serif text-2xl sm:text-4xl md:text-5xl text-on-surface font-normal tracking-tight text-balance">
                 Join the <span className="text-primary italic font-light">Nocturnal Circle</span>
               </h2>
-              <p className="font-sans text-sm sm:text-base text-on-surface/75 leading-relaxed font-light mt-1">
+              <p className="font-sans text-xs sm:text-base text-on-surface/75 leading-relaxed font-light mt-1">
                 Receive discreet invitations to weekend acoustic line-ups, secret seasonal chef previews, and priority booth reservations.
               </p>
             </div>
 
             {/* 3 Luxury Perks Double-Bezel Wells */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl my-2">
-              <div className="p-4 rounded-2xl bg-[#0D0705]/80 border border-white/10 hover:border-[#D4AF37]/35 transition-colors flex flex-col items-center gap-1.5 shadow-md">
-                <span className="material-symbols-outlined text-primary text-xl font-light">event_seat</span>
-                <span className="font-sans text-xs font-semibold text-on-surface">Priority Seating</span>
-                <span className="font-sans text-[11px] text-on-surface/60 font-light">Weekend prime booth access</span>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full max-w-2xl my-1 sm:my-2">
+              <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#0D0705]/80 border border-white/10 hover:border-[#D4AF37]/35 transition-colors flex flex-col items-center text-center gap-1 shadow-md">
+                <span className="material-symbols-outlined text-primary text-lg sm:text-xl font-light">event_seat</span>
+                <span className="font-sans text-[11px] sm:text-xs font-semibold text-on-surface">Priority</span>
+                <span className="font-sans text-[9px] sm:text-[11px] text-on-surface/60 font-light hidden sm:block">Weekend prime booth access</span>
               </div>
               
-              <div className="p-4 rounded-2xl bg-[#0D0705]/80 border border-white/10 hover:border-[#D4AF37]/35 transition-colors flex flex-col items-center gap-1.5 shadow-md">
-                <span className="material-symbols-outlined text-primary text-xl font-light">restaurant_menu</span>
-                <span className="font-sans text-xs font-semibold text-on-surface">Secret Menus</span>
-                <span className="font-sans text-[11px] text-on-surface/60 font-light">Off-menu seasonal tastings</span>
+              <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#0D0705]/80 border border-white/10 hover:border-[#D4AF37]/35 transition-colors flex flex-col items-center text-center gap-1 shadow-md">
+                <span className="material-symbols-outlined text-primary text-lg sm:text-xl font-light">restaurant_menu</span>
+                <span className="font-sans text-[11px] sm:text-xs font-semibold text-on-surface">Secret Menus</span>
+                <span className="font-sans text-[9px] sm:text-[11px] text-on-surface/60 font-light hidden sm:block">Off-menu seasonal tastings</span>
               </div>
               
-              <div className="p-4 rounded-2xl bg-[#0D0705]/80 border border-white/10 hover:border-[#D4AF37]/35 transition-colors flex flex-col items-center gap-1.5 shadow-md">
-                <span className="material-symbols-outlined text-primary text-xl font-light">music_note</span>
-                <span className="font-sans text-xs font-semibold text-on-surface">Acoustic Access</span>
-                <span className="font-sans text-[11px] text-on-surface/60 font-light">Reserved guest artist rows</span>
+              <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#0D0705]/80 border border-white/10 hover:border-[#D4AF37]/35 transition-colors flex flex-col items-center text-center gap-1 shadow-md">
+                <span className="material-symbols-outlined text-primary text-lg sm:text-xl font-light">music_note</span>
+                <span className="font-sans text-[11px] sm:text-xs font-semibold text-on-surface">Live Acoustix</span>
+                <span className="font-sans text-[9px] sm:text-[11px] text-on-surface/60 font-light hidden sm:block">Reserved guest artist rows</span>
               </div>
             </div>
 

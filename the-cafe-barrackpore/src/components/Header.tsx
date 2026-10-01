@@ -165,7 +165,7 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Editorial Mobile Navigation Modal Overlay with Staggered Mask Reveal */}
+      {/* Editorial Luxury Mobile Navigation Modal Overlay with Staggered Mask Reveal */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
@@ -174,65 +174,104 @@ export const Header: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 top-0 bg-black/80 backdrop-blur-md z-40 lg:hidden"
+              className="fixed inset-0 top-0 bg-black/85 backdrop-blur-xl z-40 lg:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <motion.div 
-              initial={{ opacity: 0, y: -15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="lg:hidden fixed top-20 left-0 right-0 max-h-[calc(100dvh-5rem)] bg-[#0E0806] border-b border-[#D4AF37]/30 shadow-2xl z-50 overflow-y-auto"
+              initial={{ opacity: 0, y: -20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.98 }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:hidden fixed top-20 left-0 right-0 max-h-[calc(100dvh-5.5rem)] bg-gradient-to-b from-[#160E0A] via-[#120B08] to-[#0D0705] border-b border-[#D4AF37]/35 shadow-[0_30px_70px_rgba(0,0,0,0.9)] z-50 overflow-y-auto rounded-b-[2rem]"
             >
-              <div className="max-w-[1320px] mx-auto px-6 py-8 flex flex-col gap-6">
+              <div className="max-w-[1320px] mx-auto px-5 py-6 flex flex-col gap-6">
                 
-                {/* Staggered Links */}
-                <nav className="flex flex-col gap-1.5">
+                {/* Brand Monogram & Live Service Status Strip */}
+                <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full border border-[#D4AF37]/40 bg-[#1A110C] flex items-center justify-center text-primary text-xs font-serif font-bold">
+                      TCB
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-serif text-sm font-semibold text-on-surface">The Café Barrackpore</span>
+                      <span className="font-sans text-[9px] uppercase tracking-[0.2em] text-primary/80">Cantonment Dining</span>
+                    </div>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-sans font-semibold uppercase tracking-wider">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Open Now</span>
+                  </div>
+                </div>
+
+                {/* Staggered Numerated Editorial Links */}
+                <nav className="flex flex-col gap-1">
                   {navLinks.map((link, idx) => (
                     <motion.a 
                       key={link.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.03, duration: 0.25 }}
-                      className="font-serif text-2xl text-[#FDFBF7] hover:text-primary transition-colors flex items-center justify-between py-3 border-b border-white/10 active:text-primary active:bg-white/5 px-2 rounded-lg" 
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.04, duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                      className="group flex items-center justify-between py-3.5 px-3 rounded-xl border-b border-white/5 active:bg-white/5 active:text-primary transition-all duration-200" 
                       href={`#${link.id}`} 
                       onClick={(e) => handleNavClick(e, link.id)}
                     >
-                      <span>{link.label}</span>
-                      <span className="material-symbols-outlined text-primary text-xl">arrow_forward</span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-sans text-[11px] uppercase tracking-widest text-[#D4AF37]/50 font-bold group-hover:text-primary transition-colors">
+                          0{idx + 1}
+                        </span>
+                        <span className="font-serif text-xl sm:text-2xl text-on-surface group-hover:text-primary transition-colors font-normal">
+                          {link.label}
+                        </span>
+                      </div>
+                      <span className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-primary group-hover:bg-[#D4AF37]/20 transition-all">
+                        <span className="material-symbols-outlined text-[15px] transform group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+                      </span>
                     </motion.a>
                   ))}
                 </nav>
                 
                 {/* Mobile CTAs */}
-                <div className="flex flex-col gap-3 pt-2">
+                <div className="flex flex-col gap-2.5 pt-1">
                   <button 
                     type="button"
                     onClick={() => { setIsReservationOpen(true); setIsMobileMenuOpen(false); }}
-                    className="w-full h-12 rounded-full bg-gradient-to-r from-primary to-[#E5C158] text-[#18110c] text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                    className="group relative w-full h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-between pl-6 pr-2 shadow-[0_4px_20px_rgba(212,175,55,0.3)] active:scale-[0.98] transition-transform cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-[18px]">table_restaurant</span>
-                    <span>Book a Table Reservation</span>
+                    <span>Reserve a Table</span>
+                    <div className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform group-hover:scale-105">
+                      <span className="material-symbols-outlined text-[16px] text-[#120B08]">table_restaurant</span>
+                    </div>
                   </button>
-                  <a 
-                    className="w-full h-12 rounded-full border border-white/15 bg-white/5 text-on-surface text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer" 
-                    href="#menu-section" 
-                    onClick={(e) => handleNavClick(e, 'menu-section')}
-                  >
-                    <span>Browse Full Menu</span>
-                    <span className="material-symbols-outlined text-[16px]">restaurant_menu</span>
-                  </a>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <a
+                      href={`tel:${clientDetails.phone}`}
+                      className="h-11 rounded-full border border-white/15 bg-white/5 text-on-surface text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 active:bg-white/10 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[16px] text-primary">call</span>
+                      <span>Call Concierge</span>
+                    </a>
+                    <a
+                      href={clientDetails.googleMapsLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-11 rounded-full border border-white/15 bg-white/5 text-on-surface text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 active:bg-white/10 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[16px] text-primary">directions</span>
+                      <span>Directions</span>
+                    </a>
+                  </div>
                 </div>
 
-                {/* Restaurant Quick Info Footer in Mobile Menu */}
-                <div className="pt-4 border-t border-white/10 flex flex-col gap-2 text-[12px] text-on-surface/65 font-sans">
+                {/* Restaurant Hours & Location Micro-Footer */}
+                <div className="pt-4 border-t border-white/10 flex flex-col gap-1.5 text-[11px] text-on-surface/65 font-sans">
                   <div className="flex items-center gap-2 text-primary font-medium">
                     <span className="material-symbols-outlined text-sm">schedule</span>
-                    <span>Daily Service: 11:00 AM – 11:30 PM</span>
+                    <span>Daily Service: 11:00 AM – 11:30 PM (Kitchen closes 11:15 PM)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-sm">location_on</span>
-                    <span>{clientDetails.address}</span>
+                    <span className="truncate">{clientDetails.address}</span>
                   </div>
                 </div>
 

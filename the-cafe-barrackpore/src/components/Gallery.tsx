@@ -83,13 +83,13 @@ export const Gallery: React.FC = () => {
           </div>
         ) : (
           /* Asymmetrical Double-Bezel Bento Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[290px] sm:auto-rows-[310px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 auto-rows-[250px] sm:auto-rows-[310px]">
             {images.slice(0, 4).map((img, idx) => {
               const meta = GALLERY_METADATA[idx] || { tag: "The Café Experience", caption: img.alt };
               // Spans: Item 0 = 1 col, 2 rows (portrait hero); Item 1 = 2 cols, 1 row (wide panoramic); Items 2 & 3 = 1 col each
               const spanClass = 
                 idx === 0 
-                  ? "lg:col-span-1 lg:row-span-2 min-h-[380px] sm:min-h-full" 
+                  ? "lg:col-span-1 lg:row-span-2 min-h-[300px] sm:min-h-full" 
                   : idx === 1 
                   ? "lg:col-span-2 lg:row-span-1" 
                   : "lg:col-span-1 lg:row-span-1";

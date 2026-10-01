@@ -36,19 +36,19 @@ export const OurStory: React.FC = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="rounded-[2.5rem] p-2 bg-gradient-to-b from-[#221610] via-[#180F0B] to-[#110B08] ring-1 ring-[#D4AF37]/25 shadow-[0_25px_60px_rgba(0,0,0,0.7)] group"
+            className="rounded-[2rem] sm:rounded-[2.5rem] p-1.5 sm:p-2 bg-gradient-to-b from-[#221610] via-[#180F0B] to-[#110B08] ring-1 ring-[#D4AF37]/25 shadow-[0_20px_50px_rgba(0,0,0,0.7)] group"
           >
-            <div className="relative w-full aspect-[4/5] sm:h-[540px] md:h-[620px] rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-[#0D0705] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
+            <div className="relative w-full aspect-[16/11] sm:aspect-[4/5] sm:h-[540px] md:h-[620px] rounded-[calc(2rem-0.375rem)] sm:rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-[#0D0705] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
               <div className="absolute inset-0 bg-gradient-to-t from-[#110B08] via-transparent to-black/25 opacity-80 z-10 pointer-events-none" />
               
               {/* Authentic Heritage Badge */}
-              <div className="absolute top-5 left-5 z-20 px-4 py-1.5 rounded-full bg-[#120B08]/90 backdrop-blur-md border border-[#D4AF37]/35 text-[10px] uppercase tracking-[0.2em] text-primary font-semibold shadow-lg">
+              <div className="absolute top-3.5 left-3.5 sm:top-5 sm:left-5 z-20 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-[#120B08]/90 backdrop-blur-md border border-[#D4AF37]/35 text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-primary font-semibold shadow-lg">
                 Origin · Riverside Cantonment
               </div>
 
               {/* Monogram Seal */}
-              <div className="absolute bottom-5 right-5 z-20 w-12 h-12 rounded-full bg-[#120B08]/90 backdrop-blur-md border border-[#D4AF37]/30 flex items-center justify-center text-primary shadow-xl">
-                <span className="font-serif text-sm font-semibold tracking-widest text-[#D4AF37]">
+              <div className="absolute bottom-3.5 right-3.5 sm:bottom-5 sm:right-5 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#120B08]/90 backdrop-blur-md border border-[#D4AF37]/30 flex items-center justify-center text-primary shadow-xl">
+                <span className="font-serif text-xs sm:text-sm font-semibold tracking-widest text-[#D4AF37]">
                   TCB
                 </span>
               </div>

@@ -100,12 +100,12 @@ export const SpecialsBanner: React.FC = () => {
               </div>
             </div>
 
-            {/* 3-Platter Double-Bezel Card Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            {/* 3-Platter Double-Bezel Card Carousel (Horizontal Snap on Mobile, 3-Col Grid on Desktop) */}
+            <div className="flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 pb-2 md:pb-0">
               {SPECIAL_COMBOS.map((combo) => (
                 <div
                   key={combo.id}
-                  className="group rounded-[2rem] p-1.5 bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/10 hover:border-[#D4AF37]/50 shadow-xl transition-all duration-500 flex flex-col hover:-translate-y-1.5"
+                  className="min-w-[86vw] max-w-[340px] sm:min-w-[320px] md:min-w-0 md:max-w-none snap-center flex-shrink-0 group rounded-[2rem] p-1.5 bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/10 hover:border-[#D4AF37]/50 shadow-xl transition-all duration-500 flex flex-col hover:-translate-y-1.5"
                 >
                   <div className="rounded-[calc(2rem-0.375rem)] bg-[#160E0A] overflow-hidden flex flex-col h-full border border-white/5">
                     
@@ -201,6 +201,12 @@ export const SpecialsBanner: React.FC = () => {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Mobile Carousel Swipe Indicator */}
+            <div className="flex md:hidden items-center justify-center gap-1.5 pt-2 text-[10px] uppercase tracking-wider text-[#D4AF37]/80 font-sans">
+              <span className="material-symbols-outlined text-sm">swipe</span>
+              <span>Swipe horizontally to view banquet platters</span>
             </div>
 
           </div>
