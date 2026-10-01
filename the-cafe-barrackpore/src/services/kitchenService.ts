@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { OrderStatus, OrderType } from '../types/order';
+import type { PaymentStatus } from '../types/payment';
 
 export interface KitchenOrderItem {
   id: string;
@@ -22,6 +23,9 @@ export interface KitchenOrder {
   total?: number;
   status: OrderStatus;
   source: string;
+  payment_required?: boolean;
+  payment_status?: PaymentStatus | string;
+  payment_amount?: number;
   created_at: string;
   updated_at: string;
   items: KitchenOrderItem[];
@@ -29,6 +33,16 @@ export interface KitchenOrder {
 
 export type KitchenFilter = 'all' | 'dine_in' | 'takeaway';
 export type KitchenConnectionStatus = 'live' | 'reconnecting' | 'offline';
+
+/**
+ * Determines whether an order is eligible to appear on the Kitchen Display.
+ * KDS SAFETY RULE: Orders with payment_status === 'pending' | 'failed' | 'cancelled'
+ * MUST NOT appear in active kitchen columns until paid or if payment is not required.
+ */
+export const isKdsEligible = (order: { payment_status?: PaymentStatus | string }): boolean => {
+  if (!order.payment_status) return true; // legacy support
+  return order.payment_status === 'paid' || order.payment_status === 'not_required';
+};
 
 export const ALLOWED_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   pending: ['preparing', 'cancelled'],
@@ -59,6 +73,8 @@ export const SAMPLE_KITCHEN_ORDERS: KitchenOrder[] = [
     total: 680,
     status: 'pending',
     source: 'qr',
+    payment_required: true,
+    payment_status: 'paid',
     created_at: new Date(Date.now() - 2.5 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 2.5 * 60 * 1000).toISOString(),
     items: [
@@ -78,6 +94,8 @@ export const SAMPLE_KITCHEN_ORDERS: KitchenOrder[] = [
     total: 580,
     status: 'preparing',
     source: 'qr',
+    payment_required: true,
+    payment_status: 'paid',
     created_at: new Date(Date.now() - 7.5 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 5.0 * 60 * 1000).toISOString(),
     items: [
@@ -97,6 +115,8 @@ export const SAMPLE_KITCHEN_ORDERS: KitchenOrder[] = [
     total: 540,
     status: 'ready',
     source: 'website',
+    payment_required: false,
+    payment_status: 'not_required',
     created_at: new Date(Date.now() - 14 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
     items: [
@@ -116,6 +136,8 @@ export const SAMPLE_KITCHEN_ORDERS: KitchenOrder[] = [
     total: 420,
     status: 'completed',
     source: 'website',
+    payment_required: true,
+    payment_status: 'paid',
     created_at: new Date(Date.now() - 38 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
     items: [
@@ -166,7 +188,7 @@ export const fetchKitchenOrders = async (): Promise<{
 }> => {
   if (!supabase || !isSupabaseConfigured) {
     const all = getDemoOrders();
-    const active = all.filter((o) => ['pending', 'confirmed', 'preparing', 'ready'].includes(o.status));
+    const active = all.filter((o) => ['pending', 'confirmed', 'preparing', 'ready'].includes(o.status) && isKdsEligible(o));
     const completed = all.filter((o) => o.status === 'completed');
     return {
       activeOrders: active,
@@ -186,7 +208,7 @@ export const fetchKitchenOrders = async (): Promise<{
     if (orderErr) throw orderErr;
 
     const allOrders = (rawOrders || []) as KitchenOrder[];
-    const activeOrders = allOrders.filter((o) => ['pending', 'confirmed', 'preparing', 'ready'].includes(o.status));
+    const activeOrders = allOrders.filter((o) => ['pending', 'confirmed', 'preparing', 'ready'].includes(o.status) && isKdsEligible(o));
     const completedOrders = allOrders
       .filter((o) => o.status === 'completed')
       .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
@@ -336,76 +358,27 @@ export const transitionOrderStatus = async (
   }
 };
 
-/**
- * Web Audio API synthesized kitchen alert chime (pleasant dual-tone chime: D5 -> A5)
- * Requires no external audio files and triggers reliably upon user interaction.
- */
-let sharedAudioCtx: AudioContext | null = null;
+import {
+  playKitchenOrderBell,
+  playTicketBumpSound,
+  playUrgentRushAlarm,
+  playDispatchChime,
+  triggerHapticFeedback,
+  unlockAudioContext as unlockSoundCtx,
+} from './soundService';
 
-export const unlockAudioContext = async (): Promise<boolean> => {
-  if (typeof window === 'undefined') return false;
-  try {
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return false;
-    if (!sharedAudioCtx) {
-      sharedAudioCtx = new AudioContextClass();
-    }
-    if (sharedAudioCtx.state === 'suspended') {
-      await sharedAudioCtx.resume();
-    }
-    return sharedAudioCtx.state === 'running';
-  } catch (err) {
-    console.warn('[kitchenService] AudioContext unlock error:', err);
-    return false;
-  }
+export {
+  playKitchenOrderBell,
+  playTicketBumpSound,
+  playUrgentRushAlarm,
+  playDispatchChime,
+  triggerHapticFeedback,
 };
 
+export const unlockAudioContext = unlockSoundCtx;
+
 export const playKitchenChime = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  try {
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return false;
-
-    if (!sharedAudioCtx) {
-      sharedAudioCtx = new AudioContextClass();
-    }
-
-    if (sharedAudioCtx.state === 'suspended') {
-      sharedAudioCtx.resume().catch(() => {});
-    }
-
-    const ctx = sharedAudioCtx;
-    const now = ctx.currentTime;
-
-    // Tone 1: 587.33 Hz (D5)
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(587.33, now);
-    gain1.gain.setValueAtTime(0.25, now);
-    gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.35);
-
-    // Tone 2: 880 Hz (A5, harmonious chime)
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(880.0, now + 0.12);
-    gain2.gain.setValueAtTime(0.3, now + 0.12);
-    gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.65);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.start(now + 0.12);
-    osc2.stop(now + 0.65);
-
-    return true;
-  } catch (err) {
-    console.warn('[kitchenService] Sound notification prevented by browser:', err);
-    return false;
-  }
+  return playKitchenOrderBell();
 };
 
 /**

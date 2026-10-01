@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { fetchRestaurantTables, saveRestaurantTable, toggleTableActive } from '../../services/dashboardService';
 import { validateAndNormalizeTableNumber } from '../../utils/tableValidation';
 import { useNotification } from '../../hooks/useNotification';
+import { buildTableQrUrl } from '../../utils/url';
 import type { RestaurantTable } from '../../types/dashboard';
 
 export const TablesManagement: React.FC = () => {
@@ -15,6 +16,7 @@ export const TablesManagement: React.FC = () => {
   const [activeQrTable, setActiveQrTable] = useState<RestaurantTable | null>(null);
   const [editingTable, setEditingTable] = useState<RestaurantTable | null>(null);
   const [isAddingTable, setIsAddingTable] = useState<boolean>(false);
+  const [copiedUrl, setCopiedUrl] = useState<boolean>(false);
 
   // Form state
   const [tableNumberInput, setTableNumberInput] = useState<string>('');
@@ -45,7 +47,6 @@ export const TablesManagement: React.FC = () => {
   }, []);
 
   const handleOpenAddModal = () => {
-    // Propose next table number
     const maxNum = tables.reduce((max, t) => {
       const n = parseInt(t.table_number, 10);
       return !isNaN(n) && n > max ? n : max;
@@ -132,121 +133,197 @@ export const TablesManagement: React.FC = () => {
     }
   };
 
-  const originUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const handleCopyQrUrl = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(true);
+    setTimeout(() => setCopiedUrl(false), 2000);
+    addNotification('info', 'URL Copied', 'Direct table ordering link copied to clipboard.');
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header and Add Button */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-8 animate-fadeIn">
+      {/* HEADER COCKPIT */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.06]">
         <div>
-          <h2 className="text-xl font-serif font-bold text-on-surface">Floor Tables & QR Codes</h2>
-          <p className="text-xs text-outline mt-0.5">
-            Manage restaurant dining tables, seat capacities, and customer QR ordering cards.
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+              Floor Architecture & Optical Dispatch
+            </span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-1 tracking-tight">
+            Floor Tables & Smart QR
+          </h2>
+          <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
+            Manage physical dining covers, table seating capacities, optical tabletop QR stands, and real-time seat activation.
           </p>
         </div>
 
         <button
           type="button"
           onClick={handleOpenAddModal}
-          className="py-2.5 px-4 rounded-xl bg-primary text-on-primary text-xs font-semibold hover:bg-primary-hover active:scale-95 transition-all flex items-center gap-2 shadow"
+          className="relative group overflow-hidden px-5 py-3 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] text-[#070605] text-xs font-black tracking-wider uppercase shadow-[0_10px_30px_rgba(212,175,55,0.25)] hover:shadow-[0_15px_40px_rgba(212,175,55,0.4)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
         >
-          <span className="material-symbols-outlined text-base">add</span>
-          Add New Table
+          <span className="material-symbols-outlined text-base font-bold">add</span>
+          <span>Add Dining Table</span>
         </button>
       </div>
 
-      {/* Tables Grid */}
+      {/* STATS OVERVIEW STRIP */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Total Tables</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-white mt-0.5">{tables.length}</p>
+          </div>
+        </div>
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">Active Service</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-emerald-400 mt-0.5">
+              {tables.filter((t) => t.active).length}
+            </p>
+          </div>
+        </div>
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Total Seating</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-white mt-0.5">
+              {tables.reduce((sum, t) => sum + (t.capacity || 0), 0)} covers
+            </p>
+          </div>
+        </div>
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">QR Dispatch</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-[#D4AF37] mt-0.5">100% Ready</p>
+          </div>
+        </div>
+      </div>
+
+      {/* TABLES HARDWARE GRID */}
       {isLoading ? (
-        <div className="py-20 text-center text-outline text-xs">Loading restaurant tables...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-pulse">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-72 rounded-[1.75rem] bg-[#120F0D] border border-white/[0.06]" />
+          ))}
+        </div>
       ) : tables.length === 0 ? (
-        <div className="py-20 text-center text-outline text-xs bg-surface-container rounded-3xl border border-outline-variant/30">
-          <span className="material-symbols-outlined text-4xl mb-2 opacity-40">qr_code_2</span>
-          <p className="font-semibold text-sm text-on-surface">No tables configured</p>
-          <p className="text-[11px] mt-1">Click "Add New Table" to create your first dining table.</p>
+        <div className="p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="py-20 text-center rounded-[calc(2rem-0.375rem)] bg-[#120F0D] flex flex-col items-center">
+            <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-zinc-500 mb-4">
+              <span className="material-symbols-outlined text-3xl">qr_code_2</span>
+            </div>
+            <h3 className="text-lg font-serif font-bold text-white">No dining tables configured</h3>
+            <p className="text-xs text-zinc-400 mt-1 max-w-sm">
+              Initialize your dining room layout by clicking "Add Dining Table" above.
+            </p>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {tables.map((table) => {
-            const qrTarget = `${originUrl}/qr?table=${table.table_number}`;
+            const qrTarget = buildTableQrUrl(table.table_number);
 
             return (
               <div
                 key={table.id}
-                className={`p-5 rounded-3xl border transition-all shadow-sm flex flex-col justify-between ${
+                className={`group relative p-1 rounded-[1.75rem] transition-all duration-300 ${
                   table.active
-                    ? 'bg-surface-container border-outline-variant/40 hover:border-primary/40'
-                    : 'bg-surface-container/50 border-outline-variant/20 opacity-70'
+                    ? 'bg-gradient-to-b from-white/[0.12] via-white/[0.04] to-white/[0.01] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.5)] hover:border-[#D4AF37]/50 hover:shadow-[0_12px_40px_rgba(212,175,55,0.15)]'
+                    : 'bg-white/[0.02] border border-white/[0.04] opacity-60'
                 }`}
               >
-                <div>
-                  {/* Top table info */}
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-2xl font-serif font-bold text-primary">
-                      Table {table.table_number}
-                    </span>
+                <div className="p-5 rounded-[calc(1.75rem-0.25rem)] bg-[#120F0D] flex flex-col justify-between h-full relative overflow-hidden">
+                  {/* Subtle top edge glow */}
+                  <div
+                    className={`absolute top-0 left-0 right-0 h-1 transition-opacity ${
+                      table.active
+                        ? 'bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent group-hover:opacity-100 opacity-60'
+                        : 'bg-transparent'
+                    }`}
+                  />
+
+                  {/* Card Header: Table Number & Status Pill */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[10px] font-mono tracking-widest uppercase text-zinc-400">TABLE</span>
+                        <span className="text-2xl sm:text-3xl font-serif font-black text-white tracking-tight group-hover:text-[#D4AF37] transition-colors">
+                          {table.table_number}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(table)}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all flex items-center gap-1.5 cursor-pointer ${
+                          table.active
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                            : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
+                        }`}
+                        title="Click to toggle table availability"
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            table.active ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'
+                          }`}
+                        />
+                        <span>{table.active ? 'Active' : 'Off-Duty'}</span>
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs mb-4">
+                      <p className="font-medium text-zinc-300 truncate max-w-[140px]">
+                        {table.label || 'Dining Area Table'}
+                      </p>
+                      <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-[10px] font-mono text-[#D4AF37] flex items-center gap-1 shrink-0">
+                        <span className="material-symbols-outlined text-xs">group</span>
+                        <span>{table.capacity} Seats</span>
+                      </span>
+                    </div>
+
+                    {/* QR Code Presentation Box */}
+                    <div
+                      onClick={() => setActiveQrTable(table)}
+                      className="relative p-3.5 rounded-2xl bg-white flex flex-col items-center justify-center cursor-pointer shadow-lg group-hover:shadow-[0_8px_25px_rgba(212,175,55,0.2)] transition-all transform group-hover:-translate-y-0.5"
+                      title="Click to inspect and print table tent card"
+                    >
+                      <QRCodeSVG
+                        value={qrTarget}
+                        size={110}
+                        level="H"
+                        includeMargin={false}
+                        fgColor="#070605"
+                        bgColor="#ffffff"
+                      />
+                      <div className="mt-2 flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase text-zinc-800 group-hover:text-black">
+                        <span className="material-symbols-outlined text-xs">print</span>
+                        <span>Print Table Stand</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Bottom Actions */}
+                  <div className="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between text-xs">
+                    <a
+                      href={qrTarget}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#D4AF37] hover:text-[#F3C766] font-mono font-semibold inline-flex items-center gap-1 text-[11px] transition-colors"
+                    >
+                      <span>Launch Preview</span>
+                      <span className="material-symbols-outlined text-xs">open_in_new</span>
+                    </a>
+
                     <button
                       type="button"
-                      onClick={() => handleToggleActive(table)}
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-colors ${
-                        table.active
-                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25'
-                          : 'bg-stone-500/15 text-stone-400 border-stone-500/30 hover:bg-stone-500/25'
-                      }`}
-                      title="Click to toggle status"
+                      onClick={() => handleOpenEditModal(table)}
+                      className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.06] text-[11px] font-semibold transition-colors cursor-pointer"
                     >
-                      {table.active ? 'Active' : 'Inactive'}
+                      Edit Config
                     </button>
                   </div>
-
-                  <p className="text-xs font-medium text-on-surface mb-1">
-                    {table.label || 'Dining Area Table'}
-                  </p>
-
-                  <div className="flex items-center gap-1.5 text-xs text-outline mb-4">
-                    <span className="material-symbols-outlined text-sm">person</span>
-                    <span>Capacity: {table.capacity} guests</span>
-                  </div>
-
-                  {/* QR Thumbnail Preview */}
-                  <div
-                    onClick={() => setActiveQrTable(table)}
-                    className="p-3 rounded-2xl bg-white flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow group mb-4"
-                    title="Click to view large printable QR card"
-                  >
-                    <QRCodeSVG
-                      value={qrTarget}
-                      size={110}
-                      level="H"
-                      includeMargin={false}
-                      fgColor="#000000"
-                      bgColor="#ffffff"
-                    />
-                    <span className="text-[10px] text-stone-600 font-semibold mt-1 group-hover:text-primary transition-colors flex items-center gap-1">
-                      <span className="material-symbols-outlined text-xs">print</span>
-                      Print / Expand Card
-                    </span>
-                  </div>
-                </div>
-
-                {/* Card Actions */}
-                <div className="pt-3 border-t border-outline-variant/20 flex items-center justify-between text-xs">
-                  <a
-                    href={qrTarget}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline font-semibold inline-flex items-center gap-1 text-[11px]"
-                  >
-                    <span>Test URL</span>
-                    <span className="material-symbols-outlined text-xs">open_in_new</span>
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEditModal(table)}
-                    className="text-outline hover:text-on-surface font-semibold text-[11px]"
-                  >
-                    Edit Table
-                  </button>
                 </div>
               </div>
             );
@@ -254,7 +331,108 @@ export const TablesManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Add / Edit Table Modal */}
+      {/* LUXURY PRINTABLE QR STAND MODAL */}
+      {activeQrTable && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            onClick={() => setActiveQrTable(null)}
+            className="fixed inset-0 bg-black/80 backdrop-blur-md print:hidden"
+          />
+
+          <div className="relative w-full max-w-sm bg-gradient-to-b from-[#140F0B] to-[#0A0706] text-white rounded-[2rem] border border-[#D4AF37]/30 p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.9)] z-10 flex flex-col items-center text-center animate-in zoom-in-95 duration-200 print:bg-white print:text-black print:border-none print:shadow-none print:p-0 print:m-0 print:max-w-none">
+            {/* Close button (screen only) */}
+            <button
+              type="button"
+              onClick={() => setActiveQrTable(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white border border-white/[0.08] transition-colors print:hidden cursor-pointer"
+              aria-label="Close QR view"
+            >
+              <span className="material-symbols-outlined text-base leading-none">close</span>
+            </button>
+
+            {/* Table Tent Graphic Frame (Fine-Dining Luxury Styling) */}
+            <div className="w-full p-6 rounded-3xl bg-[#070605] border-2 border-[#D4AF37] print:border-2 print:border-black print:bg-white flex flex-col items-center relative overflow-hidden shadow-2xl">
+              {/* Gold Filigree Accent Header */}
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#997722] p-0.5 mb-3 shadow-md">
+                <div className="w-full h-full rounded-full bg-[#070605] print:bg-white flex items-center justify-center">
+                  <span className="font-serif font-black text-[#D4AF37] print:text-black text-sm">CB</span>
+                </div>
+              </div>
+
+              <h4 className="text-base font-serif font-black uppercase tracking-[0.2em] text-[#D4AF37] print:text-black">
+                The Café Barrackpore
+              </h4>
+              <p className="text-[9px] font-mono tracking-[0.25em] text-zinc-400 print:text-zinc-600 uppercase mt-0.5 mb-4">
+                Smart Table Service
+              </p>
+
+              {/* Table Pill */}
+              <div className="mb-4 px-6 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/40 print:border-black print:bg-zinc-100">
+                <span className="text-lg font-serif font-black tracking-wider text-[#D4AF37] print:text-black uppercase">
+                  TABLE {activeQrTable.table_number}
+                </span>
+              </div>
+
+              {/* Optical High Contrast QR SVG */}
+              <div className="bg-white p-3 rounded-2xl shadow-xl border border-zinc-200 mb-4">
+                <QRCodeSVG
+                  value={buildTableQrUrl(activeQrTable.table_number)}
+                  size={200}
+                  level="H"
+                  includeMargin={false}
+                  fgColor="#000000"
+                  bgColor="#ffffff"
+                />
+              </div>
+
+              <p className="text-xs font-bold text-white print:text-black">Scan with camera to order</p>
+              <p className="text-[10px] text-zinc-400 print:text-zinc-600 mt-0.5">
+                Browse menu & dispatch directly to kitchen
+              </p>
+
+              <div className="w-full pt-3 mt-4 border-t border-white/[0.08] print:border-zinc-300 text-[9px] font-mono text-zinc-400 print:text-zinc-500 uppercase tracking-widest">
+                {activeQrTable.label || '14, Riverside Road, Barrackpore'}
+              </div>
+            </div>
+
+            {/* Quick Action Buttons (hidden in print) */}
+            <div className="w-full flex flex-col gap-2 mt-6 print:hidden">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs tracking-wider uppercase hover:shadow-[0_10px_25px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm font-bold">print</span>
+                  <span>Print Table Stand</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleCopyQrUrl(buildTableQrUrl(activeQrTable.table_number))}
+                  className="px-4 py-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-200 border border-white/[0.08] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Copy QR Order Link"
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    {copiedUrl ? 'check' : 'content_copy'}
+                  </span>
+                  <span>{copiedUrl ? 'Copied' : 'Link'}</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveQrTable(null)}
+                className="w-full py-2.5 rounded-xl text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DOUBLE-BEZEL ADD / EDIT MODAL */}
       {(isAddingTable || editingTable) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -262,166 +440,119 @@ export const TablesManagement: React.FC = () => {
               setIsAddingTable(false);
               setEditingTable(null);
             }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
           />
 
-          <div className="relative w-full max-w-md bg-surface-container-high border border-outline-variant/60 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 animate-in zoom-in-95 duration-150">
-            <h3 className="text-lg font-serif font-bold text-on-surface mb-1">
-              {editingTable ? `Edit Table ${editingTable.table_number}` : 'Add New Restaurant Table'}
-            </h3>
-            <p className="text-xs text-outline mb-6">
-              Configure table number, label, and seating capacity.
-            </p>
-
-            {formError && (
-              <div className="mb-4 p-3 rounded-xl bg-error/15 border border-error/30 text-error text-xs flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">error</span>
-                <span>{formError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSaveTable} className="space-y-4 text-xs">
-              <div>
-                <label className="block uppercase font-bold tracking-wider text-outline mb-1">
-                  Table Number (01 - 99)
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. 07"
-                  value={tableNumberInput}
-                  onChange={(e) => setTableNumberInput(e.target.value)}
-                  className="w-full bg-surface-container border border-outline-variant/60 rounded-xl px-3 py-2 text-sm text-on-surface font-mono font-bold focus:outline-none focus:border-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block uppercase font-bold tracking-wider text-outline mb-1">
-                  Table Location / Label (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Riverside Window Table, Balcony 2"
-                  value={tableLabelInput}
-                  onChange={(e) => setTableLabelInput(e.target.value)}
-                  className="w-full bg-surface-container border border-outline-variant/60 rounded-xl px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block uppercase font-bold tracking-wider text-outline mb-1">
-                  Seat Capacity (Number of Guests)
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  required
-                  value={tableCapacityInput}
-                  onChange={(e) => setTableCapacityInput(Number(e.target.value))}
-                  className="w-full bg-surface-container border border-outline-variant/60 rounded-xl px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary"
-                />
-              </div>
-
-              <div className="pt-4 flex gap-3">
+          <div className="relative w-full max-w-md p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.15] via-white/[0.05] to-white/[0.02] border border-white/[0.1] shadow-2xl z-10 animate-in zoom-in-95 duration-200">
+            <div className="rounded-[calc(2rem-0.375rem)] bg-[#120F0D] p-6 sm:p-8">
+              <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-5">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+                    Dining Room Configuration
+                  </span>
+                  <h3 className="text-xl font-serif font-black text-white mt-0.5">
+                    {editingTable ? `Edit Table ${editingTable.table_number}` : 'Add New Dining Table'}
+                  </h3>
+                </div>
                 <button
                   type="button"
                   onClick={() => {
                     setIsAddingTable(false);
                     setEditingTable(null);
                   }}
-                  className="flex-1 py-2.5 rounded-full bg-surface-container hover:bg-surface-container-highest border border-outline-variant/40 font-semibold text-outline hover:text-on-surface transition-colors"
+                  className="p-1.5 rounded-full bg-white/[0.05] text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 py-2.5 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary-hover active:scale-95 transition-all shadow"
-                >
-                  {isSubmitting ? 'Saving...' : 'Save Table'}
+                  <span className="material-symbols-outlined text-base">close</span>
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
 
-      {/* Printable QR Code Modal */}
-      {activeQrTable && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            onClick={() => setActiveQrTable(null)}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm print:hidden"
-          />
+              {formError && (
+                <div className="mb-4 p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sm text-red-400">error</span>
+                  <span>{formError}</span>
+                </div>
+              )}
 
-          <div className="relative w-full max-w-sm bg-white text-stone-900 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 flex flex-col items-center text-center print:border-none print:shadow-none print:max-w-none print:w-full print:p-0">
-            {/* Close button on screen */}
-            <button
-              type="button"
-              onClick={() => setActiveQrTable(null)}
-              className="absolute top-4 right-4 p-1.5 rounded-full bg-stone-100 text-stone-500 hover:text-stone-900 print:hidden"
-              aria-label="Close QR view"
-            >
-              <span className="material-symbols-outlined text-lg">close</span>
-            </button>
+              <form onSubmit={handleSaveTable} className="space-y-4 text-xs">
+                <div>
+                  <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Table Identifier (01 - 99)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 07"
+                    value={tableNumberInput}
+                    onChange={(e) => setTableNumberInput(e.target.value)}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-base text-white font-mono font-bold focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all"
+                  />
+                  <p className="text-[10px] text-zinc-400 mt-1">Customers access this table via QR code or direct link.</p>
+                </div>
 
-            {/* Branded Card Header */}
-            <div className="w-14 h-14 bg-black rounded-full flex items-center justify-center mb-3 p-2.5 shadow-md">
-              <img src="/logo.webp" alt="Logo" className="w-full h-full object-contain filter invert" />
-            </div>
+                <div>
+                  <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Table Location / Label (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Riverside Window Table, Balcony 2"
+                    value={tableLabelInput}
+                    onChange={(e) => setTableLabelInput(e.target.value)}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all"
+                  />
+                </div>
 
-            <h3 className="text-lg font-serif font-bold uppercase tracking-[0.16em] text-stone-900">
-              The Café Barrackpore
-            </h3>
-            <p className="text-[10px] text-stone-500 uppercase tracking-widest font-semibold mb-4">
-              Smart Table Dine-In
-            </p>
+                <div>
+                  <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Seating Capacity (Guests)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setTableCapacityInput((c) => Math.max(1, c - 1))}
+                      className="w-10 h-10 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white border border-white/[0.08] text-base font-bold flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      required
+                      value={tableCapacityInput}
+                      onChange={(e) => setTableCapacityInput(Number(e.target.value))}
+                      className="flex-1 bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-center text-sm font-mono font-bold text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setTableCapacityInput((c) => Math.min(50, c + 1))}
+                      className="w-10 h-10 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white border border-white/[0.08] text-base font-bold flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
 
-            {/* Table Badge */}
-            <div className="mb-4 px-6 py-1.5 rounded-full bg-amber-50 border border-amber-300">
-              <span className="text-xl font-serif font-black tracking-wider text-amber-900 uppercase">
-                TABLE {activeQrTable.table_number}
-              </span>
-            </div>
-
-            {/* High Contrast Optical QR Code */}
-            <div className="bg-white p-3 rounded-2xl shadow-inner border border-stone-200 mb-4">
-              <QRCodeSVG
-                value={`${originUrl}/qr?table=${activeQrTable.table_number}`}
-                size={220}
-                level="H"
-                includeMargin={true}
-                fgColor="#000000"
-                bgColor="#ffffff"
-              />
-            </div>
-
-            <p className="text-xs font-bold text-stone-800">Scan with your smartphone</p>
-            <p className="text-[11px] text-stone-500 mb-4">View digital menu & order directly from your seat</p>
-
-            <div className="w-full pt-3 border-t border-stone-200 text-[10px] text-stone-400 uppercase tracking-wider mb-6">
-              {activeQrTable.label || '14, Riverside Road, Barrackpore'}
-            </div>
-
-            {/* Print Action Buttons (hidden when printing) */}
-            <div className="w-full flex gap-3 print:hidden">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="flex-1 py-2.5 px-4 rounded-full bg-stone-900 text-white font-semibold text-xs hover:bg-stone-800 transition-colors flex items-center justify-center gap-1.5 shadow"
-              >
-                <span className="material-symbols-outlined text-sm">print</span>
-                Print QR Card
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveQrTable(null)}
-                className="py-2.5 px-4 rounded-full bg-stone-100 hover:bg-stone-200 font-semibold text-xs text-stone-700 transition-colors"
-              >
-                Close
-              </button>
+                <div className="pt-4 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingTable(false);
+                      setEditingTable(null);
+                    }}
+                    className="flex-1 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] font-bold text-xs text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs uppercase tracking-wider hover:shadow-[0_10px_25px_rgba(212,175,55,0.3)] transition-all cursor-pointer"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Table'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

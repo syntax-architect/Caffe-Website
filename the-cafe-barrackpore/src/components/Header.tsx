@@ -3,12 +3,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { clientDetails } from '../config/client';
 import { useUI } from '../context/UIContext';
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 export const Header: React.FC = () => {
   const { cartCount, setIsDrawerOpen } = useCart();
   const { setIsReservationOpen } = useUI();
+  const { restaurantConfig, logoUrl } = useSiteConfig();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const businessName = restaurantConfig?.businessName || clientDetails.businessName;
+  const shortName = restaurantConfig?.shortName || clientDetails.shortName;
+  const phone = restaurantConfig?.contact?.phone || clientDetails.phone;
+  const address = restaurantConfig?.address?.line1 || clientDetails.address;
+  const openingHours = `${restaurantConfig?.openingTime || '11:00 AM'} – ${restaurantConfig?.closingTime || '11:00 PM'}`;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 25);
@@ -70,12 +78,12 @@ export const Header: React.FC = () => {
           className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1" 
           href="#" 
           onClick={(e) => handleNavClick(e, 'root')}
-          aria-label={`${clientDetails.businessName} Home`}
+          aria-label={`${businessName} Home`}
         >
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37]/35 bg-[#160E0A] flex items-center justify-center transition-all duration-300 group-hover:border-[#D4AF37] group-hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] overflow-hidden shrink-0">
             <img 
-              src="/logo.webp" 
-              alt={`${clientDetails.businessName} Crest`} 
+              src={logoUrl || "/logo.webp"} 
+              alt={`${businessName} Crest`} 
               className="w-full h-full object-contain" 
               fetchPriority="high" 
               decoding="sync" 
@@ -83,10 +91,10 @@ export const Header: React.FC = () => {
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-base sm:text-lg tracking-tight text-on-surface font-semibold group-hover:text-primary transition-colors">
-              {clientDetails.businessName}
+              {businessName}
             </span>
             <span className="font-sans text-[10px] tracking-[0.25em] uppercase text-primary/80 -mt-0.5 font-medium">
-              {clientDetails.shortName}
+              {shortName}
             </span>
           </div>
         </a>
@@ -245,7 +253,7 @@ export const Header: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-2.5">
                     <a
-                      href={`tel:${clientDetails.phone}`}
+                      href={`tel:${phone}`}
                       className="h-11 rounded-full border border-white/15 bg-white/5 text-on-surface text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 active:bg-white/10 transition-colors"
                     >
                       <span className="material-symbols-outlined text-[16px] text-primary">call</span>
@@ -267,11 +275,11 @@ export const Header: React.FC = () => {
                 <div className="pt-4 border-t border-white/10 flex flex-col gap-1.5 text-[11px] text-on-surface/65 font-sans">
                   <div className="flex items-center gap-2 text-primary font-medium">
                     <span className="material-symbols-outlined text-sm">schedule</span>
-                    <span>Daily Service: 11:00 AM – 11:30 PM (Kitchen closes 11:15 PM)</span>
+                    <span>Daily Service: {openingHours}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-sm">location_on</span>
-                    <span className="truncate">{clientDetails.address}</span>
+                    <span className="truncate">{address}</span>
                   </div>
                 </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchReservations, updateReservationStatus } from '../../services/dashboardService';
 import { useNotification } from '../../hooks/useNotification';
 import type { ReservationRecord, ReservationStatus } from '../../types/reservation';
@@ -68,31 +68,129 @@ export const ReservationsManagement: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+        return {
+          label: 'Pending Review',
+          classes: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+          dot: 'bg-amber-400',
+        };
       case 'confirmed':
-        return 'bg-blue-500/15 text-blue-300 border-blue-500/30';
+        return {
+          label: 'Confirmed',
+          classes: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+          dot: 'bg-sky-400',
+        };
       case 'seated':
-        return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+        return {
+          label: 'Seated Now',
+          classes: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+          dot: 'bg-emerald-400 animate-pulse',
+        };
       case 'completed':
-        return 'bg-stone-500/15 text-stone-300 border-stone-500/30';
+        return {
+          label: 'Completed',
+          classes: 'bg-zinc-700/30 text-zinc-400 border-zinc-600/30',
+          dot: 'bg-zinc-500',
+        };
       case 'cancelled':
+        return {
+          label: 'Cancelled',
+          classes: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+          dot: 'bg-rose-400',
+        };
       case 'no_show':
-        return 'bg-red-500/15 text-red-300 border-red-500/30';
+        return {
+          label: 'No-Show',
+          classes: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+          dot: 'bg-purple-400',
+        };
       default:
-        return 'bg-stone-500/15 text-stone-300 border-stone-500/30';
+        return {
+          label: status,
+          classes: 'bg-zinc-800 text-zinc-400 border-zinc-700',
+          dot: 'bg-zinc-500',
+        };
     }
   };
 
+  // Stat metrics
+  const pendingCount = useMemo(() => reservations.filter((r) => r.status === 'pending').length, [reservations]);
+  const seatedCount = useMemo(() => reservations.filter((r) => r.status === 'seated').length, [reservations]);
+  const confirmedCount = useMemo(() => reservations.filter((r) => r.status === 'confirmed').length, [reservations]);
+  const totalGuests = useMemo(() => reservations.reduce((sum, r) => sum + (r.party_size || 0), 0), [reservations]);
+
+  const handleWhatsAppGuest = (res: ReservationRecord) => {
+    const cleanPhone = (res.customer_phone || '').replace(/[^0-9]/g, '');
+    const text = encodeURIComponent(
+      `Hello ${res.customer_name}, this is The Café Barrackpore regarding your table reservation ${res.reservation_ref} for ${res.party_size} guests on ${res.reservation_date} at ${res.reservation_time}. We look forward to welcoming you!`
+    );
+    window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header and Controls */}
+    <div className="space-y-8 animate-fadeIn">
+      {/* COCKPIT HEADER */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.06]">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+              Floor Reservations & Concierge Dispatch
+            </span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-1 tracking-tight">
+            Guest Reservations
+          </h2>
+          <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
+            Manage table bookings, guest arrivals, seating status, and send instant WhatsApp concierge confirmations.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={loadReservations}
+          className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-base">refresh</span>
+          <span>Refresh Bookings</span>
+        </button>
+      </div>
+
+      {/* STATS STRIP */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-amber-400">Pending Review</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-amber-400 mt-0.5">{pendingCount}</p>
+          </div>
+        </div>
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-sky-400">Confirmed</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-sky-400 mt-0.5">{confirmedCount}</p>
+          </div>
+        </div>
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">Seated Now</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-emerald-400 mt-0.5">{seatedCount}</p>
+          </div>
+        </div>
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">Expected Covers</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-[#D4AF37] mt-0.5">{totalGuests} guests</p>
+          </div>
+        </div>
+      </div>
+
+      {/* SEARCH AND VIEW SELECTORS */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
-          <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none">
+          <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-lg pointer-events-none">
             search
           </span>
           <input
@@ -100,51 +198,49 @@ export const ReservationsManagement: React.FC = () => {
             placeholder="Search by ref, guest name, or phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-surface-container border border-outline-variant/60 rounded-xl pl-10 pr-4 py-2 text-xs text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-primary transition-colors"
+            className="w-full bg-[#120F0D] border border-white/[0.08] rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs"
+            >
+              ✕
+            </button>
+          )}
         </div>
 
-        {/* View Tabs & Refresh */}
-        <div className="flex items-center gap-3">
-          <div className="bg-surface-container p-1 rounded-xl border border-outline-variant/60 flex items-center gap-1">
-            {(['today', 'upcoming', 'all'] as const).map((view) => (
-              <button
-                key={view}
-                type="button"
-                onClick={() => setSelectedView(view)}
-                className={`px-3 py-1 text-xs font-semibold rounded-lg capitalize transition-colors ${
-                  selectedView === view
-                    ? 'bg-primary text-on-primary shadow'
-                    : 'text-outline hover:text-on-surface'
-                }`}
-              >
-                {view}
-              </button>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={loadReservations}
-            className="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/60 text-outline hover:text-on-surface transition-colors"
-            title="Refresh Reservations"
-          >
-            <span className="material-symbols-outlined text-lg">refresh</span>
-          </button>
+        {/* View Tabs */}
+        <div className="bg-[#120F0D] p-1 rounded-xl border border-white/[0.08] flex items-center gap-1 self-start sm:self-auto">
+          {(['today', 'upcoming', 'all'] as const).map((view) => (
+            <button
+              key={view}
+              type="button"
+              onClick={() => setSelectedView(view)}
+              className={`px-4 py-1.5 text-xs font-mono uppercase tracking-wider rounded-lg font-bold transition-all cursor-pointer ${
+                selectedView === view
+                  ? 'bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] shadow'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              {view}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Status Filter Badges */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-outline-variant/30 scrollbar-none text-xs">
+      {/* STATUS FILTER PILLS */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs border-b border-white/[0.06]">
         {['all', 'pending', 'confirmed', 'seated', 'completed', 'cancelled', 'no_show'].map((status) => (
           <button
             key={status}
             type="button"
             onClick={() => setSelectedStatus(status)}
-            className={`px-3 py-1 rounded-full font-semibold capitalize whitespace-nowrap transition-colors ${
+            className={`px-3.5 py-1.5 rounded-full font-mono text-[11px] uppercase tracking-wider font-bold whitespace-nowrap transition-all cursor-pointer ${
               selectedStatus === status
-                ? 'bg-primary/20 text-primary border border-primary/40'
-                : 'text-outline hover:text-on-surface hover:bg-surface-container'
+                ? 'bg-[#D4AF37] text-[#070605] shadow-[0_4px_12px_rgba(212,175,55,0.25)]'
+                : 'bg-[#120F0D] text-zinc-400 hover:text-white border border-white/[0.06]'
             }`}
           >
             {status.replace('_', ' ')}
@@ -152,123 +248,191 @@ export const ReservationsManagement: React.FC = () => {
         ))}
       </div>
 
-      {/* Reservations Table */}
-      <div className="bg-surface-container border border-outline-variant/40 rounded-3xl overflow-hidden shadow-sm">
-        {isLoading ? (
-          <div className="py-20 text-center text-outline text-xs">Loading reservations...</div>
-        ) : reservations.length === 0 ? (
-          <div className="py-20 text-center text-outline text-xs flex flex-col items-center">
-            <span className="material-symbols-outlined text-4xl mb-2 opacity-40">event_seat</span>
-            <p className="font-semibold text-sm text-on-surface">No reservations scheduled</p>
-            <p className="text-[11px] mt-1 max-w-sm">
-              No booking requests found for the selected view and filter criteria.
-            </p>
+      {/* RESERVATIONS DATA DISPLAY */}
+      {isLoading ? (
+        <div className="py-20 text-center text-zinc-500 font-mono text-xs">Loading reservation ledger...</div>
+      ) : reservations.length === 0 ? (
+        <div className="p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="py-20 text-center rounded-[calc(2rem-0.375rem)] bg-[#120F0D] flex flex-col items-center">
+            <span className="material-symbols-outlined text-4xl mb-2 text-zinc-600">event_seat</span>
+            <p className="font-serif font-bold text-base text-white">No reservations found</p>
+            <p className="text-xs text-zinc-500 mt-1">No booking records match the selected view and filter criteria.</p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-outline-variant/30 bg-surface-container-high/40 text-outline text-[11px] uppercase tracking-wider">
-                  <th className="py-3 px-5 font-semibold">Reference</th>
-                  <th className="py-3 px-4 font-semibold">Guest Name</th>
-                  <th className="py-3 px-4 font-semibold">Date</th>
-                  <th className="py-3 px-4 font-semibold">Time</th>
-                  <th className="py-3 px-4 font-semibold">Party</th>
-                  <th className="py-3 px-4 font-semibold">Notes</th>
-                  <th className="py-3 px-4 font-semibold">Status</th>
-                  <th className="py-3 px-5 text-right font-semibold">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/20">
-                {reservations.map((res) => (
-                  <tr
-                    key={res.id}
-                    onClick={() => setActiveRes(res)}
-                    className="hover:bg-surface-container-high/60 cursor-pointer transition-colors"
-                  >
-                    <td className="py-3.5 px-5 font-mono font-bold text-primary">{res.reservation_ref}</td>
-                    <td className="py-3.5 px-4">
-                      <p className="font-medium text-on-surface">{res.customer_name}</p>
-                      <p className="text-[10px] text-outline font-mono">{res.customer_phone}</p>
-                    </td>
-                    <td className="py-3.5 px-4 text-on-surface font-medium whitespace-nowrap">
-                      {res.reservation_date}
-                    </td>
-                    <td className="py-3.5 px-4 font-mono font-bold text-primary">{res.reservation_time}</td>
-                    <td className="py-3.5 px-4 font-semibold text-on-surface">
-                      {res.party_size} guests
-                    </td>
-                    <td className="py-3.5 px-4 text-outline max-w-[180px] truncate">
-                      {res.special_requests || '—'}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(res.status)}`}>
-                        {res.status.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-5 text-right">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveRes(res);
-                        }}
-                        className="px-3 py-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/40 text-[11px] font-semibold text-primary transition-colors"
+        </div>
+      ) : (
+        <>
+          {/* MOBILE CARDS VIEW (< md) */}
+          <div className="grid grid-cols-1 gap-3 md:hidden">
+            {reservations.map((res) => {
+              const badge = getStatusBadge(res.status);
+              return (
+                <div
+                  key={res.id}
+                  onClick={() => setActiveRes(res)}
+                  className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.08] cursor-pointer hover:border-[#D4AF37]/40 transition-all"
+                >
+                  <div className="p-4 rounded-[calc(1rem-0.125rem)] bg-[#120F0D] flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono font-bold text-[#D4AF37]">{res.reservation_ref}</span>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${badge.classes}`}
                       >
-                        Details
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+                        <span>{badge.label}</span>
+                      </span>
+                    </div>
 
-      {/* Reservation Detail Drawer */}
+                    <div className="flex items-baseline justify-between">
+                      <div>
+                        <p className="font-bold text-white text-sm">{res.customer_name}</p>
+                        <p className="text-[11px] text-zinc-400 font-mono mt-0.5">{res.customer_phone}</p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-xs font-mono text-zinc-200">
+                        {res.party_size} Guests
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-zinc-400 pt-2 border-t border-white/[0.06]">
+                      <span className="font-mono">{res.reservation_date}</span>
+                      <span className="font-mono font-bold text-white">{res.reservation_time}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* DESKTOP TABLE VIEW (>= md) */}
+          <div className="hidden md:block p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl overflow-hidden">
+            <div className="rounded-[calc(2rem-0.375rem)] bg-[#120F0D] overflow-hidden">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-white/[0.06] bg-white/[0.02] text-zinc-400 text-[10px] font-mono uppercase tracking-[0.16em]">
+                    <th className="py-4 px-6 font-bold">Booking Ref</th>
+                    <th className="py-4 px-4 font-bold">Guest Profile</th>
+                    <th className="py-4 px-4 font-bold">Schedule</th>
+                    <th className="py-4 px-4 font-bold">Covers</th>
+                    <th className="py-4 px-4 font-bold">Special Notes</th>
+                    <th className="py-4 px-4 font-bold">Status</th>
+                    <th className="py-4 px-6 text-right font-bold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04]">
+                  {reservations.map((res) => {
+                    const badge = getStatusBadge(res.status);
+                    return (
+                      <tr
+                        key={res.id}
+                        onClick={() => setActiveRes(res)}
+                        className="hover:bg-white/[0.03] cursor-pointer transition-colors"
+                      >
+                        <td className="py-4 px-6 font-mono font-bold text-[#D4AF37]">{res.reservation_ref}</td>
+
+                        <td className="py-4 px-4">
+                          <p className="font-bold text-white">{res.customer_name}</p>
+                          <p className="text-[11px] text-zinc-400 font-mono mt-0.5">{res.customer_phone}</p>
+                        </td>
+
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <p className="font-medium text-white">{res.reservation_date}</p>
+                          <p className="font-mono text-[11px] text-[#D4AF37] mt-0.5">{res.reservation_time}</p>
+                        </td>
+
+                        <td className="py-4 px-4 font-mono font-bold text-white">
+                          {res.party_size} guests
+                        </td>
+
+                        <td className="py-4 px-4 text-zinc-400 max-w-[200px] truncate">
+                          {res.special_requests || '—'}
+                        </td>
+
+                        <td className="py-4 px-4">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${badge.classes}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+                            <span>{badge.label}</span>
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-6 text-right">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveRes(res);
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.06] text-xs font-semibold transition-colors cursor-pointer"
+                          >
+                            Concierge
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* SLIDE-OVER CONCIERGE INSPECTION DRAWER */}
       {activeRes && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div
             onClick={() => setActiveRes(null)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
           />
 
-          <div className="relative w-full max-w-lg bg-surface-container-high h-full shadow-2xl border-l border-outline-variant/40 flex flex-col justify-between overflow-y-auto p-6 sm:p-8 z-10 animate-in slide-in-from-right duration-200">
+          <div className="relative w-full max-w-lg bg-[#0F0B09] border-l border-white/[0.1] h-full shadow-[0_0_60px_rgba(0,0,0,0.8)] flex flex-col justify-between overflow-y-auto p-6 sm:p-8 z-10 animate-in slide-in-from-right duration-200">
             <div>
-              {/* Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-outline-variant/30 mb-6">
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between pb-5 border-b border-white/[0.06] mb-6">
                 <div>
-                  <span className="text-[10px] uppercase tracking-widest text-outline font-semibold">Table Reservation</span>
-                  <h3 className="text-xl font-mono font-bold text-primary mt-0.5">{activeRes.reservation_ref}</h3>
+                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+                    Concierge Ledger
+                  </span>
+                  <h3 className="text-2xl font-mono font-black text-white mt-0.5">
+                    {activeRes.reservation_ref}
+                  </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveRes(null)}
-                  className="p-2 rounded-full hover:bg-surface-container text-outline hover:text-on-surface transition-colors"
+                  className="p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white transition-colors cursor-pointer"
                   aria-label="Close drawer"
                 >
-                  <span className="material-symbols-outlined text-xl">close</span>
+                  <span className="material-symbols-outlined text-lg">close</span>
                 </button>
               </div>
 
-              {/* Status and Action Buttons */}
-              <div className="mb-6 p-4 rounded-2xl bg-surface-container border border-outline-variant/30">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs text-outline uppercase tracking-wider font-semibold">Booking Status</span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ${getStatusColor(activeRes.status)}`}>
-                    {activeRes.status.replace('_', ' ')}
-                  </span>
+              {/* Status & Quick Action Card */}
+              <div className="p-4 rounded-2xl bg-[#120F0D] border border-white/[0.08] mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-mono uppercase tracking-wider text-zinc-400">Current Status</span>
+                  {(() => {
+                    const badge = getStatusBadge(activeRes.status);
+                    return (
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${badge.classes}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+                        <span>{badge.label}</span>
+                      </span>
+                    );
+                  })()}
                 </div>
 
-                <div className="flex flex-wrap gap-2 pt-2 border-t border-outline-variant/20">
+                {/* Status Transition Buttons */}
+                <div className="flex flex-wrap gap-2 pt-3 border-t border-white/[0.06]">
                   {activeRes.status === 'pending' && (
                     <>
                       <button
                         type="button"
                         disabled={isUpdating}
                         onClick={() => handleStatusChange(activeRes.id, 'confirmed')}
-                        className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow"
+                        className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 text-white font-bold text-xs shadow transition-all cursor-pointer"
                       >
                         Confirm Booking
                       </button>
@@ -276,7 +440,7 @@ export const ReservationsManagement: React.FC = () => {
                         type="button"
                         disabled={isUpdating}
                         onClick={() => handleStatusChange(activeRes.id, 'cancelled')}
-                        className="py-2 px-3 rounded-xl bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-500/30 font-semibold text-xs transition-colors"
+                        className="py-2.5 px-3 rounded-xl bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 font-semibold text-xs transition-colors cursor-pointer"
                       >
                         Decline
                       </button>
@@ -289,7 +453,7 @@ export const ReservationsManagement: React.FC = () => {
                         type="button"
                         disabled={isUpdating}
                         onClick={() => handleStatusChange(activeRes.id, 'seated')}
-                        className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors shadow"
+                        className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs shadow transition-all cursor-pointer"
                       >
                         Mark Guests Seated
                       </button>
@@ -297,7 +461,7 @@ export const ReservationsManagement: React.FC = () => {
                         type="button"
                         disabled={isUpdating}
                         onClick={() => handleStatusChange(activeRes.id, 'no_show')}
-                        className="py-2 px-3 rounded-xl bg-amber-900/40 hover:bg-amber-900/60 text-amber-200 border border-amber-500/30 font-semibold text-xs transition-colors"
+                        className="py-2.5 px-3 rounded-xl bg-purple-950/60 hover:bg-purple-900/60 text-purple-300 border border-purple-500/30 font-semibold text-xs transition-colors cursor-pointer"
                       >
                         No-Show
                       </button>
@@ -309,84 +473,92 @@ export const ReservationsManagement: React.FC = () => {
                       type="button"
                       disabled={isUpdating}
                       onClick={() => handleStatusChange(activeRes.id, 'completed')}
-                      className="w-full py-2.5 px-3 rounded-xl bg-stone-700 hover:bg-stone-800 text-white font-semibold text-xs transition-colors shadow"
+                      className="w-full py-2.5 px-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-white font-bold text-xs transition-colors cursor-pointer"
                     >
-                      Complete Table Service
+                      Complete Dining Service
                     </button>
                   )}
-
-                  {activeRes.status === 'completed' && (
-                    <p className="text-[11px] text-emerald-400 font-semibold py-1">
-                      ✔ Reservation completed and table freed.
-                    </p>
-                  )}
-
-                  {activeRes.status === 'cancelled' && (
-                    <p className="text-[11px] text-red-400 font-semibold py-1">
-                      ✖ Reservation was cancelled.
-                    </p>
-                  )}
-
-                  {activeRes.status === 'no_show' && (
-                    <p className="text-[11px] text-amber-400 font-semibold py-1">
-                      ⚠ Guest did not arrive for the reservation.
-                    </p>
-                  )}
                 </div>
               </div>
 
-              {/* Guest & Booking Info */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="p-3.5 rounded-2xl bg-surface-container border border-outline-variant/30">
-                  <span className="text-[10px] uppercase text-outline font-semibold">Guest</span>
-                  <p className="text-xs font-bold text-on-surface mt-0.5">{activeRes.customer_name}</p>
-                  <p className="text-xs text-primary font-mono mt-0.5">{activeRes.customer_phone}</p>
+              {/* Guest Profile Card */}
+              <div className="p-5 rounded-2xl bg-[#120F0D] border border-white/[0.08] mb-6 space-y-4">
+                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+                  Primary Guest Contact
+                </p>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-lg font-serif font-black text-white">{activeRes.customer_name}</h4>
+                    <p className="text-xs font-mono text-zinc-400 mt-0.5">{activeRes.customer_phone}</p>
+                    <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Source: {activeRes.source || 'Website'}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleWhatsAppGuest(activeRes)}
+                      className="p-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-colors flex items-center justify-center cursor-pointer"
+                      title="Open WhatsApp Concierge Chat"
+                    >
+                      <span className="material-symbols-outlined text-lg">chat</span>
+                    </button>
+                    <a
+                      href={`tel:${activeRes.customer_phone}`}
+                      className="p-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] transition-colors flex items-center justify-center"
+                      title="Call Guest Phone"
+                    >
+                      <span className="material-symbols-outlined text-lg">call</span>
+                    </a>
+                  </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-surface-container border border-outline-variant/30">
-                  <span className="text-[10px] uppercase text-outline font-semibold">Party Size</span>
-                  <p className="text-xs font-bold text-on-surface mt-0.5">{activeRes.party_size} Guests</p>
-                  <p className="text-[10px] text-outline mt-0.5">Booking ID: {activeRes.id.slice(0, 8)}</p>
+                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/[0.06] text-xs">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Date</span>
+                    <p className="font-bold text-white mt-0.5">{activeRes.reservation_date}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Time Slot</span>
+                    <p className="font-mono font-bold text-[#D4AF37] mt-0.5">{activeRes.reservation_time}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Party Size</span>
+                    <p className="font-bold text-white mt-0.5">{activeRes.party_size} guests</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Booked On</span>
+                    <p className="font-mono text-zinc-300 mt-0.5">
+                      {new Date(activeRes.created_at).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-surface-container border border-outline-variant/30">
-                  <span className="text-[10px] uppercase text-outline font-semibold">Scheduled Date</span>
-                  <p className="text-xs font-bold text-on-surface mt-0.5">{activeRes.reservation_date}</p>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-surface-container border border-outline-variant/30">
-                  <span className="text-[10px] uppercase text-outline font-semibold">Scheduled Time</span>
-                  <p className="text-xs font-mono font-bold text-primary mt-0.5">{activeRes.reservation_time}</p>
-                </div>
+                {activeRes.special_requests && (
+                  <div className="pt-3 border-t border-white/[0.06]">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400">
+                      Special Guest Notes
+                    </span>
+                    <p className="text-xs text-zinc-300 mt-1 italic leading-relaxed">
+                      "{activeRes.special_requests}"
+                    </p>
+                  </div>
+                )}
               </div>
-
-              {/* Special Requests */}
-              {activeRes.special_requests && (
-                <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
-                  <span className="text-[10px] uppercase font-bold text-amber-300 block mb-1">Guest Notes & Preferences</span>
-                  <p className="leading-relaxed">{activeRes.special_requests}</p>
-                </div>
-              )}
             </div>
 
-            {/* Footer Actions */}
-            <div className="pt-6 border-t border-outline-variant/30 mt-6 flex gap-3">
-              <a
-                href={`https://wa.me/91${activeRes.customer_phone.replace(/\D/g, '')}?text=Hello%20${encodeURIComponent(activeRes.customer_name)},%20regarding%20your%20table%20reservation%20${activeRes.reservation_ref}%20at%20The%20Café%20Barrackpore:`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 py-2.5 px-4 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors shadow"
-              >
-                <span className="material-symbols-outlined text-base">chat</span>
-                Message Guest
-              </a>
-
+            {/* Drawer Footer Actions */}
+            <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => setActiveRes(null)}
-                className="py-2.5 px-6 rounded-full bg-surface-container hover:bg-surface-container-highest border border-outline-variant/40 text-xs font-semibold text-on-surface transition-colors"
+                onClick={() => handleWhatsAppGuest(activeRes)}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs uppercase tracking-wider hover:shadow-[0_10px_25px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                Close
+                <span className="material-symbols-outlined text-base font-bold">send</span>
+                <span>Send WhatsApp Confirmation</span>
               </button>
             </div>
           </div>

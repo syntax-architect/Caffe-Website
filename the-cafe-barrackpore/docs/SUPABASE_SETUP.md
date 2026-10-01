@@ -330,4 +330,163 @@ supabase functions deploy sanity-content-mutate
 
 The function authenticates the Supabase session, checks `staff_profiles` for `owner` or `manager` role, and mutates Sanity documents server-side.
 
+---
+
+## 15. Phase 1I — International Restaurant Deployment & Configuration (Migration 007)
+
+Phase 1I makes the platform globally deployable for restaurants in **India (IN), United States (US), United Kingdom (GB), United Arab Emirates (AE), Canada (CA), Australia (AU)**, and beyond without rewriting code or introducing customer friction.
+
+### 15.1 Running Migration 007
+
+1. In the Supabase SQL Editor, open `supabase/migrations/007_internationalization.sql`.
+2. Run the migration to add international columns to `restaurant_settings` and `orders`:
+   ```sql
+   ALTER TABLE restaurant_settings 
+     ADD COLUMN IF NOT EXISTS country TEXT NOT NULL DEFAULT 'IN',
+     ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'INR',
+     ADD COLUMN IF NOT EXISTS currency_symbol TEXT NOT NULL DEFAULT '₹',
+     ADD COLUMN IF NOT EXISTS locale TEXT NOT NULL DEFAULT 'en-IN',
+     ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Asia/Kolkata',
+     ADD COLUMN IF NOT EXISTS phone_country_code TEXT NOT NULL DEFAULT '+91',
+     ADD COLUMN IF NOT EXISTS tax_enabled BOOLEAN NOT NULL DEFAULT true,
+     ADD COLUMN IF NOT EXISTS tax_mode TEXT NOT NULL DEFAULT 'inclusive',
+     ADD COLUMN IF NOT EXISTS tax_label TEXT NOT NULL DEFAULT 'GST',
+     ADD COLUMN IF NOT EXISTS tax_rate NUMERIC(6,4) NOT NULL DEFAULT 0.05,
+     ADD COLUMN IF NOT EXISTS dietary_system TEXT NOT NULL DEFAULT 'india',
+     ADD COLUMN IF NOT EXISTS primary_contact_method TEXT NOT NULL DEFAULT 'whatsapp',
+     ADD COLUMN IF NOT EXISTS email TEXT,
+     ADD COLUMN IF NOT EXISTS city TEXT,
+     ADD COLUMN IF NOT EXISTS state_region TEXT,
+     ADD COLUMN IF NOT EXISTS postal_code TEXT;
+
+   ALTER TABLE orders 
+     ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'INR';
+   ```
+
+### 15.2 Configuring Localization Settings in Staff Dashboard
+
+Restaurant owners can configure localization at `/staff/settings` with 1-click Country Presets or individual parameter controls:
+
+1. **Country & Currency**: Select ISO 3166-1 alpha-2 code (`IN`, `US`, `GB`, `AE`, `CA`, `AU`) and ISO 4217 currency (`INR`, `USD`, `GBP`, `AED`, `CAD`, `AUD`).
+2. **Display Locale**: Configures `Intl.NumberFormat` and date display (`en-IN`, `en-US`, `en-GB`, `en-AE`).
+3. **Timezone**: All hours, orders, reservations, and KDS clocks format to the restaurant's local IANA timezone (`Asia/Kolkata`, `America/New_York`, `Europe/London`, `Asia/Dubai`).
+4. **Phone Validation**: International E.164 normalization supporting formats like `+1 212 555 0198`, `+44 20 7946 0958`, `+971 50 123 4567`, and `+91 98301 11222`.
+5. **Tax Architecture**:
+   - `inclusive` mode (GST / VAT): tax included in menu prices.
+   - `exclusive` mode (US / Canada Sales Tax): tax dynamically computed and added at checkout.
+   - Configurable tax label (e.g., `GST`, `Sales Tax`, `VAT`, `HST`) and percentage rate.
+6. **Dietary Presentation**:
+   - `india`: Indian FSSAI Veg / Non-Veg dot symbols.
+   - `international`: Modern badges for Vegetarian, Vegan, Gluten-Free, Nut-Free, etc.
+7. **Customer Concierge Channels**: Configurable primary channel (`whatsapp`, `phone`, `email`).
+
+### 15.3 Deployment Presets Reference
+
+#### 🇮🇳 India (Default)
+```json
+{
+  "country": "IN",
+  "currency": "INR",
+  "currencySymbol": "₹",
+  "locale": "en-IN",
+  "timezone": "Asia/Kolkata",
+  "phoneCountryCode": "+91",
+  "taxMode": "inclusive",
+  "taxLabel": "GST",
+  "taxRate": 0.05,
+  "dietarySystem": "india",
+  "primaryContactMethod": "whatsapp"
+}
+```
+
+#### 🇺🇸 United States
+```json
+{
+  "country": "US",
+  "currency": "USD",
+  "currencySymbol": "$",
+  "locale": "en-US",
+  "timezone": "America/New_York",
+  "phoneCountryCode": "+1",
+  "taxMode": "exclusive",
+  "taxLabel": "Sales Tax",
+  "taxRate": 0.0825,
+  "dietarySystem": "international",
+  "primaryContactMethod": "phone"
+}
+```
+
+#### 🇬🇧 United Kingdom
+```json
+{
+  "country": "GB",
+  "currency": "GBP",
+  "currencySymbol": "£",
+  "locale": "en-GB",
+  "timezone": "Europe/London",
+  "phoneCountryCode": "+44",
+  "taxMode": "inclusive",
+  "taxLabel": "VAT",
+  "taxRate": 0.20,
+  "dietarySystem": "international",
+  "primaryContactMethod": "phone"
+}
+```
+
+#### 🇦🇪 United Arab Emirates
+```json
+{
+  "country": "AE",
+  "currency": "AED",
+  "currencySymbol": "AED",
+  "locale": "en-AE",
+  "timezone": "Asia/Dubai",
+  "phoneCountryCode": "+971",
+  "taxMode": "inclusive",
+  "taxLabel": "VAT",
+  "taxRate": 0.05,
+  "dietarySystem": "international",
+  "primaryContactMethod": "whatsapp"
+}
+```
+
+### 15.4 Historical Order Currency Safety
+Orders store their originating `currency` (e.g. `'INR'`). Changing the restaurant configuration currency in the future does **NOT** alter the currency code or value of historical orders. The dashboard inspects `order.currency || config.currency` for presentation.
+
+### 15.5 Scope Boundaries & Limitations
+* **Payment Architecture**: Built in Phase 1J via provider-agnostic adapters (`StripeAdapter`, `RazorpayAdapter`, `DemoAdapter`).
+* **Customer Accounts**: No customer sign-up or login walls. Guest checkout remains the primary journey.
+
+---
+
+## 16. Phase 1J: Payment Architecture & Ledger Integration
+
+### 16.1 Migration `008_payment_architecture.sql`
+Phase 1J adds the authoritative payment layer to support restaurant customer payments while keeping kitchen operations protected:
+
+1. **`orders` Table Extensions**:
+   - `payment_required` (`boolean DEFAULT false`)
+   - `payment_status` (`text DEFAULT 'not_required'`)
+   - `payment_provider` (`text DEFAULT NULL`)
+   - `payment_reference` (`text DEFAULT NULL`)
+   - `payment_amount` (`numeric(10,2) DEFAULT NULL`)
+   - `paid_at` (`timestamptz DEFAULT NULL`)
+
+2. **Authoritative `payments` Ledger Table**:
+   - Stores payment transactions, provider payment IDs, idempotency keys, and payment status updates.
+   - Enforces unique index on `(order_ref, provider_payment_id)`.
+
+3. **`restaurant_settings` Extensions**:
+   - `payment_enabled` (`boolean DEFAULT false`)
+   - `payment_provider` (`text DEFAULT 'razorpay'`)
+   - `payment_mode` (`text DEFAULT 'disabled'`)
+
+4. **KDS Payment Eligibility**:
+   - Active kitchen columns strictly query orders where `payment_status` is `'paid'` or `'not_required'`.
+   - Orders with `payment_status` of `'pending'` or `'failed'` are withheld until payment confirmation.
+
+5. **Edge Function Webhook Dispatcher**:
+   - `supabase/functions/payment-webhook/index.ts` validates provider webhook signatures, enforces idempotency, and mutates `orders` and `payments` tables atomically.
+
+
 

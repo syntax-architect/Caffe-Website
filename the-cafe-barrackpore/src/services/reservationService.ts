@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { CreateReservationPayload, ReservationResult } from '../types/reservation';
 import { generateClientReservationRef } from '../utils/orderCalculations';
+import { validatePhoneNumber } from '../utils/phone';
 
 /**
  * Validates reservation payload prior to submission.
@@ -17,9 +18,9 @@ export const validateReservationPayload = (
     return { valid: false, error: 'Please enter a valid full name (minimum 2 characters).' };
   }
 
-  const cleanPhone = payload.customer_phone?.replace(/\D/g, '') || '';
-  if (!cleanPhone || cleanPhone.length < 10) {
-    return { valid: false, error: 'Please enter a valid 10-digit mobile number.' };
+  const phoneValidation = validatePhoneNumber(payload.customer_phone);
+  if (!phoneValidation.valid) {
+    return { valid: false, error: phoneValidation.error || 'Please enter a valid phone number.' };
   }
 
   if (!payload.reservation_date || !payload.reservation_date.trim()) {
@@ -63,7 +64,8 @@ export const createReservation = async (
     };
   }
 
-  const cleanPhone = payload.customer_phone.replace(/\D/g, '');
+  const phoneValidation = validatePhoneNumber(payload.customer_phone);
+  const normalizedPhone = phoneValidation.valid ? phoneValidation.normalized : payload.customer_phone.trim();
 
   // 2. Demo mode / unconfigured Supabase handling
   if (!isSupabaseConfigured || !supabase) {
@@ -93,7 +95,7 @@ export const createReservation = async (
         p_reservation: {
           reservation_ref: reservationRef,
           customer_name: payload.customer_name.trim(),
-          customer_phone: cleanPhone,
+          customer_phone: normalizedPhone,
           reservation_date: payload.reservation_date,
           reservation_time: payload.reservation_time.trim(),
           party_size: Math.floor(Number(payload.party_size)),
@@ -123,7 +125,7 @@ export const createReservation = async (
         .insert({
           reservation_ref: reservationRef,
           customer_name: payload.customer_name.trim(),
-          customer_phone: cleanPhone,
+          customer_phone: normalizedPhone,
           reservation_date: payload.reservation_date,
           reservation_time: payload.reservation_time.trim(),
           party_size: Math.floor(Number(payload.party_size)),

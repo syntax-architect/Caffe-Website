@@ -54,7 +54,7 @@ const SPECIAL_COMBOS: SpecialCombo[] = [
 export const SpecialsBanner: React.FC = () => {
   const { addToCart } = useCart();
   const { showToast } = useUI();
-  const { specials } = useSiteConfig();
+  const { specials, formatPrice, restaurantConfig } = useSiteConfig();
 
   return (
     <section id="chef-specials" className="w-full py-20 lg:py-28 bg-[#0D0705] relative border-t border-white/5 scroll-mt-28 overflow-hidden">
@@ -127,21 +127,34 @@ export const SpecialsBanner: React.FC = () => {
                       </div>
 
                       <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#120B08]/90 backdrop-blur-md border border-white/10">
-                        {/* FSSAI dietary indicator badge */}
-                        <div
-                          className={`w-3 h-3 rounded-sm border flex items-center justify-center ${
-                            combo.diet === 'all'
-                              ? 'border-emerald-500/80'
-                              : 'border-red-500/80'
-                          }`}
-                          title={combo.diet === 'all' ? 'Veg Option Available' : 'Non-Vegetarian'}
-                        >
+                        {/* Configurable dietary indicator badge */}
+                        {restaurantConfig.dietary.system === 'india' ? (
                           <div
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              combo.diet === 'all' ? 'bg-emerald-500' : 'bg-red-500'
+                            className={`w-3 h-3 rounded-sm border flex items-center justify-center ${
+                              combo.diet === 'all'
+                                ? 'border-emerald-500/80'
+                                : 'border-red-500/80'
                             }`}
-                          />
-                        </div>
+                            title={combo.diet === 'all' ? 'Veg Option Available' : 'Non-Vegetarian'}
+                          >
+                            <div
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                combo.diet === 'all' ? 'bg-emerald-500' : 'bg-red-500'
+                              }`}
+                            />
+                          </div>
+                        ) : (
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wider uppercase border ${
+                              combo.diet === 'all'
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                : 'bg-stone-500/10 text-stone-300 border-stone-500/30'
+                            }`}
+                            title={combo.diet === 'all' ? 'Veg Option Available' : 'Non-Vegetarian'}
+                          >
+                            {combo.diet === 'all' ? 'Veg' : 'Non-Veg'}
+                          </span>
+                        )}
                         <span className="font-sans text-[10px] text-on-surface/80 font-medium">
                           {combo.serves}
                         </span>
@@ -156,8 +169,7 @@ export const SpecialsBanner: React.FC = () => {
                             {combo.name}
                           </h4>
                           <div className="font-serif text-2xl text-primary font-normal tabular-nums shrink-0">
-                            <span className="text-sm align-top mr-0.5 opacity-70">₹</span>
-                            {combo.price}
+                            {formatPrice(combo.price)}
                           </div>
                         </div>
 
@@ -181,7 +193,7 @@ export const SpecialsBanner: React.FC = () => {
                           showToast({
                             title: 'Added to Order',
                             message: combo.name,
-                            subtext: `₹${combo.price} • Chef's Banquet Special`,
+                            subtext: `${formatPrice(combo.price)} • Chef's Banquet Special`,
                             type: 'success',
                           });
                         }}

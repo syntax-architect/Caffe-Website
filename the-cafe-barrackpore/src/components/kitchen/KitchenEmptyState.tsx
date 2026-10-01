@@ -18,52 +18,67 @@ export const KitchenEmptyState: React.FC<KitchenEmptyStateProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-8 text-center max-w-lg mx-auto">
-      <div className="w-16 h-16 rounded-2xl bg-[#1e1510] border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] text-2xl shadow-xl mb-4">
-        ☕
-      </div>
-      <h3 className="text-xl font-bold font-serif text-[#f5efe6] tracking-wide">
-        Kitchen is clear
-      </h3>
-      <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
-        All orders have been prepared and served. Real-time dispatch is connected and standing by for new orders from dine-in tables and takeaway.
-      </p>
+    <div className="h-full flex items-center justify-center p-6">
+      <div className="p-1 rounded-[2.5rem] bg-gradient-to-b from-white/[0.1] via-white/[0.03] to-transparent border border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.8)] max-w-lg w-full">
+        <div className="p-8 sm:p-10 rounded-[calc(2.5rem-0.25rem)] bg-[#120F0D] flex flex-col items-center text-center">
+          {/* Hardware Icon Disc with Brass Glow */}
+          <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-[#D4AF37]/20 to-transparent border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] text-3xl shadow-[0_0_30px_rgba(212,175,55,0.2)] mb-5">
+            <span className="material-symbols-outlined text-4xl">restaurant</span>
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#120F0D] animate-pulse" />
+          </div>
 
-      {/* Action shortcuts */}
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-        <button
-          type="button"
-          onClick={handleTestChime}
-          className="px-3.5 py-2 rounded-lg bg-[#1a120c] hover:bg-[#251a11] text-xs font-semibold text-[#D4AF37] border border-[#D4AF37]/30 transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
-        >
-          <span>🔔 Test Chime Sound</span>
-        </button>
+          <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#D4AF37]">
+            Active Station Standby
+          </span>
+          <h3 className="text-2xl font-serif font-black text-white tracking-tight mt-1">
+            Kitchen Rail is Clear
+          </h3>
+          <p className="text-xs text-zinc-400 mt-2 leading-relaxed max-w-sm">
+            All guest orders have been prepared and delivered to dining covers or takeaway. Real-time optical dispatch is standing by for new tickets.
+          </p>
 
-        {onToggleSound && !soundEnabled && (
-          <button
-            type="button"
-            onClick={onToggleSound}
-            className="px-3.5 py-2 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/60 text-xs font-semibold text-emerald-300 border border-emerald-600/40 transition-colors flex items-center gap-2 cursor-pointer"
-          >
-            <span>🔊 Turn Sound On</span>
-          </button>
-        )}
+          {/* Action shortcuts */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 w-full">
+            <button
+              type="button"
+              onClick={handleTestChime}
+              className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-mono font-bold text-[#D4AF37] border border-[#D4AF37]/30 transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-105"
+            >
+              <span className="material-symbols-outlined text-base">notifications_active</span>
+              <span>Test Audio Chime</span>
+            </button>
 
-        {onRefresh && (
-          <button
-            type="button"
-            onClick={onRefresh}
-            className="px-3.5 py-2 rounded-lg bg-[#1a120c] hover:bg-[#251a11] text-xs font-semibold text-zinc-300 border border-[#2d1f16] transition-colors cursor-pointer"
-          >
-            <span>↻ Check Server</span>
-          </button>
-        )}
-      </div>
+            {onToggleSound && !soundEnabled && (
+              <button
+                type="button"
+                onClick={onToggleSound}
+                className="px-4 py-2.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/60 text-xs font-mono font-bold text-emerald-300 border border-emerald-500/40 transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">volume_up</span>
+                <span>Enable Sound Alert</span>
+              </button>
+            )}
 
-      <div className="mt-8 flex items-center gap-2 text-xs text-zinc-400 font-mono">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-        <span>Live ticket synchronization active</span>
+            {onRefresh && (
+              <button
+                type="button"
+                onClick={onRefresh}
+                className="px-4 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] text-xs font-mono font-bold text-zinc-400 hover:text-white border border-white/[0.06] transition-colors cursor-pointer flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-base">sync</span>
+                <span>Check Dispatch</span>
+              </button>
+            )}
+          </div>
+
+          <div className="mt-8 flex items-center gap-2 text-[10px] text-zinc-500 font-mono pt-4 border-t border-white/[0.06] w-full justify-center">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Real-time optical ticket sync active • 0 latency</span>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
+
+export default KitchenEmptyState;

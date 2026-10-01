@@ -1,8 +1,10 @@
 import React, { lazy, Suspense } from 'react';
 import { TableProvider } from './context/TableContext';
 import { AuthProvider } from './context/AuthContext';
+import { SiteConfigProvider } from './context/SiteConfigContext';
+import { I18nProvider } from './i18n';
 
-const App = lazy(() => import('./App.tsx'));
+const App = lazy(() => import('./App'));
 const QROrderingPage = lazy(() => import('./components/QROrderingPage').then(m => ({ default: m.QROrderingPage })));
 const QRCodeGenerator = lazy(() => import('./components/QRCodeGenerator').then(m => ({ default: m.QRCodeGenerator })));
 const StaffLoginPage = lazy(() => import('./components/staff/StaffLoginPage').then(m => ({ default: m.StaffLoginPage })));
@@ -19,27 +21,31 @@ export const Root: React.FC = () => {
   const isQRRoute = pathname === '/qr';
 
   return (
-    <AuthProvider>
-      <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
-        {isStaffLogin ? (
-          <StaffLoginPage />
-        ) : isStaffRoute ? (
-          <ProtectedRoute>
-            <StaffApp />
-          </ProtectedRoute>
-        ) : isGeneratorRoute ? (
-          <QRCodeGenerator />
-        ) : isQRRoute ? (
-          <TableProvider>
-            <QROrderingPage />
-          </TableProvider>
-        ) : (
-          <TableProvider>
-            <App />
-          </TableProvider>
-        )}
-      </Suspense>
-    </AuthProvider>
+    <I18nProvider>
+      <SiteConfigProvider>
+        <AuthProvider>
+          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+            {isStaffLogin ? (
+              <StaffLoginPage />
+            ) : isStaffRoute ? (
+              <ProtectedRoute>
+                <StaffApp />
+              </ProtectedRoute>
+            ) : isGeneratorRoute ? (
+              <QRCodeGenerator />
+            ) : isQRRoute ? (
+              <TableProvider>
+                <QROrderingPage />
+              </TableProvider>
+            ) : (
+              <TableProvider>
+                <App />
+              </TableProvider>
+            )}
+          </Suspense>
+        </AuthProvider>
+      </SiteConfigProvider>
+    </I18nProvider>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchStaffProfiles, toggleStaffActive, updateStaffRole } from '../../services/dashboardService';
 import { useNotification } from '../../hooks/useNotification';
@@ -113,7 +113,6 @@ export const StaffManagement: React.FC = () => {
       return;
     }
 
-    // Provision local entry and explain serverless Edge Function invite pattern
     const newStaff: StaffProfile = {
       id: `staff-${Date.now()}`,
       user_id: `user-${Date.now()}`,
@@ -135,14 +134,25 @@ export const StaffManagement: React.FC = () => {
     );
   };
 
+  const activeStaffCount = useMemo(() => staffList.filter((s) => s.active).length, [staffList]);
+  const managerCount = useMemo(() => staffList.filter((s) => s.role === 'manager').length, [staffList]);
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-8 animate-fadeIn">
+      {/* COCKPIT HEADER */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.06]">
         <div>
-          <h2 className="text-xl font-serif font-bold text-on-surface">Staff Roster & Terminal Access</h2>
-          <p className="text-xs text-outline mt-0.5">
-            Manage operational team members, role assignments, and active terminal permissions.
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+              Security Ledger & Terminal Access
+            </span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-1 tracking-tight">
+            Staff & Terminals
+          </h2>
+          <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
+            Manage operational team profiles, POS credentials, role authorization, and terminal permissions.
           </p>
         </div>
 
@@ -150,221 +160,346 @@ export const StaffManagement: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsInviteModalOpen(true)}
-            className="py-2.5 px-4 rounded-xl bg-primary text-on-primary text-xs font-semibold hover:bg-primary-hover active:scale-95 transition-all flex items-center gap-2 shadow"
+            className="relative group overflow-hidden px-5 py-3 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] text-[#070605] text-xs font-black tracking-wider uppercase shadow-[0_10px_30px_rgba(212,175,55,0.25)] hover:shadow-[0_15px_40px_rgba(212,175,55,0.4)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
           >
-            <span className="material-symbols-outlined text-base">person_add</span>
-            Provision Staff Account
+            <span className="material-symbols-outlined text-base font-bold">person_add</span>
+            <span>Provision Account</span>
           </button>
         )}
       </div>
 
-      {/* Role Security Callout */}
-      {!isOwner && isManager && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-3">
-          <span className="material-symbols-outlined text-amber-400 text-lg shrink-0 mt-0.5">info</span>
-          <div>
-            <p className="font-semibold text-amber-300">Manager Mode</p>
-            <p className="text-[11px] text-amber-200/80 mt-0.5">
-              You have access to view the staff roster. Deactivating accounts and modifying permissions is restricted to restaurant proprietors (Owner role).
+      {/* STATS STRIP */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Total Staff</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-white mt-0.5">{staffList.length}</p>
+          </div>
+        </div>
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">Active Terminals</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-emerald-400 mt-0.5">{activeStaffCount}</p>
+          </div>
+        </div>
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">Shift Managers</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-[#D4AF37] mt-0.5">{managerCount}</p>
+          </div>
+        </div>
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-sky-400">Proprietor</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-sky-400 mt-0.5">
+              {staffList.filter((s) => s.role === 'owner').length}
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ROLE PERMISSION NOTICE */}
+      {!isOwner && isManager && (
+        <div className="p-1 rounded-2xl bg-gradient-to-b from-amber-500/20 to-transparent border border-amber-500/30">
+          <div className="p-4 rounded-[calc(1rem-0.125rem)] bg-[#120F0D] flex items-start gap-3.5 text-xs text-amber-200">
+            <span className="material-symbols-outlined text-amber-400 text-lg shrink-0 mt-0.5">shield</span>
+            <div>
+              <p className="font-bold text-amber-300">Manager Shift Oversight</p>
+              <p className="text-[11px] text-amber-200/80 mt-0.5 leading-relaxed">
+                You have active authorization to view the staff ledger. Provisioning new accounts and altering terminal roles is restricted to restaurant proprietors.
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Staff Roster Table */}
-      <div className="bg-surface-container border border-outline-variant/40 rounded-3xl overflow-hidden shadow-sm">
-        {isLoading ? (
-          <div className="py-20 text-center text-outline text-xs">Loading staff roster...</div>
-        ) : staffList.length === 0 ? (
-          <div className="py-20 text-center text-outline text-xs flex flex-col items-center">
-            <span className="material-symbols-outlined text-4xl mb-2 opacity-40">group</span>
-            <p className="font-semibold text-sm text-on-surface">No staff members found</p>
-            <p className="text-[11px] mt-1">Staff accounts can be provisioned by the restaurant owner.</p>
+      {/* STAFF DATA DISPLAY */}
+      {isLoading ? (
+        <div className="py-20 text-center text-zinc-500 font-mono text-xs">Authenticating staff roster...</div>
+      ) : staffList.length === 0 ? (
+        <div className="p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
+          <div className="py-20 text-center rounded-[calc(2rem-0.375rem)] bg-[#120F0D] flex flex-col items-center">
+            <span className="material-symbols-outlined text-4xl mb-2 text-zinc-600">group</span>
+            <p className="font-serif font-bold text-base text-white">No staff profiles registered</p>
+            <p className="text-xs text-zinc-500 mt-1">Click "Provision Account" to create your first team credential.</p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-outline-variant/30 bg-surface-container-high/40 text-outline text-[11px] uppercase tracking-wider">
-                  <th className="py-3 px-5 font-semibold">Staff Member</th>
-                  <th className="py-3 px-4 font-semibold">Assigned Role</th>
-                  <th className="py-3 px-4 font-semibold">Account State</th>
-                  <th className="py-3 px-4 font-semibold">Registered</th>
-                  <th className="py-3 px-5 text-right font-semibold">Security Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/20">
-                {staffList.map((staff) => {
-                  const roleBadge = {
-                    owner: 'bg-primary/15 text-primary border-primary/30',
-                    manager: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-                    staff: 'bg-stone-500/15 text-stone-300 border-stone-500/30',
-                  }[staff.role];
+        </div>
+      ) : (
+        <>
+          {/* MOBILE CARDS VIEW (< md) */}
+          <div className="grid grid-cols-1 gap-3 md:hidden">
+            {staffList.map((staff) => {
+              const isCurrent = staff.id === currentProfile?.id;
+              const roleBadge = {
+                owner: 'bg-[#D4AF37]/15 text-[#D4AF37] border-[#D4AF37]/30',
+                manager: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+                staff: 'bg-zinc-800 text-zinc-300 border-zinc-700',
+              }[staff.role];
 
-                  const isCurrent = staff.id === currentProfile?.id;
-
-                  return (
-                    <tr key={staff.id} className="hover:bg-surface-container-high/50 transition-colors">
-                      <td className="py-3.5 px-5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-xs text-primary uppercase">
-                            {staff.full_name ? staff.full_name.charAt(0) : 'S'}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-on-surface flex items-center gap-1.5">
-                              {staff.full_name}
-                              {isCurrent && (
-                                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-primary/10 text-primary border border-primary/20 font-bold uppercase">
-                                  You
-                                </span>
-                              )}
-                            </p>
-                            <p className="text-[10px] text-outline font-mono">ID: {staff.user_id.slice(0, 8)}...</p>
-                          </div>
+              return (
+                <div
+                  key={staff.id}
+                  className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.08]"
+                >
+                  <div className="p-4 rounded-[calc(1rem-0.125rem)] bg-[#120F0D] flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center font-bold text-xs text-[#D4AF37] uppercase">
+                          {staff.full_name ? staff.full_name.charAt(0) : 'S'}
                         </div>
-                      </td>
+                        <div>
+                          <p className="font-bold text-white text-sm flex items-center gap-1.5">
+                            {staff.full_name}
+                            {isCurrent && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] font-mono uppercase">
+                                You
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[10px] text-zinc-500 font-mono">ID: {staff.user_id.slice(0, 8)}</p>
+                        </div>
+                      </div>
 
-                      <td className="py-3.5 px-4">
-                        {isOwner && !isCurrent ? (
-                          <select
-                            value={staff.role}
-                            onChange={(e) => handleRoleChange(staff, e.target.value as StaffRole)}
-                            className="bg-surface-container-high border border-outline-variant/60 rounded-lg px-2.5 py-1 text-xs text-on-surface font-semibold focus:outline-none focus:border-primary capitalize"
-                          >
-                            <option value="staff">Staff (Service/Kitchen)</option>
-                            <option value="manager">Manager (Shift Lead)</option>
-                            <option value="owner">Owner (Proprietor)</option>
-                          </select>
-                        ) : (
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${roleBadge}`}>
-                            {staff.role}
-                          </span>
-                        )}
-                      </td>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                          staff.active
+                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                            : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${staff.active ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                        <span>{staff.active ? 'Active' : 'Off-Duty'}</span>
+                      </span>
+                    </div>
 
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                    <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-xs">
+                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider border ${roleBadge}`}>
+                        {staff.role}
+                      </span>
+
+                      {isOwner && !isCurrent ? (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(staff)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
                             staff.active
-                              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                              : 'bg-red-500/15 text-red-400 border-red-500/30'
+                              ? 'bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border-rose-500/30'
+                              : 'bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border-emerald-500/30'
                           }`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full ${staff.active ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                          {staff.active ? 'Active' : 'Deactivated'}
-                        </span>
-                      </td>
+                          {staff.active ? 'Deactivate' : 'Reactivate'}
+                        </button>
+                      ) : (
+                        <span className="text-zinc-600 font-mono text-[10px]">Protected</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
-                      <td className="py-3.5 px-4 text-outline font-mono text-[11px]">
-                        {new Date(staff.created_at).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </td>
+          {/* DESKTOP TABLE VIEW (>= md) */}
+          <div className="hidden md:block p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl overflow-hidden">
+            <div className="rounded-[calc(2rem-0.375rem)] bg-[#120F0D] overflow-hidden">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-white/[0.06] bg-white/[0.02] text-zinc-400 text-[10px] font-mono uppercase tracking-[0.16em]">
+                    <th className="py-4 px-6 font-bold">Team Member</th>
+                    <th className="py-4 px-4 font-bold">Assigned Role</th>
+                    <th className="py-4 px-4 font-bold">Terminal Status</th>
+                    <th className="py-4 px-4 font-bold">Registration Date</th>
+                    <th className="py-4 px-6 text-right font-bold">Access Controls</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04]">
+                  {staffList.map((staff) => {
+                    const roleBadge = {
+                      owner: 'bg-[#D4AF37]/15 text-[#D4AF37] border-[#D4AF37]/30',
+                      manager: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+                      staff: 'bg-zinc-800 text-zinc-300 border-zinc-700',
+                    }[staff.role];
 
-                      <td className="py-3.5 px-5 text-right">
-                        {isOwner && !isCurrent ? (
-                          <button
-                            type="button"
-                            onClick={() => handleToggleStatus(staff)}
-                            className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-colors border ${
+                    const isCurrent = staff.id === currentProfile?.id;
+
+                    return (
+                      <tr key={staff.id} className="hover:bg-white/[0.03] transition-colors">
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center font-bold text-xs text-[#D4AF37] uppercase shrink-0">
+                              {staff.full_name ? staff.full_name.charAt(0) : 'S'}
+                            </div>
+                            <div>
+                              <p className="font-bold text-white flex items-center gap-2">
+                                <span className="text-sm">{staff.full_name}</span>
+                                {isCurrent && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 font-mono uppercase tracking-wider">
+                                    You
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-[11px] text-zinc-500 font-mono mt-0.5">
+                                UID: {staff.user_id.slice(0, 12)}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-4">
+                          {isOwner && !isCurrent ? (
+                            <select
+                              value={staff.role}
+                              onChange={(e) => handleRoleChange(staff, e.target.value as StaffRole)}
+                              className="bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37] capitalize cursor-pointer"
+                            >
+                              <option value="staff" className="bg-[#120F0D]">Staff (Service/Kitchen)</option>
+                              <option value="manager" className="bg-[#120F0D]">Manager (Floor Lead)</option>
+                              <option value="owner" className="bg-[#120F0D]">Owner (Proprietor)</option>
+                            </select>
+                          ) : (
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border ${roleBadge}`}>
+                              {staff.role}
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="py-4 px-4">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                               staff.active
-                                ? 'bg-red-950/40 hover:bg-red-900/60 text-red-300 border-red-500/30'
-                                : 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border-emerald-500/30'
+                                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                                : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
                             }`}
                           >
-                            {staff.active ? 'Deactivate' : 'Reactivate'}
-                          </button>
-                        ) : (
-                          <span className="text-outline/40 text-[11px]">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                            <span className={`w-1.5 h-1.5 rounded-full ${staff.active ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                            <span>{staff.active ? 'Active' : 'Deactivated'}</span>
+                          </span>
+                        </td>
 
-      {/* Provision Staff Modal */}
+                        <td className="py-4 px-4 text-zinc-400 font-mono text-xs">
+                          {new Date(staff.created_at).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </td>
+
+                        <td className="py-4 px-6 text-right">
+                          {isOwner && !isCurrent ? (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleStatus(staff)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors border cursor-pointer ${
+                                staff.active
+                                  ? 'bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border-rose-500/30'
+                                  : 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border-emerald-500/30'
+                              }`}
+                            >
+                              {staff.active ? 'Deactivate' : 'Reactivate'}
+                            </button>
+                          ) : (
+                            <span className="text-zinc-600 font-mono text-xs">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* DOUBLE-BEZEL PROVISION MODAL */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             onClick={() => setIsInviteModalOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
           />
 
-          <div className="relative w-full max-w-md bg-surface-container-high border border-outline-variant/60 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 animate-in zoom-in-95 duration-150">
-            <h3 className="text-lg font-serif font-bold text-on-surface mb-1">
-              Provision Staff Terminal Account
-            </h3>
-            <p className="text-xs text-outline mb-6">
-              Create a restaurant staff profile and assign operational permissions.
-            </p>
-
-            <form onSubmit={handleInviteSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block uppercase font-bold tracking-wider text-outline mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Rahul Sharma"
-                  value={inviteName}
-                  onChange={(e) => setInviteName(e.target.value)}
-                  className="w-full bg-surface-container border border-outline-variant/60 rounded-xl px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block uppercase font-bold tracking-wider text-outline mb-1">
-                  Staff Email Address
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="staff@thecafebarrackpore.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full bg-surface-container border border-outline-variant/60 rounded-xl px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block uppercase font-bold tracking-wider text-outline mb-1">
-                  Role Assignment
-                </label>
-                <select
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as StaffRole)}
-                  className="w-full bg-surface-container border border-outline-variant/60 rounded-xl px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary"
-                >
-                  <option value="staff">Staff (Orders & Table Service)</option>
-                  <option value="manager">Manager (Floor & Roster Oversight)</option>
-                  <option value="owner">Owner (Full Administration)</option>
-                </select>
-              </div>
-
-              <div className="pt-4 flex gap-3">
+          <div className="relative w-full max-w-md p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.15] via-white/[0.05] to-white/[0.02] border border-white/[0.1] shadow-2xl z-10 animate-in zoom-in-95 duration-200">
+            <div className="rounded-[calc(2rem-0.375rem)] bg-[#120F0D] p-6 sm:p-8">
+              <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-5">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+                    Security Provisioning
+                  </span>
+                  <h3 className="text-xl font-serif font-black text-white mt-0.5">
+                    Provision Terminal Profile
+                  </h3>
+                </div>
                 <button
                   type="button"
                   onClick={() => setIsInviteModalOpen(false)}
-                  className="flex-1 py-2.5 rounded-full bg-surface-container hover:bg-surface-container-highest border border-outline-variant/40 font-semibold text-outline hover:text-on-surface transition-colors"
+                  className="p-1.5 rounded-full bg-white/[0.05] text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary-hover active:scale-95 transition-all shadow"
-                >
-                  Create Account
+                  <span className="material-symbols-outlined text-base">close</span>
                 </button>
               </div>
-            </form>
+
+              <form onSubmit={handleInviteSubmit} className="space-y-4 text-xs">
+                <div>
+                  <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Rahul Sharma"
+                    value={inviteName}
+                    onChange={(e) => setInviteName(e.target.value)}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Terminal Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="staff@thecafebarrackpore.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Operational Role
+                  </label>
+                  <select
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as StaffRole)}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  >
+                    <option value="staff" className="bg-[#120F0D]">Staff (Orders &amp; Kitchen)</option>
+                    <option value="manager" className="bg-[#120F0D]">Manager (Floor &amp; Roster)</option>
+                    <option value="owner" className="bg-[#120F0D]">Owner (Proprietor Full Access)</option>
+                  </select>
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsInviteModalOpen(false)}
+                    className="flex-1 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] font-bold text-xs text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs uppercase tracking-wider hover:shadow-[0_10px_25px_rgba(212,175,55,0.3)] transition-all cursor-pointer"
+                  >
+                    Create Account
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

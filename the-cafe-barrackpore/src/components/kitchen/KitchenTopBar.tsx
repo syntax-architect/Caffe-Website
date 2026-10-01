@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { KitchenConnectionStatus, KitchenFilter } from '../../services/kitchenService';
+import { unlockAudioContext, playKitchenOrderBell } from '../../services/soundService';
 
 interface KitchenTopBarProps {
   connectionStatus: KitchenConnectionStatus;
@@ -16,6 +17,7 @@ interface KitchenTopBarProps {
   staffName?: string;
   staffRole?: string;
   onRefresh?: () => void;
+  onSimulateTestOrder?: () => void;
 }
 
 export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
@@ -33,6 +35,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
   staffName,
   staffRole,
   onRefresh,
+  onSimulateTestOrder,
 }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [currentDate, setCurrentDate] = useState<string>('');
@@ -89,16 +92,16 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
     switch (connectionStatus) {
       case 'live':
         return (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/70 text-emerald-400 border border-emerald-700/50 text-[11px] font-mono font-bold">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 text-[11px] font-mono font-bold shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Kitchen Live</span>
+            <span>KITCHEN LIVE</span>
           </div>
         );
       case 'reconnecting':
         return (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/70 text-amber-300 border border-amber-600/50 text-[11px] font-mono font-bold">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/80 text-amber-300 border border-amber-500/40 text-[11px] font-mono font-bold">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-            <span>Reconnecting...</span>
+            <span>SYNCING...</span>
           </div>
         );
       case 'offline':
@@ -106,176 +109,195 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
           <button
             type="button"
             onClick={onRefresh}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-950/80 text-red-300 border border-red-600/50 text-[11px] font-mono font-bold hover:bg-red-900 cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-950/90 text-red-300 border border-red-500/50 text-[11px] font-mono font-bold hover:bg-red-900 cursor-pointer shadow-sm"
             title="Tap to reconnect"
           >
             <span className="w-2 h-2 rounded-full bg-red-500" />
-            <span>Offline (Tap to Retry)</span>
+            <span>OFFLINE (RETRY)</span>
           </button>
         );
     }
   };
 
   return (
-    <header className="bg-[#120c08] border-b border-[#261a13] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-[#f5efe6] select-none sticky top-0 z-30 shadow-md">
-      {/* LEFT: BRAND & BADGE */}
+    <header className="bg-[#0A0807] border-b border-white/[0.08] px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-white select-none sticky top-0 z-30 shadow-[0_4px_25px_rgba(0,0,0,0.8)]">
+      {/* LEFT SECTION: Brand Crest & Exit Button */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <span className="bg-[#D4AF37] text-[#120c08] font-mono text-[11px] font-black tracking-widest px-2.5 py-1 rounded shadow-sm">
-            KDS
-          </span>
-          <div>
-            <h1 className="text-sm sm:text-base font-serif font-black tracking-wider text-[#f5efe6] leading-none">
-              The Café Barrackpore
-            </h1>
-            <p className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-mono mt-0.5">
-              Kitchen Display System
-            </p>
-          </div>
-        </div>
-
-        {/* CONNECTION INDICATOR */}
-        <div className="hidden sm:block">{getConnectionDisplay()}</div>
-      </div>
-
-      {/* CENTER: LIVE CLOCK & ACTIVE COUNT */}
-      <div className="flex items-center gap-4">
-        <div className="hidden md:flex flex-col items-center">
-          <div className="font-mono text-base font-black tracking-wider text-[#f5efe6] leading-none">
-            {currentTime}
-          </div>
-          <div className="text-[10px] text-zinc-400 font-medium tracking-wide mt-0.5">
-            {currentDate}
-          </div>
-        </div>
-
-        {/* ACTIVE WORKLOAD SUMMARY */}
-        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#1a110b] border border-[#2d1f16] text-xs font-mono">
-          <span className="text-zinc-400">Active Queue:</span>
-          <span className="font-black text-[#D4AF37] text-sm">{totalActive}</span>
-        </div>
-      </div>
-
-      {/* RIGHT: OPERATIONAL CONTROLS & ACTIONS */}
-      <div className="flex items-center flex-wrap gap-2">
-        {/* FILTERS */}
-        <div className="flex items-center bg-[#170f0b] p-0.5 rounded-lg border border-[#2d1f16]">
-          {(['all', 'dine_in', 'takeaway'] as KitchenFilter[]).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => onSetFilter(f)}
-              className={`px-2.5 py-1 text-[11px] font-bold uppercase rounded-md transition-colors cursor-pointer ${
-                filter === f
-                  ? 'bg-[#D4AF37] text-[#120c08] shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              {f === 'all' ? 'All' : f === 'dine_in' ? 'Dine-In' : 'Takeaway'}
-            </button>
-          ))}
-        </div>
-
-        {/* SOUND TOGGLE */}
-        <button
-          type="button"
-          onClick={onToggleSound}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-            soundEnabled
-              ? 'bg-[#1e1510] text-[#D4AF37] border-[#D4AF37]/50 hover:bg-[#281c15]'
-              : 'bg-[#170f0b] text-zinc-500 border-[#2d1f16] hover:text-zinc-300'
-          }`}
-          title={soundEnabled ? 'Kitchen chime sound is ON' : 'Enable kitchen alert chime'}
-          aria-label={soundEnabled ? 'Mute kitchen sound' : 'Enable kitchen sound'}
-        >
-          {soundEnabled ? (
-            <>
-              <svg className="w-3.5 h-3.5 text-[#D4AF37]" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 3a1 1 0 00-1 1v12a1 1 0 001.707.707L14.414 13H17a1 1 0 001-1V8a1 1 0 00-1-1h-2.586l-3.707-3.707A1 1 0 0010 3z" />
-                <path d="M18.364 4.636a9 9 0 010 12.728l-1.414-1.414a7 7 0 000-9.9l1.414-1.414z" />
-              </svg>
-              <span>Sound On</span>
-            </>
-          ) : (
-            <>
-              <svg className="w-3.5 h-3.5 text-zinc-500" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>Muted</span>
-            </>
-          )}
-        </button>
-
-        {/* DENSITY TOGGLE */}
-        <button
-          type="button"
-          onClick={() => onSetDensity(density === 'comfortable' ? 'compact' : 'comfortable')}
-          className="hidden sm:flex items-center px-2 py-1 rounded-lg text-xs font-mono font-medium text-zinc-400 bg-[#170f0b] border border-[#2d1f16] hover:text-white transition-colors cursor-pointer"
-          title={`Switch to ${density === 'comfortable' ? 'compact' : 'comfortable'} ticket layout`}
-        >
-          {density === 'comfortable' ? 'Compact' : 'Normal'}
-        </button>
-
-        {/* FULLSCREEN */}
-        <button
-          type="button"
-          onClick={toggleFullscreen}
-          className="p-1.5 rounded-lg bg-[#170f0b] border border-[#2d1f16] text-zinc-400 hover:text-white transition-colors cursor-pointer"
-          title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen Mode'}
-          aria-label={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-        >
-          {isFullscreen ? (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-              />
-            </svg>
-          )}
-        </button>
-
-        {/* HISTORY DRAWER TOGGLE */}
-        <button
-          type="button"
-          onClick={onOpenHistory}
-          className="px-2.5 py-1 rounded-lg text-xs font-bold text-zinc-300 bg-[#1a110b] border border-[#2d1f16] hover:bg-[#261a13] hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
-          title="View recent completed orders"
-        >
-          <span>History</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-zinc-800 text-zinc-400">
-            {completedCount}
-          </span>
-        </button>
-
-        {/* EXIT TO DASHBOARD */}
         <button
           type="button"
           onClick={onExitToDashboard}
-          className="px-3 py-1 rounded-lg text-xs font-bold text-[#D4AF37] bg-[#1e1510] border border-[#D4AF37]/30 hover:bg-[#2d1f16] transition-colors flex items-center gap-1 cursor-pointer"
-          title="Return to Staff Dashboard"
+          className="group px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-stone-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
+          title="Exit to Restaurant Management Dashboard"
         >
-          <span>Dashboard →</span>
+          <span className="material-symbols-outlined text-base text-[#D4AF37] group-hover:-translate-x-0.5 transition-transform">
+            arrow_back
+          </span>
+          <span className="hidden sm:inline">Management</span>
         </button>
 
-        {/* STAFF AVATAR / PROFILE */}
-        {staffName && (
-          <div className="hidden xl:flex items-center gap-1.5 pl-2 border-l border-[#261a13] text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span className="font-semibold text-zinc-300 truncate max-w-[90px]">{staffName}</span>
-            <span className="text-[10px] text-zinc-500 uppercase font-mono">({staffRole})</span>
+        <div className="flex items-center gap-2 pl-1 border-l border-white/[0.08]">
+          <div className="w-7 h-7 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/35 flex items-center justify-center p-1">
+            <img src="/logo.webp" alt="Logo" className="w-full h-full object-contain filter invert" />
           </div>
+          <div>
+            <h1 className="font-serif text-sm font-bold tracking-[0.14em] uppercase text-white leading-none">
+              Kitchen Display
+            </h1>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[9px] font-mono text-[#D4AF37] tracking-wider uppercase">
+                Station KDS-01
+              </span>
+              {staffName && (
+                <span className="hidden xl:inline text-stone-400 font-mono text-[9px] border-l border-white/[0.1] pl-1.5">
+                  {staffName} ({staffRole || 'staff'})
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {getConnectionDisplay()}
+      </div>
+
+      {/* CENTER SECTION: Filter Segmented Controller */}
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-[#14100D] border border-white/[0.06] shadow-inner">
+        <button
+          type="button"
+          onClick={() => onSetFilter('all')}
+          className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+            filter === 'all'
+              ? 'bg-[#D4AF37] text-[#120B08] shadow-sm'
+              : 'text-stone-400 hover:text-white'
+          }`}
+        >
+          All Tickets
+        </button>
+        <button
+          type="button"
+          onClick={() => onSetFilter('dine_in')}
+          className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
+            filter === 'dine_in'
+              ? 'bg-[#D4AF37] text-[#120B08] shadow-sm'
+              : 'text-stone-400 hover:text-white'
+          }`}
+        >
+          <span className="material-symbols-outlined text-xs">restaurant</span>
+          <span>Dine-In</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onSetFilter('takeaway')}
+          className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
+            filter === 'takeaway'
+              ? 'bg-[#D4AF37] text-[#120B08] shadow-sm'
+              : 'text-stone-400 hover:text-white'
+          }`}
+        >
+          <span className="material-symbols-outlined text-xs">takeout_dining</span>
+          <span>Takeaway</span>
+        </button>
+      </div>
+
+      {/* RIGHT SECTION: Metrics, Tools & Clock */}
+      <div className="flex items-center gap-3">
+        {/* Ticket Volume Badge */}
+        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <span className="text-[10px] font-mono uppercase text-stone-400">Active</span>
+          <span className="font-mono font-bold text-sm text-[#F3C766]">{totalActive}</span>
+          <span className="text-stone-600">|</span>
+          <span className="text-[10px] font-mono uppercase text-stone-400">Done</span>
+          <span className="font-mono font-bold text-sm text-emerald-400">{completedCount}</span>
+        </div>
+
+        {/* History Drawer Trigger */}
+        <button
+          type="button"
+          onClick={onOpenHistory}
+          className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-stone-300 hover:text-[#D4AF37] transition-all cursor-pointer"
+          title="View recent completed tickets"
+        >
+          <span className="material-symbols-outlined text-lg">history</span>
+        </button>
+
+        {/* Sound Toggle */}
+        <button
+          type="button"
+          onClick={onToggleSound}
+          className={`p-2 rounded-xl border transition-all cursor-pointer ${
+            soundEnabled
+              ? 'bg-[#D4AF37]/15 text-[#F3C766] border-[#D4AF37]/30 hover:bg-[#D4AF37]/25'
+              : 'bg-white/[0.04] text-stone-500 border-white/[0.08] hover:text-stone-300'
+          }`}
+          title={soundEnabled ? 'Chime sound alert is ON' : 'Chime sound alert is OFF'}
+        >
+          <span className="material-symbols-outlined text-lg">
+            {soundEnabled ? 'volume_up' : 'volume_off'}
+          </span>
+        </button>
+
+        {/* Audio Speaker Test / Chime Check */}
+        <button
+          type="button"
+          onClick={async () => {
+            await unlockAudioContext();
+            playKitchenOrderBell();
+          }}
+          className="p-2 rounded-xl bg-white/[0.04] hover:bg-[#D4AF37]/15 border border-white/[0.08] hover:border-[#D4AF37]/40 text-stone-300 hover:text-[#F3C766] transition-all cursor-pointer"
+          title="Sound Check: Test brass kitchen bell ring"
+          aria-label="Test kitchen chime"
+        >
+          <span className="material-symbols-outlined text-lg">notifications_active</span>
+        </button>
+
+        {/* Dinner Service Simulation Quick Trigger */}
+        {onSimulateTestOrder && (
+          <button
+            type="button"
+            onClick={onSimulateTestOrder}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 to-[#F3C766]/10 hover:from-[#D4AF37]/30 hover:to-[#F3C766]/20 border border-[#D4AF37]/40 text-[#F3C766] text-xs font-mono font-bold transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+            title="Simulate incoming Table 07 order for dinner rush testing"
+          >
+            <span className="material-symbols-outlined text-sm">bolt</span>
+            <span>+ Test Order</span>
+          </button>
         )}
+
+        {/* Density Toggle */}
+        <button
+          type="button"
+          onClick={() => onSetDensity(density === 'comfortable' ? 'compact' : 'comfortable')}
+          className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-stone-300 hover:text-white transition-all cursor-pointer"
+          title={`Switch to ${density === 'comfortable' ? 'Compact' : 'Comfortable'} mode`}
+        >
+          <span className="material-symbols-outlined text-lg">
+            {density === 'comfortable' ? 'view_compact' : 'view_comfortable'}
+          </span>
+        </button>
+
+        {/* Fullscreen Toggle */}
+        <button
+          type="button"
+          onClick={toggleFullscreen}
+          className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-stone-300 hover:text-[#D4AF37] transition-all cursor-pointer"
+          title={isFullscreen ? 'Exit full screen' : 'Expand full screen'}
+        >
+          <span className="material-symbols-outlined text-lg">
+            {isFullscreen ? 'fullscreen_exit' : 'fullscreen'}
+          </span>
+        </button>
+
+        {/* Live Digital Clock */}
+        <div className="hidden lg:flex flex-col items-end pl-2 border-l border-white/[0.08]">
+          <span className="font-mono text-sm font-bold text-white tracking-wider leading-none">
+            {currentTime}
+          </span>
+          <span className="text-[10px] text-stone-400 font-medium uppercase mt-0.5">
+            {currentDate}
+          </span>
+        </div>
       </div>
     </header>
   );
 };
+
+export default KitchenTopBar;

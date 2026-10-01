@@ -1,6 +1,8 @@
 /**
  * Core Order types for The Café Barrackpore ordering foundation.
  */
+import type { PaymentStatus, PaymentProvider } from './payment';
+import type { TaxRule, ServiceChargeConfig, TaxMode } from './tax';
 
 export type OrderType = 'dine_in' | 'takeaway';
 export type OrderSource = 'website' | 'qr';
@@ -33,6 +35,18 @@ export interface OrderItemRecord {
   created_at: string;
 }
 
+export interface TaxCalculationOptions {
+  enabled?: boolean;
+  rate?: number;
+  label?: string;
+  mode?: TaxMode;
+  serviceCharge?: Partial<ServiceChargeConfig>;
+  rules?: TaxRule[];
+  taxIdLabel?: string;
+  showBreakdown?: boolean;
+  roundingMode?: 'line' | 'total';
+}
+
 export interface CreateOrderPayload {
   order_ref?: string;
   customer_name: string;
@@ -42,6 +56,13 @@ export interface CreateOrderPayload {
   special_requests?: string | null;
   items: OrderItemInput[];
   source?: OrderSource;
+  currency?: string;
+  payment_required?: boolean;
+  payment_status?: PaymentStatus;
+  payment_provider?: PaymentProvider;
+  payment_reference?: string | null;
+  payment_amount?: number;
+  tax_options?: TaxCalculationOptions;
 }
 
 export interface OrderRecord {
@@ -54,15 +75,35 @@ export interface OrderRecord {
   special_requests: string | null;
   subtotal: number;
   total: number;
+  currency?: string;
   status: OrderStatus;
   source: OrderSource | string;
+  payment_required?: boolean;
+  payment_status?: PaymentStatus;
+  payment_provider?: PaymentProvider | string | null;
+  payment_reference?: string | null;
+  payment_amount?: number | null;
+  paid_at?: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface OrderCalculationSummary {
   subtotal: number;
+  tax: number;
   total: number;
+  taxLabel?: string;
+  taxRate?: number;
+  taxMode?: 'inclusive' | 'exclusive';
+  serviceCharge?: number;
+  serviceChargeLabel?: string;
+  taxBreakdownLines?: Array<{
+    label: string;
+    rate: number;
+    mode: string;
+    amount: number;
+  }>;
+  netSubtotal?: number;
   itemCount: number;
   lineItems: Array<{
     menu_item_id: string;

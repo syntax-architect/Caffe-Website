@@ -4,6 +4,9 @@
   "scripts": {
     "dev": "npm run dev --prefix the-cafe-barrackpore",
     "build": "npm run build --prefix the-cafe-barrackpore",
+    "lint": "npm run lint --prefix the-cafe-barrackpore",
+    "test": "npm run test --prefix the-cafe-barrackpore",
+    "studio": "npm run dev --prefix studio",
     "install:all": "npm install --prefix the-cafe-barrackpore"
   }
 }

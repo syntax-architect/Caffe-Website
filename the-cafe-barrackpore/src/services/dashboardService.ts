@@ -32,13 +32,291 @@ const DEFAULT_TABLES: RestaurantTable[] = [
  */
 const DEFAULT_SETTINGS: RestaurantSettings = {
   business_name: 'The Café Barrackpore',
-  phone: '+91 98300 12345',
+  phone: '+918420507105',
   address: '14, Riverside Road, Cantonment, Barrackpore, West Bengal 700120',
   is_ordering_enabled: true,
   is_table_booking_enabled: true,
   opening_time: '11:00 AM',
   closing_time: '11:00 PM',
   announcement_banner: 'Welcome to The Café Barrackpore. Serving artisanal coffee & gourmet wood-fired pizza.',
+  country: 'IN',
+  currency: 'INR',
+  currency_symbol: '₹',
+  locale: 'en-IN',
+  timezone: 'Asia/Kolkata',
+  phone_country_code: '+91',
+  tax_enabled: true,
+  tax_mode: 'inclusive',
+  tax_label: 'GST',
+  tax_rate: 0.05,
+  dietary_system: 'india',
+  primary_contact_method: 'whatsapp',
+  email: 'contact@thecafe.com',
+  city: 'Barrackpore',
+  state_region: 'West Bengal',
+  postal_code: '700120',
+};
+
+const getDemoOrders = (): OrderRecord[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('cafe_demo_orders');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+  }
+  const defaultOrders: OrderRecord[] = [
+    {
+      id: 'demo-order-1',
+      order_ref: 'CB-2026-X104',
+      customer_name: 'Ananya Roy',
+      customer_phone: '9830111222',
+      order_type: 'dine_in',
+      table_number: '07',
+      special_requests: 'Less spicy please',
+      subtotal: 580,
+      total: 580,
+      currency: 'INR',
+      status: 'pending',
+      source: 'qr',
+      payment_required: false,
+      payment_status: 'not_required',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      items: [
+        { id: 'item-1a', item_name: 'Alfredo Pasta', quantity: 1, unit_price: 380, line_total: 380 },
+        { id: 'item-1b', item_name: 'Cold Coffee', quantity: 2, unit_price: 100, line_total: 200 },
+      ],
+    } as any,
+    {
+      id: 'demo-order-2',
+      order_ref: 'CB-2026-B812',
+      customer_name: 'Vikram Mehta',
+      customer_phone: '9830222333',
+      order_type: 'takeaway',
+      table_number: null,
+      special_requests: null,
+      subtotal: 750,
+      total: 750,
+      currency: 'INR',
+      status: 'preparing',
+      source: 'website',
+      payment_required: true,
+      payment_status: 'paid',
+      created_at: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+      items: [
+        { id: 'item-2a', item_name: 'Wood-fired Margherita', quantity: 1, unit_price: 450, line_total: 450 },
+        { id: 'item-2b', item_name: 'Peri-Peri Fries', quantity: 1, unit_price: 150, line_total: 150 },
+        { id: 'item-2c', item_name: 'Lemon Iced Tea', quantity: 1, unit_price: 150, line_total: 150 },
+      ],
+    } as any,
+    {
+      id: 'demo-order-3',
+      order_ref: 'CB-2026-P319',
+      customer_name: 'Sneha Sen',
+      customer_phone: '9830555444',
+      order_type: 'dine_in',
+      table_number: '03',
+      special_requests: 'Extra napkins',
+      subtotal: 420,
+      total: 420,
+      currency: 'INR',
+      status: 'ready',
+      source: 'qr',
+      payment_required: false,
+      payment_status: 'not_required',
+      created_at: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+      items: [
+        { id: 'item-3a', item_name: 'Iced Caramel Macchiato', quantity: 2, unit_price: 210, line_total: 420 },
+      ],
+    } as any,
+  ];
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('cafe_demo_orders', JSON.stringify(defaultOrders));
+    } catch {
+      // ignore
+    }
+  }
+  return defaultOrders;
+};
+
+const saveDemoOrders = (orders: OrderRecord[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('cafe_demo_orders', JSON.stringify(orders));
+  } catch {
+    // ignore
+  }
+};
+
+const getDemoReservations = (): ReservationRecord[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('cafe_demo_reservations');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+  }
+  const today = new Date().toISOString().split('T')[0];
+  const defaultReservations: ReservationRecord[] = [
+    {
+      id: 'demo-res-1',
+      reservation_ref: 'RS-2026-A401',
+      customer_name: 'Debjit Mukherjee',
+      customer_phone: '9830999888',
+      reservation_date: today,
+      reservation_time: '19:30',
+      party_size: 4,
+      special_requests: 'Anniversary celebration, window table preferred',
+      status: 'confirmed',
+      source: 'website',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'demo-res-2',
+      reservation_ref: 'RS-2026-B902',
+      customer_name: 'Pooja Agarwal',
+      customer_phone: '9830777666',
+      reservation_date: today,
+      reservation_time: '20:30',
+      party_size: 2,
+      special_requests: 'Quiet booth',
+      status: 'pending',
+      source: 'website',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ];
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('cafe_demo_reservations', JSON.stringify(defaultReservations));
+    } catch {
+      // ignore
+    }
+  }
+  return defaultReservations;
+};
+
+const saveDemoReservations = (reservations: ReservationRecord[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('cafe_demo_reservations', JSON.stringify(reservations));
+  } catch {
+    // ignore
+  }
+};
+
+const getDemoTables = (): RestaurantTable[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('cafe_demo_tables');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+  }
+  return DEFAULT_TABLES;
+};
+
+const saveDemoTables = (tables: RestaurantTable[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('cafe_demo_tables', JSON.stringify(tables));
+  } catch {
+    // ignore
+  }
+};
+
+const getDemoSettings = (): RestaurantSettings => {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('cafe_demo_settings');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return { ...DEFAULT_SETTINGS, ...parsed };
+      }
+    } catch {
+      // fallback
+    }
+  }
+  return DEFAULT_SETTINGS;
+};
+
+const saveDemoSettings = (settings: RestaurantSettings) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('cafe_demo_settings', JSON.stringify(settings));
+  } catch {
+    // ignore
+  }
+};
+
+const getDemoStaff = (): StaffProfile[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('cafe_demo_staff');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+  }
+  const defaultStaff: StaffProfile[] = [
+    {
+      id: 'demo-staff-1',
+      user_id: 'demo-user-1',
+      full_name: 'Demo Owner',
+      role: 'owner',
+      active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'demo-staff-2',
+      user_id: 'demo-user-2',
+      full_name: 'Operations Manager',
+      role: 'manager',
+      active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'demo-staff-3',
+      user_id: 'demo-user-3',
+      full_name: 'Head Chef',
+      role: 'staff',
+      active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ];
+  return defaultStaff;
+};
+
+const saveDemoStaff = (staff: StaffProfile[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('cafe_demo_staff', JSON.stringify(staff));
+  } catch {
+    // ignore
+  }
 };
 
 /**
@@ -46,15 +324,21 @@ const DEFAULT_SETTINGS: RestaurantSettings = {
  */
 export const fetchDashboardOverview = async (): Promise<DashboardOverviewData> => {
   if (!supabase || !isSupabaseConfigured) {
+    const demoOrders = getDemoOrders();
+    const demoReservations = getDemoReservations();
+    const validOrders = demoOrders.filter((o) => o.status !== 'cancelled');
+    const revenue = validOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+    const pendingCount = demoOrders.filter((o) => o.status === 'pending').length;
+
     return {
       kpis: {
-        todayOrdersCount: 0,
-        todayRevenue: 0,
-        pendingOrdersCount: 0,
-        todayReservationsCount: 0,
+        todayOrdersCount: demoOrders.length,
+        todayRevenue: revenue,
+        pendingOrdersCount: pendingCount,
+        todayReservationsCount: demoReservations.length,
       },
-      recentOrders: [],
-      todayReservations: [],
+      recentOrders: demoOrders.slice(0, 6),
+      todayReservations: demoReservations.slice(0, 6),
     };
   }
 
@@ -129,7 +413,24 @@ export const fetchOrders = async (options?: {
   search?: string;
 }): Promise<OrderRecord[]> => {
   if (!supabase || !isSupabaseConfigured) {
-    return [];
+    let results = getDemoOrders();
+    if (options?.status && options.status !== 'all') {
+      results = results.filter((o) => o.status === options.status);
+    }
+    if (options?.orderType && options.orderType !== 'all') {
+      results = results.filter((o) => o.order_type === options.orderType);
+    }
+    if (options?.search && options.search.trim()) {
+      const q = options.search.trim().toLowerCase();
+      results = results.filter(
+        (o) =>
+          o.order_ref.toLowerCase().includes(q) ||
+          o.customer_name.toLowerCase().includes(q) ||
+          o.customer_phone.includes(q) ||
+          (o.table_number && o.table_number.toLowerCase().includes(q))
+      );
+    }
+    return results;
   }
 
   try {
@@ -170,7 +471,11 @@ export const fetchOrders = async (options?: {
  * Fetches order items for a specific order
  */
 export const fetchOrderItems = async (orderId: string) => {
-  if (!supabase || !isSupabaseConfigured) return [];
+  if (!supabase || !isSupabaseConfigured) {
+    const demoOrders = getDemoOrders();
+    const order = demoOrders.find((o) => o.id === orderId);
+    return (order as any)?.items || [];
+  }
   try {
     const { data, error } = await supabase
       .from('order_items')
@@ -192,7 +497,19 @@ export const updateOrderStatus = async (
   newStatus: OrderStatus
 ): Promise<{ success: boolean; error?: string }> => {
   if (!supabase || !isSupabaseConfigured) {
-    return { success: false, error: 'Database is in demo mode.' };
+    const orders = getDemoOrders();
+    const updated = orders.map((o) =>
+      o.id === orderId ? { ...o, status: newStatus, updated_at: new Date().toISOString() } : o
+    );
+    saveDemoOrders(updated);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('cafe:order-status-changed', {
+          detail: { orderId, newStatus },
+        })
+      );
+    }
+    return { success: true };
   }
 
   try {
@@ -218,7 +535,26 @@ export const fetchReservations = async (options?: {
   search?: string;
 }): Promise<ReservationRecord[]> => {
   if (!supabase || !isSupabaseConfigured) {
-    return [];
+    let results = getDemoReservations();
+    const today = new Date().toISOString().split('T')[0];
+    if (options?.view === 'today') {
+      results = results.filter((r) => r.reservation_date === today);
+    } else if (options?.view === 'upcoming') {
+      results = results.filter((r) => r.reservation_date >= today);
+    }
+    if (options?.status && options.status !== 'all') {
+      results = results.filter((r) => r.status === options.status);
+    }
+    if (options?.search && options.search.trim()) {
+      const q = options.search.trim().toLowerCase();
+      results = results.filter(
+        (r) =>
+          r.reservation_ref.toLowerCase().includes(q) ||
+          r.customer_name.toLowerCase().includes(q) ||
+          r.customer_phone.includes(q)
+      );
+    }
+    return results;
   }
 
   try {
@@ -267,7 +603,12 @@ export const updateReservationStatus = async (
   newStatus: ReservationStatus
 ): Promise<{ success: boolean; error?: string }> => {
   if (!supabase || !isSupabaseConfigured) {
-    return { success: false, error: 'Database is in demo mode.' };
+    const list = getDemoReservations();
+    const updated = list.map((r) =>
+      r.id === reservationId ? { ...r, status: newStatus, updated_at: new Date().toISOString() } : r
+    );
+    saveDemoReservations(updated);
+    return { success: true };
   }
 
   try {
@@ -289,7 +630,7 @@ export const updateReservationStatus = async (
  */
 export const fetchRestaurantTables = async (): Promise<RestaurantTable[]> => {
   if (!supabase || !isSupabaseConfigured) {
-    return DEFAULT_TABLES;
+    return getDemoTables();
   }
 
   try {
@@ -299,12 +640,12 @@ export const fetchRestaurantTables = async (): Promise<RestaurantTable[]> => {
       .order('table_number', { ascending: true });
 
     if (error || !data || data.length === 0) {
-      return DEFAULT_TABLES;
+      return getDemoTables();
     }
 
     return data as RestaurantTable[];
   } catch {
-    return DEFAULT_TABLES;
+    return getDemoTables();
   }
 };
 
@@ -315,7 +656,34 @@ export const saveRestaurantTable = async (
   table: Partial<RestaurantTable>
 ): Promise<{ success: boolean; table?: RestaurantTable; error?: string }> => {
   if (!supabase || !isSupabaseConfigured) {
-    return { success: false, error: 'Supabase is not configured.' };
+    const tables = getDemoTables();
+    if (table.id) {
+      const updated = tables.map((t) =>
+        t.id === table.id
+          ? {
+              ...t,
+              table_number: table.table_number?.trim() || t.table_number,
+              label: table.label?.trim() || null,
+              capacity: Number(table.capacity) || t.capacity,
+              active: table.active !== undefined ? table.active : t.active,
+            }
+          : t
+      );
+      saveDemoTables(updated);
+      const saved = updated.find((t) => t.id === table.id);
+      return { success: true, table: saved };
+    } else {
+      const newTable: RestaurantTable = {
+        id: `demo-tbl-${Date.now()}`,
+        table_number: table.table_number?.trim() || 'New',
+        label: table.label?.trim() || null,
+        capacity: Number(table.capacity) || 4,
+        active: true,
+      };
+      const updated = [...tables, newTable];
+      saveDemoTables(updated);
+      return { success: true, table: newTable };
+    }
   }
 
   try {
@@ -366,7 +734,10 @@ export const toggleTableActive = async (
   active: boolean
 ): Promise<{ success: boolean; error?: string }> => {
   if (!supabase || !isSupabaseConfigured) {
-    return { success: false, error: 'Supabase is not configured.' };
+    const tables = getDemoTables();
+    const updated = tables.map((t) => (t.id === tableId ? { ...t, active } : t));
+    saveDemoTables(updated);
+    return { success: true };
   }
 
   try {
@@ -387,7 +758,7 @@ export const toggleTableActive = async (
  */
 export const fetchStaffProfiles = async (): Promise<StaffProfile[]> => {
   if (!supabase || !isSupabaseConfigured) {
-    return [];
+    return getDemoStaff();
   }
 
   try {
@@ -412,7 +783,12 @@ export const toggleStaffActive = async (
   active: boolean
 ): Promise<{ success: boolean; error?: string }> => {
   if (!supabase || !isSupabaseConfigured) {
-    return { success: false, error: 'Supabase is not configured.' };
+    const staff = getDemoStaff();
+    const updated = staff.map((s) =>
+      s.id === profileId ? { ...s, active, updated_at: new Date().toISOString() } : s
+    );
+    saveDemoStaff(updated);
+    return { success: true };
   }
 
   try {
@@ -436,7 +812,12 @@ export const updateStaffRole = async (
   role: StaffRole
 ): Promise<{ success: boolean; error?: string }> => {
   if (!supabase || !isSupabaseConfigured) {
-    return { success: false, error: 'Supabase is not configured.' };
+    const staff = getDemoStaff();
+    const updated = staff.map((s) =>
+      s.id === profileId ? { ...s, role, updated_at: new Date().toISOString() } : s
+    );
+    saveDemoStaff(updated);
+    return { success: true };
   }
 
   try {
@@ -457,7 +838,7 @@ export const updateStaffRole = async (
  */
 export const fetchRestaurantSettings = async (): Promise<RestaurantSettings> => {
   if (!supabase || !isSupabaseConfigured) {
-    return DEFAULT_SETTINGS;
+    return getDemoSettings();
   }
 
   try {
@@ -468,12 +849,12 @@ export const fetchRestaurantSettings = async (): Promise<RestaurantSettings> => 
       .maybeSingle();
 
     if (error || !data) {
-      return DEFAULT_SETTINGS;
+      return getDemoSettings();
     }
 
     return data as RestaurantSettings;
   } catch {
-    return DEFAULT_SETTINGS;
+    return getDemoSettings();
   }
 };
 
@@ -484,7 +865,8 @@ export const updateRestaurantSettings = async (
   settings: RestaurantSettings
 ): Promise<{ success: boolean; error?: string }> => {
   if (!supabase || !isSupabaseConfigured) {
-    return { success: false, error: 'Supabase is not configured.' };
+    saveDemoSettings(settings);
+    return { success: true };
   }
 
   try {
@@ -500,6 +882,22 @@ export const updateRestaurantSettings = async (
         opening_time: settings.opening_time,
         closing_time: settings.closing_time,
         announcement_banner: settings.announcement_banner,
+        country: settings.country || 'IN',
+        currency: settings.currency || 'INR',
+        currency_symbol: settings.currency_symbol || '₹',
+        locale: settings.locale || 'en-IN',
+        timezone: settings.timezone || 'Asia/Kolkata',
+        phone_country_code: settings.phone_country_code || '+91',
+        tax_enabled: settings.tax_enabled ?? true,
+        tax_mode: settings.tax_mode || 'inclusive',
+        tax_label: settings.tax_label || 'GST',
+        tax_rate: settings.tax_rate ?? 0.05,
+        dietary_system: settings.dietary_system || 'india',
+        primary_contact_method: settings.primary_contact_method || 'whatsapp',
+        email: settings.email || null,
+        city: settings.city || null,
+        state_region: settings.state_region || null,
+        postal_code: settings.postal_code || null,
         updated_at: new Date().toISOString(),
       });
 

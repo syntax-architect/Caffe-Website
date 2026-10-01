@@ -167,7 +167,9 @@ async function dispatchServerSanityMutation(
         if (response.ok) {
           const res = await response.json();
           if (res.success) {
-            console.log(`[contentPersistenceService] Server mutation dispatched for ${docType}:${target}`);
+            if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+              console.log(`[contentPersistenceService] Server mutation dispatched for ${docType}:${target}`);
+            }
             return;
           }
         }

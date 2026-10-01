@@ -10,19 +10,21 @@ export interface MenuItemAvailability {
 const LOCAL_STORAGE_KEY = 'cafe_menu_availability';
 export const AVAILABILITY_EVENT = 'cafe:menu-availability-changed';
 
+let memoryAvailabilityMap: Record<string, boolean> = {};
+
 /**
- * Retrieve cached availability map from local persistent storage.
+ * Retrieve cached availability map from local persistent storage or in-memory fallback.
  * Map shape: { [itemId: string]: boolean } where false means sold-out / 86'd.
  */
 export function getLocalAvailabilityMap(): Record<string, boolean> {
-  if (typeof window === 'undefined') return {};
+  if (typeof window === 'undefined') return { ...memoryAvailabilityMap };
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!raw) return {};
+    if (!raw) return { ...memoryAvailabilityMap };
     const parsed = JSON.parse(raw);
-    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+    return typeof parsed === 'object' && parsed !== null ? parsed : { ...memoryAvailabilityMap };
   } catch {
-    return {};
+    return { ...memoryAvailabilityMap };
   }
 }
 
@@ -30,6 +32,7 @@ export function getLocalAvailabilityMap(): Record<string, boolean> {
  * Save availability map to local persistent storage and broadcast change.
  */
 export function saveLocalAvailabilityMap(map: Record<string, boolean>): void {
+  memoryAvailabilityMap = { ...map };
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(map));

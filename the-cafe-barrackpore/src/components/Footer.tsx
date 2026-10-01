@@ -1,5 +1,6 @@
 import React from 'react';
 import { useUI } from '../context/UIContext';
+import { useSiteConfig } from '../context/SiteConfigContext';
 import { smoothScrollTo } from '../utils/scroll';
 import { clientDetails } from '../config/client';
 
@@ -10,6 +11,21 @@ const IconZomato = () => <svg className="w-4 h-4" fill="none" stroke="currentCol
 
 export const Footer: React.FC = () => {
   const { showModal, setIsReservationOpen } = useUI();
+  const { restaurantConfig } = useSiteConfig();
+
+  const businessName = restaurantConfig?.businessName || clientDetails.businessName;
+  const shortName = restaurantConfig?.shortName || clientDetails.shortName;
+  const displayCity = restaurantConfig?.address?.city || clientDetails.displayLocation;
+  const addressLine = restaurantConfig?.address?.line1 || clientDetails.address;
+  const phone = restaurantConfig?.contact?.phone || clientDetails.phone;
+  const displayPhone = restaurantConfig?.contact?.displayPhone || clientDetails.displayPhone;
+  const whatsapp = restaurantConfig?.contact?.whatsapp || clientDetails.whatsapp;
+  const openingHours = restaurantConfig?.openingTime && restaurantConfig?.closingTime
+    ? `${restaurantConfig.openingTime} – ${restaurantConfig.closingTime}`
+    : '11:00 AM – 11:30 PM';
+  const hygieneMsg = restaurantConfig?.dietary?.system === 'india'
+    ? '100% FSSAI-compliant commercial kitchen with daily sanitized workstations.'
+    : '100% health-inspection compliant commercial kitchen with daily sanitized workstations.';
 
   const handleNav = (e: React.MouseEvent, target: string) => { 
     e.preventDefault(); 
@@ -40,7 +56,7 @@ export const Footer: React.FC = () => {
                 {clientDetails.tagline2 || "An Unrivaled Dining Atmosphere"}
               </h3>
               <p className="font-sans text-xs sm:text-sm text-on-surface/75 leading-relaxed font-light mt-0.5">
-                Reserve your private booth or enjoy gourmet artisanal favorites in {clientDetails.displayLocation}.
+                Reserve your private booth or enjoy gourmet artisanal favorites in {displayCity}.
               </p>
             </div>
 
@@ -78,11 +94,11 @@ export const Footer: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full border border-[#D4AF37]/35 bg-[#160E0A] flex items-center justify-center overflow-hidden shadow-[0_0_12px_rgba(212,175,55,0.15)] shrink-0">
-                <img src="/logo.webp" alt={`${clientDetails.businessName} Crest`} className="w-full h-full object-contain" />
+                <img src="/logo.webp" alt={`${businessName} Crest`} className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
-                <span className="font-serif text-base text-on-surface font-semibold tracking-tight">{clientDetails.businessName}</span>
-                <span className="font-sans text-[10px] tracking-[0.2em] uppercase text-primary/80 -mt-0.5">{clientDetails.shortName}</span>
+                <span className="font-serif text-base text-on-surface font-semibold tracking-tight">{businessName}</span>
+                <span className="font-sans text-[10px] tracking-[0.2em] uppercase text-primary/80 -mt-0.5">{shortName}</span>
               </div>
             </div>
             
@@ -173,7 +189,7 @@ export const Footer: React.FC = () => {
                     <p className="text-on-surface font-medium">Daily Service</p>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   </div>
-                  <p className="text-on-surface/60 font-light mt-0.5">11:00 AM – 11:30 PM</p>
+                  <p className="text-on-surface/60 font-light mt-0.5">{openingHours}</p>
                 </div>
               </div>
               <div className="flex items-start gap-2.5 pt-1">
@@ -195,7 +211,7 @@ export const Footer: React.FC = () => {
               <div className="flex items-start gap-2.5">
                 <span className="material-symbols-outlined text-primary text-base mt-0.5 shrink-0 font-light">location_on</span>
                 <div className="flex flex-col gap-1.5">
-                  <span className="font-light leading-relaxed">{clientDetails.address}</span>
+                  <span className="font-light leading-relaxed">{addressLine}</span>
                   <a 
                     href={clientDetails.googleMapsLink} 
                     target="_blank" 
@@ -209,16 +225,18 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center gap-2.5 pt-1">
                 <span className="material-symbols-outlined text-primary text-base shrink-0 font-light">phone_in_talk</span>
-                <a className="hover:text-primary transition-colors font-medium" href={`tel:${clientDetails.phone}`}>
-                  {clientDetails.displayPhone}
+                <a className="hover:text-primary transition-colors font-medium" href={`tel:${phone}`}>
+                  {displayPhone}
                 </a>
               </div>
-              <div className="flex items-center gap-2.5">
-                <span className="material-symbols-outlined text-primary text-base shrink-0 font-light">forum</span>
-                <a className="hover:text-primary transition-colors font-medium text-primary/90" href={`https://wa.me/${clientDetails.whatsapp}`} target="_blank" rel="noopener noreferrer">
-                  WhatsApp Concierge
-                </a>
-              </div>
+              {whatsapp ? (
+                <div className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-primary text-base shrink-0 font-light">forum</span>
+                  <a className="hover:text-primary transition-colors font-medium text-primary/90" href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
+                    WhatsApp Concierge
+                  </a>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -226,15 +244,15 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Legal & Discrete Staff Login */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 font-sans text-xs text-on-surface/50 text-center md:text-left">
-          <p>© {new Date().getFullYear()} {clientDetails.businessName} {clientDetails.shortName}. All culinary &amp; brand rights reserved.</p>
+          <p>© {new Date().getFullYear()} {businessName} {shortName}. All culinary &amp; brand rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <a className="hover:text-primary transition-colors" href="#" onClick={(e) => handleDummy(e, 'Privacy Policy', 'The Café Barrackpore takes guest data privacy with absolute seriousness. Data is never shared or sold.')}>
+            <a className="hover:text-primary transition-colors" href="#" onClick={(e) => handleDummy(e, 'Privacy Policy', `${businessName} takes guest data privacy with absolute seriousness. Data is never shared or sold.`)}>
               Privacy
             </a>
             <a className="hover:text-primary transition-colors" href="#" onClick={(e) => handleDummy(e, 'Terms of Hospitality', 'Standard restaurant service guidelines, hygiene protocols, and guest booking policies apply.')}>
               Terms of Service
             </a>
-            <a className="hover:text-primary transition-colors" href="#" onClick={(e) => handleDummy(e, 'Hygiene Standards', '100% FSSAI-compliant commercial kitchen with daily sanitized workstations.')}>
+            <a className="hover:text-primary transition-colors" href="#" onClick={(e) => handleDummy(e, 'Hygiene Standards', hygieneMsg)}>
               Hygiene &amp; Safety
             </a>
             <span className="text-white/10 hidden sm:inline">•</span>

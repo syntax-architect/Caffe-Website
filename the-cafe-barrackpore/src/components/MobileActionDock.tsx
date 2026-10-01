@@ -3,13 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
 import { clientDetails } from '../config/client';
+import { useSiteConfig } from '../context/SiteConfigContext';
 import { smoothScrollTo } from '../utils/scroll';
 
 export const MobileActionDock: React.FC = () => {
   const { cartCount, setIsDrawerOpen } = useCart();
   const { setIsReservationOpen } = useUI();
+  const { restaurantConfig } = useSiteConfig();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  const phone = restaurantConfig?.contact?.phone || clientDetails.phone;
+  const businessName = restaurantConfig?.businessName || clientDetails.businessName;
 
   // Subtle auto-hide on fast downward scroll, reveal on upward scroll or near top/bottom
   useEffect(() => {
@@ -76,9 +81,9 @@ export const MobileActionDock: React.FC = () => {
 
               {/* Quick Action 2: Phone Concierge */}
               <a
-                href={`tel:${clientDetails.phone}`}
+                href={`tel:${phone}`}
                 className="flex flex-col items-center justify-center py-1 px-2.5 rounded-full text-on-surface/80 hover:text-primary transition-colors active:scale-95 cursor-pointer group"
-                aria-label={`Call ${clientDetails.businessName}`}
+                aria-label={`Call ${businessName}`}
               >
                 <span className="material-symbols-outlined text-[19px] text-[#D4AF37] group-hover:scale-110 transition-transform">
                   call

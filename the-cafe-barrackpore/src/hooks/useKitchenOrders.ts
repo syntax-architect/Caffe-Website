@@ -14,6 +14,7 @@ import {
   setSoundPreference,
   getDensityPreference,
   setDensityPreference,
+  isKdsEligible,
 } from '../services/kitchenService';
 
 export const useKitchenOrders = () => {
@@ -104,9 +105,14 @@ export const useKitchenOrders = () => {
   }, []);
 
   /**
-   * Handles incoming new order event (deduplicated)
+   * Handles incoming new order event (deduplicated & KDS payment safety checked)
    */
   const handleNewOrder = useCallback((incoming: KitchenOrder) => {
+    // KDS SAFETY: Exclude unpaid orders from active Kitchen columns
+    if (!isKdsEligible(incoming)) {
+      return;
+    }
+
     setOrders((prev) => {
       // Prevent duplicate tickets if event fired multiple times
       if (prev.some((o) => o.id === incoming.id || o.order_ref === incoming.order_ref)) {
@@ -128,7 +134,7 @@ export const useKitchenOrders = () => {
   }, []);
 
   /**
-   * Handles order status updates across tickets
+   * Handles order status and payment updates across tickets
    */
   const handleStatusUpdate = useCallback((orderId: string, newStatus: string, fullOrder?: KitchenOrder) => {
     setOrders((prev) => {
@@ -139,6 +145,29 @@ export const useKitchenOrders = () => {
         }
         return prev.filter((o) => o.id !== orderId);
       }
+
+      if (newStatus === 'cancelled') {
+        return prev.filter((o) => o.id !== orderId);
+      }
+
+      // Check payment eligibility if fullOrder is provided
+      if (fullOrder) {
+        if (!isKdsEligible(fullOrder)) {
+          // If payment was cancelled or failed, remove from active display
+          return prev.filter((o) => o.id !== orderId);
+        }
+
+        // If previously held because unpaid and now marked paid, promote to active orders
+        const exists = prev.some((o) => o.id === orderId);
+        if (!exists && ['pending', 'confirmed', 'preparing', 'ready'].includes(newStatus)) {
+          if (soundRef.current) {
+            playKitchenChime();
+          }
+          setNewOrderAlert({ ref: fullOrder.order_ref, table: fullOrder.table_number });
+          return [fullOrder, ...prev];
+        }
+      }
+
       return prev.map((o) => {
         if (o.id === orderId) {
           return {

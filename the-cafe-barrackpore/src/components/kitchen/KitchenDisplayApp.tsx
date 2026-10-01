@@ -5,6 +5,8 @@ import { KitchenTopBar } from './KitchenTopBar';
 import { KitchenColumn } from './KitchenColumn';
 import { KitchenHistoryDrawer } from './KitchenHistoryDrawer';
 import { KitchenEmptyState } from './KitchenEmptyState';
+import { createOrder } from '../../services/orderService';
+import { unlockAudioContext, playKitchenOrderBell } from '../../services/soundService';
 
 interface KitchenDisplayAppProps {
   onExit?: () => void;
@@ -49,6 +51,36 @@ export const KitchenDisplayApp: React.FC<KitchenDisplayAppProps> = ({ onExit }) 
     }
   };
 
+  const handleSimulateTestOrder = async () => {
+    await unlockAudioContext();
+    const testOrder = {
+      customer_name: 'Priya Mukherjee (Table 07)',
+      customer_phone: '9830111222',
+      order_type: 'dine_in' as const,
+      table_number: '07',
+      items: [
+        {
+          id: 'pizza-woodfired-1',
+          name: 'Wood-Fired Truffle Margherita Pizza',
+          price: 495,
+          quantity: 1,
+        },
+        {
+          id: 'beverage-coldbrew-1',
+          name: 'Signature Vanilla Bean Cold Brew',
+          price: 240,
+          quantity: 2,
+        },
+      ],
+      special_requests: 'Extra crispy crust, serve drinks together',
+      payment_method: 'pay_at_counter' as const,
+    };
+    const res = await createOrder(testOrder);
+    if (res.success) {
+      playKitchenOrderBell();
+    }
+  };
+
   const staffDisplayName =
     staffProfile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Staff';
 
@@ -70,6 +102,7 @@ export const KitchenDisplayApp: React.FC<KitchenDisplayAppProps> = ({ onExit }) 
         staffName={staffDisplayName}
         staffRole={role || 'staff'}
         onRefresh={refreshOrders}
+        onSimulateTestOrder={handleSimulateTestOrder}
       />
 
       {/* NEW ORDER NOTIFICATION BANNER */}

@@ -1,19 +1,41 @@
 import { useEffect, useRef } from 'react';
 
+/**
+ * Custom hook to trap keyboard focus within a modal or drawer dialog.
+ * Prevents focus leakage to background elements while preserving natural typing inside inputs.
+ */
 export function useFocusTrap(isOpen: boolean, onClose: () => void) {
   const containerRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  // Track open state transitions so initial auto-focus only runs once on dialog open
+  const wasOpenRef = useRef(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      if (wasOpenRef.current && previousActiveElement.current && typeof previousActiveElement.current.focus === 'function') {
+        previousActiveElement.current.focus();
+      }
+      wasOpenRef.current = false;
+      return;
+    }
 
-    // Cache the currently focused element to restore upon closing
-    previousActiveElement.current = document.activeElement as HTMLElement | null;
+    const isNewlyOpened = !wasOpenRef.current;
+    wasOpenRef.current = true;
+
+    if (isNewlyOpened) {
+      // Cache the currently focused element outside the modal to restore upon closing
+      previousActiveElement.current = document.activeElement as HTMLElement | null;
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -49,25 +71,26 @@ export function useFocusTrap(isOpen: boolean, onClose: () => void) {
 
     window.addEventListener('keydown', handleKeyDown);
 
-    // Focus the first interactive element or container
-    const timer = setTimeout(() => {
-      const container = containerRef.current;
-      if (container) {
-        const firstFocusable = container.querySelector<HTMLElement>(
-          'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
-        );
-        firstFocusable?.focus();
-      }
-    }, 50);
+    // ONLY focus the first interactive element when the modal is newly opened
+    // and only if focus is not already inside the container
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    if (isNewlyOpened) {
+      timer = setTimeout(() => {
+        const container = containerRef.current;
+        if (container && !container.contains(document.activeElement)) {
+          const firstFocusable = container.querySelector<HTMLElement>(
+            'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
+          );
+          firstFocusable?.focus();
+        }
+      }, 50);
+    }
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      clearTimeout(timer);
-      if (previousActiveElement.current && typeof previousActiveElement.current.focus === 'function') {
-        previousActiveElement.current.focus();
-      }
+      if (timer) clearTimeout(timer);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   return containerRef;
 }

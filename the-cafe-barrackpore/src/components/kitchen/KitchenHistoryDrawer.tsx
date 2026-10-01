@@ -33,7 +33,7 @@ export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm transition-opacity"
+      className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-md transition-opacity"
       role="dialog"
       aria-modal="true"
       aria-labelledby="history-drawer-title"
@@ -42,24 +42,27 @@ export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
       <div className="flex-1" onClick={onClose} aria-hidden="true" />
 
       {/* Drawer Container */}
-      <div className="w-full max-w-md bg-[#140d08] border-l border-[#261a13] h-full flex flex-col shadow-2xl overflow-hidden">
+      <div className="w-full max-w-md bg-[#0F0B09] border-l border-white/[0.1] h-full flex flex-col shadow-[0_0_60px_rgba(0,0,0,0.9)] overflow-hidden animate-in slide-in-from-right duration-200">
         {/* Header */}
-        <div className="p-4 border-b border-[#261a13] flex items-center justify-between bg-[#19100a]">
+        <div className="p-5 border-b border-white/[0.06] flex items-center justify-between bg-[#120F0D]">
           <div>
-            <h2 id="history-drawer-title" className="text-base font-bold text-[#f5efe6] font-serif">
-              Recent Completed Orders
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+              Dispatch Archives
+            </span>
+            <h2 id="history-drawer-title" className="text-lg font-serif font-black text-white mt-0.5">
+              Completed Kitchen Tickets
             </h2>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Showing last {completedOrders.length} finished tickets
+              Showing last {completedOrders.length} fulfilled orders
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/[0.06] transition-colors cursor-pointer"
             aria-label="Close completed orders drawer"
           >
-            ✕
+            <span className="material-symbols-outlined text-base">close</span>
           </button>
         </div>
 
@@ -73,83 +76,79 @@ export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
               return (
                 <div
                   key={order.id}
-                  className="p-3.5 rounded-xl bg-[#1a120c] border border-[#2d1f16] flex flex-col gap-2"
+                  className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.08]"
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm font-bold text-[#f5efe6]">
-                          #{order.order_ref}
-                        </span>
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 uppercase">
-                          {order.source}
-                        </span>
-                      </div>
-                      <div className="mt-1 flex items-center gap-1.5">
-                        <span className="text-[11px] font-bold text-[#D4AF37] px-2 py-0.5 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/30">
-                          {tableText}
-                        </span>
-                        {order.customer_name && (
-                          <span className="text-xs text-zinc-400 truncate max-w-[120px]">
-                            {order.customer_name}
+                  <div className="p-4 rounded-[calc(1rem-0.125rem)] bg-[#120F0D] flex flex-col gap-2.5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm font-bold text-white">
+                            #{order.order_ref}
                           </span>
-                        )}
+                          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/[0.05] text-zinc-400 uppercase">
+                            {order.source}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="text-[10px] font-mono font-bold text-[#D4AF37] px-2 py-0.5 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/30">
+                            {tableText}
+                          </span>
+                          {order.customer_name && (
+                            <span className="text-xs text-zinc-400 truncate max-w-[130px]">
+                              {order.customer_name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-[11px] text-zinc-500 font-mono">
+                          {formatCompletionTime(order.updated_at || order.created_at)}
+                        </span>
+                        <div className="mt-1">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                            Fulfilled
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-[11px] text-zinc-400 font-mono">
-                        {formatCompletionTime(order.updated_at || order.created_at)}
-                      </span>
-                      <div className="mt-1">
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-700/40">
-                          ✓ Completed
-                        </span>
-                      </div>
+                    {/* Items summary */}
+                    <div className="py-2 border-t border-white/[0.06] text-xs space-y-1.5">
+                      {order.items?.map((it, idx) => (
+                        <div key={it.id || idx} className="flex items-center gap-2 text-zinc-300">
+                          <span className="font-mono font-bold text-[#D4AF37] text-xs">
+                            {it.quantity}×
+                          </span>
+                          <span className="text-xs">{it.item_name}</span>
+                        </div>
+                      ))}
                     </div>
-                  </div>
 
-                  {/* Items summary */}
-                  <div className="py-1 border-t border-[#261a13] text-xs space-y-1">
-                    {order.items?.map((it, idx) => (
-                      <div key={it.id || idx} className="flex items-center gap-2 text-zinc-300">
-                        <span className="font-mono font-bold text-[#D4AF37] text-xs">
-                          {it.quantity}×
-                        </span>
-                        <span className="text-xs">{it.item_name}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Recall Action */}
-                  <div className="pt-2 border-t border-[#261a13] flex justify-end">
-                    <button
-                      type="button"
-                      disabled={isMutatingId === order.id}
-                      onClick={() => onRecall(order)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold text-amber-300 bg-amber-950/50 hover:bg-amber-900/60 border border-amber-600/40 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      title="Recall this order back into the Ready column"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                        />
-                      </svg>
-                      <span>Recall to Ready</span>
-                    </button>
+                    {/* Recall Action */}
+                    <div className="pt-2 border-t border-white/[0.06] flex justify-end">
+                      <button
+                        type="button"
+                        disabled={isMutatingId === order.id}
+                        onClick={() => onRecall(order)}
+                        className="px-3.5 py-2 rounded-xl text-xs font-mono font-bold text-amber-300 bg-amber-950/40 hover:bg-amber-900/50 border border-amber-600/40 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        title="Recall this ticket back into the Ready column"
+                      >
+                        <span className="material-symbols-outlined text-sm">history</span>
+                        <span>Recall to Ready</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
             })
           ) : (
             <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-zinc-500">
-              <span className="text-2xl mb-2">📜</span>
-              <p className="text-xs font-semibold">No recently completed orders</p>
-              <p className="text-[11px] text-zinc-600 mt-1 max-w-[200px]">
-                Orders marked as completed will be recorded here for fast reference.
+              <span className="material-symbols-outlined text-4xl mb-2 text-zinc-600">receipt_long</span>
+              <p className="font-serif font-bold text-sm text-white">No recently completed tickets</p>
+              <p className="text-xs text-zinc-500 mt-1 max-w-[220px]">
+                Orders punched as completed will archive here for quick kitchen recall.
               </p>
             </div>
           )}
@@ -158,3 +157,5 @@ export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
     </div>
   );
 };
+
+export default KitchenHistoryDrawer;

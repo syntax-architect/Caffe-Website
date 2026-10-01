@@ -1,18 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { clientDetails } from '../config/client';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { createOrder } from '../services/orderService';
-import { generateClientOrderRef } from '../utils/orderCalculations';
+import { createOrder, updatePendingOrder } from '../services/orderService';
+import { generateClientOrderRef, calculateOrderTotals } from '../utils/orderCalculations';
 import { useTableContext } from '../context/TableContext';
+import { useSiteConfig } from '../context/SiteConfigContext';
+import { validatePhoneNumber } from '../utils/phone';
+import { isItemAvailable } from '../services/menuAvailabilityService';
+import {
+  validateAndCalculateOrderPayment,
+  createPaymentSession,
+  verifyAndReconcilePayment,
+} from '../services/paymentService';
 
-type DrawerStep = 'cart' | 'details' | 'review';
+type DrawerStep = 'cart' | 'details' | 'review' | 'payment_process' | 'payment_failed' | 'confirmed';
 type OrderType = 'dine-in' | 'takeaway';
 
 export const CartDrawer: React.FC = () => {
-  const { items, isDrawerOpen, setIsDrawerOpen, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart();
+  const { items, isDrawerOpen, setIsDrawerOpen, updateQuantity, removeFromCart, clearCart } = useCart();
   const { tableNumber: qrTable, isQrOrder, isValidTable: isQrValid } = useTableContext();
+  const { restaurantConfig, formatPrice } = useSiteConfig();
   const [isMobile, setIsMobile] = useState(false);
   const [step, setStep] = useState<DrawerStep>('cart');
 
@@ -27,11 +36,23 @@ export const CartDrawer: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
-  const drawerRef = useFocusTrap(isDrawerOpen, () => {
+  // Payment Architecture State (Phase 1J)
+  const [paymentMethodChoice, setPaymentMethodChoice] = useState<'online' | 'counter'>('online');
+  const [activePaymentSessionId, setActivePaymentSessionId] = useState<string | null>(null);
+  const [paymentFailureReason, setPaymentFailureReason] = useState<string | null>(null);
+  const [paidAmount, setPaidAmount] = useState<number | null>(null);
+  const [confirmedTotal, setConfirmedTotal] = useState<number | null>(null);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+
+  const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false);
     setStep('cart');
     setSubmissionError(null);
-  });
+    setPaymentFailureReason(null);
+    setConfirmedTotal(null);
+  }, [setIsDrawerOpen]);
+
+  const drawerRef = useFocusTrap(isDrawerOpen, handleCloseDrawer);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -40,9 +61,26 @@ export const CartDrawer: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const totals = calculateOrderTotals(items, {
+    enabled: restaurantConfig.tax.enabled,
+    mode: restaurantConfig.tax.mode,
+    label: restaurantConfig.tax.label,
+    rate: restaurantConfig.tax.rate,
+    serviceCharge: restaurantConfig.tax.serviceCharge,
+    rules: restaurantConfig.tax.rules,
+  });
+
+  // Payment Configuration Resolution
+  const isPaymentEnabled = Boolean(
+    restaurantConfig.payments?.enabled && restaurantConfig.payments?.mode !== 'disabled'
+  );
+  const paymentMode = restaurantConfig.payments?.mode || 'disabled';
+  const isOnlinePayment =
+    isPaymentEnabled &&
+    (paymentMode === 'online' || (paymentMode === 'optional' && paymentMethodChoice === 'online'));
 
   // Derive active step to avoid cascading setState inside effects
-  const activeStep = items.length === 0 ? 'cart' : step;
+  const activeStep = items.length === 0 && step !== 'confirmed' ? 'cart' : step;
 
   const handleProceedToDetails = () => {
     if (items.length === 0) return;
@@ -65,9 +103,9 @@ export const CartDrawer: React.FC = () => {
       newErrors.customerName = 'Please enter your full name';
     }
 
-    const cleanPhone = phone.replace(/\D/g, '');
-    if (!cleanPhone || cleanPhone.length < 10) {
-      newErrors.phone = 'Please enter a valid 10-digit mobile number';
+    const phoneVal = validatePhoneNumber(phone, restaurantConfig.phoneCountryCode);
+    if (!phoneVal.valid) {
+      newErrors.phone = phoneVal.error || 'Please enter a valid phone number';
     }
 
     if (orderType === 'dine-in' && !tableNumber.trim()) {
@@ -95,7 +133,7 @@ export const CartDrawer: React.FC = () => {
     const resolvedOrderType = isTableLocked ? 'dine-in' : orderType;
 
     const orderLines = items
-      .map((item) => `${item.quantity} × ${item.name}    ₹${item.price * item.quantity}`)
+      .map((item) => `${item.quantity} × ${item.name}    ${formatPrice(item.price * item.quantity)}`)
       .join('%0A');
 
     const serviceInfo =
@@ -105,9 +143,9 @@ export const CartDrawer: React.FC = () => {
 
     const notesSection = orderNotes.trim() ? `%0A%0ASpecial Notes: ${encodeURIComponent(orderNotes.trim())}` : '';
 
-    const text = `*THE CAFÉ BARRACKPORE*%0A*NEW ORDER: ${finalRef}*%0A%0A*Customer:* ${encodeURIComponent(customerName.trim())}%0A*Phone:* ${phone.trim()}%0A*Order Type:* ${encodeURIComponent(serviceInfo)}${notesSection}%0A%0A---%0A${orderLines}%0A---%0A%0A*Subtotal: ₹${cartTotal}*%0A%0APlease confirm this order.`;
+    const text = `*${encodeURIComponent(restaurantConfig.businessName.toUpperCase())}*%0A*NEW ORDER: ${finalRef}*%0A%0A*Customer:* ${encodeURIComponent(customerName.trim())}%0A*Phone:* ${phone.trim()}%0A*Order Type:* ${encodeURIComponent(serviceInfo)}${notesSection}%0A%0A---%0A${orderLines}%0A---%0A%0A*Total: ${encodeURIComponent(formatPrice(totals.total))}*%0A%0APlease confirm this order.`;
 
-    const cleanTargetPhone = clientDetails.whatsapp.replace(/\D/g, '');
+    const cleanTargetPhone = (restaurantConfig.contact.whatsapp || clientDetails.whatsapp).replace(/\D/g, '');
     window.open(`https://wa.me/${cleanTargetPhone}?text=${text}`, '_blank');
 
     // Clear cart and reset state
@@ -123,32 +161,235 @@ export const CartDrawer: React.FC = () => {
 
     setIsSubmitting(true);
     setSubmissionError(null);
+    setPaymentFailureReason(null);
 
     const activeRef = orderRef || generateClientOrderRef();
+    setOrderRef(activeRef);
+
     const isTableLocked = Boolean(isQrOrder && isQrValid && qrTable);
     const resolvedTable = isTableLocked ? qrTable : (orderType === 'dine-in' ? tableNumber.trim() : null);
     const resolvedOrderType = isTableLocked ? 'dine_in' : (orderType === 'dine-in' ? 'dine_in' : 'takeaway');
+    const phoneVal = validatePhoneNumber(phone, restaurantConfig.phoneCountryCode);
+    const normalizedPhone = phoneVal.normalized || phone.trim();
+
+    // Pre-check: Ensure no items in cart are 86'd (sold out)
+    const unavailableItem = items.find((i) => !isItemAvailable(i.id));
+    if (unavailableItem) {
+      setSubmissionError(`"${unavailableItem.name}" is currently sold out. Please remove it from your cart to proceed.`);
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
-      const result = await createOrder({
-        order_ref: activeRef,
-        customer_name: customerName,
-        customer_phone: phone,
-        order_type: resolvedOrderType,
-        table_number: resolvedTable,
-        special_requests: orderNotes.trim() || null,
-        items,
-        source: isTableLocked ? 'qr' : 'website',
-      });
+      if (isOnlinePayment) {
+        // 1. Authoritative Server-side Price & 86'd Availability Validation (Section 12 & 13)
+        const validation = await validateAndCalculateOrderPayment(
+          items,
+          {
+            enabled: restaurantConfig.tax.enabled,
+            mode: restaurantConfig.tax.mode,
+            label: restaurantConfig.tax.label,
+            rate: restaurantConfig.tax.rate,
+            serviceCharge: restaurantConfig.tax.serviceCharge,
+            rules: restaurantConfig.tax.rules,
+          },
+          totals.total,
+          true
+        );
 
-      if (result.success) {
-        dispatchWhatsApp(result.orderRef);
+        if (!validation.valid) {
+          setSubmissionError(validation.error || 'Menu pricing validation failed.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        const authoritativeTotal = validation.totals!.total;
+
+        // 2. Register order in database with pending payment status
+        const orderResult = await createOrder({
+          order_ref: activeRef,
+          customer_name: customerName,
+          customer_phone: normalizedPhone,
+          order_type: resolvedOrderType,
+          table_number: resolvedTable,
+          special_requests: orderNotes.trim() || null,
+          items,
+          source: isTableLocked ? 'qr' : 'website',
+          currency: restaurantConfig.currency,
+          payment_required: true,
+          payment_status: 'pending',
+          payment_provider: restaurantConfig.payments.provider,
+          payment_amount: authoritativeTotal,
+          tax_options: {
+            enabled: restaurantConfig.tax.enabled,
+            mode: restaurantConfig.tax.mode,
+            label: restaurantConfig.tax.label,
+            rate: restaurantConfig.tax.rate,
+            serviceCharge: restaurantConfig.tax.serviceCharge,
+            rules: restaurantConfig.tax.rules,
+          },
+        });
+
+        if (!orderResult.success) {
+          setSubmissionError(orderResult.error || 'Unable to register order for payment.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 3. Create payment session via provider abstraction
+        const sessionResult = await createPaymentSession(
+          {
+            orderId: orderResult.orderId || activeRef,
+            orderRef: activeRef,
+            amount: authoritativeTotal,
+            currency: restaurantConfig.currency,
+            customerName: customerName.trim(),
+            customerPhone: normalizedPhone,
+            items: items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price })),
+          },
+          restaurantConfig.payments.provider
+        );
+
+        if (!sessionResult.success) {
+          setPaymentFailureReason(sessionResult.error || 'Payment gateway initialization failed.');
+          setStep('payment_failed');
+          setIsSubmitting(false);
+          return;
+        }
+
+        setActivePaymentSessionId(sessionResult.paymentId || null);
+
+        // Move to secure payment process step
+        setStep('payment_process');
       } else {
-        setSubmissionError(result.error || 'Unable to register order with the server.');
+        // Pay-at-counter or Payment Disabled Checkout
+        const result = await createOrder({
+          order_ref: activeRef,
+          customer_name: customerName,
+          customer_phone: normalizedPhone,
+          order_type: resolvedOrderType,
+          table_number: resolvedTable,
+          special_requests: orderNotes.trim() || null,
+          items,
+          source: isTableLocked ? 'qr' : 'website',
+          currency: restaurantConfig.currency,
+          payment_required: false,
+          payment_status: 'not_required',
+          payment_amount: totals.total,
+          tax_options: {
+            enabled: restaurantConfig.tax.enabled,
+            mode: restaurantConfig.tax.mode,
+            label: restaurantConfig.tax.label,
+            rate: restaurantConfig.tax.rate,
+            serviceCharge: restaurantConfig.tax.serviceCharge,
+            rules: restaurantConfig.tax.rules,
+          },
+        });
+
+        if (result.success) {
+          if (restaurantConfig.contact.primaryMethod === 'whatsapp') {
+            dispatchWhatsApp(result.orderRef);
+          } else {
+            setOrderRef(result.orderRef);
+            setPaidAmount(null);
+            setConfirmedTotal(totals.total);
+            setStep('confirmed');
+            clearCart();
+          }
+        } else {
+          setSubmissionError(result.error || 'Unable to register order with the server.');
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('[CartDrawer] Unexpected error confirming order:', err);
-      setSubmissionError('Network error while saving order. You can still confirm directly via WhatsApp.');
+      if (restaurantConfig.contact.primaryMethod === 'whatsapp') {
+        setSubmissionError('Network error while saving order. You can still confirm directly via WhatsApp.');
+      } else {
+        setSubmissionError(err.message || 'Network error while processing order. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Payment Verification Handler (e.g. for Demo or In-App Gateway)
+  const handleAuthorizePayment = async () => {
+    if (isVerifyingPayment) return;
+    setIsVerifyingPayment(true);
+    setPaymentFailureReason(null);
+
+    try {
+      const verifyRes = await verifyAndReconcilePayment(
+        {
+          orderRef,
+          providerPaymentId: activePaymentSessionId || 'demo_pay_auth',
+          metadata: { amount: totals.total, currency: restaurantConfig.currency },
+        },
+        restaurantConfig.payments.provider
+      );
+
+      if (verifyRes.success && verifyRes.paid) {
+        setPaidAmount(totals.total);
+        setConfirmedTotal(totals.total);
+        setStep('confirmed');
+        clearCart();
+      } else {
+        setPaymentFailureReason(verifyRes.error || 'Payment was declined or failed.');
+        setStep('payment_failed');
+      }
+    } catch (err: any) {
+      setPaymentFailureReason(err.message || 'Payment verification encountered a network error.');
+      setStep('payment_failed');
+    } finally {
+      setIsVerifyingPayment(false);
+    }
+  };
+
+  // Simulated Payment Failure for Testing Recovery Flow
+  const handleSimulateFailure = async () => {
+    if (isVerifyingPayment) return;
+    setIsVerifyingPayment(true);
+
+    try {
+      await verifyAndReconcilePayment(
+        {
+          orderRef,
+          providerPaymentId: 'fail_card_declined',
+          metadata: { amount: totals.total, currency: restaurantConfig.currency },
+        },
+        restaurantConfig.payments.provider
+      );
+
+      setPaymentFailureReason('Card declined by issuing bank: insufficient funds or invalid authorization token.');
+      setStep('payment_failed');
+    } catch {
+      setPaymentFailureReason('Payment verification failed.');
+      setStep('payment_failed');
+    } finally {
+      setIsVerifyingPayment(false);
+    }
+  };
+
+  // Retry payment without creating duplicate order (Section 15)
+  const handleRetryPayment = () => {
+    setPaymentFailureReason(null);
+    setStep('review');
+  };
+
+  // Switch to pay-at-counter from failed state
+  const handleSwitchToCounterPayment = async () => {
+    setIsSubmitting(true);
+    try {
+      await updatePendingOrder(orderRef, {
+        payment_required: false,
+        payment_status: 'not_required',
+      });
+      setPaidAmount(null);
+      setConfirmedTotal(totals.total);
+      setStep('confirmed');
+      clearCart();
+    } catch (err: any) {
+      setSubmissionError(err.message || 'Failed to update order to pay at counter.');
     } finally {
       setIsSubmitting(false);
     }
@@ -211,10 +452,14 @@ export const CartDrawer: React.FC = () => {
               }`}
             >
               <div className="flex items-center gap-3">
-                {activeStep !== 'cart' && (
+                {activeStep !== 'cart' && activeStep !== 'confirmed' && activeStep !== 'payment_process' && (
                   <button
                     type="button"
-                    onClick={() => setStep(activeStep === 'review' ? 'details' : 'cart')}
+                    onClick={() => {
+                      if (activeStep === 'payment_failed') setStep('review');
+                      else if (activeStep === 'review') setStep('details');
+                      else setStep('cart');
+                    }}
                     className="w-8 h-8 rounded-full text-on-surface/70 hover:text-primary hover:bg-white/5 flex items-center justify-center transition-colors cursor-pointer"
                     aria-label="Back to previous step"
                   >
@@ -228,6 +473,9 @@ export const CartDrawer: React.FC = () => {
                       {activeStep === 'cart' && 'Your Order Bag'}
                       {activeStep === 'details' && 'Guest Details'}
                       {activeStep === 'review' && 'Confirm & Dispatch'}
+                      {activeStep === 'payment_process' && 'Payment Gateway'}
+                      {activeStep === 'payment_failed' && 'Payment Recovery'}
+                      {activeStep === 'confirmed' && 'Order Confirmed'}
                     </h2>
                     {items.length > 0 && activeStep === 'cart' && (
                       <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-primary text-[10px] font-sans font-semibold">
@@ -250,23 +498,25 @@ export const CartDrawer: React.FC = () => {
               </button>
             </div>
 
-            {/* Luxury 3-Step Breadcrumb Bar */}
-            <div className="px-6 py-2.5 border-b border-[#D4AF37]/10 bg-[#110B07] flex items-center justify-between text-[11px] font-sans">
-              <div className={`flex items-center gap-1.5 ${activeStep === 'cart' ? 'text-primary font-medium' : 'text-on-surface/40'}`}>
-                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${activeStep === 'cart' ? 'bg-primary text-[#120B08]' : 'bg-white/10 text-white/50'}`}>1</span>
-                <span>Bag</span>
+            {/* Luxury 3-Step Breadcrumb Bar (Pre-submission flow only) */}
+            {(activeStep === 'cart' || activeStep === 'details' || activeStep === 'review') && (
+              <div className="px-6 py-2.5 border-b border-[#D4AF37]/10 bg-[#110B07] flex items-center justify-between text-[11px] font-sans">
+                <div className={`flex items-center gap-1.5 ${activeStep === 'cart' ? 'text-primary font-medium' : 'text-on-surface/40'}`}>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${activeStep === 'cart' ? 'bg-primary text-[#120B08]' : 'bg-white/10 text-white/50'}`}>1</span>
+                  <span>Bag</span>
+                </div>
+                <span className="w-8 h-[1px] bg-white/10" />
+                <div className={`flex items-center gap-1.5 ${activeStep === 'details' ? 'text-primary font-medium' : 'text-on-surface/40'}`}>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${activeStep === 'details' ? 'bg-primary text-[#120B08]' : 'bg-white/10 text-white/50'}`}>2</span>
+                  <span>Details</span>
+                </div>
+                <span className="w-8 h-[1px] bg-white/10" />
+                <div className={`flex items-center gap-1.5 ${activeStep === 'review' ? 'text-primary font-medium' : 'text-on-surface/40'}`}>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${activeStep === 'review' ? 'bg-primary text-[#120B08]' : 'bg-white/10 text-white/50'}`}>3</span>
+                  <span>Review</span>
+                </div>
               </div>
-              <span className="w-8 h-[1px] bg-white/10" />
-              <div className={`flex items-center gap-1.5 ${activeStep === 'details' ? 'text-primary font-medium' : 'text-on-surface/40'}`}>
-                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${activeStep === 'details' ? 'bg-primary text-[#120B08]' : 'bg-white/10 text-white/50'}`}>2</span>
-                <span>Details</span>
-              </div>
-              <span className="w-8 h-[1px] bg-white/10" />
-              <div className={`flex items-center gap-1.5 ${activeStep === 'review' ? 'text-primary font-medium' : 'text-on-surface/40'}`}>
-                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${activeStep === 'review' ? 'bg-primary text-[#120B08]' : 'bg-white/10 text-white/50'}`}>3</span>
-                <span>Review</span>
-              </div>
-            </div>
+            )}
 
             {/* STEP 1: CART ITEMS */}
             {activeStep === 'cart' && (
@@ -329,7 +579,7 @@ export const CartDrawer: React.FC = () => {
                                 </button>
                               </div>
                               <span className="font-serif text-xs text-primary/90 font-normal tabular-nums">
-                                ₹{item.price} each
+                                {formatPrice(item.price)} each
                               </span>
                             </div>
                             <div className="flex items-center justify-between mt-2 gap-2">
@@ -356,7 +606,7 @@ export const CartDrawer: React.FC = () => {
                                 </button>
                               </div>
                               <span className="font-serif text-sm text-primary font-medium tabular-nums">
-                                ₹{item.price * item.quantity}
+                                {formatPrice(item.price * item.quantity)}
                               </span>
                             </div>
                           </div>
@@ -370,17 +620,27 @@ export const CartDrawer: React.FC = () => {
                   <div className="p-5 sm:p-6 border-t border-[#D4AF37]/15 bg-[#140D09]/95 backdrop-blur-xl flex flex-col gap-3 shadow-[0_-10px_35px_rgba(0,0,0,0.7)]">
                     <div className="flex justify-between items-center text-xs text-on-surface/70 font-sans">
                       <span>Subtotal ({items.reduce((acc, i) => acc + i.quantity, 0)} items)</span>
-                      <span className="font-serif text-sm font-medium text-on-surface tabular-nums">₹{cartTotal}</span>
+                      <span className="font-serif text-sm font-medium text-on-surface tabular-nums">{formatPrice(totals.subtotal)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-xs text-on-surface/50 font-sans pb-2 border-b border-white/5">
-                      <span>Taxes &amp; Service Charges</span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-semibold uppercase tracking-wider">
-                        Included
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-on-surface pt-0.5">
+                    {restaurantConfig.tax.enabled && (totals.taxRate ?? 0) > 0 && (
+                      <div className="flex justify-between items-center text-xs text-on-surface/60 font-sans">
+                        <span>{totals.taxLabel} ({totals.taxMode === 'inclusive' ? `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}% incl.` : `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}%`})</span>
+                        <span className="font-serif text-xs text-primary/80 tabular-nums">
+                          {formatPrice(totals.tax)}
+                        </span>
+                      </div>
+                    )}
+                    {(totals as any).serviceCharge > 0 && (
+                      <div className="flex justify-between items-center text-xs text-on-surface/60 font-sans">
+                        <span>{(totals as any).serviceChargeLabel || 'Service Charge'}</span>
+                        <span className="font-serif text-xs text-primary/80 tabular-nums">
+                          {formatPrice((totals as any).serviceCharge)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-on-surface pt-0.5 border-t border-white/5">
                       <span className="font-sans text-xs font-semibold uppercase tracking-wider text-on-surface/90">Total Payable</span>
-                      <span className="font-serif text-2xl font-normal text-primary tabular-nums">₹{cartTotal}</span>
+                      <span className="font-serif text-2xl font-normal text-primary tabular-nums">{formatPrice(totals.total)}</span>
                     </div>
                     <div className="flex gap-2.5 pt-1.5">
                       <button
@@ -450,7 +710,15 @@ export const CartDrawer: React.FC = () => {
                         setPhone(e.target.value);
                         if (errors.phone) setErrors((prev) => ({ ...prev, phone: '' }));
                       }}
-                      placeholder="e.g. 9876543210"
+                      placeholder={
+                        restaurantConfig.phoneCountryCode === '+1'
+                          ? 'e.g. (212) 555-0198'
+                          : restaurantConfig.phoneCountryCode === '+44'
+                          ? 'e.g. 020 7946 0958'
+                          : restaurantConfig.phoneCountryCode === '+971'
+                          ? 'e.g. 050 123 4567'
+                          : 'e.g. 98301 11222'
+                      }
                       className={`w-full bg-[#0D0705] border rounded-xl px-4 py-3 text-on-surface font-sans text-sm focus:outline-none transition-colors placeholder:text-white/20 ${
                         errors.phone ? 'border-red-400 focus:border-red-400' : 'border-white/10 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40'
                       }`}
@@ -655,18 +923,71 @@ export const CartDrawer: React.FC = () => {
                           {item.quantity} × {item.name}
                         </span>
                         <span className="font-serif text-primary font-normal tabular-nums">
-                          ₹{item.price * item.quantity}
+                          {formatPrice(item.price * item.quantity)}
                         </span>
                       </div>
                     ))}
                   </div>
 
-                  {/* Total Amount Box */}
-                  <div className="p-4 rounded-2xl bg-[#140D09] border border-[#D4AF37]/30 flex justify-between items-center">
-                    <span className="font-sans text-xs font-semibold uppercase tracking-wider text-on-surface">Total Amount</span>
-                    <span className="font-serif text-2xl font-normal text-primary tabular-nums">
-                      ₹{cartTotal}
-                    </span>
+                  {/* Optional Payment Selection */}
+                  {paymentMode === 'optional' && (
+                    <div className="p-4 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/20 flex flex-col gap-2.5">
+                      <span className="font-sans text-[11px] uppercase tracking-wider text-primary font-semibold">
+                        Select Payment Method
+                      </span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethodChoice('online')}
+                          className={`py-2.5 px-3 rounded-xl border flex flex-col items-center justify-center gap-1 text-xs cursor-pointer transition-all ${
+                            paymentMethodChoice === 'online'
+                              ? 'bg-primary/20 border-primary text-primary font-bold shadow-sm'
+                              : 'bg-[#0D0705] border-white/10 text-on-surface/70 hover:border-white/20'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg">credit_card</span>
+                          <span className="font-sans text-[11px] uppercase tracking-wider">Pay Online</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethodChoice('counter')}
+                          className={`py-2.5 px-3 rounded-xl border flex flex-col items-center justify-center gap-1 text-xs cursor-pointer transition-all ${
+                            paymentMethodChoice === 'counter'
+                              ? 'bg-primary/20 border-primary text-primary font-bold shadow-sm'
+                              : 'bg-[#0D0705] border-white/10 text-on-surface/70 hover:border-white/20'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg">point_of_sale</span>
+                          <span className="font-sans text-[11px] uppercase tracking-wider">Pay at Counter</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Total Amount Box with Configurable Tax */}
+                  <div className="p-4 rounded-2xl bg-[#140D09] border border-[#D4AF37]/30 flex flex-col gap-2">
+                    <div className="flex justify-between items-center text-xs text-on-surface/70">
+                      <span>Subtotal</span>
+                      <span className="font-serif text-sm tabular-nums">{formatPrice(totals.subtotal)}</span>
+                    </div>
+                    {restaurantConfig.tax.enabled && (totals.taxRate ?? 0) > 0 && (
+                      <div className="flex justify-between items-center text-xs text-on-surface/60">
+                        <span>{totals.taxLabel} ({totals.taxMode === 'inclusive' ? `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}% incl.` : `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}%`})</span>
+                        <span className="font-serif text-xs text-primary/80 tabular-nums">{formatPrice(totals.tax)}</span>
+                      </div>
+                    )}
+                    {(totals as any).serviceCharge > 0 && (
+                      <div className="flex justify-between items-center text-xs text-on-surface/60">
+                        <span>{(totals as any).serviceChargeLabel || 'Service Charge'}</span>
+                        <span className="font-serif text-xs text-primary/80 tabular-nums">{formatPrice((totals as any).serviceCharge)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                      <span className="font-sans text-xs font-semibold uppercase tracking-wider text-on-surface">Total Amount</span>
+                      <span className="font-serif text-2xl font-normal text-primary tabular-nums">
+                        {formatPrice(totals.total)}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Submission Notice / Fallback if Supabase was unreachable */}
@@ -674,7 +995,7 @@ export const CartDrawer: React.FC = () => {
                     <div className="p-4 rounded-xl bg-error/10 border border-error/30 text-xs flex flex-col gap-2">
                       <div className="flex items-center gap-1.5 font-bold text-red-400">
                         <span className="material-symbols-outlined text-base">warning</span>
-                        <span>Backend Registration Notice</span>
+                        <span>Notice</span>
                       </div>
                       <p className="text-on-surface/80 leading-relaxed font-sans">
                         {submissionError}
@@ -709,12 +1030,230 @@ export const CartDrawer: React.FC = () => {
                     onClick={handleConfirmOrder}
                     className="group relative flex-1 h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-semibold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.28)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all duration-300 flex items-center justify-between pl-6 pr-2 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span>{isSubmitting ? 'Saving Order...' : 'Send via WhatsApp'}</span>
+                    <span>
+                      {isSubmitting
+                        ? 'Processing...'
+                        : isOnlinePayment
+                        ? `Pay Securely · ${formatPrice(totals.total)}`
+                        : restaurantConfig.contact.primaryMethod === 'whatsapp'
+                        ? 'Send via WhatsApp'
+                        : 'Place Order (Pay at Counter)'}
+                    </span>
                     <span className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
-                      <span className="material-symbols-outlined text-[16px] text-[#120B08]">send</span>
+                      <span className="material-symbols-outlined text-[16px] text-[#120B08]">
+                        {isOnlinePayment ? 'lock' : restaurantConfig.contact.primaryMethod === 'whatsapp' ? 'send' : 'check'}
+                      </span>
                     </span>
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* STEP: SECURE PAYMENT PROCESSING (Demo / Gateway UI) */}
+            {activeStep === 'payment_process' && (
+              <div className="flex-1 flex flex-col justify-between p-6 bg-[#130C08]">
+                <div className="space-y-6 max-w-sm mx-auto w-full pt-4">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/40 flex items-center justify-center text-primary shadow-[0_0_24px_rgba(212,175,55,0.2)] mb-3">
+                      <span className="material-symbols-outlined text-3xl">shield_locked</span>
+                    </div>
+                    <span className="font-sans text-[10px] uppercase tracking-widest text-primary font-bold">
+                      {restaurantConfig.payments.provider.toUpperCase()} CHECKOUT
+                    </span>
+                    <h3 className="font-serif text-2xl text-on-surface font-normal mt-0.5">
+                      Authorize Payment
+                    </h3>
+                    <p className="font-sans text-xs text-on-surface/60 mt-1">
+                      Order Reference: <span className="font-mono text-primary font-bold">{orderRef}</span>
+                    </p>
+                  </div>
+
+                  {/* Payment Summary Box */}
+                  <div className="p-4 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/30 space-y-2.5">
+                    <div className="flex justify-between items-center text-xs font-sans">
+                      <span className="text-on-surface/60">Payable Amount:</span>
+                      <span className="font-serif text-xl font-bold text-primary tabular-nums">
+                        {formatPrice(totals.total)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs font-sans pt-2 border-t border-white/5">
+                      <span className="text-on-surface/60">Customer:</span>
+                      <span className="text-on-surface font-medium">{customerName}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs font-sans">
+                      <span className="text-on-surface/60">Dining:</span>
+                      <span className="text-primary font-mono text-[11px]">
+                        {(isQrOrder && isQrValid && qrTable) || orderType === 'dine-in'
+                          ? `Table ${isQrOrder && isQrValid && qrTable ? qrTable : tableNumber}`
+                          : 'Takeaway'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-on-surface/50 text-center leading-relaxed">
+                    This order will be submitted to the kitchen display only after successful verification.
+                  </p>
+                </div>
+
+                {/* Payment Actions */}
+                <div className="space-y-2.5 max-w-sm mx-auto w-full pt-6">
+                  <button
+                    type="button"
+                    disabled={isVerifyingPayment}
+                    onClick={handleAuthorizePayment}
+                    className="w-full h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-bold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined text-base">verified_user</span>
+                    <span>{isVerifyingPayment ? 'Verifying Payment...' : `Complete Payment (${formatPrice(totals.total)})`}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isVerifyingPayment}
+                    onClick={handleSimulateFailure}
+                    className="w-full py-2.5 rounded-full border border-red-500/30 text-red-300 hover:bg-red-500/10 text-[11px] font-sans font-medium transition-colors cursor-pointer"
+                  >
+                    Simulate Payment Decline (Test Failure Flow)
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isVerifyingPayment}
+                    onClick={() => setStep('review')}
+                    className="w-full text-center text-xs text-on-surface/50 hover:text-on-surface transition-colors py-1 cursor-pointer"
+                  >
+                    Cancel and Return to Review
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP: PAYMENT FAILED RECOVERY (Section 15) */}
+            {activeStep === 'payment_failed' && (
+              <div className="flex-1 flex flex-col justify-between p-6 bg-[#130C08]">
+                <div className="space-y-6 max-w-sm mx-auto w-full pt-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-red-950/60 border border-red-500/50 flex items-center justify-center text-red-400 mx-auto shadow-[0_0_24px_rgba(239,68,68,0.2)]">
+                    <span className="material-symbols-outlined text-3xl">error</span>
+                  </div>
+
+                  <div>
+                    <span className="font-sans text-[10px] uppercase tracking-widest text-red-400 font-bold">
+                      Payment Unsuccessful
+                    </span>
+                    <h3 className="font-serif text-2xl text-on-surface font-normal mt-0.5">
+                      Transaction Declined
+                    </h3>
+                    <p className="font-sans text-xs text-red-300/80 mt-2 bg-red-950/30 p-3 rounded-xl border border-red-900/40">
+                      {paymentFailureReason || 'The payment provider was unable to authorize the charge.'}
+                    </p>
+                  </div>
+
+                  {/* Idempotent Safety Notice */}
+                  <div className="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 text-left text-xs space-y-1">
+                    <div className="flex items-center gap-1.5 text-primary font-bold text-[11px]">
+                      <span className="material-symbols-outlined text-sm">info</span>
+                      <span>Order Preserved</span>
+                    </div>
+                    <p className="text-on-surface/70 text-[11px] leading-relaxed">
+                      Your order reference <span className="font-mono text-primary font-bold">{orderRef}</span> remains safely on file. Retrying will not create duplicate charges.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Recovery Buttons */}
+                <div className="space-y-2.5 max-w-sm mx-auto w-full pt-6">
+                  <button
+                    type="button"
+                    onClick={handleRetryPayment}
+                    className="w-full h-12 rounded-full bg-primary text-[#120B08] font-bold text-xs uppercase tracking-wider hover:bg-primary-hover transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-base">refresh</span>
+                    <span>Try Payment Again</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={handleSwitchToCounterPayment}
+                    className="w-full h-11 rounded-full border border-[#D4AF37]/30 text-primary hover:bg-[#D4AF37]/10 font-sans text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
+                  >
+                    {isSubmitting ? 'Updating Order...' : 'Pay at Counter Instead'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP: ORDER CONFIRMED (Section 16) */}
+            {activeStep === 'confirmed' && (
+              <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-5 bg-[#130C08]">
+                <div className="w-20 h-20 rounded-full bg-[#1C120D] border border-primary/40 flex items-center justify-center text-primary shadow-[0_0_30px_rgba(212,175,55,0.25)]">
+                  <span className="material-symbols-outlined text-4xl">check_circle</span>
+                </div>
+
+                <div>
+                  <span className="font-sans text-[10px] uppercase tracking-widest text-primary font-bold">
+                    Order Confirmed
+                  </span>
+                  <h3 className="font-serif text-2xl text-on-surface font-normal mt-1">
+                    Thank You, {customerName}!
+                  </h3>
+                  <p className="font-serif text-xl text-primary mt-1 font-bold tracking-wider font-mono">
+                    {orderRef}
+                  </p>
+                  <p className="text-xs text-on-surface/80 mt-0.5 font-sans font-medium">
+                    {restaurantConfig.businessName}
+                  </p>
+                  <p className="font-sans text-xs text-on-surface/60 mt-2 max-w-xs mx-auto leading-relaxed">
+                    Your order has been recorded and transmitted to the kitchen team.
+                  </p>
+                </div>
+
+                {/* Operational Details Card */}
+                <div className="w-full max-w-sm rounded-2xl bg-[#160E0A] border border-[#D4AF37]/25 p-4 space-y-2 text-xs font-sans text-left">
+                  <div className="flex justify-between items-center">
+                    <span className="text-on-surface/60">Dining Option:</span>
+                    <span className="font-semibold text-on-surface">
+                      {(isQrOrder && isQrValid && qrTable) || orderType === 'dine-in'
+                        ? `Dine-in (Table ${isQrOrder && isQrValid && qrTable ? qrTable : tableNumber})`
+                        : 'Takeaway'}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                    <span className="text-on-surface/60">Payment Status:</span>
+                    {paidAmount !== null ? (
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold font-mono">
+                        PAID ({formatPrice(paidAmount)})
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-bold font-mono">
+                        PAY AT COUNTER ({formatPrice(confirmedTotal ?? totals.total)})
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-[#160E0A] border border-white/10 w-full max-w-sm flex items-center justify-between text-xs font-sans">
+                  <span className="text-on-surface/60">Questions regarding your order?</span>
+                  <a
+                    href={`tel:${restaurantConfig.contact.phone}`}
+                    className="text-primary font-semibold flex items-center gap-1 hover:underline"
+                  >
+                    <span className="material-symbols-outlined text-sm">call</span>
+                    <span>{restaurantConfig.contact.displayPhone}</span>
+                  </a>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('cart');
+                    setIsDrawerOpen(false);
+                  }}
+                  className="w-full max-w-sm h-12 rounded-full bg-primary text-[#120B08] font-bold text-xs uppercase tracking-wider hover:bg-primary-hover transition-colors shadow-md cursor-pointer"
+                >
+                  Done
+                </button>
               </div>
             )}
           </motion.div>

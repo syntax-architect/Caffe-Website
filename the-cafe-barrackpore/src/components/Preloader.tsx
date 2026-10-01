@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clientDetails } from '../config/client';
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 export const Preloader: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
+  const { restaurantConfig, logoUrl } = useSiteConfig();
+
+  const businessName = restaurantConfig?.businessName || clientDetails.businessName;
+  const shortName = restaurantConfig?.shortName || clientDetails.shortName;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -29,13 +34,13 @@ export const Preloader: React.FC = () => {
             className="flex flex-col items-center gap-6"
           >
             <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border border-white/10 flex items-center justify-center bg-background overflow-hidden drop-shadow-[0_0_25px_rgba(212,175,55,0.2)]">
-              <img src="/logo.webp" alt={`${clientDetails.businessName} Logo`} className="w-full h-full object-contain" fetchPriority="high" decoding="sync" />
+              <img src={logoUrl || "/logo.webp"} alt={`${businessName} Logo`} className="w-full h-full object-contain" fetchPriority="high" decoding="sync" />
             </div>
             {/* We can keep the text below, but maybe smaller or omit it since the logo has text */}
             <h1 className="font-headline-lg text-2xl md:text-3xl text-on-surface font-medium tracking-widest uppercase mt-2">
-              {clientDetails.businessName}
+              {businessName}
             </h1>
-            <span className="font-label-sm text-[10px] tracking-[0.3em] uppercase text-primary/80 -mt-2">{clientDetails.shortName}</span>
+            <span className="font-label-sm text-[10px] tracking-[0.3em] uppercase text-primary/80 -mt-2">{shortName}</span>
           </motion.div>
         </motion.div>
       )}

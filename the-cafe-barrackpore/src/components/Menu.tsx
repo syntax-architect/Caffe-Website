@@ -6,6 +6,7 @@ import { useUI } from '../context/UIContext';
 import { client, urlFor } from '../lib/sanityClient';
 import { menuData } from '../data/menu';
 import { useMenuAvailability } from '../hooks/useMenuAvailability';
+import { useSiteConfig } from '../context/SiteConfigContext';
 import { getPersistedMenuItems, MENU_UPDATED_EVENT } from '../services/contentPersistenceService';
 import type { PersistedMenuItem } from '../services/contentPersistenceService';
 
@@ -95,6 +96,7 @@ export const Menu: React.FC = () => {
   const { addToCart } = useCart();
   const { showToast } = useUI();
   const { isAvailable } = useMenuAvailability();
+  const { formatPrice, restaurantConfig } = useSiteConfig();
 
   // Fetch latest data from Sanity with resilient fallback
   useEffect(() => {
@@ -382,18 +384,33 @@ export const Menu: React.FC = () => {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {/* FSSAI Indian Dietary Badge */}
+                          {/* Dietary Badge (Configurable: India FSSAI or International badge) */}
                           {item.dietType !== 'none' && (
-                            <div 
-                              className={`w-3.5 h-3.5 rounded-sm border shrink-0 flex items-center justify-center ${
-                                item.dietType === 'veg' || item.dietType === 'vegan'
-                                  ? 'border-emerald-500/80' 
-                                  : 'border-red-500/80'
-                              }`}
-                              title={item.dietType === 'veg' ? 'Vegetarian' : item.dietType === 'vegan' ? 'Vegan' : 'Non-Vegetarian'}
-                            >
-                              <div className={`w-1.5 h-1.5 rounded-full ${item.dietType === 'veg' || item.dietType === 'vegan' ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                            </div>
+                            restaurantConfig.dietary.system === 'india' ? (
+                              <div 
+                                className={`w-3.5 h-3.5 rounded-sm border shrink-0 flex items-center justify-center ${
+                                  item.dietType === 'veg' || item.dietType === 'vegan'
+                                    ? 'border-emerald-500/80' 
+                                    : 'border-red-500/80'
+                                }`}
+                                title={item.dietType === 'veg' ? 'Vegetarian' : item.dietType === 'vegan' ? 'Vegan' : 'Non-Vegetarian'}
+                              >
+                                <div className={`w-1.5 h-1.5 rounded-full ${item.dietType === 'veg' || item.dietType === 'vegan' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                              </div>
+                            ) : (
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase shrink-0 border ${
+                                  item.dietType === 'veg'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                    : item.dietType === 'vegan'
+                                    ? 'bg-teal-500/10 text-teal-400 border-teal-500/30'
+                                    : 'bg-stone-500/10 text-stone-300 border-stone-500/30'
+                                }`}
+                                title={item.dietType === 'veg' ? 'Vegetarian' : item.dietType === 'vegan' ? 'Vegan' : 'Non-Vegetarian'}
+                              >
+                                {item.dietType === 'veg' ? 'Veg' : item.dietType === 'vegan' ? 'Vegan' : 'Non-Veg'}
+                              </span>
+                            )
                           )}
 
                           <h3 className={`font-serif text-base sm:text-lg font-medium leading-snug transition-colors ${
@@ -443,7 +460,7 @@ export const Menu: React.FC = () => {
                     {/* Bottom Row: Price & Tactile Action Button */}
                     <div className="flex items-center justify-between gap-4 pt-3 border-t border-white/5">
                       <div className="font-serif text-xl sm:text-2xl text-primary font-normal tabular-nums">
-                        <span className="text-sm align-top mr-0.5 opacity-70">₹</span>{item.price}
+                        {formatPrice(item.price)}
                       </div>
 
                       <motion.button 
@@ -469,7 +486,7 @@ export const Menu: React.FC = () => {
                           showToast({
                             title: 'Added to Order',
                             message: item.name,
-                            subtext: `₹${item.price}`,
+                            subtext: `${formatPrice(item.price)}`,
                             type: 'success',
                           });
                         }}

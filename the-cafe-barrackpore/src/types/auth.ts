@@ -43,4 +43,5 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<AuthSignInResult>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  signInDemo?: (role?: StaffRole) => void;
 }

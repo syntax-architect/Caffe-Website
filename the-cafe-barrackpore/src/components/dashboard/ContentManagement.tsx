@@ -83,7 +83,6 @@ export const ContentManagement: React.FC = () => {
 
   const isAnyDirty = isHeroDirty || isAboutDirty || isSpecialsDirty || isGalleryDirty;
 
-  // Unsaved changes browser prompt
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isAnyDirty) {
@@ -207,50 +206,50 @@ export const ContentManagement: React.FC = () => {
     const isError = saveStatus === 'error';
 
     return (
-      <div className="pt-4 border-t border-outline-variant/30 flex items-center justify-between">
+      <div className="pt-6 border-t border-white/[0.06] flex items-center justify-between">
         <div className="text-xs">
           {isCurrentTabDirty ? (
-            <span className="text-amber-400 font-semibold inline-flex items-center gap-1.5">
+            <span className="text-amber-400 font-mono font-bold inline-flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              Unsaved changes
+              Unsaved changes in this section
             </span>
           ) : (
-            <span className="text-outline/70">All changes saved</span>
+            <span className="text-zinc-500 font-mono text-[11px]">All changes synced to website</span>
           )}
         </div>
 
         <button
           type="submit"
           disabled={isSaving || !isCurrentTabDirty}
-          className={`py-2.5 px-6 rounded-full text-xs font-semibold flex items-center gap-2 transition-all shadow ${
+          className={`py-3 px-6 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
             isSaved
-              ? 'bg-emerald-600 text-white'
+              ? 'bg-emerald-600 text-white shadow-[0_0_20px_rgba(5,150,105,0.4)]'
               : isError
-              ? 'bg-red-600 text-white'
+              ? 'bg-rose-600 text-white'
               : !isCurrentTabDirty
-              ? 'bg-surface-container-high text-outline cursor-not-allowed opacity-50'
-              : 'bg-primary text-on-primary hover:bg-primary-hover active:scale-95'
+              ? 'bg-white/[0.04] text-zinc-600 border border-white/[0.04] cursor-not-allowed'
+              : 'bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] hover:shadow-[0_10px_25px_rgba(212,175,55,0.3)] active:scale-95'
           }`}
         >
           {isSaving ? (
             <>
               <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
-              <span>Saving...</span>
+              <span>Persisting...</span>
             </>
           ) : isSaved ? (
             <>
               <span className="material-symbols-outlined text-base">check_circle</span>
-              <span>Saved</span>
+              <span>Saved Successfully</span>
             </>
           ) : isError ? (
             <>
               <span className="material-symbols-outlined text-base">error</span>
-              <span>Couldn't save changes. Try again.</span>
+              <span>Save Failed</span>
             </>
           ) : (
             <>
               <span className="material-symbols-outlined text-base">save</span>
-              <span>Save {sectionLabel}</span>
+              <span>Publish {sectionLabel}</span>
             </>
           )}
         </button>
@@ -259,13 +258,21 @@ export const ContentManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-8 animate-fadeIn max-w-4xl">
+      {/* COCKPIT HEADER */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.06]">
         <div>
-          <h2 className="text-xl font-serif font-bold text-on-surface">Website Content Control Center</h2>
-          <p className="text-xs text-outline mt-0.5">
-            Edit text, headings, and imagery displayed on the public website with live previews and persistent saves.
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+              Brand Manifest &amp; Creative Studio
+            </span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-1 tracking-tight">
+            Website Content Engine
+          </h2>
+          <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
+            Curate typography, brand storytelling, visual hero assets, and photo galleries rendered on the public storefront.
           </p>
         </div>
 
@@ -273,241 +280,256 @@ export const ContentManagement: React.FC = () => {
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          className="py-2 px-4 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/60 text-xs font-semibold text-primary inline-flex items-center gap-1.5 transition-colors shadow-sm"
+          className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer"
         >
           <span>Preview Live Website</span>
           <span className="material-symbols-outlined text-sm">open_in_new</span>
         </a>
       </div>
 
-      {/* Section Tabs */}
-      <div className="flex items-center gap-2 border-b border-outline-variant/30 pb-1 text-xs">
+      {/* SECTION TABS */}
+      <div className="flex items-center gap-2 border-b border-white/[0.06] pb-2 overflow-x-auto scrollbar-none text-xs">
         {[
-          { id: 'hero' as ContentTab, label: 'Homepage Hero', icon: 'home', dirty: isHeroDirty },
-          { id: 'about' as ContentTab, label: 'Our Story & Vibe', icon: 'menu_book', dirty: isAboutDirty },
-          { id: 'specials' as ContentTab, label: 'Specials Banner', icon: 'stars', dirty: isSpecialsDirty },
+          { id: 'hero' as ContentTab, label: 'Hero Experience', icon: 'home', dirty: isHeroDirty },
+          { id: 'about' as ContentTab, label: 'Brand Story', icon: 'menu_book', dirty: isAboutDirty },
+          { id: 'specials' as ContentTab, label: 'Banquets & Specials', icon: 'stars', dirty: isSpecialsDirty },
           { id: 'gallery' as ContentTab, label: 'Ambiance Gallery', icon: 'photo_library', dirty: isGalleryDirty },
         ].map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => handleTabSwitch(tab.id)}
-            className={`px-4 py-2 rounded-full font-semibold inline-flex items-center gap-2 transition-all ${
+            className={`px-4 py-2.5 rounded-xl font-mono text-[11px] uppercase tracking-wider font-bold inline-flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-primary text-on-primary shadow-sm'
-                : 'text-outline hover:text-on-surface hover:bg-surface-container'
+                ? 'bg-[#D4AF37] text-[#070605] shadow-[0_4px_15px_rgba(212,175,55,0.25)]'
+                : 'bg-[#120F0D] text-zinc-400 hover:text-white border border-white/[0.06]'
             }`}
           >
-            <span className="material-symbols-outlined text-sm">{tab.icon}</span>
+            <span className="material-symbols-outlined text-base">{tab.icon}</span>
             <span>{tab.label}</span>
-            {tab.dirty && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Unsaved changes" />}
+            {tab.dirty && (
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" title="Unsaved changes" />
+            )}
           </button>
         ))}
       </div>
 
-      {/* Tab 1: Hero Section */}
+      {/* TAB 1: HERO SECTION */}
       {activeTab === 'hero' && (
-        <form onSubmit={handleSaveSection} className="space-y-6 max-w-3xl">
-          <div className="bg-surface-container border border-outline-variant/40 rounded-3xl p-6 sm:p-8 space-y-4">
-            <h3 className="font-serif text-lg font-bold text-on-surface">Hero Section Headline & Visuals</h3>
-
-            <div>
-              <label className="block text-xs uppercase font-bold tracking-wider text-outline mb-1.5">
-                Hero Headline
-              </label>
-              <input
-                type="text"
-                required
-                value={heroHeading}
-                onChange={(e) => {
-                  setHeroHeading(e.target.value);
-                  setSaveStatus('idle');
-                }}
-                className="w-full bg-surface-container-high border border-outline-variant/60 rounded-xl px-4 py-2.5 text-xs text-on-surface focus:outline-none focus:border-primary font-medium"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs uppercase font-bold tracking-wider text-outline mb-1.5">
-                Supporting Subtext
-              </label>
-              <textarea
-                rows={3}
-                required
-                value={heroSubtext}
-                onChange={(e) => {
-                  setHeroSubtext(e.target.value);
-                  setSaveStatus('idle');
-                }}
-                className="w-full bg-surface-container-high border border-outline-variant/60 rounded-xl px-4 py-2.5 text-xs text-on-surface focus:outline-none focus:border-primary leading-relaxed"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs uppercase font-bold tracking-wider text-outline mb-2">
-                Hero Background Image
-              </label>
-              <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-surface-container-high/60 border border-outline-variant/30">
-                <img
-                  src={heroImage}
-                  alt="Hero Preview"
-                  className="w-full sm:w-48 h-28 object-cover rounded-xl border border-outline-variant/50 shadow"
-                />
-                <div className="flex-1 space-y-2 text-left w-full">
-                  <p className="text-xs font-semibold text-on-surface">Replace Hero Visual</p>
-                  <p className="text-[11px] text-outline leading-tight">
-                    Recommended: 1920 × 1080 px WebP/JPG. Max size 5 MB.
-                  </p>
-                  <label className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-highest border border-outline-variant/60 text-xs font-semibold text-primary cursor-pointer transition-colors">
-                    <span className="material-symbols-outlined text-sm">upload</span>
-                    Choose New Photo
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        handleImageUpload(e, setHeroImage);
-                        setSaveStatus('idle');
-                      }}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
+        <form onSubmit={handleSaveSection} className="space-y-6">
+          <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Above the Fold</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">Hero Headline &amp; Visuals</h3>
               </div>
-            </div>
 
-            {renderSaveButton('Hero Section')}
-          </div>
-        </form>
-      )}
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Hero Headline
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={heroHeading}
+                  onChange={(e) => {
+                    setHeroHeading(e.target.value);
+                    setSaveStatus('idle');
+                  }}
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
 
-      {/* Tab 2: About Section */}
-      {activeTab === 'about' && (
-        <form onSubmit={handleSaveSection} className="space-y-6 max-w-3xl">
-          <div className="bg-surface-container border border-outline-variant/40 rounded-3xl p-6 sm:p-8 space-y-4">
-            <h3 className="font-serif text-lg font-bold text-on-surface">About Our Story & Atmosphere</h3>
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Supporting Brand Subtext
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={heroSubtext}
+                  onChange={(e) => {
+                    setHeroSubtext(e.target.value);
+                    setSaveStatus('idle');
+                  }}
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white leading-relaxed focus:outline-none focus:border-[#D4AF37] resize-none"
+                />
+              </div>
 
-            <div>
-              <label className="block text-xs uppercase font-bold tracking-wider text-outline mb-1.5">
-                Section Title
-              </label>
-              <input
-                type="text"
-                required
-                value={aboutTitle}
-                onChange={(e) => {
-                  setAboutTitle(e.target.value);
-                  setSaveStatus('idle');
-                }}
-                className="w-full bg-surface-container-high border border-outline-variant/60 rounded-xl px-4 py-2.5 text-xs text-on-surface focus:outline-none focus:border-primary font-medium"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs uppercase font-bold tracking-wider text-outline mb-1.5">
-                Story & Philosophy
-              </label>
-              <textarea
-                rows={4}
-                required
-                value={aboutDescription}
-                onChange={(e) => {
-                  setAboutDescription(e.target.value);
-                  setSaveStatus('idle');
-                }}
-                className="w-full bg-surface-container-high border border-outline-variant/60 rounded-xl px-4 py-2.5 text-xs text-on-surface focus:outline-none focus:border-primary leading-relaxed"
-              />
-            </div>
-
-            {renderSaveButton('About Section')}
-          </div>
-        </form>
-      )}
-
-      {/* Tab 3: Specials Banner */}
-      {activeTab === 'specials' && (
-        <form onSubmit={handleSaveSection} className="space-y-6 max-w-3xl">
-          <div className="bg-surface-container border border-outline-variant/40 rounded-3xl p-6 sm:p-8 space-y-4">
-            <h3 className="font-serif text-lg font-bold text-on-surface">Special Highlights Banner</h3>
-
-            <div>
-              <label className="block text-xs uppercase font-bold tracking-wider text-outline mb-1.5">
-                Banner Headline
-              </label>
-              <input
-                type="text"
-                required
-                value={specialsTitle}
-                onChange={(e) => {
-                  setSpecialsTitle(e.target.value);
-                  setSaveStatus('idle');
-                }}
-                className="w-full bg-surface-container-high border border-outline-variant/60 rounded-xl px-4 py-2.5 text-xs text-on-surface focus:outline-none focus:border-primary font-medium"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs uppercase font-bold tracking-wider text-outline mb-1.5">
-                Promotion Details
-              </label>
-              <textarea
-                rows={3}
-                required
-                value={specialsDescription}
-                onChange={(e) => {
-                  setSpecialsDescription(e.target.value);
-                  setSaveStatus('idle');
-                }}
-                className="w-full bg-surface-container-high border border-outline-variant/60 rounded-xl px-4 py-2.5 text-xs text-on-surface focus:outline-none focus:border-primary leading-relaxed"
-              />
-            </div>
-
-            {renderSaveButton('Specials Banner')}
-          </div>
-        </form>
-      )}
-
-      {/* Tab 4: Ambiance Gallery */}
-      {activeTab === 'gallery' && (
-        <form onSubmit={handleSaveSection} className="space-y-6 max-w-4xl">
-          <div className="bg-surface-container border border-outline-variant/40 rounded-3xl p-6 sm:p-8 space-y-6">
-            <div>
-              <h3 className="font-serif text-lg font-bold text-on-surface">Ambiance Gallery Photos</h3>
-              <p className="text-xs text-outline">
-                Showcasing the café's interior, lighting, and barista craft on the homepage.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {galleryImages.map((img, idx) => (
-                <div
-                  key={idx}
-                  className="group relative rounded-2xl overflow-hidden border border-outline-variant/40 aspect-square bg-surface-container-high shadow-sm"
-                >
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-2">
+                  Hero Cinematic Background Visual
+                </label>
+                <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-[#070605] border border-white/[0.08]">
                   <img
-                    src={img.src}
-                    alt={img.alt || `Gallery ${idx + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    src={heroImage}
+                    alt="Hero Preview"
+                    className="w-full sm:w-56 h-32 object-cover rounded-xl border border-white/[0.1] shadow-lg"
                   />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center gap-2">
-                    <span className="text-white text-[11px] font-semibold">Photo {idx + 1}</span>
-                    <label className="px-3 py-1 rounded-full bg-primary text-on-primary text-[10px] font-semibold cursor-pointer hover:bg-primary-hover transition-colors">
-                      Replace Photo
+                  <div className="flex-1 space-y-2 text-left w-full">
+                    <p className="text-xs font-bold text-white">Replace Cinematic Visual</p>
+                    <p className="text-[11px] text-zinc-400 leading-tight">
+                      Recommended: 1920 × 1080 px WebP/JPG. High-res nocturnal atmosphere.
+                    </p>
+                    <label className="inline-block mt-2 px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer">
+                      <span>Choose File...</span>
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => {
-                          handleReplaceGalleryImage(idx, e);
-                          setSaveStatus('idle');
-                        }}
                         className="hidden"
+                        onChange={(e) => handleImageUpload(e, (url) => setHeroImage(url))}
                       />
                     </label>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
 
-            {renderSaveButton('Gallery Photos')}
+              {renderSaveButton('Hero Section')}
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* TAB 2: ABOUT SECTION */}
+      {activeTab === 'about' && (
+        <form onSubmit={handleSaveSection} className="space-y-6">
+          <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Hospitality Philosophy</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">Our Story &amp; Nocturnal Vibe</h3>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Section Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={aboutTitle}
+                  onChange={(e) => {
+                    setAboutTitle(e.target.value);
+                    setSaveStatus('idle');
+                  }}
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Narrative Description
+                </label>
+                <textarea
+                  rows={5}
+                  required
+                  value={aboutDescription}
+                  onChange={(e) => {
+                    setAboutDescription(e.target.value);
+                    setSaveStatus('idle');
+                  }}
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white leading-relaxed focus:outline-none focus:border-[#D4AF37] resize-none"
+                />
+              </div>
+
+              {renderSaveButton('Brand Story')}
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* TAB 3: SPECIALS SECTION */}
+      {activeTab === 'specials' && (
+        <form onSubmit={handleSaveSection} className="space-y-6">
+          <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Curated Group Feasts</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">Special Banquet &amp; Hangout Platters</h3>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Section Headline
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={specialsTitle}
+                  onChange={(e) => {
+                    setSpecialsTitle(e.target.value);
+                    setSaveStatus('idle');
+                  }}
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Platters Description
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={specialsDescription}
+                  onChange={(e) => {
+                    setSpecialsDescription(e.target.value);
+                    setSaveStatus('idle');
+                  }}
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white leading-relaxed focus:outline-none focus:border-[#D4AF37] resize-none"
+                />
+              </div>
+
+              {renderSaveButton('Specials Section')}
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* TAB 4: GALLERY SECTION */}
+      {activeTab === 'gallery' && (
+        <form onSubmit={handleSaveSection} className="space-y-6">
+          <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Visual World</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">Ambiance &amp; Interior Gallery</h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  High-resolution photo slots rendered in the interactive customer ambiance carousel.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                {galleryImages.map((img, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-2xl bg-[#070605] border border-white/[0.08] flex flex-col justify-between gap-3"
+                  >
+                    <div className="relative aspect-video rounded-xl overflow-hidden border border-white/[0.08]">
+                      <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
+                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-mono text-[#D4AF37] font-bold">
+                        Slot #{idx + 1}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[11px] text-zinc-400 truncate max-w-[160px]">{img.alt}</span>
+                      <label className="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer">
+                        <span>Replace Photo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleReplaceGalleryImage(idx, e)}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {renderSaveButton('Ambiance Gallery')}
+            </div>
           </div>
         </form>
       )}

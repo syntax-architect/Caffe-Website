@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { KitchenOrder } from '../../services/kitchenService';
+import { playTicketBumpSound, playDispatchChime } from '../../services/soundService';
 
 interface KitchenTicketProps {
   order: KitchenOrder;
@@ -49,65 +50,61 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
     if (totalSecs >= 20 * 60) {
       // > 20 min: Very long wait
       return {
-        badge: 'bg-red-950/80 text-red-300 border-red-600/50 shadow-[0_0_12px_rgba(239,68,68,0.2)]',
-        cardBorder: 'border-red-800/60 shadow-[0_4px_20px_rgba(239,68,68,0.15)]',
-        timerDot: 'bg-red-500 animate-ping',
+        badge: 'bg-red-950 text-red-200 border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.3)]',
+        cardBorder: 'border-red-500/70 shadow-[0_0_25px_rgba(239,68,68,0.2)]',
+        timerDot: 'bg-red-400 animate-ping',
       };
     }
     if (totalSecs >= 10 * 60) {
       // 10 - 20 min: Long wait / Attention
       return {
-        badge: 'bg-amber-950/70 text-amber-300 border-amber-500/40',
-        cardBorder: 'border-amber-700/50',
+        badge: 'bg-amber-950 text-amber-200 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]',
+        cardBorder: 'border-amber-500/60 shadow-[0_0_20px_rgba(245,158,11,0.15)]',
         timerDot: 'bg-amber-400',
       };
     }
     // Normal wait (< 10 min)
     return {
-      badge: 'bg-[#1e1510] text-[#D4AF37] border-[#D4AF37]/30',
-      cardBorder: 'border-[#2d1f16] hover:border-[#D4AF37]/40',
+      badge: 'bg-[#1C1610] text-[#F3C766] border-[#D4AF37]/35',
+      cardBorder: 'border-white/[0.08] hover:border-[#D4AF37]/50',
       timerDot: 'bg-[#D4AF37]',
     };
   };
 
   const urgency = getUrgencyClasses(elapsedSeconds);
   const isDineIn = order.order_type === 'dine_in';
-  const tableDisplay = isDineIn ? `TABLE ${order.table_number || '??'}` : 'TAKEAWAY';
+  const tableDisplay = isDineIn ? `TABLE ${order.table_number || '??'}` : 'TAKEAWAY COUNTER';
 
   // Action button labeling and style per column
   const getActionConfig = () => {
     if (order.status === 'pending' || order.status === 'confirmed') {
       return {
-        label: 'START PREPARING',
+        label: 'START PREPARATION',
+        icon: 'soup_kitchen',
         buttonClass:
-          'bg-[#D4AF37] hover:bg-[#b89528] active:bg-[#9a7b1e] text-[#120c08] shadow-[0_2px_12px_rgba(212,175,55,0.25)]',
-        statusPill: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-        statusLabel: 'NEW',
+          'bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e4b955] text-[#120B08] shadow-[0_4px_16px_rgba(212,175,55,0.3)]',
       };
     }
     if (order.status === 'preparing') {
       return {
-        label: 'MARK READY',
+        label: 'MARK DISH READY',
+        icon: 'check_circle',
         buttonClass:
-          'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-[0_2px_12px_rgba(16,185,129,0.25)]',
-        statusPill: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-        statusLabel: 'PREPPING',
+          'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-[0_4px_16px_rgba(16,185,129,0.3)]',
       };
     }
     if (order.status === 'ready') {
       return {
-        label: 'COMPLETE ORDER',
+        label: 'COMPLETE & DISPATCH',
+        icon: 'task_alt',
         buttonClass:
-          'bg-[#f5efe6] hover:bg-white active:bg-[#ded7cc] text-[#120c08] shadow-[0_2px_12px_rgba(245,239,230,0.2)]',
-        statusPill: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-        statusLabel: 'READY',
+          'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-[0_4px_16px_rgba(59,130,246,0.3)]',
       };
     }
     return {
       label: 'PROCEED',
+      icon: 'arrow_forward',
       buttonClass: 'bg-neutral-800 text-neutral-300',
-      statusPill: 'bg-neutral-800 text-neutral-400',
-      statusLabel: order.status.toUpperCase(),
     };
   };
 
@@ -115,175 +112,181 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
 
   return (
     <div
-      className={`relative bg-[#170f0b] rounded-xl border transition-all duration-200 flex flex-col justify-between ${
+      className={`group relative rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-1 border transition-all duration-300 shadow-xl ${
         urgency.cardBorder
-      } ${density === 'compact' ? 'p-3 mb-2.5' : 'p-4 mb-3.5'}`}
+      } ${density === 'compact' ? 'mb-2.5' : 'mb-3.5'}`}
       data-testid={`kitchen-ticket-${order.order_ref}`}
     >
-      {/* TICKET TOP HEADER */}
-      <div className="flex items-start justify-between gap-2 border-b border-[#2d1f16] pb-2.5">
-        <div>
-          {/* Order Ref */}
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-base font-bold text-[#f5efe6] tracking-tight">
-              #{order.order_ref}
-            </span>
-            <span
-              className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded border ${
-                order.source === 'qr'
-                  ? 'bg-purple-950/60 text-purple-300 border-purple-800/40'
-                  : 'bg-zinc-800/80 text-zinc-300 border-zinc-700/50'
-              }`}
-            >
-              {order.source}
-            </span>
-          </div>
-
-          {/* Dining Type / Table */}
-          <div className="mt-1 flex items-center gap-1.5">
-            <span
-              className={`text-xs font-bold tracking-wider px-2 py-0.5 rounded ${
-                isDineIn
-                  ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40'
-                  : 'bg-sky-950/60 text-sky-300 border border-sky-700/40'
-              }`}
-            >
-              {tableDisplay}
-            </span>
-            {order.customer_name && (
-              <span className="text-[11px] text-zinc-400 truncate max-w-[130px]">
-                {order.customer_name}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Live Elapsed Wait Timer */}
-        <div
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border font-mono text-xs font-bold ${urgency.badge}`}
-          title="Elapsed wait time since order submission"
-        >
-          <span className={`w-2 h-2 rounded-full ${urgency.timerDot}`} />
-          <span>{formatElapsed(elapsedSeconds)}</span>
-        </div>
-      </div>
-
-      {/* ITEMS LIST */}
-      <div className={`space-y-2 py-3 flex-1 ${density === 'compact' ? 'py-2 space-y-1.5' : 'py-3'}`}>
-        {order.items && order.items.length > 0 ? (
-          order.items.map((item, idx) => (
-            <div
-              key={item.id || idx}
-              className="flex items-start justify-between text-sm leading-snug group"
-            >
-              <div className="flex items-start gap-2.5 pr-2">
-                <span className="font-mono font-black text-[#D4AF37] text-base min-w-[24px]">
-                  {item.quantity}×
+      {/* Inner Ticket Card */}
+      <div className="rounded-[calc(1rem-0.125rem)] bg-[#130F0D] border border-white/[0.04] p-4 flex flex-col justify-between h-full">
+        {/* TICKET TOP HEADER */}
+        <div className="border-b border-white/[0.08] pb-3">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              {/* Order Reference */}
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-base sm:text-lg font-bold text-white tracking-wide">
+                  #{order.order_ref}
                 </span>
-                <span className="font-semibold text-[#f5efe6] text-sm group-hover:text-white transition-colors">
-                  {item.item_name}
+                <span
+                  className={`text-[9px] font-mono uppercase px-2 py-0.5 rounded-full border ${
+                    order.source === 'qr'
+                      ? 'bg-[#D4AF37]/20 text-[#F3C766] border-[#D4AF37]/35'
+                      : 'bg-white/[0.06] text-stone-300 border-white/[0.1]'
+                  }`}
+                >
+                  {order.source || 'website'}
                 </span>
+                {order.payment_status === 'paid' ? (
+                  <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full border bg-emerald-950/80 text-emerald-300 border-emerald-600/40">
+                    PAID
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full border bg-amber-950/80 text-amber-300 border-amber-600/40">
+                    COUNTER
+                  </span>
+                )}
+              </div>
+
+              {/* Dining Location & Customer Name */}
+              <div className="mt-2 flex items-center gap-2">
+                <span
+                  className={`text-xs font-bold tracking-wider uppercase px-2.5 py-1 rounded-lg ${
+                    isDineIn
+                      ? 'bg-[#D4AF37]/20 text-[#F3C766] border border-[#D4AF37]/40'
+                      : 'bg-sky-950/80 text-sky-300 border border-sky-600/40'
+                  }`}
+                >
+                  {tableDisplay}
+                </span>
+                {order.customer_name && (
+                  <span className="text-xs text-stone-400 font-medium truncate max-w-[140px]">
+                    {order.customer_name}
+                  </span>
+                )}
               </div>
             </div>
-          ))
-        ) : (
-          <div className="text-xs text-zinc-500 italic py-1">No item details recorded</div>
-        )}
-      </div>
 
-      {/* SPECIAL REQUESTS / CHEF NOTE */}
-      {order.special_requests && order.special_requests.trim() && (
-        <div className="mb-3 p-2.5 rounded-lg bg-amber-950/40 border border-amber-600/30 text-amber-200">
-          <div className="flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase text-amber-400">
-            <span>⚡ Special Request</span>
+            {/* Live Elapsed Wait Timer Badge */}
+            <div
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg border font-mono text-xs font-bold shadow-sm ${urgency.badge}`}
+              title="Elapsed prep time"
+            >
+              <span className={`w-2 h-2 rounded-full ${urgency.timerDot}`} />
+              <span>{formatElapsed(elapsedSeconds)}</span>
+            </div>
           </div>
-          <p className="text-xs mt-0.5 font-medium leading-relaxed">
-            "{order.special_requests.trim()}"
-          </p>
         </div>
-      )}
 
-      {/* ACTION FOOTER */}
-      <div className="pt-2 border-t border-[#2d1f16] flex items-center gap-2">
-        <button
-          type="button"
-          disabled={isMutating}
-          onClick={() => onAdvance(order)}
-          className={`flex-1 py-3 px-4 rounded-lg font-bold text-xs tracking-wider uppercase transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-            action.buttonClass
-          }`}
-          aria-label={`${action.label} for order ${order.order_ref}`}
-        >
-          {isMutating ? (
-            <>
-              <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8H4z"
-                />
-              </svg>
-              <span>Updating...</span>
-            </>
-          ) : (
-            <span>{action.label}</span>
-          )}
-        </button>
-
-        {/* Cancellation Option */}
-        {onCancel && (
-          <div className="relative">
-            {showCancelConfirm ? (
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCancelConfirm(false);
-                    onCancel(order);
-                  }}
-                  className="px-2.5 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold uppercase transition-colors"
-                  title="Confirm order cancellation"
-                >
-                  Yes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCancelConfirm(false)}
-                  className="px-2 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-bold"
-                  title="Keep order"
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowCancelConfirm(true)}
-                className="p-3 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-950/30 transition-colors"
-                title="Cancel order"
-                aria-label={`Cancel order ${order.order_ref}`}
+        {/* ITEMS LIST (High Visibility for Line Cooks) */}
+        <div className={`space-y-2 py-3 flex-1 ${density === 'compact' ? 'py-2 space-y-1.5' : 'py-3.5'}`}>
+          {order.items && order.items.length > 0 ? (
+            order.items.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                className="flex items-start justify-between text-sm leading-snug group/item"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            )}
+                <div className="flex items-start gap-2.5 pr-2">
+                  <span className="font-mono font-black text-[#F3C766] text-base min-w-[28px] shrink-0">
+                    {item.quantity}×
+                  </span>
+                  <span className="font-bold text-white text-sm group-hover/item:text-[#F3C766] transition-colors">
+                    {item.item_name}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-xs text-stone-500 italic py-2">No item details recorded</div>
+          )}
+        </div>
+
+        {/* SPECIAL CHEF INSTRUCTIONS */}
+        {order.special_requests && order.special_requests.trim() && (
+          <div className="mb-3 p-3 rounded-xl bg-amber-950/50 border border-amber-500/40 text-amber-200 shadow-inner">
+            <div className="flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase text-amber-300 mb-0.5">
+              <span className="material-symbols-outlined text-xs">priority_high</span>
+              <span>Chef Note</span>
+            </div>
+            <p className="text-xs font-semibold leading-relaxed">
+              "{order.special_requests.trim()}"
+            </p>
           </div>
         )}
+
+        {/* ACTION PUNCH FOOTER */}
+        <div className="pt-3 border-t border-white/[0.08] flex items-center gap-2">
+          <button
+            type="button"
+            disabled={isMutating}
+            onClick={() => {
+              if (order.status === 'ready') {
+                playDispatchChime();
+              } else {
+                playTicketBumpSound();
+              }
+              onAdvance(order);
+            }}
+            className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] ${
+              action.buttonClass
+            }`}
+            aria-label={`${action.label} for order ${order.order_ref}`}
+          >
+            {isMutating ? (
+              <>
+                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <span>Updating Ticket...</span>
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-base">{action.icon}</span>
+                <span>{action.label}</span>
+              </>
+            )}
+          </button>
+
+          {/* Cancellation Option */}
+          {onCancel && (
+            <div className="relative">
+              {showCancelConfirm ? (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCancelConfirm(false);
+                      onCancel(order);
+                    }}
+                    className="px-3 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold uppercase transition-colors shadow"
+                    title="Confirm order cancellation"
+                  >
+                    Void
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCancelConfirm(false)}
+                    className="px-2.5 py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-[11px] font-bold"
+                    title="Keep order"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowCancelConfirm(true)}
+                  className="p-3 rounded-xl bg-white/[0.03] hover:bg-red-950/40 text-stone-500 hover:text-red-400 border border-white/[0.06] hover:border-red-500/30 transition-colors cursor-pointer"
+                  title="Void order"
+                  aria-label={`Void order ${order.order_ref}`}
+                >
+                  <span className="material-symbols-outlined text-base">close</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
+
+export default KitchenTicket;

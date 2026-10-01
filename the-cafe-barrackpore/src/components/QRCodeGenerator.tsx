@@ -2,18 +2,22 @@ import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { clientDetails } from '../config/client';
 import { validateAndNormalizeTableNumber } from '../utils/tableValidation';
+import { useSiteConfig } from '../context/SiteConfigContext';
+import { buildTableQrUrl } from '../utils/url';
 
 export const QRCodeGenerator: React.FC = () => {
+  const { restaurantConfig } = useSiteConfig();
   const [tableInput, setTableInput] = useState<string>('07');
   const [copied, setCopied] = useState<boolean>(false);
 
+  const businessName = restaurantConfig?.businessName || clientDetails.businessName;
+
   // Normalize table number safely
   const validation = validateAndNormalizeTableNumber(tableInput);
-  const normalizedTable = validation.isValid ? validation.normalized : '07';
+  const normalizedTable = validation.isValid && validation.normalized ? validation.normalized : '07';
 
-  // Base URL
-  const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const qrUrl = `${siteUrl}/qr?table=${normalizedTable}`;
+  // Authoritative production QR URL
+  const qrUrl = buildTableQrUrl(normalizedTable);
 
   const handleTableChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTableInput(e.target.value);
@@ -111,7 +115,7 @@ export const QRCodeGenerator: React.FC = () => {
         </div>
 
         <h1 className="text-xl font-bold font-serif uppercase tracking-[0.18em] text-stone-900 mb-1">
-          {clientDetails.businessName}
+          {businessName}
         </h1>
         <p className="text-stone-500 uppercase tracking-widest text-[11px] font-semibold mb-6">
           Order from your table

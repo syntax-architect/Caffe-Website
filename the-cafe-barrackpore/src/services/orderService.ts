@@ -1,6 +1,8 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { CreateOrderPayload, OrderResult } from '../types/order';
 import { calculateOrderTotals, generateClientOrderRef } from '../utils/orderCalculations';
+import { validatePhoneNumber } from '../utils/phone';
+import { isItemAvailable } from './menuAvailabilityService';
 
 /**
  * Validates checkout payload prior to database submission.
@@ -15,9 +17,9 @@ export const validateOrderPayload = (payload: CreateOrderPayload): { valid: bool
     return { valid: false, error: 'Please provide a valid full name (minimum 2 characters).' };
   }
 
-  const cleanPhone = payload.customer_phone?.replace(/\D/g, '') || '';
-  if (!cleanPhone || cleanPhone.length < 10) {
-    return { valid: false, error: 'Please provide a valid 10-digit phone number.' };
+  const phoneValidation = validatePhoneNumber(payload.customer_phone);
+  if (!phoneValidation.valid) {
+    return { valid: false, error: phoneValidation.error || 'Please provide a valid phone number.' };
   }
 
   if (payload.order_type !== 'dine_in' && payload.order_type !== 'takeaway') {
@@ -54,8 +56,21 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
     };
   }
 
+  // 1b. Menu Item Availability (86'd items) defense-in-depth check
+  for (const item of payload.items) {
+    const itemId = (item as any).item_id || item.id;
+    if (itemId && !isItemAvailable(itemId)) {
+      const itemName = (item as any).item_name || item.name || 'Selected item';
+      return {
+        success: false,
+        orderRef: payload.order_ref || generateClientOrderRef(),
+        error: `Item "${itemName}" is currently unavailable (sold out).`,
+      };
+    }
+  }
+
   // 2. Financial calculation (never trust client-supplied totals)
-  const totals = calculateOrderTotals(payload.items);
+  const totals = calculateOrderTotals(payload.items, payload.tax_options);
   if (totals.lineItems.length === 0 || totals.total <= 0) {
     return {
       success: false,
@@ -64,8 +79,16 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
     };
   }
 
-  const cleanPhone = payload.customer_phone.replace(/\D/g, '');
+  const phoneValidation = validatePhoneNumber(payload.customer_phone);
+  const normalizedPhone = phoneValidation.valid ? phoneValidation.normalized : payload.customer_phone.trim();
+  const orderCurrency = payload.currency || 'INR';
   let orderRef = payload.order_ref?.trim() || generateClientOrderRef();
+
+  const paymentRequired = payload.payment_required ?? false;
+  const paymentStatus = payload.payment_status ?? (paymentRequired ? 'pending' : 'not_required');
+  const paymentProvider = payload.payment_provider || null;
+  const paymentReference = payload.payment_reference || null;
+  const paymentAmount = payload.payment_amount ?? totals.total;
 
   // 3. Local / Demo mode handling
   if (!isSupabaseConfigured || !supabase) {
@@ -76,19 +99,31 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
 
     if (typeof window !== 'undefined') {
       try {
+        const raw = localStorage.getItem('cafe_demo_orders');
+        const existing = raw ? JSON.parse(raw) : [];
+
+        // Check if pending order already exists with same order_ref (payment retry)
+        const existingIdx = existing.findIndex((o: any) => o.order_ref === orderRef);
+
         const demoOrder = {
-          id: `demo-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          id: existingIdx !== -1 ? existing[existingIdx].id : `demo-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
           order_ref: orderRef,
           customer_name: payload.customer_name.trim(),
-          customer_phone: cleanPhone,
+          customer_phone: normalizedPhone,
           order_type: payload.order_type,
           table_number: payload.order_type === 'dine_in' ? payload.table_number?.trim() || null : null,
           special_requests: payload.special_requests?.trim() || null,
           subtotal: totals.subtotal,
           total: totals.total,
+          currency: orderCurrency,
           status: 'pending',
           source: payload.source || 'website',
-          created_at: new Date().toISOString(),
+          payment_required: paymentRequired,
+          payment_status: paymentStatus,
+          payment_provider: paymentProvider,
+          payment_reference: paymentReference,
+          payment_amount: paymentAmount,
+          created_at: existingIdx !== -1 ? existing[existingIdx].created_at : new Date().toISOString(),
           updated_at: new Date().toISOString(),
           items: totals.lineItems.map((li, idx) => ({
             id: `item-${Date.now()}-${idx}`,
@@ -99,9 +134,13 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
             line_total: li.line_total,
           })),
         };
-        const raw = localStorage.getItem('cafe_demo_orders');
-        const existing = raw ? JSON.parse(raw) : [];
-        existing.unshift(demoOrder);
+
+        if (existingIdx !== -1) {
+          existing[existingIdx] = demoOrder;
+        } else {
+          existing.unshift(demoOrder);
+        }
+
         localStorage.setItem('cafe_demo_orders', JSON.stringify(existing.slice(0, 50)));
         localStorage.setItem('cafe_latest_order_event', JSON.stringify({ event: 'created', order: demoOrder, ts: Date.now() }));
         window.dispatchEvent(new CustomEvent('cafe:order-created', { detail: demoOrder }));
@@ -117,7 +156,7 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
     };
   }
 
-  // 4. Submission to Supabase with collision retry
+  // 4. Submission to Supabase with collision retry or existing order update
   const maxAttempts = 3;
   let attempt = 0;
 
@@ -129,7 +168,7 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
         p_order: {
           order_ref: orderRef,
           customer_name: payload.customer_name.trim(),
-          customer_phone: cleanPhone,
+          customer_phone: normalizedPhone,
           order_type: payload.order_type,
           table_number: payload.order_type === 'dine_in' ? payload.table_number?.trim() : null,
           special_requests: payload.special_requests?.trim() || null,
@@ -137,6 +176,12 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
           total: totals.total,
           status: 'pending',
           source: payload.source || 'website',
+          currency: orderCurrency,
+          payment_required: paymentRequired,
+          payment_status: paymentStatus,
+          payment_provider: paymentProvider,
+          payment_reference: paymentReference,
+          payment_amount: paymentAmount,
         },
         p_items: totals.lineItems,
       });
@@ -150,7 +195,34 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
       }
 
       // Check for unique constraint violation on order_ref (PostgreSQL 23505)
+      // If this was an explicit retry with the same ref, update the existing order instead
       if (rpcError && rpcError.code === '23505') {
+        const { data: existingOrder } = await supabase
+          .from('orders')
+          .select('id, payment_status')
+          .eq('order_ref', orderRef)
+          .single();
+
+        if (existingOrder && (existingOrder.payment_status === 'pending' || existingOrder.payment_status === 'failed')) {
+          // Safe reuse of pending/failed order
+          await supabase
+            .from('orders')
+            .update({
+              payment_status: paymentStatus,
+              payment_provider: paymentProvider,
+              payment_reference: paymentReference,
+              payment_amount: paymentAmount,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existingOrder.id);
+
+          return {
+            success: true,
+            orderId: existingOrder.id,
+            orderRef,
+          };
+        }
+
         orderRef = generateClientOrderRef();
         continue;
       }
@@ -161,14 +233,20 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
         .insert({
           order_ref: orderRef,
           customer_name: payload.customer_name.trim(),
-          customer_phone: cleanPhone,
+          customer_phone: normalizedPhone,
           order_type: payload.order_type,
           table_number: payload.order_type === 'dine_in' ? payload.table_number?.trim() : null,
           special_requests: payload.special_requests?.trim() || null,
           subtotal: totals.subtotal,
           total: totals.total,
+          currency: orderCurrency,
           status: 'pending',
           source: payload.source || 'website',
+          payment_required: paymentRequired,
+          payment_status: paymentStatus,
+          payment_provider: paymentProvider,
+          payment_reference: paymentReference,
+          payment_amount: paymentAmount,
         })
         .select('id, order_ref')
         .single();
@@ -197,7 +275,6 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
 
       if (itemsInsertError) {
         console.error('[orderService] Failed to insert order line items:', itemsInsertError);
-        // Note: order record exists; line items failed
       }
 
       return {
@@ -223,3 +300,57 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
     error: 'Could not register order with backend. You can still confirm via WhatsApp.',
   };
 };
+
+/**
+ * Reuses or updates an existing pending order (e.g. on payment retry)
+ */
+export const updatePendingOrder = async (
+  orderRef: string,
+  updates: Partial<CreateOrderPayload>
+): Promise<OrderResult> => {
+  if (!orderRef) {
+    return { success: false, orderRef: '', error: 'Missing order reference.' };
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .update({
+          payment_status: updates.payment_status,
+          payment_provider: updates.payment_provider,
+          payment_reference: updates.payment_reference,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('order_ref', orderRef)
+        .select('id, order_ref')
+        .single();
+
+      if (error) throw error;
+      return { success: true, orderId: data?.id, orderRef };
+    } catch (err: any) {
+      console.warn('[orderService] Error updating pending order:', err);
+      return { success: false, orderRef, error: err.message };
+    }
+  }
+
+  // Demo fallback
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('cafe_demo_orders');
+      if (raw) {
+        const orders = JSON.parse(raw);
+        const idx = orders.findIndex((o: any) => o.order_ref === orderRef);
+        if (idx !== -1) {
+          orders[idx] = { ...orders[idx], ...updates, updated_at: new Date().toISOString() };
+          localStorage.setItem('cafe_demo_orders', JSON.stringify(orders));
+        }
+      }
+    } catch (e) {
+      console.warn('[orderService] Local update pending order failed:', e);
+    }
+  }
+
+  return { success: true, orderRef };
+};
+
