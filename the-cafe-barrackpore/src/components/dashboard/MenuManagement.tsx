@@ -1,128 +1,34 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { client, urlFor } from '../../lib/sanityClient';
-import { menuData } from '../../data/menu';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import { useSiteConfig } from '../../context/SiteConfigContext';
-
+import type { MenuItem, MenuCategory } from '../../types/menu';
 import {
-  setMenuItemAvailability,
-  getLocalAvailabilityMap,
-  isItemAvailable,
-} from '../../services/menuAvailabilityService';
-import {
-  getPersistedMenuItems,
-  saveMenuItemMutation,
-} from '../../services/contentPersistenceService';
-
-export interface EditableMenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  diet: 'veg' | 'nv' | 'vegan';
-  tag?: string;
-  available: boolean;
-  image?: any;
-}
-
-// Category mapping defined at module scope for stable reference
-const categoryLabels: Record<string, string> = {
-  'burgers-pizzas': 'Burgers & Pizzas',
-  'starters-momos': 'Starters & Momos',
-  'mains-platters': 'Mains & Platters',
-  'sips-desserts': 'Sips & Desserts',
-  'soups-salads': 'Soups & Salads',
-};
-
-const fetchInitialMenuItems = async (): Promise<EditableMenuItem[]> => {
-  const localMap = getLocalAvailabilityMap();
-  const persistedMenu = getPersistedMenuItems();
-
-  let baseItems: EditableMenuItem[] = menuData.map((item) => ({
-    id: item.id,
-    name: item.name,
-    description: item.description,
-    price: item.price,
-    category: item.category,
-    diet: item.diet === 'nv' ? 'nv' : item.diet === 'vegan' ? 'vegan' : 'veg',
-    tag: item.tag || undefined,
-    available: isItemAvailable(item.id, localMap),
-    image: item.image,
-  }));
-
-  if (client) {
-    try {
-      const query = `*[_type == "menuItem"]{
-        _id,
-        name,
-        description,
-        price,
-        category,
-        dietType,
-        popular,
-        image
-      }`;
-      const sanityItems = await client.fetch(query);
-      if (Array.isArray(sanityItems) && sanityItems.length > 0) {
-        baseItems = sanityItems.map((cms) => ({
-          id: cms._id,
-          name: cms.name,
-          description: cms.description || '',
-          price: Number(cms.price) || 0,
-          category: cms.category || 'burgers-pizzas',
-          diet: cms.dietType === 'non-veg' ? 'nv' : cms.dietType === 'vegan' ? 'vegan' : 'veg',
-          tag: cms.popular ? 'Bestseller' : undefined,
-          available: isItemAvailable(cms._id, localMap),
-          image: cms.image,
-        }));
-      }
-    } catch (err) {
-      console.warn('[MenuManagement] Failed to fetch CMS items, using local menu dataset:', err);
-    }
-  }
-
-  // Merge any persisted custom / edited menu items
-  const mergedItems = baseItems.map((item) => {
-    const override = persistedMenu[item.id];
-    if (override) {
-      return {
-        ...item,
-        ...override,
-        available: isItemAvailable(item.id, localMap),
-      };
-    }
-    return item;
-  });
-
-  const baseIds = new Set(baseItems.map((i) => i.id));
-  const additions: EditableMenuItem[] = [];
-  for (const id of Object.keys(persistedMenu)) {
-    if (!baseIds.has(id)) {
-      additions.push({
-        ...persistedMenu[id],
-        available: isItemAvailable(id, localMap),
-      });
-    }
-  }
-
-  return [...additions, ...mergedItems];
-};
+  fetchMenuItems,
+  fetchMenuCategories,
+  upsertMenuItem,
+  updateMenuItemAvailability,
+  deleteMenuItem,
+  subscribeToMenuRealtime,
+  MENU_CATEGORIES_FALLBACK,
+} from '../../services/menuService';
+import { uploadSiteImage } from '../../services/storageService';
 
 export const MenuManagement: React.FC = () => {
   const { addNotification } = useNotification();
   const { restaurantConfig, formatPrice } = useSiteConfig();
 
-  const [items, setItems] = useState<EditableMenuItem[]>([]);
+  const [items, setItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<MenuCategory[]>(MENU_CATEGORIES_FALLBACK);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dietFilter, setDietFilter] = useState<'all' | 'veg' | 'nv' | 'vegan'>('all');
 
   // Modal State
-  const [editingItem, setEditingItem] = useState<EditableMenuItem | null>(null);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [isAddingItem, setIsAddingItem] = useState<boolean>(false);
   const [isSavingItem, setIsSavingItem] = useState<boolean>(false);
+  const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
 
   // Form Fields
   const [formName, setFormName] = useState<string>('');
@@ -131,50 +37,102 @@ export const MenuManagement: React.FC = () => {
   const [formDescription, setFormDescription] = useState<string>('');
   const [formDiet, setFormDiet] = useState<'veg' | 'nv' | 'vegan'>('veg');
   const [formTag, setFormTag] = useState<string>('');
+  const [formImageUrl, setFormImageUrl] = useState<string>('');
   const [formAvailable, setFormAvailable] = useState<boolean>(true);
+  const [formAllergens, setFormAllergens] = useState<string[]>([]);
+
+  // Build category dictionary for labels
+  const categoryLabels = useMemo(() => {
+    const dict: Record<string, string> = {};
+    for (const cat of categories) {
+      dict[cat.id] = cat.name;
+    }
+    return dict;
+  }, [categories]);
+
+  const loadMenuData = useCallback(async () => {
+    try {
+      const [cats, menuItems] = await Promise.all([
+        fetchMenuCategories(),
+        fetchMenuItems(),
+      ]);
+      setCategories(cats.length > 0 ? cats : MENU_CATEGORIES_FALLBACK);
+      setItems(menuItems);
+    } catch (err) {
+      console.error('[MenuManagement] Failed loading menu data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
-    fetchInitialMenuItems().then((data) => {
-      if (!isMounted) return;
-      setItems(data);
-      setIsLoading(false);
+    loadMenuData();
+
+    // Subscribe to realtime database changes on menu_items and menu_categories
+    const unsubscribe = subscribeToMenuRealtime(() => {
+      if (isMounted) {
+        loadMenuData();
+      }
     });
 
     return () => {
       isMounted = false;
+      unsubscribe();
     };
-  }, []);
+  }, [loadMenuData]);
 
-  const handleReloadMenu = () => {
-    setIsLoading(true);
-    fetchInitialMenuItems().then((data) => {
-      setItems(data);
-      setIsLoading(false);
-    });
+  const ALLERGEN_OPTIONS = ['Dairy', 'Gluten', 'Nuts', 'Peanuts', 'Soy', 'Eggs', 'Fish', 'Shellfish', 'Sesame'];
+
+  const toggleFormAllergen = (allergen: string) => {
+    setFormAllergens((prev) =>
+      prev.includes(allergen) ? prev.filter((a) => a !== allergen) : [...prev, allergen]
+    );
   };
 
-  const handleOpenEdit = (item: EditableMenuItem) => {
+  const handleOpenEdit = (item: MenuItem) => {
     setEditingItem(item);
     setFormName(item.name);
     setFormPrice(item.price);
-    setFormCategory(item.category);
-    setFormDescription(item.description);
-    setFormDiet(item.diet);
-    setFormTag(item.tag || '');
-    setFormAvailable(item.available);
+    setFormCategory(item.category_id || item.category || 'burgers-pizzas');
+    setFormDescription(item.description || '');
+    setFormDiet((item.diet === 'nv' ? 'nv' : item.diet === 'vegan' ? 'vegan' : 'veg') as any);
+    setFormTag(item.tag || (item.popular ? 'Bestseller' : ''));
+    setFormImageUrl(item.image_url || item.image || '');
+    setFormAvailable(item.available !== false);
+    setFormAllergens(item.allergens || []);
   };
 
   const handleOpenAdd = () => {
     setEditingItem(null);
     setFormName('');
     setFormPrice(250);
-    setFormCategory('burgers-pizzas');
+    setFormCategory(categories[0]?.id || 'burgers-pizzas');
     setFormDescription('');
     setFormDiet('veg');
     setFormTag('');
+    setFormImageUrl('');
     setFormAvailable(true);
+    setFormAllergens([]);
     setIsAddingItem(true);
+  };
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    addNotification('info', 'Uploading Image', `Uploading "${file.name}" to Storage...`);
+
+    const result = await uploadSiteImage(file, 'menu');
+    setIsUploadingImage(false);
+
+    if (result.success && result.url) {
+      setFormImageUrl(result.url);
+      addNotification('success', 'Image Uploaded', 'Dish photo uploaded to site-images bucket.');
+    } else {
+      addNotification('error', 'Upload Failed', result.error || 'Could not upload image.');
+    }
   };
 
   const handleSaveItem = async (e: React.FormEvent) => {
@@ -182,64 +140,93 @@ export const MenuManagement: React.FC = () => {
     if (!formName.trim() || formPrice <= 0 || isSavingItem) return;
 
     setIsSavingItem(true);
-    const targetId = editingItem ? editingItem.id : `item-custom-${Date.now()}`;
-    const itemToPersist: EditableMenuItem = {
+    const targetId = editingItem ? editingItem.id : `item_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+    const result = await upsertMenuItem({
       id: targetId,
+      category_id: formCategory,
       name: formName.trim(),
       price: Number(formPrice),
-      category: formCategory,
-      description: formDescription.trim(),
+      description: formDescription.trim() || undefined,
       diet: formDiet,
-      tag: formTag.trim() || undefined,
+      popular: Boolean(formTag.trim()),
       available: formAvailable,
-      image: editingItem?.image,
-    };
+      image_url: formImageUrl.trim() || undefined,
+      sort_order: editingItem?.sort_order ?? items.length + 1,
+      allergens: formAllergens,
+    });
 
-    try {
-      await saveMenuItemMutation(itemToPersist);
-      await setMenuItemAvailability(targetId, formAvailable);
+    setIsSavingItem(false);
 
+    if (result.success && result.item) {
+      const savedItem = result.item;
       setItems((prev) => {
-        const exists = prev.some((i) => i.id === targetId);
-        if (exists) {
-          return prev.map((i) => (i.id === targetId ? itemToPersist : i));
+        const idx = prev.findIndex((i) => i.id === savedItem.id);
+        if (idx !== -1) {
+          const next = [...prev];
+          next[idx] = savedItem;
+          return next;
         }
-        return [itemToPersist, ...prev];
+        return [savedItem, ...prev];
       });
 
       addNotification(
         'success',
-        editingItem ? 'Menu Item Updated' : 'Menu Item Added',
-        `"${formName}" has been persisted to the restaurant catalog and public website.`
+        editingItem ? 'Menu Item Updated' : 'Menu Item Created',
+        `"${formName}" has been persisted to the database and is live on the website.`
       );
       setEditingItem(null);
       setIsAddingItem(false);
-    } catch {
-      addNotification('error', 'Save Failed', 'Could not persist menu item updates.');
-    } finally {
-      setIsSavingItem(false);
+    } else {
+      addNotification('error', 'Save Failed', result.error || 'Failed to persist menu item to database.');
     }
   };
 
   const handleToggleAvailability = async (id: string, name: string) => {
     const item = items.find((i) => i.id === id);
     if (!item) return;
+
     const next = !item.available;
-    await setMenuItemAvailability(id, next);
+    // Optimistic UI update
     setItems((prev) =>
       prev.map((i) => (i.id === id ? { ...i, available: next } : i))
     );
-    addNotification(
-      next ? 'success' : 'warning',
-      next ? 'Item In Stock' : 'Item Sold Out (86\'d)',
-      `"${name}" is now marked as ${next ? 'Available' : 'Sold Out (86\'d)'} for service across customer and QR ordering.`
-    );
+
+    const res = await updateMenuItemAvailability(id, next);
+    if (res.success) {
+      addNotification(
+        next ? 'success' : 'warning',
+        next ? 'Item In Stock' : "Item Sold Out (86'd)",
+        `"${name}" is now marked as ${next ? 'Available' : "Sold Out (86'd)"} for service across customer and QR ordering.`
+      );
+    } else {
+      // Revert on failure
+      setItems((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, available: !next } : i))
+      );
+      addNotification('error', 'Update Failed', res.error || 'Failed to update item availability in database.');
+    }
+  };
+
+  const handleDeleteItem = async (item: MenuItem) => {
+    const confirmed = window.confirm(`Are you sure you want to permanently delete "${item.name}" from the menu catalog?`);
+    if (!confirmed) return;
+
+    const res = await deleteMenuItem(item.id);
+    if (res.success) {
+      setItems((prev) => prev.filter((i) => i.id !== item.id));
+      addNotification('info', 'Item Deleted', `"${item.name}" was removed from the database.`);
+      setEditingItem(null);
+    } else {
+      addNotification('error', 'Delete Failed', res.error || 'Failed to delete menu item.');
+    }
   };
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
       // Category filter
-      if (selectedCategory !== 'all' && item.category !== selectedCategory) {
+      const itemCat = item.category_id || item.category;
+      if (selectedCategory !== 'all' && itemCat !== selectedCategory) {
         return false;
       }
       // Diet filter
@@ -255,15 +242,16 @@ export const MenuManagement: React.FC = () => {
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
+        const catLabel = (categoryLabels[itemCat || ''] || itemCat || '').toLowerCase();
         return (
           item.name.toLowerCase().includes(q) ||
-          item.description.toLowerCase().includes(q) ||
-          (categoryLabels[item.category] || item.category).toLowerCase().includes(q)
+          (item.description || '').toLowerCase().includes(q) ||
+          catLabel.includes(q)
         );
       }
       return true;
     });
-  }, [items, selectedCategory, dietFilter, searchQuery]);
+  }, [items, selectedCategory, dietFilter, searchQuery, categoryLabels]);
 
   const activeCount = useMemo(() => items.filter((i) => i.available).length, [items]);
   const outOfStockCount = useMemo(() => items.filter((i) => !i.available).length, [items]);
@@ -283,7 +271,7 @@ export const MenuManagement: React.FC = () => {
             Menu & Availability
           </h2>
           <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
-            Instant 86'd toggles for kitchen service, real-time catalog pricing, and automatic sync across table QR and online delivery.
+            Instant 86'd toggles for kitchen service, real-time catalog pricing, and automatic Supabase synchronization across table QR and online delivery.
           </p>
         </div>
 
@@ -321,22 +309,22 @@ export const MenuManagement: React.FC = () => {
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
             <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">Categories</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-[#D4AF37] mt-0.5">
-              {Object.keys(categoryLabels).length}
+              {categories.length}
             </p>
           </div>
         </div>
       </div>
 
-      {/* SECURITY / CMS ARCHITECTURE NOTICE */}
+      {/* SECURITY / ARCHITECTURE NOTICE */}
       <div className="p-1 rounded-2xl bg-gradient-to-b from-[#D4AF37]/20 via-white/[0.04] to-transparent border border-[#D4AF37]/30">
         <div className="p-4 rounded-[calc(1rem-0.125rem)] bg-[#120F0D] flex items-start gap-3.5 text-xs">
           <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shrink-0 mt-0.5">
-            <span className="material-symbols-outlined text-lg">shield</span>
+            <span className="material-symbols-outlined text-lg">database</span>
           </div>
           <div>
-            <p className="font-serif font-bold text-white text-sm">Enterprise CMS Write-Path Security</p>
+            <p className="font-serif font-bold text-white text-sm">Supabase Realtime Menu Catalog & Storage</p>
             <p className="text-zinc-400 text-[11px] leading-relaxed mt-0.5">
-              Availability and 86'd sold-out states update instantly in-memory and in restaurant dispatch. Catalog mutations are signed and persisted with strict origin controls.
+              Catalog mutations and availability toggles write directly to postgres with Row Level Security. Connected guests and kitchen displays update automatically via Supabase Realtime without redeploying.
             </p>
           </div>
         </div>
@@ -351,336 +339,214 @@ export const MenuManagement: React.FC = () => {
           </span>
           <input
             type="text"
-            placeholder="Search dishes, ingredients, or descriptions..."
+            placeholder="Search dish by name, ingredients, or category..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#120F0D] border border-white/[0.08] rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all"
+            className="w-full bg-[#120F0D] border border-white/[0.08] focus:border-[#D4AF37] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#D4AF37] transition-all"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs cursor-pointer"
             >
-              ✕
+              Clear
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          {/* Diet Filter Pills */}
-          <div className="bg-[#120F0D] p-1 rounded-xl border border-white/[0.08] flex items-center gap-1 text-xs shrink-0">
+        {/* Dietary Pills */}
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#120F0D] border border-white/[0.06] overflow-x-auto">
+          {(['all', 'veg', 'nv', 'vegan'] as const).map((diet) => (
             <button
+              key={diet}
               type="button"
-              onClick={() => setDietFilter('all')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                dietFilter === 'all'
-                  ? 'bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] shadow-sm font-bold'
-                  : 'text-zinc-400 hover:text-white'
+              onClick={() => setDietFilter(diet)}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                dietFilter === diet
+                  ? 'bg-[#D4AF37] text-[#070605] shadow'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
               }`}
             >
-              All
+              {diet === 'all' ? 'All Diets' : diet === 'nv' ? 'Non-Veg' : diet}
             </button>
-            <button
-              type="button"
-              onClick={() => setDietFilter('veg')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                dietFilter === 'veg'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              Veg
-            </button>
-            <button
-              type="button"
-              onClick={() => setDietFilter('nv')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                dietFilter === 'nv'
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-              Non-Veg
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleReloadMenu}
-            className="p-2.5 rounded-xl bg-[#120F0D] hover:bg-white/[0.05] border border-white/[0.08] text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0"
-            title="Reload Menu from Server"
-          >
-            <span className="material-symbols-outlined text-lg leading-none">refresh</span>
-          </button>
+          ))}
         </div>
       </div>
 
-      {/* CATEGORY SELECTOR TABS */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs border-b border-white/[0.06]">
+      {/* CATEGORY TABS STRIP */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <button
           type="button"
           onClick={() => setSelectedCategory('all')}
-          className={`px-4 py-2 rounded-xl font-mono text-[11px] uppercase tracking-wider font-bold whitespace-nowrap transition-all cursor-pointer ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap border ${
             selectedCategory === 'all'
-              ? 'bg-[#D4AF37] text-[#070605] shadow-[0_4px_15px_rgba(212,175,55,0.25)]'
-              : 'bg-[#120F0D] text-zinc-400 hover:text-white border border-white/[0.06]'
+              ? 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/40'
+              : 'bg-white/[0.02] text-zinc-400 border-white/[0.06] hover:text-white'
           }`}
         >
-          All Items ({items.length})
+          All Categories ({items.length})
         </button>
-        {Object.entries(categoryLabels).map(([catKey, catLabel]) => {
-          const count = items.filter((i) => i.category === catKey).length;
+        {categories.map((cat) => {
+          const count = items.filter((i) => (i.category_id || i.category) === cat.id).length;
           return (
             <button
-              key={catKey}
+              key={cat.id}
               type="button"
-              onClick={() => setSelectedCategory(catKey)}
-              className={`px-4 py-2 rounded-xl font-mono text-[11px] uppercase tracking-wider font-bold whitespace-nowrap transition-all cursor-pointer ${
-                selectedCategory === catKey
-                  ? 'bg-[#D4AF37] text-[#070605] shadow-[0_4px_15px_rgba(212,175,55,0.25)]'
-                  : 'bg-[#120F0D] text-zinc-400 hover:text-white border border-white/[0.06]'
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap border ${
+                selectedCategory === cat.id
+                  ? 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/40'
+                  : 'bg-white/[0.02] text-zinc-400 border-white/[0.06] hover:text-white'
               }`}
             >
-              {catLabel} ({count})
+              {cat.name} ({count})
             </button>
           );
         })}
       </div>
 
-      {/* MENU ITEMS DISPLAY */}
+      {/* ITEMS CATALOG TABLE */}
       {isLoading ? (
-        <div className="py-20 text-center text-zinc-500 font-mono text-xs">Synchronizing catalog...</div>
+        <div className="p-12 text-center">
+          <div className="w-8 h-8 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mx-auto mb-3" />
+          <p className="text-xs text-zinc-400 font-mono">Loading restaurant menu from database...</p>
+        </div>
       ) : filteredItems.length === 0 ? (
-        <div className="p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
-          <div className="py-20 text-center rounded-[calc(2rem-0.375rem)] bg-[#120F0D] flex flex-col items-center">
-            <span className="material-symbols-outlined text-4xl mb-2 text-zinc-600">menu_book</span>
-            <p className="font-serif font-bold text-base text-white">No dishes found</p>
-            <p className="text-xs text-zinc-500 mt-1">Adjust search parameters or category filter.</p>
-          </div>
+        <div className="p-12 rounded-3xl bg-[#120F0D] border border-white/[0.06] text-center">
+          <span className="material-symbols-outlined text-4xl text-zinc-600 mb-2">restaurant_menu</span>
+          <p className="font-serif font-bold text-white text-base">No Menu Items Found</p>
+          <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
+            {searchQuery
+              ? `No dishes matched "${searchQuery}". Try a different keyword.`
+              : 'No items currently exist in this category.'}
+          </p>
         </div>
       ) : (
-        <>
-          {/* MOBILE CARDS VIEW (< md) */}
-          <div className="grid grid-cols-1 gap-3 md:hidden">
-            {filteredItems.map((item) => {
-              let imgUrl = '/images/hero-bar.webp';
-              if (item.image) {
-                if (typeof item.image === 'string') {
-                  imgUrl = item.image;
-                } else if (urlFor) {
-                  try {
-                    imgUrl = urlFor(item.image).width(120).height(120).url();
-                  } catch {
-                    // fallback
-                  }
-                }
-              }
+        <div className="p-1 rounded-3xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl overflow-hidden">
+          <div className="rounded-[calc(1.5rem-0.125rem)] bg-[#120F0D] overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-[10px] font-mono uppercase tracking-wider text-zinc-400 bg-white/[0.02]">
+                  <th className="py-3.5 px-6">Dish Details</th>
+                  <th className="py-3.5 px-4">Category</th>
+                  <th className="py-3.5 px-4">Diet</th>
+                  <th className="py-3.5 px-4">Price</th>
+                  <th className="py-3.5 px-4">Service Status</th>
+                  <th className="py-3.5 px-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04] text-xs">
+                {filteredItems.map((item) => {
+                  const displayImage = item.image_url || item.image;
+                  const itemCat = item.category_id || item.category || '';
 
-              return (
-                <div
-                  key={item.id}
-                  className={`p-1 rounded-2xl border transition-all ${
-                    item.available
-                      ? 'bg-gradient-to-b from-white/[0.08] to-white/[0.02] border-white/[0.08]'
-                      : 'bg-white/[0.02] border-rose-500/20 opacity-75'
-                  }`}
-                >
-                  <div className="p-4 rounded-[calc(1rem-0.125rem)] bg-[#120F0D] flex flex-col gap-3">
-                    <div className="flex items-start gap-3">
-                      <img
-                        src={imgUrl}
-                        alt={item.name}
-                        className="w-14 h-14 rounded-xl object-cover border border-white/[0.1] shrink-0"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="font-bold text-white text-sm truncate">{item.name}</p>
-                          <span className="font-mono font-bold text-[#D4AF37] text-sm shrink-0 ml-2">
-                            {formatPrice(item.price)}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5">{item.description}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${
-                              item.diet === 'veg'
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                                : item.diet === 'vegan'
-                                ? 'bg-teal-500/10 text-teal-400 border border-teal-500/30'
-                                : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-                            }`}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                            {item.diet}
-                          </span>
-                          <span className="text-[10px] text-zinc-500 truncate">
-                            {categoryLabels[item.category] || item.category}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Mobile Action Controls */}
-                    <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleAvailability(item.id, item.name)}
-                        className={`px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wider border transition-all flex items-center gap-1.5 cursor-pointer ${
-                          item.available
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                            : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            item.available ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'
-                          }`}
-                        />
-                        <span>{item.available ? 'In Stock (Active)' : '86\'d (Sold Out)'}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEdit(item)}
-                        className="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-semibold cursor-pointer"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* DESKTOP TABLE VIEW (>= md) */}
-          <div className="hidden md:block p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl overflow-hidden">
-            <div className="rounded-[calc(2rem-0.375rem)] bg-[#120F0D] overflow-hidden">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-white/[0.06] bg-white/[0.02] text-zinc-400 text-[10px] font-mono uppercase tracking-[0.16em]">
-                    <th className="py-4 px-6 font-bold">Dish & Description</th>
-                    <th className="py-4 px-4 font-bold">Category</th>
-                    <th className="py-4 px-4 font-bold">Diet</th>
-                    <th className="py-4 px-4 font-bold">Price</th>
-                    <th className="py-4 px-4 font-bold">Availability State</th>
-                    <th className="py-4 px-6 text-right font-bold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.04]">
-                  {filteredItems.map((item) => {
-                    let imgUrl = '/images/hero-bar.webp';
-                    if (item.image) {
-                      if (typeof item.image === 'string') {
-                        imgUrl = item.image;
-                      } else if (urlFor) {
-                        try {
-                          imgUrl = urlFor(item.image).width(120).height(120).url();
-                        } catch {
-                          // fallback
-                        }
-                      }
-                    }
-
-                    return (
-                      <tr
-                        key={item.id}
-                        className={`hover:bg-white/[0.03] transition-colors ${
-                          !item.available ? 'opacity-60 bg-rose-950/[0.04]' : ''
-                        }`}
-                      >
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-3.5">
-                            <img
-                              src={imgUrl}
-                              alt={item.name}
-                              className="w-11 h-11 rounded-xl object-cover border border-white/[0.08] shrink-0"
-                              onError={(e) => {
-                                (e.target as HTMLElement).style.display = 'none';
-                              }}
-                            />
-                            <div className="min-w-0">
-                              <p className="font-bold text-white flex items-center gap-2">
-                                <span className="text-sm">{item.name}</span>
-                                {item.tag && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 font-mono uppercase tracking-wider">
-                                    {item.tag}
-                                  </span>
-                                )}
-                              </p>
-                              <p className="text-[11px] text-zinc-400 truncate max-w-sm mt-0.5">
-                                {item.description}
-                              </p>
-                            </div>
+                  return (
+                    <tr
+                      key={item.id}
+                      className="hover:bg-white/[0.02] transition-colors group"
+                    >
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-black/40 border border-white/[0.08] overflow-hidden shrink-0 flex items-center justify-center">
+                            {displayImage ? (
+                              <img
+                                src={displayImage}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="material-symbols-outlined text-zinc-600 text-xl">
+                                restaurant
+                              </span>
+                            )}
                           </div>
-                        </td>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-serif font-bold text-white text-sm group-hover:text-[#D4AF37] transition-colors">
+                                {item.name}
+                              </p>
+                              {(item.tag || item.popular) && (
+                                <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[9px] font-mono font-bold uppercase tracking-wider">
+                                  {item.tag || 'Bestseller'}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-zinc-400 text-[11px] line-clamp-1 mt-0.5 max-w-md">
+                              {item.description || 'No description provided.'}
+                            </p>
+                            {item.allergens && item.allergens.length > 0 && (
+                              <div className="flex items-center gap-1 flex-wrap mt-1">
+                                {item.allergens.map((alg) => (
+                                  <span key={alg} className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                    {alg}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
 
-                        <td className="py-4 px-4 text-zinc-400 font-mono text-[11px]">
-                          {categoryLabels[item.category] || item.category}
-                        </td>
+                      <td className="py-4 px-4 text-zinc-400 font-mono text-[11px]">
+                        {categoryLabels[itemCat] || itemCat}
+                      </td>
 
-                        <td className="py-4 px-4">
+                      <td className="py-4 px-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                            item.diet === 'veg'
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                              : item.diet === 'vegan'
+                              ? 'bg-teal-500/10 text-teal-400 border-teal-500/30'
+                              : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                          }`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                          {item.diet || 'veg'}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-4 font-mono font-bold text-white text-sm">
+                        {formatPrice(item.price)}
+                      </td>
+
+                      <td className="py-4 px-4">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleAvailability(item.id, item.name)}
+                          className={`px-3 py-1.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border transition-all flex items-center gap-2 cursor-pointer ${
+                            item.available
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                              : 'bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30'
+                          }`}
+                          title="Click to toggle availability"
+                        >
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                              item.diet === 'veg'
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                                : item.diet === 'vegan'
-                                ? 'bg-teal-500/10 text-teal-400 border-teal-500/30'
-                                : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              item.available ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'
                             }`}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                            {item.diet}
-                          </span>
-                        </td>
+                          />
+                          <span>{item.available ? 'In Stock (Live)' : "86'd (Sold Out)"}</span>
+                        </button>
+                      </td>
 
-                        <td className="py-4 px-4 font-mono font-bold text-white text-sm">
-                          {formatPrice(item.price)}
-                        </td>
-
-                        <td className="py-4 px-4">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleAvailability(item.id, item.name)}
-                            className={`px-3 py-1.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border transition-all flex items-center gap-2 cursor-pointer ${
-                              item.available
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                                : 'bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30'
-                            }`}
-                            title="Click to toggle availability"
-                          >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                item.available ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'
-                              }`}
-                            />
-                            <span>{item.available ? 'In Stock (Live)' : '86\'d (Sold Out)'}</span>
-                          </button>
-                        </td>
-
-                        <td className="py-4 px-6 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEdit(item)}
-                            className="px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.06] text-xs font-semibold transition-colors cursor-pointer"
-                          >
-                            Edit Item
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                      <td className="py-4 px-6 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(item)}
+                          className="px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.06] text-xs font-semibold transition-colors cursor-pointer"
+                        >
+                          Edit Item
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        </>
+        </div>
       )}
 
       {/* DOUBLE-BEZEL ADD / EDIT MODAL */}
@@ -757,12 +623,48 @@ export const MenuManagement: React.FC = () => {
                       onChange={(e) => setFormCategory(e.target.value)}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                     >
-                      {Object.entries(categoryLabels).map(([catKey, catLabel]) => (
-                        <option key={catKey} value={catKey} className="bg-[#120F0D] text-white">
-                          {catLabel}
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id} className="bg-[#120F0D] text-white">
+                          {cat.name}
                         </option>
                       ))}
                     </select>
+                  </div>
+                </div>
+
+                {/* IMAGE UPLOAD TO STORAGE BUCKET */}
+                <div>
+                  <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Dish Photo (Storage Bucket: site-images)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-xl bg-black/40 border border-white/[0.1] overflow-hidden shrink-0 flex items-center justify-center">
+                      {formImageUrl ? (
+                        <img src={formImageUrl} alt="Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="material-symbols-outlined text-zinc-600 text-2xl">image</span>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-semibold text-white transition-colors cursor-pointer">
+                        <span className="material-symbols-outlined text-base">cloud_upload</span>
+                        <span>{isUploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageFileChange}
+                          disabled={isUploadingImage}
+                          className="hidden"
+                        />
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="Or enter public image URL..."
+                        value={formImageUrl}
+                        onChange={(e) => setFormImageUrl(e.target.value)}
+                        className="w-full bg-[#070605] border border-white/[0.08] rounded-lg px-3 py-1.5 text-[11px] text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -803,6 +705,31 @@ export const MenuManagement: React.FC = () => {
 
                 <div>
                   <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Allergen Warnings (Select all that apply)
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-[#070605] border border-white/[0.1]">
+                    {ALLERGEN_OPTIONS.map((alg) => {
+                      const selected = formAllergens.includes(alg);
+                      return (
+                        <button
+                          key={alg}
+                          type="button"
+                          onClick={() => toggleFormAllergen(alg)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer border ${
+                            selected
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
+                              : 'bg-white/[0.02] text-zinc-400 border-white/[0.06] hover:text-white'
+                          }`}
+                        >
+                          {selected ? `✓ ${alg}` : `+ ${alg}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
                     Description & Ingredients
                   </label>
                   <textarea
@@ -827,7 +754,17 @@ export const MenuManagement: React.FC = () => {
                   />
                 </div>
 
-                <div className="pt-4 flex gap-3">
+                <div className="pt-4 flex items-center gap-3">
+                  {editingItem && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteItem(editingItem)}
+                      className="py-3 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-xs transition-colors cursor-pointer"
+                      title="Permanently delete from database"
+                    >
+                      Delete
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => {

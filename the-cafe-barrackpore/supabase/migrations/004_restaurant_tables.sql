@@ -34,6 +34,7 @@ CREATE TRIGGER trg_restaurant_tables_updated_at
 ALTER TABLE public.restaurant_tables ENABLE ROW LEVEL SECURITY;
 
 -- Anonymous public: Read-only for active tables (for QR validation)
+DROP POLICY IF EXISTS "Public can view active tables" ON public.restaurant_tables;
 CREATE POLICY "Public can view active tables"
     ON public.restaurant_tables
     FOR SELECT
@@ -41,6 +42,7 @@ CREATE POLICY "Public can view active tables"
     USING (active = true);
 
 -- Active staff: View all tables (including deactivated ones)
+DROP POLICY IF EXISTS "Active staff can view all tables" ON public.restaurant_tables;
 CREATE POLICY "Active staff can view all tables"
     ON public.restaurant_tables
     FOR SELECT
@@ -48,6 +50,7 @@ CREATE POLICY "Active staff can view all tables"
     USING (public.is_active_staff(auth.uid()));
 
 -- Owners and Managers: Manage tables (insert, update, delete)
+DROP POLICY IF EXISTS "Owners and managers can manage tables" ON public.restaurant_tables;
 CREATE POLICY "Owners and managers can manage tables"
     ON public.restaurant_tables
     FOR ALL
@@ -72,6 +75,7 @@ CREATE TABLE IF NOT EXISTS public.restaurant_settings (
 ALTER TABLE public.restaurant_settings ENABLE ROW LEVEL SECURITY;
 
 -- Public read for operational settings
+DROP POLICY IF EXISTS "Public can read restaurant settings" ON public.restaurant_settings;
 CREATE POLICY "Public can read restaurant settings"
     ON public.restaurant_settings
     FOR SELECT
@@ -79,6 +83,7 @@ CREATE POLICY "Public can read restaurant settings"
     USING (true);
 
 -- Owners can update restaurant settings
+DROP POLICY IF EXISTS "Owners can update restaurant settings" ON public.restaurant_settings;
 CREATE POLICY "Owners can update restaurant settings"
     ON public.restaurant_settings
     FOR UPDATE

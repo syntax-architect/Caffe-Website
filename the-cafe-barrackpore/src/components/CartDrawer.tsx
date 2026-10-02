@@ -14,6 +14,9 @@ import {
   createPaymentSession,
   verifyAndReconcilePayment,
 } from '../services/paymentService';
+import { TurnstileWidget } from './TurnstileWidget';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import type { PaymentCheckoutResult } from '../types/payment';
 
 type DrawerStep = 'cart' | 'details' | 'review' | 'payment_process' | 'payment_failed' | 'confirmed';
 type OrderType = 'dine-in' | 'takeaway';
@@ -35,6 +38,7 @@ export const CartDrawer: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   // Payment Architecture State (Phase 1J)
   const [paymentMethodChoice, setPaymentMethodChoice] = useState<'online' | 'counter'>('online');
@@ -220,6 +224,7 @@ export const CartDrawer: React.FC = () => {
           payment_status: 'pending',
           payment_provider: restaurantConfig.payments.provider,
           payment_amount: authoritativeTotal,
+          captcha_token: captchaToken || undefined,
           tax_options: {
             enabled: restaurantConfig.tax.enabled,
             mode: restaurantConfig.tax.mode,
@@ -259,8 +264,15 @@ export const CartDrawer: React.FC = () => {
 
         setActivePaymentSessionId(sessionResult.paymentId || null);
 
-        // Move to secure payment process step
-        setStep('payment_process');
+        // Open provider-specific checkout (Razorpay modal with UPI/Cards, or Stripe Checkout URL)
+        if (restaurantConfig.payments.provider === 'razorpay' && (sessionResult.razorpayOrderId || sessionResult.orderId)) {
+          openRazorpayCheckout(sessionResult, activeRef);
+        } else if (restaurantConfig.payments.provider === 'stripe' && sessionResult.checkoutUrl) {
+          startListeningForPayment(activeRef);
+          window.location.href = sessionResult.checkoutUrl;
+        } else {
+          setStep('payment_process');
+        }
       } else {
         // Pay-at-counter or Payment Disabled Checkout
         const result = await createOrder({
@@ -276,6 +288,7 @@ export const CartDrawer: React.FC = () => {
           payment_required: false,
           payment_status: 'not_required',
           payment_amount: totals.total,
+          captcha_token: captchaToken || undefined,
           tax_options: {
             enabled: restaurantConfig.tax.enabled,
             mode: restaurantConfig.tax.mode,
@@ -312,8 +325,165 @@ export const CartDrawer: React.FC = () => {
     }
   };
 
-  // Payment Verification Handler (e.g. for Demo or In-App Gateway)
+  // Realtime subscription & polling fallback to wait for verified webhook reconciliation
+  const startListeningForPayment = (activeRef: string) => {
+    setIsVerifyingPayment(true);
+    setStep('payment_process');
+
+    let isSubscribed = true;
+    let intervalId: any = null;
+    let realtimeChannel: any = null;
+
+    const onConfirmed = (amountPaid: number, total: number) => {
+      if (!isSubscribed) return;
+      isSubscribed = false;
+      if (intervalId) clearInterval(intervalId);
+      if (realtimeChannel && supabase) supabase.removeChannel(realtimeChannel);
+      setIsVerifyingPayment(false);
+      setPaidAmount(amountPaid);
+      setConfirmedTotal(total);
+      clearCart();
+      setStep('confirmed');
+    };
+
+    const onFailed = (reason?: string) => {
+      if (!isSubscribed) return;
+      isSubscribed = false;
+      if (intervalId) clearInterval(intervalId);
+      if (realtimeChannel && supabase) supabase.removeChannel(realtimeChannel);
+      setIsVerifyingPayment(false);
+      setPaymentFailureReason(reason || 'Payment authorization failed.');
+      setStep('payment_failed');
+    };
+
+    if (isSupabaseConfigured && supabase) {
+      // 1. Supabase Realtime Channel
+      realtimeChannel = supabase
+        .channel(`payment_status_${activeRef}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'orders',
+            filter: `order_ref=eq.${activeRef}`,
+          },
+          (payload: any) => {
+            const status = payload.new?.payment_status;
+            if (status === 'paid') {
+              onConfirmed(payload.new?.payment_amount ?? payload.new?.total, payload.new?.total);
+            } else if (status === 'failed') {
+              onFailed('Payment reported as failed.');
+            }
+          }
+        )
+        .subscribe();
+
+      // 2. Polling fallback every 2.5s
+      let elapsed = 0;
+      intervalId = setInterval(async () => {
+        if (!isSubscribed || !supabase) return;
+        elapsed += 2.5;
+
+        try {
+          const { data: currentOrder } = await supabase
+            .from('orders')
+            .select('payment_status, total, payment_amount')
+            .eq('order_ref', activeRef)
+            .maybeSingle();
+
+          if (currentOrder?.payment_status === 'paid') {
+            onConfirmed(currentOrder.payment_amount ?? currentOrder.total, currentOrder.total);
+            return;
+          } else if (currentOrder?.payment_status === 'failed') {
+            onFailed('Payment declined or failed.');
+            return;
+          }
+        } catch (err) {
+          console.warn('Polling check error:', err);
+        }
+
+        if (elapsed >= 90) {
+          onFailed('Payment confirmation timed out. If your account was charged, please show your receipt at the counter.');
+        }
+      }, 2500);
+    }
+  };
+
+  // Launch standard Razorpay Checkout modal for UPI, Cards, Net Banking
+  const openRazorpayCheckout = (sessionResult: PaymentCheckoutResult, activeRef: string) => {
+    const loadScript = (): Promise<boolean> => {
+      return new Promise((resolve) => {
+        if ((window as any).Razorpay) {
+          resolve(true);
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+      });
+    };
+
+    loadScript().then((loaded) => {
+      if (!loaded || !(window as any).Razorpay) {
+        if (sessionResult.checkoutUrl) {
+          window.location.href = sessionResult.checkoutUrl;
+          return;
+        }
+        setPaymentFailureReason('Could not load Razorpay payment SDK. Please try again or choose Pay at Counter.');
+        setStep('payment_failed');
+        return;
+      }
+
+      setStep('payment_process');
+      setIsVerifyingPayment(true);
+
+      const rzpOptions = {
+        key: sessionResult.keyId || (import.meta.env.VITE_RAZORPAY_KEY_ID as string),
+        amount: sessionResult.amount, // in paise
+        currency: sessionResult.currency || 'INR',
+        name: restaurantConfig.businessName || 'The Café Barrackpore',
+        description: `Order ${activeRef}`,
+        order_id: sessionResult.razorpayOrderId || sessionResult.orderId,
+        prefill: {
+          name: customerName,
+          contact: phone,
+        },
+        notes: {
+          order_ref: activeRef,
+        },
+        theme: {
+          color: '#D4AF37',
+        },
+        handler: function (_response: any) {
+          // Frontend never mutates status to 'paid'; begins awaiting webhook verification
+          startListeningForPayment(activeRef);
+        },
+        modal: {
+          ondismiss: function () {
+            setIsVerifyingPayment(false);
+            setPaymentFailureReason('Payment window closed before completing transaction.');
+            setStep('payment_failed');
+          },
+        },
+      };
+
+      try {
+        const rzpInstance = new (window as any).Razorpay(rzpOptions);
+        rzpInstance.open();
+      } catch (e: any) {
+        setPaymentFailureReason(e.message || 'Failed to open Razorpay modal.');
+        setStep('payment_failed');
+      }
+    });
+  };
+
+  // Payment Verification Handler (strictly restricted to DEV environment)
   const handleAuthorizePayment = async () => {
+    if (!import.meta.env.DEV) return;
     if (isVerifyingPayment) return;
     setIsVerifyingPayment(true);
     setPaymentFailureReason(null);
@@ -345,8 +515,9 @@ export const CartDrawer: React.FC = () => {
     }
   };
 
-  // Simulated Payment Failure for Testing Recovery Flow
+  // Simulated Payment Failure for Testing Recovery Flow (strictly restricted to DEV environment)
   const handleSimulateFailure = async () => {
+    if (!import.meta.env.DEV) return;
     if (isVerifyingPayment) return;
     setIsVerifyingPayment(true);
 
@@ -964,6 +1135,15 @@ export const CartDrawer: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Security Verification (Cloudflare Turnstile) */}
+                  <div className="p-3.5 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/20 flex flex-col gap-2">
+                    <div className="flex items-center gap-1.5 text-primary text-[11px] font-sans font-semibold uppercase tracking-wider">
+                      <span className="material-symbols-outlined text-sm">shield</span>
+                      <span>Security Verification</span>
+                    </div>
+                    <TurnstileWidget action="order" onVerify={(token) => setCaptchaToken(token)} />
+                  </div>
+
                   {/* Total Amount Box with Configurable Tax */}
                   <div className="p-4 rounded-2xl bg-[#140D09] border border-[#D4AF37]/30 flex flex-col gap-2">
                     <div className="flex justify-between items-center text-xs text-on-surface/70">
@@ -1097,24 +1277,35 @@ export const CartDrawer: React.FC = () => {
 
                 {/* Payment Actions */}
                 <div className="space-y-2.5 max-w-sm mx-auto w-full pt-6">
-                  <button
-                    type="button"
-                    disabled={isVerifyingPayment}
-                    onClick={handleAuthorizePayment}
-                    className="w-full h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-bold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <span className="material-symbols-outlined text-base">verified_user</span>
-                    <span>{isVerifyingPayment ? 'Verifying Payment...' : `Complete Payment (${formatPrice(totals.total)})`}</span>
-                  </button>
+                  {isVerifyingPayment && (
+                    <div className="flex items-center justify-center gap-2.5 p-3 rounded-xl bg-primary/10 border border-primary/25 text-primary text-xs">
+                      <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                      <span>Waiting for payment confirmation from bank...</span>
+                    </div>
+                  )}
 
-                  <button
-                    type="button"
-                    disabled={isVerifyingPayment}
-                    onClick={handleSimulateFailure}
-                    className="w-full py-2.5 rounded-full border border-red-500/30 text-red-300 hover:bg-red-500/10 text-[11px] font-sans font-medium transition-colors cursor-pointer"
-                  >
-                    Simulate Payment Decline (Test Failure Flow)
-                  </button>
+                  {import.meta.env.DEV && (
+                    <>
+                      <button
+                        type="button"
+                        disabled={isVerifyingPayment}
+                        onClick={handleAuthorizePayment}
+                        className="w-full h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-bold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        <span className="material-symbols-outlined text-base">verified_user</span>
+                        <span>{isVerifyingPayment ? 'Verifying Payment...' : `Complete Payment (${formatPrice(totals.total)}) [Dev]`}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isVerifyingPayment}
+                        onClick={handleSimulateFailure}
+                        className="w-full py-2.5 rounded-full border border-red-500/30 text-red-300 hover:bg-red-500/10 text-[11px] font-sans font-medium transition-colors cursor-pointer"
+                      >
+                        Simulate Payment Decline (Test Failure Flow) [Dev]
+                      </button>
+                    </>
+                  )}
 
                   <button
                     type="button"
@@ -1171,14 +1362,16 @@ export const CartDrawer: React.FC = () => {
                     <span>Try Payment Again</span>
                   </button>
 
-                  <button
-                    type="button"
-                    disabled={isSubmitting}
-                    onClick={handleSwitchToCounterPayment}
-                    className="w-full h-11 rounded-full border border-[#D4AF37]/30 text-primary hover:bg-[#D4AF37]/10 font-sans text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    {isSubmitting ? 'Updating Order...' : 'Pay at Counter Instead'}
-                  </button>
+                  {(restaurantConfig.payments?.allow_pay_at_counter ?? true) && (
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={handleSwitchToCounterPayment}
+                      className="w-full h-11 rounded-full border border-[#D4AF37]/30 text-primary hover:bg-[#D4AF37]/10 font-sans text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
+                    >
+                      {isSubmitting ? 'Updating Order...' : 'Pay at Counter Instead'}
+                    </button>
+                  )}
                 </div>
               </div>
             )}

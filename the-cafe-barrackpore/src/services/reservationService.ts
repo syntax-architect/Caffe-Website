@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { CreateReservationPayload, ReservationResult } from '../types/reservation';
 import { generateClientReservationRef } from '../utils/orderCalculations';
 import { validatePhoneNumber } from '../utils/phone';
+import { enforceRateLimit } from '../utils/rateLimiter';
 
 /**
  * Validates reservation payload prior to submission.
@@ -52,9 +53,20 @@ export const validateReservationPayload = (
 export const createReservation = async (
   payload: CreateReservationPayload
 ): Promise<ReservationResult> => {
+  let reservationRef = payload.reservation_ref?.trim() || generateClientReservationRef();
+
+  // 0. Rate limiting enforcement (5 reservations / 60 seconds)
+  const rateLimit = enforceRateLimit('reservation');
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      reservationRef,
+      error: rateLimit.error || 'Too many reservation attempts. Please wait a moment before trying again.',
+    };
+  }
+
   // 1. Validation
   const validation = validateReservationPayload(payload);
-  let reservationRef = payload.reservation_ref?.trim() || generateClientReservationRef();
 
   if (!validation.valid) {
     return {
@@ -66,16 +78,25 @@ export const createReservation = async (
 
   const phoneValidation = validatePhoneNumber(payload.customer_phone);
   const normalizedPhone = phoneValidation.valid ? phoneValidation.normalized : payload.customer_phone.trim();
+  const restaurantId = payload.restaurant_id || 'the-cafe-barrackpore';
 
-  // 2. Demo mode / unconfigured Supabase handling
+  // 2. Demo mode / unconfigured Supabase handling (strictly restricted to DEV environment)
   if (!isSupabaseConfigured || !supabase) {
-    const isDev = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.DEV : true;
-    if (isDev) {
-      console.info(
-        '[reservationService] Supabase not configured. Operating in local demo mode with reference:',
-        reservationRef
-      );
+    const proc = (globalThis as any).process;
+    const isDev = typeof import.meta !== 'undefined' && import.meta.env
+      ? Boolean(import.meta.env.DEV)
+      : (proc ? proc.env?.NODE_ENV !== 'production' : false);
+    if (!isDev) {
+      return {
+        success: false,
+        reservationRef,
+        error: 'Reservation system is temporarily unavailable. Database connection is not configured.',
+      };
     }
+    console.info(
+      '[reservationService] Supabase not configured. Operating in local demo mode with reference:',
+      reservationRef
+    );
     return {
       success: true,
       reservationRef,
@@ -94,6 +115,7 @@ export const createReservation = async (
       const { data: rpcData, error: rpcError } = await supabase.rpc('create_reservation_atomic', {
         p_reservation: {
           reservation_ref: reservationRef,
+          restaurant_id: restaurantId,
           customer_name: payload.customer_name.trim(),
           customer_phone: normalizedPhone,
           reservation_date: payload.reservation_date,
@@ -124,6 +146,7 @@ export const createReservation = async (
         .from('reservations')
         .insert({
           reservation_ref: reservationRef,
+          restaurant_id: restaurantId,
           customer_name: payload.customer_name.trim(),
           customer_phone: normalizedPhone,
           reservation_date: payload.reservation_date,

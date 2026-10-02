@@ -3,6 +3,7 @@ import type { CreateOrderPayload, OrderResult } from '../types/order';
 import { calculateOrderTotals, generateClientOrderRef } from '../utils/orderCalculations';
 import { validatePhoneNumber } from '../utils/phone';
 import { isItemAvailable } from './menuAvailabilityService';
+import { enforceRateLimit } from '../utils/rateLimiter';
 
 /**
  * Validates checkout payload prior to database submission.
@@ -46,6 +47,16 @@ export const validateOrderPayload = (payload: CreateOrderPayload): { valid: bool
  * If Supabase is not configured, gracefully falls back to local demo mode.
  */
 export const createOrder = async (payload: CreateOrderPayload): Promise<OrderResult> => {
+  // 0. Rate limiting enforcement (5 orders / 60 seconds)
+  const rateLimit = enforceRateLimit('order');
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      orderRef: payload.order_ref || generateClientOrderRef(),
+      error: rateLimit.error || 'Too many order attempts. Please wait a moment before trying again.',
+    };
+  }
+
   // 1. Validation
   const validation = validateOrderPayload(payload);
   if (!validation.valid) {
@@ -90,12 +101,20 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
   const paymentReference = payload.payment_reference || null;
   const paymentAmount = payload.payment_amount ?? totals.total;
 
-  // 3. Local / Demo mode handling
+  // 3. Local / Demo mode handling (strictly restricted to DEV environment)
   if (!isSupabaseConfigured || !supabase) {
-    const isDev = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.DEV : true;
-    if (isDev) {
-      console.info('[orderService] Supabase not configured. Operating in local demo mode with reference:', orderRef);
+    const proc = (globalThis as any).process;
+    const isDev = typeof import.meta !== 'undefined' && import.meta.env
+      ? Boolean(import.meta.env.DEV)
+      : (proc ? proc.env?.NODE_ENV !== 'production' : false);
+    if (!isDev) {
+      return {
+        success: false,
+        orderRef,
+        error: 'Order system database connection is not configured.',
+      };
     }
+    console.info('[orderService] Supabase not configured. Operating in local demo mode with reference:', orderRef);
 
     if (typeof window !== 'undefined') {
       try {
@@ -163,27 +182,28 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
   while (attempt < maxAttempts) {
     attempt++;
     try {
-      // Attempt 1: Use atomic RPC function
+      const restaurantId = payload.restaurant_id || 'the-cafe-barrackpore';
+      const isCounterPayment = payload.payment_provider === 'counter' || payload.payment_status === 'pay_at_counter';
       const { data: rpcData, error: rpcError } = await supabase.rpc('create_order_atomic', {
         p_order: {
           order_ref: orderRef,
+          restaurant_id: restaurantId,
           customer_name: payload.customer_name.trim(),
           customer_phone: normalizedPhone,
           order_type: payload.order_type,
           table_number: payload.order_type === 'dine_in' ? payload.table_number?.trim() : null,
           special_requests: payload.special_requests?.trim() || null,
-          subtotal: totals.subtotal,
-          total: totals.total,
-          status: 'pending',
           source: payload.source || 'website',
           currency: orderCurrency,
-          payment_required: paymentRequired,
-          payment_status: paymentStatus,
+          payment_method: isCounterPayment ? 'counter' : 'online',
           payment_provider: paymentProvider,
           payment_reference: paymentReference,
-          payment_amount: paymentAmount,
         },
-        p_items: totals.lineItems,
+        p_items: payload.items.map((it: any) => ({
+          id: (it as any).menu_item_id || it.id,
+          quantity: it.quantity || 1,
+          selected_options: (it as any).selected_options || {},
+        })),
       });
 
       if (!rpcError && rpcData?.order_id) {
@@ -232,6 +252,7 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
         .from('orders')
         .insert({
           order_ref: orderRef,
+          restaurant_id: restaurantId,
           customer_name: payload.customer_name.trim(),
           customer_phone: normalizedPhone,
           order_type: payload.order_type,
@@ -264,6 +285,7 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
       // Insert line items
       const itemsToInsert = totals.lineItems.map((item) => ({
         order_id: orderId,
+        restaurant_id: restaurantId,
         menu_item_id: item.menu_item_id,
         item_name: item.item_name,
         quantity: item.quantity,
@@ -314,14 +336,19 @@ export const updatePendingOrder = async (
 
   if (isSupabaseConfigured && supabase) {
     try {
+      // Client code may NEVER set payment_status to 'paid'. Only verified webhook (service role) can do so.
+      const updatePayload: Record<string, any> = {
+        payment_provider: updates.payment_provider,
+        payment_reference: updates.payment_reference,
+        updated_at: new Date().toISOString(),
+      };
+      if (updates.payment_status && updates.payment_status !== 'paid') {
+        updatePayload.payment_status = updates.payment_status;
+      }
+
       const { data, error } = await supabase
         .from('orders')
-        .update({
-          payment_status: updates.payment_status,
-          payment_provider: updates.payment_provider,
-          payment_reference: updates.payment_reference,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq('order_ref', orderRef)
         .select('id, order_ref')
         .single();

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchOrders, fetchOrderItems, updateOrderStatus } from '../../services/dashboardService';
 import { useNotification } from '../../hooks/useNotification';
+import { useAuth } from '../../hooks/useAuth';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatCurrency } from '../../utils/currency';
 import type { OrderRecord, OrderStatus } from '../../types/order';
 import { createOrder } from '../../services/orderService';
 import { unlockAudioContext, playKitchenOrderBell } from '../../services/soundService';
+import { processRefund } from '../../services/paymentService';
 
 interface OrderItemRecord {
   id: string;
@@ -16,6 +18,7 @@ interface OrderItemRecord {
 }
 
 export const OrdersManagement: React.FC = () => {
+  const { isOwner } = useAuth();
   const { addNotification } = useNotification();
   const { restaurantConfig, formatTime } = useSiteConfig();
 
@@ -31,6 +34,11 @@ export const OrdersManagement: React.FC = () => {
   const [activeOrderItems, setActiveOrderItems] = useState<OrderItemRecord[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState<boolean>(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false);
+
+  // Refund Management State
+  const [showRefundModal, setShowRefundModal] = useState<boolean>(false);
+  const [refundReason, setRefundReason] = useState<string>('requested_by_customer');
+  const [isRefunding, setIsRefunding] = useState<boolean>(false);
 
   const loadOrders = useCallback(async () => {
     setIsRefreshing(true);
@@ -138,6 +146,30 @@ export const OrdersManagement: React.FC = () => {
       addNotification('error', 'Error', 'Failed to update order status.');
     } finally {
       setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleProcessRefund = async () => {
+    if (!activeOrder || !isOwner || isRefunding) return;
+    setIsRefunding(true);
+    try {
+      const res = await processRefund(activeOrder.order_ref, undefined, refundReason);
+      if (res.success) {
+        addNotification(
+          'success',
+          'Refund Processed',
+          `Order #${activeOrder.order_ref} refunded successfully.${res.refundId ? ` (Refund ID: ${res.refundId})` : ''}`
+        );
+        setShowRefundModal(false);
+        setActiveOrder({ ...activeOrder, payment_status: 'refunded' });
+        await loadOrders();
+      } else {
+        addNotification('error', 'Refund Failed', res.error || 'Failed to process refund.');
+      }
+    } catch (err: any) {
+      addNotification('error', 'Refund Error', err.message || 'Unexpected refund error.');
+    } finally {
+      setIsRefunding(false);
     }
   };
 
@@ -612,10 +644,35 @@ export const OrdersManagement: React.FC = () => {
                   {activeOrder.payment_reference && (
                     <div className="flex justify-between">
                       <span className="text-stone-400">Payment ID:</span>
-                      <span className="font-mono text-[#F3C766] truncate max-w-[200px]">{activeOrder.payment_reference}</span>
+                      <span className="font-mono text-[#F3C766] truncate max-w-[200px]" title={activeOrder.payment_reference}>
+                        {activeOrder.payment_reference}
+                      </span>
+                    </div>
+                  )}
+                  {activeOrder.payment_status === 'refunded' && (
+                    <div className="flex justify-between text-purple-400 font-mono text-[11px] pt-1">
+                      <span>Refund Status:</span>
+                      <span>Full Refund Processed</span>
                     </div>
                   )}
                 </div>
+
+                {isOwner && activeOrder.payment_status === 'paid' && (
+                  <div className="pt-3 mt-3 border-t border-white/[0.06] flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-mono tracking-wider text-stone-400 font-semibold">
+                      Owner Action
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowRefundModal(true)}
+                      className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-mono font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+                      title="Issue a full gateway refund via Edge Function"
+                    >
+                      <span className="material-symbols-outlined text-sm">currency_exchange</span>
+                      Issue Full Refund
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Kitchen Note */}
@@ -713,6 +770,68 @@ export const OrdersManagement: React.FC = () => {
                 className="py-3 px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-semibold text-stone-300 hover:text-white transition-colors cursor-pointer"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Owner Refund Confirmation Modal */}
+      {showRefundModal && activeOrder && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn">
+          <div className="max-w-md w-full rounded-2xl bg-[#120F0D] border border-white/[0.1] shadow-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <span className="material-symbols-outlined text-2xl">currency_exchange</span>
+              <div>
+                <h3 className="font-serif font-bold text-white text-base">Issue Order Refund</h3>
+                <p className="text-xs text-stone-400 font-mono">Order #{activeOrder.order_ref}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-stone-300 leading-relaxed">
+              This will invoke the payment refund Edge Function with <span className="font-bold text-white capitalize">{activeOrder.payment_provider || 'gateway'}</span> and return{' '}
+              <span className="text-[#F3C766] font-bold font-mono">
+                {formatCurrency(activeOrder.total, activeOrder.currency || restaurantConfig.currency, restaurantConfig.locale)}
+              </span>{' '}
+              to the customer. This action is irreversible.
+            </p>
+
+            <div>
+              <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                Reason for Refund
+              </label>
+              <select
+                value={refundReason}
+                onChange={(e) => setRefundReason(e.target.value)}
+                className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+              >
+                <option value="requested_by_customer" className="bg-[#120F0D]">Customer Requested Cancellation</option>
+                <option value="kitchen_delay_void" className="bg-[#120F0D]">Kitchen Out of Stock / Order Voided</option>
+                <option value="duplicate_charge" className="bg-[#120F0D]">Accidental Duplicate Charge</option>
+                <option value="quality_issue" className="bg-[#120F0D]">Guest Experience / Resolution</option>
+                <option value="other" className="bg-[#120F0D]">Staff Discretion</option>
+              </select>
+            </div>
+
+            <div className="pt-3 border-t border-white/[0.08] flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={isRefunding}
+                onClick={() => setShowRefundModal(false)}
+                className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-stone-300 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isRefunding}
+                onClick={handleProcessRefund}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md disabled:opacity-50 cursor-pointer"
+              >
+                <span className={`material-symbols-outlined text-sm ${isRefunding ? 'animate-spin' : ''}`}>
+                  {isRefunding ? 'progress_activity' : 'check'}
+                </span>
+                {isRefunding ? 'Processing...' : 'Confirm Refund'}
               </button>
             </div>
           </div>

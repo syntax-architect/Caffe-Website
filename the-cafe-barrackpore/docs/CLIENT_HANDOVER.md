@@ -101,7 +101,7 @@ The platform implements 3 distinct operational roles:
 
 #### A. Opening the Kitchen Display System (KDS)
 1. Open a tablet, POS monitor, or kitchen screen and navigate to:
-   `https://www.restaurant.com/kitchen`
+   `https://www.restaurant.com/staff/kitchen` (or via `/staff` → **Kitchen KDS**)
 2. Log in with your staff account credentials.
 3. Tap the screen once to unlock audio notifications.
 4. Incoming orders will play a distinct kitchen chime and appear under the **Preparing** column.

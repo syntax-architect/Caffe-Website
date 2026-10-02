@@ -6,6 +6,7 @@ import type {
   PaymentVerificationResult,
   WebhookEventResult,
 } from '../../types/payment';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 /**
  * Razorpay Payment Adapter
@@ -35,16 +36,90 @@ export class RazorpayAdapter implements PaymentProviderAdapter {
         };
       }
 
-      // Razorpay Order ID format: order_XXXXX
-      const orderId = `order_rzp_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      // If Supabase is configured, invoke create-payment Edge Function
+      // which reads authoritative amount from database and checks provider settings
+      if (isSupabaseConfigured && supabase) {
+        let { data, error } = await supabase.functions.invoke('create-payment', {
+          body: { order_ref: params.orderRef },
+        });
 
+        // Fallback to create-razorpay-order if create-payment not reachable
+        if (error) {
+          const fallback = await supabase.functions.invoke('create-razorpay-order', {
+            body: { order_ref: params.orderRef },
+          });
+          if (!fallback.error && fallback.data) {
+            data = fallback.data;
+            error = null;
+          }
+        }
+
+        if (error) {
+          return {
+            success: false,
+            provider: this.provider,
+            orderRef: params.orderRef,
+            amount: params.amount,
+            currency: params.currency,
+            error: error.message || 'Failed to invoke create-payment edge function.',
+          };
+        }
+
+        if (data && (data.orderId || data.razorpayOrderId || data.paymentId || data.checkoutUrl)) {
+          const rzpOrderId = data.orderId || data.razorpayOrderId || data.paymentId;
+          return {
+            success: true,
+            provider: this.provider,
+            paymentId: rzpOrderId,
+            orderId: rzpOrderId,
+            razorpayOrderId: rzpOrderId,
+            keyId: data.keyId,
+            checkoutUrl: data.checkoutUrl,
+            orderRef: data.orderRef || params.orderRef,
+            amount: data.amount ? (data.amount > 1000 && params.amount < 1000 ? data.amount / 100 : data.amount) : params.amount,
+            currency: (data.currency || params.currency).toUpperCase(),
+            customer: data.customer,
+          };
+        }
+
+        if (data && !data.success && data.error) {
+          return {
+            success: false,
+            provider: this.provider,
+            orderRef: params.orderRef,
+            amount: params.amount,
+            currency: params.currency,
+            error: data.error,
+          };
+        }
+      }
+
+      // Offline / Demo mode fallback (restricted to DEV environment)
+      const proc = (globalThis as any).process;
+      const isDev = typeof import.meta !== 'undefined' && import.meta.env
+        ? Boolean(import.meta.env.DEV)
+        : (proc ? proc.env?.NODE_ENV !== 'production' : false);
+      if (!isDev) {
+        return {
+          success: false,
+          provider: this.provider,
+          orderRef: params.orderRef,
+          amount: params.amount,
+          currency: params.currency,
+          error: 'Razorpay payments require database and edge function configuration in production.',
+        };
+      }
+
+      const orderId = `order_rzp_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       return {
         success: true,
         provider: this.provider,
         paymentId: orderId,
+        checkoutUrl: `https://rzp.io/i/${orderId}`,
         orderRef: params.orderRef,
         amount: params.amount,
         currency: params.currency.toUpperCase(),
+        isDemo: true,
       };
     } catch (err: any) {
       return {

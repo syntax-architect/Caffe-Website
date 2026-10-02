@@ -24,15 +24,15 @@ const languageLoaders: Record<SupportedLanguage, () => Promise<{ default?: Trans
   en: () => Promise.resolve({ en }),
   ar: () => import('./ar'),
   fr: () => import('./fr'),
-  de: () => Promise.resolve({ de: en }), // Placeholder: falls back to English
-  es: () => Promise.resolve({ es: en }),
-  pt: () => Promise.resolve({ pt: en }),
-  ja: () => Promise.resolve({ ja: en }),
-  zh: () => Promise.resolve({ zh: en }),
-  ko: () => Promise.resolve({ ko: en }),
-  hi: () => Promise.resolve({ hi: en }),
-  tr: () => Promise.resolve({ tr: en }),
-  th: () => Promise.resolve({ th: en }),
+  de: () => import('./de'),
+  es: () => import('./es'),
+  pt: () => import('./pt'),
+  ja: () => import('./ja'),
+  zh: () => import('./zh'),
+  ko: () => import('./ko'),
+  hi: () => import('./hi'),
+  tr: () => import('./tr'),
+  th: () => import('./th'),
 };
 
 /**

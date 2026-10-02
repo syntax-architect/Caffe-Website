@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSiteConfig, type ImageAsset } from '../../context/SiteConfigContext';
 import { useNotification } from '../../hooks/useNotification';
+import { uploadSiteImage } from '../../services/storageService';
 
 type ContentTab = 'hero' | 'about' | 'specials' | 'gallery';
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -154,7 +155,9 @@ export const ContentManagement: React.FC = () => {
     }
   };
 
-  const handleImageUpload = (
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const handleImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     setImageCallback: (url: string) => void
   ) => {
@@ -166,17 +169,21 @@ export const ContentManagement: React.FC = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (typeof event.target?.result === 'string') {
-        setImageCallback(event.target.result);
-        addNotification('info', 'Image Preview Ready', `Selected "${file.name}" for preview. Click Save to persist.`);
-      }
-    };
-    reader.readAsDataURL(file);
+    setIsUploadingImage(true);
+    addNotification('info', 'Uploading Asset', `Uploading "${file.name}" to storage...`);
+
+    const result = await uploadSiteImage(file, 'content');
+    setIsUploadingImage(false);
+
+    if (result.success && result.url) {
+      setImageCallback(result.url);
+      addNotification('success', 'Image Uploaded', `"${file.name}" uploaded to site-images storage.`);
+    } else {
+      addNotification('error', 'Upload Failed', result.error || 'Failed to upload image.');
+    }
   };
 
-  const handleReplaceGalleryImage = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReplaceGalleryImage = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -185,19 +192,23 @@ export const ContentManagement: React.FC = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (typeof event.target?.result === 'string') {
-        const next = [...galleryImages];
-        next[index] = {
-          src: event.target.result,
-          alt: `Gallery Photo ${index + 1}`,
-        };
-        setGalleryImages(next);
-        addNotification('info', 'Gallery Photo Replaced', `Photo ${index + 1} updated in preview. Click Save to persist.`);
-      }
-    };
-    reader.readAsDataURL(file);
+    setIsUploadingImage(true);
+    addNotification('info', 'Uploading Gallery Asset', `Uploading "${file.name}"...`);
+
+    const result = await uploadSiteImage(file, 'gallery');
+    setIsUploadingImage(false);
+
+    if (result.success && result.url) {
+      const next = [...galleryImages];
+      next[index] = {
+        src: result.url,
+        alt: `Gallery Photo ${index + 1}`,
+      };
+      setGalleryImages(next);
+      addNotification('success', 'Gallery Image Uploaded', `Photo ${index + 1} updated with storage asset.`);
+    } else {
+      addNotification('error', 'Upload Failed', result.error || 'Failed to upload image.');
+    }
   };
 
   const renderSaveButton = (sectionLabel: string) => {
@@ -220,13 +231,13 @@ export const ContentManagement: React.FC = () => {
 
         <button
           type="submit"
-          disabled={isSaving || !isCurrentTabDirty}
+          disabled={isSaving || isUploadingImage || !isCurrentTabDirty}
           className={`py-3 px-6 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
             isSaved
               ? 'bg-emerald-600 text-white shadow-[0_0_20px_rgba(5,150,105,0.4)]'
               : isError
               ? 'bg-rose-600 text-white'
-              : !isCurrentTabDirty
+              : isUploadingImage || !isCurrentTabDirty
               ? 'bg-white/[0.04] text-zinc-600 border border-white/[0.04] cursor-not-allowed'
               : 'bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] hover:shadow-[0_10px_25px_rgba(212,175,55,0.3)] active:scale-95'
           }`}
@@ -235,6 +246,11 @@ export const ContentManagement: React.FC = () => {
             <>
               <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
               <span>Persisting...</span>
+            </>
+          ) : isUploadingImage ? (
+            <>
+              <span className="material-symbols-outlined text-base animate-spin">upload</span>
+              <span>Uploading Asset...</span>
             </>
           ) : isSaved ? (
             <>

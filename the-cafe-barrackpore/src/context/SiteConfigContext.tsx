@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { client, urlFor } from '../lib/sanityClient';
 import { siteConfig as fallbackConfig } from '../data/siteConfig';
 import {
-  getPersistedContent,
-  saveContentSection,
-  CONTENT_UPDATED_EVENT,
-} from '../services/contentPersistenceService';
+  fetchAllSiteContent,
+  updateSiteContent,
+  subscribeToSiteContentChanges,
+} from '../services/siteContentService';
 
 export interface ImageAsset {
   src: string;
@@ -96,9 +95,11 @@ const mapSettingsToConfig = (
       country: country === 'IN' ? 'India' : country,
     },
     payments: {
-      enabled: settings.payment_enabled ?? (preset.payments?.enabled ?? false),
-      provider: (settings.payment_provider as any) || preset.payments?.provider || 'stripe',
+      enabled: settings.payments_enabled ?? settings.payment_enabled ?? (preset.payments?.enabled ?? false),
+      payments_enabled: settings.payments_enabled ?? settings.payment_enabled ?? (preset.payments?.enabled ?? false),
+      provider: (settings.payment_provider as any) || preset.payments?.provider || 'none',
       mode: (settings.payment_mode as any) || preset.payments?.mode || 'disabled',
+      allow_pay_at_counter: settings.allow_pay_at_counter ?? true,
     },
   };
 };
@@ -202,177 +203,72 @@ const defaultContextValue: SiteConfigContextType = {
 const SiteConfigContext = createContext<SiteConfigContextType>(defaultContextValue);
 
 export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [config, setConfig] = useState<SiteConfigContextType>(() => {
-    // Initial state with persisted overrides applied
-    const persisted = getPersistedContent();
-    return {
-      ...defaultContextValue,
-      hero: {
-        ...defaultContextValue.hero,
-        ...(persisted.hero || {}),
-      },
-      ourStory: {
-        ...defaultContextValue.ourStory,
-        ...(persisted.ourStory || {}),
-      },
-      specials: {
-        ...defaultContextValue.specials,
-        ...(persisted.specials || {}),
-      },
-      gallery: {
-        images: persisted.gallery?.images || defaultContextValue.gallery.images,
-      },
-    };
-  });
+  const [config, setConfig] = useState<SiteConfigContextType>(defaultContextValue);
 
+  // Initial load of content from Supabase site_content table
   useEffect(() => {
     let isMounted = true;
 
-    const fetchUnifiedConfig = async () => {
+    const loadContent = async () => {
       try {
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Sanity siteConfig request timed out')), 8000)
-        );
-
-        const fetchPromise = client.fetch(
-          `*[_type == "siteConfig"][0]{
-            title,
-            logo,
-            heroImage,
-            ourStoryImage,
-            galleryImages,
-            aboutVibeImages,
-            seoTitle,
-            seoDescription,
-            seoImage
-          }`
-        );
-
-        const data: any = await Promise.race([fetchPromise, timeoutPromise]);
-
+        const content = await fetchAllSiteContent();
         if (!isMounted) return;
 
-        const persisted = getPersistedContent();
-
-        if (data) {
-          // Resolve hero image
-          const heroAsset: HeroConfig = {
-            src: persisted.hero?.src || (data.heroImage
-              ? urlFor(data.heroImage).width(1200).auto('format').quality(80).url()
-              : defaultContextValue.hero.src),
-            alt: persisted.hero?.alt || 'Hero Image',
-            headline: persisted.hero?.headline || defaultContextValue.hero.headline,
-            subtext: persisted.hero?.subtext || defaultContextValue.hero.subtext,
-          };
-
-          // Resolve ourStory image
-          const ourStoryAsset: OurStoryConfig = {
-            src: persisted.ourStory?.src || (data.ourStoryImage
-              ? urlFor(data.ourStoryImage).width(1200).auto('format').quality(80).url()
-              : defaultContextValue.ourStory.src),
-            alt: persisted.ourStory?.alt || 'Our Story Image',
-            title: persisted.ourStory?.title || defaultContextValue.ourStory.title,
-            description: persisted.ourStory?.description || defaultContextValue.ourStory.description,
-          };
-
-          // Resolve gallery images
-          let galleryImages: ImageAsset[] = persisted.gallery?.images || defaultContextValue.gallery.images;
-          if (!persisted.gallery?.images && Array.isArray(data.galleryImages) && data.galleryImages.length > 0) {
-            galleryImages = data.galleryImages.map((img: any, idx: number) => ({
-              src: urlFor(img).width(800).auto('format').quality(80).url(),
-              alt: fallbackConfig.gallery.images[idx]?.alt || `Gallery Image ${idx + 1}`,
-            }));
-          }
-
-          // Resolve aboutVibe images
-          let aboutVibeImages: ImageAsset[] = defaultContextValue.aboutVibe.images;
-          if (Array.isArray(data.aboutVibeImages) && data.aboutVibeImages.length > 0) {
-            aboutVibeImages = data.aboutVibeImages.map((item: any, idx: number) => ({
-              src: item.image
-                ? urlFor(item.image).width(800).auto('format').quality(80).url()
-                : fallbackConfig.aboutVibe.images[idx]?.src || '',
-              alt: item.alt || fallbackConfig.aboutVibe.images[idx]?.alt || `Vibe Image ${idx + 1}`,
-            }));
-          }
-
-          // Resolve SEO
-          const seoConfig: SEOConfig = {
-            title: data.seoTitle || defaultContextValue.seo.title,
-            description: data.seoDescription || defaultContextValue.seo.description,
-            image: data.seoImage
-              ? urlFor(data.seoImage).width(1200).height(630).url()
-              : defaultContextValue.seo.image,
-          };
-
-          // Resolve Logo
-          let resolvedLogo = defaultContextValue.logoUrl;
-          if (data.logo) {
-            try {
-              resolvedLogo = urlFor(data.logo).width(400).auto('format').quality(80).url();
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('cafe_logo', resolvedLogo);
-              }
-            } catch {
-              // Retain fallback logo
-            }
-          }
-
-          setConfig((prev) => ({
-            ...prev,
-            hero: heroAsset,
-            ourStory: ourStoryAsset,
-            gallery: { images: galleryImages },
-            aboutVibe: { images: aboutVibeImages },
-            seo: seoConfig,
-            logoUrl: resolvedLogo,
-            isLoading: false,
-            error: null,
-          }));
-        } else {
-          setConfig((prev) => ({ ...prev, isLoading: false }));
-        }
-      } catch (err: any) {
-        if (!isMounted) return;
-        console.warn('Unable to load Sanity siteConfig, retaining fallback configuration:', err);
         setConfig((prev) => ({
           ...prev,
+          hero: {
+            src: content.hero.src || defaultContextValue.hero.src,
+            alt: content.hero.alt || defaultContextValue.hero.alt,
+            headline: content.hero.headline || defaultContextValue.hero.headline,
+            subtext: content.hero.subtext || defaultContextValue.hero.subtext,
+          },
+          ourStory: {
+            src: content.story.src || defaultContextValue.ourStory.src,
+            alt: content.story.alt || defaultContextValue.ourStory.alt,
+            title: content.story.title || defaultContextValue.ourStory.title,
+            description: content.story.description || defaultContextValue.ourStory.description,
+          },
+          specials: {
+            title: content.specials.title || defaultContextValue.specials.title,
+            description: content.specials.description || defaultContextValue.specials.description,
+            image: content.specials.image || defaultContextValue.specials.image,
+          },
+          gallery: {
+            images: content.gallery.images || defaultContextValue.gallery.images,
+          },
           isLoading: false,
-          error: err instanceof Error ? err : new Error(String(err)),
+          error: null,
         }));
+      } catch (err: any) {
+        if (!isMounted) return;
+        console.warn('[SiteConfigContext] Failed loading site_content, using defaults:', err);
+        setConfig((prev) => ({ ...prev, isLoading: false }));
       }
     };
 
-    fetchUnifiedConfig();
+    loadContent();
+
+    // Attach Realtime subscription so updates in ContentManagement show instantly on public site
+    const unsubscribe = subscribeToSiteContentChanges((key, value) => {
+      if (!isMounted || !value) return;
+
+      setConfig((prev) => {
+        if (key === 'hero') {
+          return { ...prev, hero: { ...prev.hero, ...value } };
+        } else if (key === 'story' || key === 'ourStory') {
+          return { ...prev, ourStory: { ...prev.ourStory, ...value } };
+        } else if (key === 'specials') {
+          return { ...prev, specials: { ...prev.specials, ...value } };
+        } else if (key === 'gallery') {
+          return { ...prev, gallery: { images: value.images || value } };
+        }
+        return prev;
+      });
+    });
 
     return () => {
       isMounted = false;
-    };
-  }, []);
-
-  // Listen to live updates from ContentManagement save events
-  useEffect(() => {
-    const handleContentUpdated = (e: Event) => {
-      const custom = e as CustomEvent<{ section: string; data: any }>;
-      if (custom.detail) {
-        const { section, data } = custom.detail;
-        setConfig((prev) => {
-          if (section === 'hero') {
-            return { ...prev, hero: { ...prev.hero, ...data } };
-          } else if (section === 'ourStory') {
-            return { ...prev, ourStory: { ...prev.ourStory, ...data } };
-          } else if (section === 'specials') {
-            return { ...prev, specials: { ...prev.specials, ...data } };
-          } else if (section === 'gallery') {
-            return { ...prev, gallery: { images: data.images || data } };
-          }
-          return prev;
-        });
-      }
-    };
-
-    window.addEventListener(CONTENT_UPDATED_EVENT, handleContentUpdated);
-    return () => {
-      window.removeEventListener(CONTENT_UPDATED_EVENT, handleContentUpdated);
+      unsubscribe();
     };
   }, []);
 
@@ -380,8 +276,10 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
     section: 'hero' | 'ourStory' | 'specials' | 'gallery',
     data: any
   ): Promise<boolean> => {
-    const res = await saveContentSection(section, data);
-    if (res.success) {
+    // 1. Persist to authoritative Supabase site_content table
+    const result = await updateSiteContent(section, data);
+    if (result.success) {
+      // 2. Immediately update local state
       setConfig((prev) => {
         if (section === 'hero') {
           return { ...prev, hero: { ...prev.hero, ...data } };
@@ -512,8 +410,10 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
         state_region: merged.address.region,
         postal_code: merged.address.postalCode,
         payment_enabled: merged.payments.enabled,
+        payments_enabled: merged.payments.enabled,
         payment_provider: merged.payments.provider,
         payment_mode: merged.payments.mode,
+        allow_pay_at_counter: merged.payments.allow_pay_at_counter ?? true,
       };
       await updateRestaurantSettings(settingsPayload);
     } catch (err) {

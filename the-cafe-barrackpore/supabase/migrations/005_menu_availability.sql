@@ -21,12 +21,14 @@ ALTER TABLE public.menu_item_availability ENABLE ROW LEVEL SECURITY;
 
 -- 3. RLS Policies
 -- Anyone (public customers, QR ordering, staff) can read availability
+DROP POLICY IF EXISTS "public_read_menu_availability" ON public.menu_item_availability;
 CREATE POLICY "public_read_menu_availability"
 ON public.menu_item_availability
 FOR SELECT
 USING (true);
 
 -- Active staff members can update or insert availability states
+DROP POLICY IF EXISTS "staff_manage_menu_availability" ON public.menu_item_availability;
 CREATE POLICY "staff_manage_menu_availability"
 ON public.menu_item_availability
 FOR ALL

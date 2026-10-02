@@ -6,6 +6,7 @@ import type {
   PaymentVerificationResult,
   WebhookEventResult,
 } from '../../types/payment';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 /**
  * Stripe Payment Adapter
@@ -36,11 +37,78 @@ export class StripeAdapter implements PaymentProviderAdapter {
         };
       }
 
-      // Generate a structured provider payment reference for the session
-      const sessionId = `cs_stripe_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      // If Supabase is configured, invoke create-payment Edge Function
+      // which reads authoritative amount from database and checks provider settings
+      if (isSupabaseConfigured && supabase) {
+        let { data, error } = await supabase.functions.invoke('create-payment', {
+          body: { order_ref: params.orderRef },
+        });
 
-      // In production, this would call Supabase Edge Function `create-stripe-checkout`
-      // which uses the STRIPE_SECRET_KEY stored safely in Supabase Secrets.
+        // Fallback to create-stripe-checkout if create-payment not reachable
+        if (error) {
+          const fallback = await supabase.functions.invoke('create-stripe-checkout', {
+            body: { order_ref: params.orderRef },
+          });
+          if (!fallback.error && fallback.data) {
+            data = fallback.data;
+            error = null;
+          }
+        }
+
+        if (error) {
+          return {
+            success: false,
+            provider: this.provider,
+            orderRef: params.orderRef,
+            amount: params.amount,
+            currency: params.currency,
+            error: error.message || 'Failed to invoke create-payment edge function.',
+          };
+        }
+
+        if (data && (data.checkoutUrl || data.sessionId || data.paymentId)) {
+          return {
+            success: true,
+            provider: this.provider,
+            paymentId: data.paymentId || data.sessionId,
+            sessionId: data.sessionId || data.paymentId,
+            checkoutUrl: data.checkoutUrl, // Real hosted Stripe checkout URL
+            clientSecret: data.clientSecret,
+            orderRef: data.orderRef || params.orderRef,
+            amount: data.amount ?? params.amount,
+            currency: (data.currency || params.currency).toUpperCase(),
+          };
+        }
+
+        if (data && !data.success && data.error) {
+          return {
+            success: false,
+            provider: this.provider,
+            orderRef: params.orderRef,
+            amount: params.amount,
+            currency: params.currency,
+            error: data.error,
+          };
+        }
+      }
+
+      // Offline / Demo mode fallback (restricted to DEV environment)
+      const proc = (globalThis as any).process;
+      const isDev = typeof import.meta !== 'undefined' && import.meta.env
+        ? Boolean(import.meta.env.DEV)
+        : (proc ? proc.env?.NODE_ENV !== 'production' : false);
+      if (!isDev) {
+        return {
+          success: false,
+          provider: this.provider,
+          orderRef: params.orderRef,
+          amount: params.amount,
+          currency: params.currency,
+          error: 'Stripe payments require database and edge function configuration in production.',
+        };
+      }
+
+      const sessionId = `cs_stripe_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       return {
         success: true,
         provider: this.provider,
@@ -50,6 +118,7 @@ export class StripeAdapter implements PaymentProviderAdapter {
         orderRef: params.orderRef,
         amount: params.amount,
         currency: params.currency.toUpperCase(),
+        isDemo: true,
       };
     } catch (err: any) {
       return {

@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { isSupabaseConfigured } from '../../lib/supabase';
-import type { StaffRole } from '../../types/auth';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 export const StaffLoginPage: React.FC = () => {
-  const { signIn, isLoading, isAuthenticated, isActiveStaff, signInDemo } = useAuth();
+  const { signIn, isLoading, isAuthenticated, isActiveStaff } = useAuth();
 
-  const [email, setEmail] = useState('admin@gmail.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedDemoRole, setSelectedDemoRole] = useState<StaffRole>('owner');
+
+  // Forgot Password Modal/View States
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null);
+  const [resetErrorMessage, setResetErrorMessage] = useState<string | null>(null);
+  const [isResetSubmitting, setIsResetSubmitting] = useState(false);
 
   // If already logged in with active staff profile, redirect to staff dashboard
   useEffect(() => {
@@ -44,10 +49,38 @@ export const StaffLoginPage: React.FC = () => {
     }
   };
 
-  const handleLaunchDemo = (role: StaffRole, targetPath: string = '/staff/dashboard') => {
-    if (signInDemo) {
-      signInDemo(role);
-      window.location.href = targetPath;
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetErrorMessage(null);
+    setResetSuccessMessage(null);
+
+    const cleanEmail = resetEmail.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setResetErrorMessage('Please enter a valid email address.');
+      return;
+    }
+
+    if (!supabase || !isSupabaseConfigured) {
+      setResetErrorMessage('Authentication service is not configured. Please contact the administrator.');
+      return;
+    }
+
+    setIsResetSubmitting(true);
+    try {
+      const redirectTo = `${window.location.origin}/reset-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo,
+      });
+
+      if (error) {
+        setResetErrorMessage(error.message || 'Failed to send password recovery instructions.');
+      } else {
+        setResetSuccessMessage('Recovery instructions have been sent to your email. Please check your inbox.');
+      }
+    } catch (err: any) {
+      setResetErrorMessage(err.message || 'An unexpected error occurred while requesting password reset.');
+    } finally {
+      setIsResetSubmitting(false);
     }
   };
 
@@ -121,120 +154,14 @@ export const StaffLoginPage: React.FC = () => {
                 The Café Barrackpore
               </h1>
               <p className="text-stone-400 text-xs sm:text-sm mt-1 max-w-xs leading-relaxed">
-                Secure management terminal for owners, floor managers & kitchen stations.
+                {isForgotPassword
+                  ? 'Request password recovery instructions for your staff account.'
+                  : 'Secure management terminal for owners, floor managers & kitchen stations.'}
               </p>
             </div>
 
-            {/* Demo Mode 1-Click Launchpad (If Supabase is not configured or in evaluation) */}
-            {!isSupabaseConfigured && (
-              <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#1C1610] to-[#120E0A] border border-[#D4AF37]/30 shadow-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#D4AF37] text-lg">auto_awesome</span>
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#F3C766]">
-                      Demo Evaluation Mode
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-mono uppercase tracking-widest text-[#D4AF37] bg-[#D4AF37]/15 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">
-                    Zero Setup Required
-                  </span>
-                </div>
-
-                <p className="text-stone-300 text-xs leading-relaxed mb-4">
-                  Explore the full restaurant management suite with simulated orders, table bookings, and live kitchen dispatch:
-                </p>
-
-                {/* Role Switcher Pills */}
-                <div className="grid grid-cols-3 gap-2 p-1 rounded-xl bg-black/40 border border-white/[0.06] mb-3">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDemoRole('owner')}
-                    className={`py-2 px-1 text-center rounded-lg text-xs font-medium transition-all ${
-                      selectedDemoRole === 'owner'
-                        ? 'bg-[#D4AF37] text-[#120B08] font-bold shadow-sm'
-                        : 'text-stone-400 hover:text-white'
-                    }`}
-                  >
-                    Owner
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDemoRole('manager')}
-                    className={`py-2 px-1 text-center rounded-lg text-xs font-medium transition-all ${
-                      selectedDemoRole === 'manager'
-                        ? 'bg-[#D4AF37] text-[#120B08] font-bold shadow-sm'
-                        : 'text-stone-400 hover:text-white'
-                    }`}
-                  >
-                    Manager
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDemoRole('staff')}
-                    className={`py-2 px-1 text-center rounded-lg text-xs font-medium transition-all ${
-                      selectedDemoRole === 'staff'
-                        ? 'bg-[#D4AF37] text-[#120B08] font-bold shadow-sm'
-                        : 'text-stone-400 hover:text-white'
-                    }`}
-                  >
-                    Kitchen
-                  </button>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => handleLaunchDemo(selectedDemoRole, '/staff/dashboard')}
-                    className="flex-1 group py-3 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e4b955] text-[#120B08] font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(212,175,55,0.25)] active:scale-[0.98]"
-                  >
-                    <span>Launch Terminal ({selectedDemoRole.toUpperCase()})</span>
-                    <span className="w-5 h-5 rounded-full bg-black/15 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
-                      <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLaunchDemo('staff', '/staff/kds')}
-                    className="py-3 px-4 rounded-xl border border-white/[0.12] hover:border-[#D4AF37]/50 bg-white/[0.04] hover:bg-white/[0.08] text-stone-200 hover:text-[#D4AF37] font-semibold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.98]"
-                    title="Launch Kitchen Display System full screen"
-                  >
-                    <span className="material-symbols-outlined text-base">soup_kitchen</span>
-                    <span>Live KDS</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Credentials Quick-Reference Pill */}
-            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-[#D4AF37]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs mb-6">
-              <div className="flex items-center gap-2.5">
-                <span className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shrink-0">
-                  <span className="material-symbols-outlined text-base">key</span>
-                </span>
-                <div>
-                  <p className="font-mono text-[11px] text-zinc-200">
-                    Email: <span className="font-bold text-[#D4AF37]">admin@gmail.com</span>
-                  </p>
-                  <p className="font-mono text-[11px] text-zinc-200">
-                    Password: <span className="font-bold text-[#D4AF37]">admin123</span>
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('admin@gmail.com');
-                  setPassword('admin123');
-                }}
-                className="px-3 py-1.5 rounded-xl bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/30 font-mono text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
-              >
-                Auto-Fill
-              </button>
-            </div>
-
             {/* Error Message */}
-            {errorMessage && (
+            {errorMessage && !isForgotPassword && (
               <div
                 role="alert"
                 className="mb-6 p-4 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs leading-relaxed flex items-start gap-3 shadow-md"
@@ -249,91 +176,198 @@ export const StaffLoginPage: React.FC = () => {
               </div>
             )}
 
-            {/* Credentials Sign In Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="staff-email"
-                  className="block text-[11px] uppercase tracking-wider text-stone-300 font-semibold mb-1.5 flex items-center justify-between"
-                >
-                  <span>Staff Work Email</span>
-                  <span className="text-[10px] text-stone-500 font-normal">SSO / Password</span>
-                </label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-lg pointer-events-none">
-                    mail
-                  </span>
-                  <input
-                    id="staff-email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@gmail.com"
-                    disabled={isSubmitting}
-                    className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-stone-600 focus:outline-none transition-all disabled:opacity-50"
-                  />
-                </div>
-              </div>
+            {isForgotPassword ? (
+              /* Forgot Password Form */
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                {resetSuccessMessage && (
+                  <div
+                    role="alert"
+                    className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs leading-relaxed flex items-start gap-3 shadow-md"
+                  >
+                    <span className="material-symbols-outlined text-emerald-400 text-base shrink-0 mt-0.5">
+                      check_circle
+                    </span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-emerald-300">Reset Email Dispatched</p>
+                      <p className="text-emerald-200/90 text-[11px] mt-0.5">{resetSuccessMessage}</p>
+                    </div>
+                  </div>
+                )}
 
-              <div>
-                <label
-                  htmlFor="staff-password"
-                  className="block text-[11px] uppercase tracking-wider text-stone-300 font-semibold mb-1.5 flex items-center justify-between"
+                {resetErrorMessage && (
+                  <div
+                    role="alert"
+                    className="p-4 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs leading-relaxed flex items-start gap-3 shadow-md"
+                  >
+                    <span className="material-symbols-outlined text-red-400 text-base shrink-0 mt-0.5">
+                      error
+                    </span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-red-300">Recovery Error</p>
+                      <p className="text-red-200/90 text-[11px] mt-0.5">{resetErrorMessage}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    htmlFor="reset-email"
+                    className="block text-[11px] uppercase tracking-wider text-stone-300 font-semibold mb-1.5"
+                  >
+                    Staff Work Email
+                  </label>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-lg pointer-events-none">
+                      mail
+                    </span>
+                    <input
+                      id="reset-email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      placeholder="staff@thecafebarrackpore.com"
+                      disabled={isResetSubmitting}
+                      className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-stone-600 focus:outline-none transition-all disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isResetSubmitting}
+                  className="w-full group mt-2 py-3.5 px-6 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e4b955] text-[#120B08] font-bold text-sm tracking-wider uppercase transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_4px_24px_rgba(212,175,55,0.3)] active:scale-[0.98]"
                 >
-                  <span>Security Credential</span>
-                  <span className="text-[10px] text-stone-500 font-normal">Encrypted</span>
-                </label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-lg pointer-events-none">
-                    lock
-                  </span>
-                  <input
-                    id="staff-password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="admin123"
-                    disabled={isSubmitting}
-                    className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl pl-10 pr-11 py-3 text-sm text-white placeholder:text-stone-600 focus:outline-none transition-all disabled:opacity-50 font-mono"
-                  />
+                  {isResetSubmitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-[#120B08] border-t-transparent rounded-full animate-spin" />
+                      <span>Sending Instructions...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Send Password Reset Link</span>
+                      <span className="w-6 h-6 rounded-full bg-black/15 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                        <span className="material-symbols-outlined text-sm">send</span>
+                      </span>
+                    </>
+                  )}
+                </button>
+
+                <div className="text-center pt-2">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white transition-colors p-1"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => {
+                      setIsForgotPassword(false);
+                      setResetErrorMessage(null);
+                      setResetSuccessMessage(null);
+                    }}
+                    className="text-xs text-stone-400 hover:text-[#D4AF37] transition-colors inline-flex items-center gap-1.5"
                   >
-                    <span className="material-symbols-outlined text-lg">
-                      {showPassword ? 'visibility_off' : 'visibility'}
-                    </span>
+                    <span className="material-symbols-outlined text-sm">arrow_back</span>
+                    <span>Back to Sign In</span>
                   </button>
                 </div>
-              </div>
-
-              {/* Submit CTA with Button-in-Button architecture */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full group mt-2 py-3.5 px-6 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e4b955] text-[#120B08] font-bold text-sm tracking-wider uppercase transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_4px_24px_rgba(212,175,55,0.3)] active:scale-[0.98]"
-              >
-                {isSubmitting ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-[#120B08] border-t-transparent rounded-full animate-spin" />
-                    <span>Authorizing Terminal...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Authenticate Session</span>
-                    <span className="w-6 h-6 rounded-full bg-black/15 flex items-center justify-center group-hover:translate-x-1 transition-transform">
-                      <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              </form>
+            ) : (
+              /* Credentials Sign In Form */
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="staff-email"
+                    className="block text-[11px] uppercase tracking-wider text-stone-300 font-semibold mb-1.5 flex items-center justify-between"
+                  >
+                    <span>Staff Work Email</span>
+                    <span className="text-[10px] text-stone-500 font-normal">SSO / Password</span>
+                  </label>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-lg pointer-events-none">
+                      mail
                     </span>
-                  </>
-                )}
-              </button>
-            </form>
+                    <input
+                      id="staff-email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="staff@thecafebarrackpore.com"
+                      disabled={isSubmitting}
+                      className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-stone-600 focus:outline-none transition-all disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label
+                      htmlFor="staff-password"
+                      className="block text-[11px] uppercase tracking-wider text-stone-300 font-semibold"
+                    >
+                      Security Credential
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResetEmail(email);
+                        setIsForgotPassword(true);
+                        setErrorMessage(null);
+                      }}
+                      className="text-[11px] text-[#D4AF37] hover:text-[#F3C766] transition-colors hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-lg pointer-events-none">
+                      lock
+                    </span>
+                    <input
+                      id="staff-password"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      disabled={isSubmitting}
+                      className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl pl-10 pr-11 py-3 text-sm text-white placeholder:text-stone-600 focus:outline-none transition-all disabled:opacity-50 font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white transition-colors p-1"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        {showPassword ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit CTA */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full group mt-2 py-3.5 px-6 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e4b955] text-[#120B08] font-bold text-sm tracking-wider uppercase transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_4px_24px_rgba(212,175,55,0.3)] active:scale-[0.98]"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-[#120B08] border-t-transparent rounded-full animate-spin" />
+                      <span>Authorizing Terminal...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Authenticate Session</span>
+                      <span className="w-6 h-6 rounded-full bg-black/15 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                      </span>
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
 
             {/* Terminal Security Meta */}
             <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-stone-500">

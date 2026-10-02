@@ -36,6 +36,7 @@ ALTER TABLE public.staff_profiles ENABLE ROW LEVEL SECURITY;
 
 -- Anonymous users: ALL DENIED
 -- Authenticated users: Only active staff can view their own profile.
+DROP POLICY IF EXISTS "Staff can view own profile" ON public.staff_profiles;
 CREATE POLICY "Staff can view own profile"
     ON public.staff_profiles
     FOR SELECT
@@ -43,6 +44,7 @@ CREATE POLICY "Staff can view own profile"
     USING (auth.uid() = user_id);
 
 -- Staff members can update basic info on their own profile (name only, not role or active)
+DROP POLICY IF EXISTS "Staff can update own name" ON public.staff_profiles;
 CREATE POLICY "Staff can update own name"
     ON public.staff_profiles
     FOR UPDATE
@@ -106,6 +108,7 @@ REVOKE ALL ON FUNCTION public.get_staff_role(UUID) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_staff_role(UUID) TO authenticated, service_role;
 
 -- 6. OWNER & MANAGER PRIVILEGES ON STAFF PROFILES
+DROP POLICY IF EXISTS "Owners and managers can view all staff profiles" ON public.staff_profiles;
 CREATE POLICY "Owners and managers can view all staff profiles"
     ON public.staff_profiles
     FOR SELECT
@@ -114,6 +117,7 @@ CREATE POLICY "Owners and managers can view all staff profiles"
         public.get_staff_role(auth.uid()) IN ('owner', 'manager')
     );
 
+DROP POLICY IF EXISTS "Owners can manage staff profiles" ON public.staff_profiles;
 CREATE POLICY "Owners can manage staff profiles"
     ON public.staff_profiles
     FOR ALL

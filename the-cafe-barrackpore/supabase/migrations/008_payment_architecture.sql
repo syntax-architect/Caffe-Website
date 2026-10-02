@@ -68,6 +68,7 @@ CREATE TRIGGER trg_payments_updated_at
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
 -- Anonymous public customers can insert payment attempts for their orders
+DROP POLICY IF EXISTS "Allow public payment creation" ON public.payments;
 CREATE POLICY "Allow public payment creation"
     ON public.payments
     FOR INSERT
@@ -75,6 +76,7 @@ CREATE POLICY "Allow public payment creation"
     WITH CHECK (true);
 
 -- Active staff, managers and owners can read payment records for operations & reconciliation
+DROP POLICY IF EXISTS "Allow staff to read payment records" ON public.payments;
 CREATE POLICY "Allow staff to read payment records"
     ON public.payments
     FOR SELECT

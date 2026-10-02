@@ -18,6 +18,8 @@ export interface CreateReservationPayload {
   reservation_time: string;
   party_size: number;
   special_requests?: string | null;
+  restaurant_id?: string;
+  captcha_token?: string;
 }
 
 export interface ReservationRecord {

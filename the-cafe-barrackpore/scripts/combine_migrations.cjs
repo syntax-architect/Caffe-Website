@@ -10,12 +10,16 @@ const files = [
   '005_menu_availability.sql',
   '006_kitchen_realtime.sql',
   '007_internationalization.sql',
-  '008_payment_architecture.sql'
+  '008_payment_architecture.sql',
+  '009_menu_and_secure_orders.sql',
+  '010_menu_and_site_content.sql',
+  '011_multi_tenant_and_allergens.sql',
+  '012_provider_agnostic_payments.sql'
 ];
 
 let combined = `-- ==============================================================================
 -- COMPLETE DATABASE INITIALIZATION SCRIPT: The Café Barrackpore
--- Runs all migrations (001 - 008) in proper dependency order.
+-- Runs all migrations (001 - 012) in proper dependency order.
 -- Copy and paste this ENTIRE script into Supabase Dashboard -> SQL Editor and click Run.
 -- ==============================================================================
 

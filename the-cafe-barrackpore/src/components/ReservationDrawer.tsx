@@ -7,6 +7,7 @@ import { createReservation } from '../services/reservationService';
 import { generateClientReservationRef } from '../utils/orderCalculations';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { validatePhoneNumber } from '../utils/phone';
+import { TurnstileWidget } from './TurnstileWidget';
 
 export const ReservationDrawer: React.FC = () => {
   const { isReservationOpen, setIsReservationOpen } = useUI();
@@ -14,6 +15,7 @@ export const ReservationDrawer: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [confirmedRef, setConfirmedRef] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const handleClose = useCallback(() => {
     setIsReservationOpen(false);
@@ -91,6 +93,7 @@ export const ReservationDrawer: React.FC = () => {
         reservation_time: formData.time,
         party_size: formData.guests,
         special_requests: formData.notes.trim() || null,
+        captcha_token: captchaToken || undefined,
       });
 
       if (result.success) {
@@ -334,6 +337,14 @@ export const ReservationDrawer: React.FC = () => {
                         rows={3}
                         className="w-full bg-[#0D0705] border border-white/10 rounded-xl px-4 py-2.5 text-on-surface font-sans text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40 transition-colors resize-none placeholder:text-white/20"
                       />
+                    </div>
+
+                    {/* Security Verification (Cloudflare Turnstile) */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">
+                        Security Verification
+                      </label>
+                      <TurnstileWidget action="reservation" onVerify={(token) => setCaptchaToken(token)} />
                     </div>
 
                   </form>

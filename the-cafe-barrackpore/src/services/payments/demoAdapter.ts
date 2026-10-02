@@ -17,6 +17,21 @@ export class DemoAdapter implements PaymentProviderAdapter {
   readonly isConfigured = true;
 
   async createCheckoutSession(params: CreatePaymentParams): Promise<PaymentCheckoutResult> {
+    const proc = (globalThis as any).process;
+    const isDev = typeof import.meta !== 'undefined' && import.meta.env
+      ? Boolean(import.meta.env.DEV)
+      : (proc ? proc.env?.NODE_ENV !== 'production' : false);
+    if (!isDev) {
+      return {
+        success: false,
+        provider: this.provider,
+        orderRef: params.orderRef,
+        amount: params.amount,
+        currency: params.currency,
+        error: 'Demo payment mode is strictly disabled in production.',
+      };
+    }
+
     if (params.amount <= 0) {
       return {
         success: false,

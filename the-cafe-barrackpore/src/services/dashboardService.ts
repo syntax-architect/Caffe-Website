@@ -55,6 +55,10 @@ const DEFAULT_SETTINGS: RestaurantSettings = {
   city: 'Barrackpore',
   state_region: 'West Bengal',
   postal_code: '700120',
+  payment_provider: 'none',
+  payment_enabled: false,
+  payments_enabled: false,
+  allow_pay_at_counter: true,
 };
 
 const getDemoOrders = (): OrderRecord[] => {
@@ -898,6 +902,11 @@ export const updateRestaurantSettings = async (
         city: settings.city || null,
         state_region: settings.state_region || null,
         postal_code: settings.postal_code || null,
+        payment_provider: settings.payment_provider || 'none',
+        payments_enabled: settings.payments_enabled ?? settings.payment_enabled ?? false,
+        payment_enabled: settings.payments_enabled ?? settings.payment_enabled ?? false,
+        payment_mode: settings.payment_mode || 'disabled',
+        allow_pay_at_counter: settings.allow_pay_at_counter ?? true,
         updated_at: new Date().toISOString(),
       });
 

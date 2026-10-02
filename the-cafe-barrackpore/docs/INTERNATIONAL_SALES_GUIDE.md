@@ -305,11 +305,10 @@ After deployment, provide these routes to prospects:
 | `/qr?table=07` | QR ordering experience (as if at Table 7) |
 | `/staff/login` | Staff portal login |
 | `/staff` | Full staff dashboard (after login) |
-| `/kitchen` | Kitchen display system |
+| `/staff/kitchen` | Kitchen display system (accessible via `/staff` → Kitchen KDS) |
 
-### Demo Credentials
-- **Email**: `admin@gmail.com`
-- **Password**: `admin123`
+### Staff Authentication
+- Staff members authenticate securely via `/staff/login` using their active credentials stored in Supabase `staff_profiles`. Password reset is accessible via `/reset-password`.
 
 ---
 

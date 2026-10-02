@@ -20,6 +20,7 @@ const Menu = lazy(() => import('./components/Menu').then(module => ({ default: m
 const Footer = lazy(() => import('./components/Footer').then(module => ({ default: module.Footer })));
 const CartDrawer = lazy(() => import('./components/CartDrawer').then(module => ({ default: module.CartDrawer })));
 const ReservationDrawer = lazy(() => import('./components/ReservationDrawer').then(module => ({ default: module.ReservationDrawer })));
+const CookieConsent = lazy(() => import('./components/CookieConsent').then(module => ({ default: module.CookieConsent })));
 
 function App() {
   useEffect(() => {
@@ -109,6 +110,7 @@ function App() {
           <Suspense fallback={null}>
             <CartDrawer />
             <ReservationDrawer />
+            <CookieConsent />
           </Suspense>
           <MobileActionDock />
           <div 

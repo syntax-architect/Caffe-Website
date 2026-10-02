@@ -12,25 +12,41 @@ import type {
 import type { OrderItemInput, OrderCalculationSummary } from '../types/order';
 import type { TaxCalculationOptions } from '../utils/orderCalculations';
 import { calculateOrderTotals, roundCurrency } from '../utils/orderCalculations';
-import { menuData } from '../data/menu';
+import { getCanonicalMenuItem } from './menuService';
 import { getLocalAvailabilityMap, fetchAvailabilityMap } from './menuAvailabilityService';
 import type { PaymentProviderAdapter } from './payments/types';
 import { StripeAdapter } from './payments/stripeAdapter';
 import { RazorpayAdapter } from './payments/razorpayAdapter';
 import { DemoAdapter } from './payments/demoAdapter';
 
+const proc = (globalThis as any).process;
+const isDev = typeof import.meta !== 'undefined' && import.meta.env
+  ? Boolean(import.meta.env.DEV)
+  : (proc ? proc.env?.NODE_ENV !== 'production' : false);
+
 /**
  * Payment Provider Registry
+ * Demo / simulated adapters are strictly omitted from production builds (Requirement 6).
  */
 const providers: Record<string, PaymentProviderAdapter> = {
   stripe: new StripeAdapter(),
   razorpay: new RazorpayAdapter(),
-  demo: new DemoAdapter(),
-  manual: new DemoAdapter(),
+  ...(isDev ? { demo: new DemoAdapter(), manual: new DemoAdapter() } : {}),
 };
 
-export const getPaymentProvider = (providerName: PaymentProvider = 'demo'): PaymentProviderAdapter => {
-  return providers[providerName] || providers.demo;
+export const getPaymentProvider = (providerName: PaymentProvider = 'stripe'): PaymentProviderAdapter => {
+  if ((providerName === 'demo' || providerName === 'manual') && !isDev) {
+    throw new Error('Demo payment provider is strictly disabled in production builds.');
+  }
+  const provider = providers[providerName];
+  if (!provider) {
+    if (providerName === 'demo' || providerName === 'manual') {
+      if (isDev) return new DemoAdapter();
+      throw new Error('Demo payment provider is strictly disabled in production builds.');
+    }
+    return providers.stripe || providers.razorpay;
+  }
+  return provider;
 };
 
 export interface AuthoritativeItemCheck {
@@ -76,9 +92,7 @@ export const validateAndCalculateOrderPayment = async (
     const rawName = String(item.name || (item as any).item_name || '').trim();
 
     // Look up canonical item in menu database
-    const canonical = menuData.find(
-      (m) => (rawId && m.id === rawId) || m.name.toLowerCase() === rawName.toLowerCase()
-    );
+    const canonical = await getCanonicalMenuItem(rawId || rawName);
 
     if (!canonical) {
       return {
@@ -161,7 +175,11 @@ const getDemoPayments = (): PaymentRecord[] => {
 };
 
 const saveDemoPayment = (record: PaymentRecord): void => {
-  if (typeof window === 'undefined') return;
+  const proc = (globalThis as any).process;
+  const isDev = typeof import.meta !== 'undefined' && import.meta.env
+    ? Boolean(import.meta.env.DEV)
+    : (proc ? proc.env?.NODE_ENV !== 'production' : false);
+  if (!isDev || typeof window === 'undefined') return;
   try {
     const existing = getDemoPayments();
     const updated = [record, ...existing.filter((p) => p.id !== record.id)].slice(0, 100);
@@ -242,13 +260,16 @@ export const verifyAndReconcilePayment = async (
   const provider = getPaymentProvider(providerName);
   const verifyResult = await provider.verifyPayment(params);
 
-  if (verifyResult.success && verifyResult.paid) {
-    await updateOrderAndPaymentStatus(
-      params.orderRef,
-      'paid',
-      params.providerPaymentId,
-      providerName
-    );
+  // In offline local demo mode (development only, when Supabase is not configured)
+  if (!isSupabaseConfigured && providerName === 'demo') {
+    if (verifyResult.success && verifyResult.paid) {
+      await updateOrderAndPaymentStatus(
+        params.orderRef,
+        'paid',
+        params.providerPaymentId,
+        providerName
+      );
+    }
   } else if (!verifyResult.paid) {
     await updateOrderAndPaymentStatus(
       params.orderRef,
@@ -258,6 +279,9 @@ export const verifyAndReconcilePayment = async (
       verifyResult.error || 'Payment verification failed'
     );
   }
+  // NOTE: For live providers (Stripe, Razorpay) with Supabase, client code NEVER
+  // marks the order as 'paid'. That is strictly handled server-side by the payment webhook
+  // using the service-role key.
 
   return verifyResult;
 };
@@ -272,6 +296,16 @@ export const updateOrderAndPaymentStatus = async (
   providerName: PaymentProvider = 'demo',
   failureReason?: string
 ): Promise<{ success: boolean; error?: string }> => {
+  // CLIENT SECURITY ENFORCEMENT:
+  // Client code may NEVER set payment_status to 'paid' in Supabase.
+  // Only the verified webhook (service role) is permitted to mark an order as paid.
+  if (status === 'paid' && isSupabaseConfigured && supabase) {
+    console.info(
+      `[paymentService] Client-side 'paid' status mutation skipped for ${orderRef}. Authoritative reconciliation is handled exclusively by verified webhook.`
+    );
+    return { success: true };
+  }
+
   const paidAt = status === 'paid' ? new Date().toISOString() : null;
 
   if (isSupabaseConfigured && supabase) {
@@ -312,7 +346,15 @@ export const updateOrderAndPaymentStatus = async (
     }
   }
 
-  // Local / Demo Mode Update
+  // Local / Demo Mode Update (strictly restricted to DEV environment)
+  const proc = (globalThis as any).process;
+  const isDev = typeof import.meta !== 'undefined' && import.meta.env
+    ? Boolean(import.meta.env.DEV)
+    : (proc ? proc.env?.NODE_ENV !== 'production' : false);
+  if (!isDev) {
+    return { success: false, error: 'Database is not configured and demo mode is disabled in production.' };
+  }
+
   if (typeof window !== 'undefined') {
     try {
       const raw = localStorage.getItem('cafe_demo_orders');
@@ -415,7 +457,7 @@ export const handleWebhookEvent = async (
 
 /**
  * Staff-authorized server-side refund boundary (Section 24).
- * Enforces staff authentication and delegates to provider adapter if available.
+ * Enforces staff authentication and delegates to process-refund Edge Function.
  */
 export const processRefund = async (
   orderRef: string,
@@ -428,11 +470,35 @@ export const processRefund = async (
     if (!user) {
       return { success: false, error: 'Unauthorized: Only authenticated staff can initiate refunds.' };
     }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('process-refund', {
+        body: { order_ref: orderRef, amount, reason },
+      });
+
+      if (error) {
+        return { success: false, error: error.message || 'Refund invocation failed.' };
+      }
+
+      if (data && !data.success) {
+        return { success: false, error: data.error || 'Refund rejected by server.' };
+      }
+
+      return {
+        success: true,
+        refundId: data?.refundId || `ref_${Date.now()}`,
+      };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Exception during refund invocation.' };
+    }
+  }
+
+  // Local / dev fallback
+  if (!isDev) {
+    return { success: false, error: 'Refunds require backend connection in production.' };
   }
 
   const effectiveReason = reason || (amount ? `Staff initiated refund of ${amount}` : 'Staff initiated refund');
-
-  // Update order and payments to refunded
   await updateOrderAndPaymentStatus(
     orderRef,
     'refunded',
@@ -443,6 +509,117 @@ export const processRefund = async (
 
   return {
     success: true,
-    refundId: `ref_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    refundId: `ref_demo_${Date.now()}`,
   };
 };
+
+export interface PaymentHealthStatus {
+  activeProvider: string;
+  paymentsEnabled: boolean;
+  allowPayAtCounter: boolean;
+  statusText: 'Connected' | 'Not connected';
+  isConnected: boolean;
+  providers: {
+    razorpay: {
+      connected: boolean;
+      hasKeyId: boolean;
+      hasKeySecret: boolean;
+      hasWebhookSecret: boolean;
+    };
+    stripe: {
+      connected: boolean;
+      hasSecretKey: boolean;
+      hasWebhookSecret: boolean;
+    };
+  };
+}
+
+/**
+ * Health check: queries payment-health-check Edge Function.
+ * NEVER returns secret values, only boolean connection flags.
+ */
+export const checkPaymentHealth = async (): Promise<PaymentHealthStatus> => {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase.functions.invoke('payment-health-check');
+      if (!error && data && data.success) {
+        return data;
+      }
+    } catch (err) {
+      console.warn('[paymentService] Health check failed, using fallback:', err);
+    }
+  }
+
+  return {
+    activeProvider: isDev ? 'demo' : 'none',
+    paymentsEnabled: false,
+    allowPayAtCounter: true,
+    statusText: 'Not connected',
+    isConnected: false,
+    providers: {
+      razorpay: { connected: false, hasKeyId: false, hasKeySecret: false, hasWebhookSecret: false },
+      stripe: { connected: false, hasSecretKey: false, hasWebhookSecret: false },
+    },
+  };
+};
+
+/**
+ * Initiates a test payment transaction to verify end-to-end gateway configuration.
+ */
+export const sendTestPayment = async (
+  provider: PaymentProvider = 'stripe',
+  amount = 100,
+  currency = 'INR'
+): Promise<{ success: boolean; orderRef?: string; message?: string; error?: string }> => {
+  const testRef = `TEST-${Date.now().toString(36).toUpperCase()}`;
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error: orderErr } = await supabase
+        .from('orders')
+        .insert({
+          order_ref: testRef,
+          customer_name: 'Test Payment Simulator',
+          customer_phone: '+919999999999',
+          order_type: 'dine_in',
+          table_number: '99',
+          special_requests: 'Simulated test transaction from staff settings',
+          subtotal: amount,
+          total: amount,
+          currency: currency.toUpperCase(),
+          status: 'pending',
+          source: 'website',
+          payment_required: true,
+          payment_status: 'pending',
+          payment_provider: provider,
+        });
+
+      if (orderErr) {
+        return { success: false, error: `Could not insert test order: ${orderErr.message}` };
+      }
+
+      const { data: createData, error: createErr } = await supabase.functions.invoke('create-payment', {
+        body: { order_ref: testRef },
+      });
+
+      if (createErr) {
+        return { success: false, error: `create-payment edge function error: ${createErr.message}` };
+      }
+
+      return {
+        success: true,
+        orderRef: testRef,
+        message: `Test payment initiated successfully for ${provider.toUpperCase()}.${createData?.paymentId || createData?.orderId ? ` Ref: ${createData?.paymentId || createData?.orderId}` : ''}`,
+      };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Test payment failed.' };
+    }
+  }
+
+  return {
+    success: true,
+    orderRef: testRef,
+    message: `Test payment simulation completed for ${provider}.`,
+  };
+};
+

@@ -51,6 +51,7 @@ ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
 -- Anonymous public website visitors: INSERT only.
 -- Strict Privacy: No public SELECT, UPDATE, or DELETE permissions.
 -- Prevents unauthorized scraping or enumeration of customer reservations.
+DROP POLICY IF EXISTS "Allow public reservation insertion" ON public.reservations;
 CREATE POLICY "Allow public reservation insertion"
     ON public.reservations
     FOR INSERT

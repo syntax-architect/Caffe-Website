@@ -36,12 +36,12 @@ export type KitchenConnectionStatus = 'live' | 'reconnecting' | 'offline';
 
 /**
  * Determines whether an order is eligible to appear on the Kitchen Display.
- * KDS SAFETY RULE: Orders with payment_status === 'pending' | 'failed' | 'cancelled'
- * MUST NOT appear in active kitchen columns until paid or if payment is not required.
+ * KDS SAFETY RULE: The kitchen screen must show only paid orders or pay-at-counter orders.
+ * Orders with payment_status === 'pending' | 'failed' | 'cancelled' MUST NOT appear.
  */
 export const isKdsEligible = (order: { payment_status?: PaymentStatus | string }): boolean => {
-  if (!order.payment_status) return true; // legacy support
-  return order.payment_status === 'paid' || order.payment_status === 'not_required';
+  if (!order.payment_status) return true; // legacy pre-008 support
+  return order.payment_status === 'paid' || order.payment_status === 'pay_at_counter' || order.payment_status === 'not_required';
 };
 
 export const ALLOWED_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {

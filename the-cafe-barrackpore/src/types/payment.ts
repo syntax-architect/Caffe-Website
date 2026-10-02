@@ -8,19 +8,22 @@ export type PaymentStatus =
   | 'pending'
   | 'processing'
   | 'paid'
+  | 'pay_at_counter'
   | 'failed'
   | 'cancelled'
   | 'refunded'
   | 'partially_refunded';
 
-export type PaymentProvider = 'stripe' | 'razorpay' | 'manual' | 'demo';
+export type PaymentProvider = 'stripe' | 'razorpay' | 'none' | 'manual' | 'demo' | 'counter';
 
 export type PaymentMode = 'disabled' | 'online' | 'optional';
 
 export interface PaymentConfiguration {
   enabled: boolean;
+  payments_enabled?: boolean;
   provider: PaymentProvider;
   mode: PaymentMode;
+  allow_pay_at_counter?: boolean;
   publishableKey?: string;
 }
 
@@ -59,11 +62,16 @@ export interface PaymentCheckoutResult {
   success: boolean;
   provider: PaymentProvider;
   paymentId?: string;
+  sessionId?: string;
+  orderId?: string;
+  razorpayOrderId?: string;
+  keyId?: string;
   checkoutUrl?: string;
   clientSecret?: string;
   orderRef: string;
   amount: number;
   currency: string;
+  customer?: { name?: string; contact?: string; phone?: string; email?: string };
   isDemo?: boolean;
   error?: string;
 }

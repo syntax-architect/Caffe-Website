@@ -109,6 +109,9 @@ const requiredMigrationHeaders = [
   '006_kitchen_realtime.sql',
   '007_internationalization.sql',
   '008_payment_architecture.sql',
+  '009_menu_and_secure_orders.sql',
+  '010_menu_and_site_content.sql',
+  '011_multi_tenant_and_allergens.sql',
 ];
 
 for (const header of requiredMigrationHeaders) {

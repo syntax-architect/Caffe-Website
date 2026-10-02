@@ -63,6 +63,8 @@ export interface CreateOrderPayload {
   payment_reference?: string | null;
   payment_amount?: number;
   tax_options?: TaxCalculationOptions;
+  restaurant_id?: string;
+  captcha_token?: string;
 }
 
 export interface OrderRecord {

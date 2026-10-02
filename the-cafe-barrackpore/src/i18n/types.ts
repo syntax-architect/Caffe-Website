@@ -113,6 +113,8 @@ export interface TranslationDictionary {
     customizeNote: string;
     specialInstructions: string;
     specialInstructionsPlaceholder: string;
+    allergens?: string;
+    customise?: string;
   };
 
   // ─── Cart & Checkout ───────────────────────────────

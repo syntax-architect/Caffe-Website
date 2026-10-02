@@ -1,49 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import type { StaffProfile, AuthContextType, AuthSignInResult, StaffRole } from '../types/auth';
+import type { StaffProfile, AuthContextType, AuthSignInResult } from '../types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const getInitialDemoAuth = (): { user: User | null; session: Session | null; profile: StaffProfile | null } => {
-  if (typeof window === 'undefined') {
-    return { user: null, session: null, profile: null };
-  }
-  try {
-    const saved = localStorage.getItem('cafe_demo_auth_active');
-    if (saved) {
-      const profile = JSON.parse(saved);
-      if (profile && profile.active) {
-        const mockUser = {
-          id: profile.user_id || 'demo-user-1',
-          email: profile.email || 'admin@gmail.com',
-          aud: 'authenticated',
-          app_metadata: {},
-          user_metadata: { full_name: profile.full_name || 'Restaurant Administrator' },
-          created_at: new Date().toISOString(),
-        } as User;
-        const mockSession = {
-          access_token: 'demo-token',
-          token_type: 'bearer',
-          user: mockUser,
-        } as Session;
-        return { user: mockUser, session: mockSession, profile };
-      }
-    }
-  } catch {
-    // ignore
-  }
-  return { user: null, session: null, profile: null };
-};
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [initialDemo] = useState(getInitialDemoAuth);
-  const [user, setUser] = useState<User | null>(initialDemo.user);
-  const [session, setSession] = useState<Session | null>(initialDemo.session);
-  const [staffProfile, setStaffProfile] = useState<StaffProfile | null>(initialDemo.profile);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [staffProfile, setStaffProfile] = useState<StaffProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(() => {
-    // If demo/admin credentials exist in localStorage, immediately grant access without spinner
-    if (initialDemo.user && initialDemo.profile) return false;
     if (!supabase || !isSupabaseConfigured) return false;
     return true;
   });
@@ -52,9 +18,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * Fetches the authoritative staff profile from public.staff_profiles
    */
   const fetchStaffProfile = useCallback(async (userId: string): Promise<StaffProfile | null> => {
-    if (!supabase) return null;
+    const client = supabase;
+    if (!client) return null;
     try {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('staff_profiles')
         .select('*')
         .eq('user_id', userId)
@@ -74,16 +41,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   /**
    * Initializes auth state and attaches listener
+   * Ensures users have an active row in staff_profiles; otherwise signs them out.
    */
   useEffect(() => {
-    if (!supabase || !isSupabaseConfigured) {
+    const client = supabase;
+    if (!client || !isSupabaseConfigured) {
+      setIsLoading(false);
       return;
     }
 
     let isMounted = true;
 
     // 1. Fetch initial session
-    supabase.auth
+    client.auth
       .getSession()
       .then(async ({ data: { session: initialSession }, error }) => {
         if (!isMounted) return;
@@ -93,42 +63,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           return;
         }
 
-        if (initialSession) {
-          setSession(initialSession);
-          setUser(initialSession?.user ?? null);
+        if (initialSession?.user) {
           const profile = await fetchStaffProfile(initialSession.user.id);
-          if (isMounted) {
-            setStaffProfile(profile && profile.active ? profile : null);
+          if (!profile || !profile.active) {
+            // Require active row in staff_profiles; otherwise sign out
+            await client.auth.signOut();
+            if (isMounted) {
+              setSession(null);
+              setUser(null);
+              setStaffProfile(null);
+            }
+          } else {
+            if (isMounted) {
+              setSession(initialSession);
+              setUser(initialSession.user);
+              setStaffProfile(profile);
+            }
           }
         } else {
-          // If no active Supabase session, check if admin/demo auth is stored in localStorage
-          const saved = typeof window !== 'undefined' ? localStorage.getItem('cafe_demo_auth_active') : null;
-          if (saved) {
-            try {
-              const profile = JSON.parse(saved);
-              if (profile && profile.active) {
-                const mockUser = {
-                  id: profile.user_id || 'demo-user-1',
-                  email: profile.email || 'admin@gmail.com',
-                  aud: 'authenticated',
-                  app_metadata: {},
-                  user_metadata: { full_name: profile.full_name || 'Restaurant Administrator' },
-                  created_at: new Date().toISOString(),
-                } as User;
-                const mockSession = {
-                  access_token: 'demo-token',
-                  token_type: 'bearer',
-                  user: mockUser,
-                } as Session;
-                if (isMounted) {
-                  setUser(mockUser);
-                  setSession(mockSession);
-                  setStaffProfile(profile);
-                }
-              }
-            } catch {
-              // ignore
-            }
+          if (isMounted) {
+            setSession(null);
+            setUser(null);
+            setStaffProfile(null);
           }
         }
         if (isMounted) {
@@ -145,19 +101,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // 2. Subscribe to auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    } = client.auth.onAuthStateChange(async (_event, newSession) => {
       if (!isMounted) return;
 
       if (newSession?.user) {
-        setSession(newSession);
-        setUser(newSession.user);
         const profile = await fetchStaffProfile(newSession.user.id);
-        if (isMounted) {
-          setStaffProfile(profile && profile.active ? profile : null);
+        if (!profile || !profile.active) {
+          await client.auth.signOut();
+          if (isMounted) {
+            setSession(null);
+            setUser(null);
+            setStaffProfile(null);
+          }
+        } else {
+          if (isMounted) {
+            setSession(newSession);
+            setUser(newSession.user);
+            setStaffProfile(profile);
+          }
         }
       } else {
-        const hasDemo = typeof window !== 'undefined' && localStorage.getItem('cafe_demo_auth_active');
-        if (!hasDemo && isMounted) {
+        if (isMounted) {
           setSession(null);
           setUser(null);
           setStaffProfile(null);
@@ -176,42 +140,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [fetchStaffProfile]);
 
   /**
-   * Demo mode sign-in for frictionless local testing and client evaluation
-   */
-  const signInDemo = useCallback((demoRole: StaffRole = 'owner', demoEmail: string = 'admin@gmail.com') => {
-    const demoProfile: StaffProfile = {
-      id: 'demo-staff-1',
-      user_id: 'demo-user-1',
-      full_name: demoRole === 'owner' ? 'Restaurant Administrator' : demoRole === 'manager' ? 'Shift Manager' : 'Kitchen Head',
-      role: demoRole,
-      active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    const mockUser = {
-      id: 'demo-user-1',
-      email: demoEmail,
-      aud: 'authenticated',
-      app_metadata: {},
-      user_metadata: { full_name: demoProfile.full_name },
-      created_at: new Date().toISOString(),
-    } as User;
-    const mockSession = {
-      access_token: 'demo-token',
-      token_type: 'bearer',
-      user: mockUser,
-    } as Session;
-
-    setUser(mockUser);
-    setSession(mockSession);
-    setStaffProfile(demoProfile);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('cafe_demo_auth_active', JSON.stringify({ ...demoProfile, email: demoEmail }));
-    }
-  }, []);
-
-  /**
-   * Sign in using Supabase Auth, with direct support for admin@gmail.com / admin123
+   * Sign in strictly using supabase.auth.signInWithPassword AND verified active staff_profiles record.
+   * Otherwise sign out and return an error.
    */
   const signIn = async (email: string, password: string): Promise<AuthSignInResult> => {
     const cleanEmail = email.trim().toLowerCase();
@@ -224,26 +154,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { success: false, error: 'Please enter your password.' };
     }
 
-    // Direct Administrator Credentials Override: admin@gmail.com / admin123
-    if (
-      (cleanEmail === 'admin@gmail.com' || cleanEmail === 'admin@thecafebarrackpore.com') &&
-      cleanPassword === 'admin123'
-    ) {
-      signInDemo('owner', cleanEmail);
-      setIsLoading(false);
-      return { success: true };
-    }
-
-    if (!supabase || !isSupabaseConfigured) {
+    const client = supabase;
+    if (!client || !isSupabaseConfigured) {
       return {
         success: false,
-        error: 'Invalid credentials. For staff access, enter email: admin@gmail.com and password: admin123',
+        error: 'Authentication service is not configured. Please verify database connection settings.',
       };
     }
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await client.auth.signInWithPassword({
         email: cleanEmail,
         password: cleanPassword,
       });
@@ -251,55 +172,59 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) {
         setIsLoading(false);
         if (error.message.toLowerCase().includes('invalid login credentials')) {
-          return { success: false, error: 'Invalid email or password. Use admin@gmail.com and pass: admin123' };
+          return { success: false, error: 'Invalid email or password.' };
         }
         if (error.message.toLowerCase().includes('rate limit')) {
           return { success: false, error: 'Too many login attempts. Please wait a moment and try again.' };
         }
-        return { success: false, error: 'Sign in failed. Please verify your credentials or contact management.' };
+        return { success: false, error: error.message || 'Authentication failed. Please verify your credentials.' };
       }
 
       if (!data.user) {
         setIsLoading(false);
-        return { success: false, error: 'No user account returned from authentication.' };
+        return { success: false, error: 'Authentication failed: No user account returned.' };
       }
 
-      // Authoritative staff profile check
+      // Check authoritative public.staff_profiles table
       const profile = await fetchStaffProfile(data.user.id);
 
       if (!profile) {
-        await supabase.auth.signOut();
+        // Sign out immediately if no staff profile exists
+        await client.auth.signOut();
         setSession(null);
         setUser(null);
         setStaffProfile(null);
         setIsLoading(false);
         return {
           success: false,
-          error: 'Your account does not currently have staff access. Please speak to your manager.',
+          error: 'Access denied: No staff profile found for this account. Please speak to your manager.',
         };
       }
 
       if (!profile.active) {
-        await supabase.auth.signOut();
+        // Sign out immediately if deactivated
+        await client.auth.signOut();
         setSession(null);
         setUser(null);
         setStaffProfile(null);
         setIsLoading(false);
         return {
           success: false,
-          error: 'Your staff account is currently deactivated. Please contact the administrator.',
+          error: 'Access denied: Your staff account is deactivated. Please contact your administrator.',
         };
       }
 
+      setSession(data.session);
+      setUser(data.user);
       setStaffProfile(profile);
       setIsLoading(false);
       return { success: true };
-    } catch (err) {
+    } catch (err: any) {
       console.error('[Auth] Unexpected error during sign in:', err);
       setIsLoading(false);
       return {
         success: false,
-        error: 'An unexpected connection error occurred. Please try again.',
+        error: err.message || 'An unexpected connection error occurred. Please try again.',
       };
     }
   };
@@ -310,9 +235,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signOut = async (): Promise<void> => {
     setIsLoading(true);
     try {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('cafe_demo_auth_active');
-      }
       if (supabase && isSupabaseConfigured) {
         await supabase.auth.signOut();
       }
@@ -338,7 +260,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(data.session.user);
         if (data.session.user) {
           const profile = await fetchStaffProfile(data.session.user.id);
-          setStaffProfile(profile && profile.active ? profile : null);
+          if (!profile || !profile.active) {
+            await supabase.auth.signOut();
+            setSession(null);
+            setUser(null);
+            setStaffProfile(null);
+          } else {
+            setStaffProfile(profile);
+          }
         }
       }
     } catch (err) {
@@ -369,7 +298,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         signIn,
         signOut,
         refreshSession,
-        signInDemo,
       }}
     >
       {children}

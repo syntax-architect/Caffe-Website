@@ -186,9 +186,13 @@ export const SpecialsBanner: React.FC = () => {
                             id: combo.id,
                             name: combo.name,
                             category: combo.category,
+                            category_id: combo.category,
                             diet: combo.diet,
                             price: combo.price,
                             description: combo.description,
+                            popular: true,
+                            available: true,
+                            sort_order: 99,
                           });
                           showToast({
                             title: 'Added to Order',

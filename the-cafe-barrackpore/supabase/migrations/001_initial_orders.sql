@@ -85,12 +85,14 @@ ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 -- Anonymous public website customers: INSERT only.
 -- Strict Privacy: No public SELECT, UPDATE, or DELETE permissions.
 -- Customers cannot scrape or browse other customer orders.
+DROP POLICY IF EXISTS "Allow public order insertion" ON public.orders;
 CREATE POLICY "Allow public order insertion"
     ON public.orders
     FOR INSERT
     TO anon, authenticated
     WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow public order_items insertion" ON public.order_items;
 CREATE POLICY "Allow public order_items insertion"
     ON public.order_items
     FOR INSERT

@@ -246,10 +246,10 @@ export const Footer: React.FC = () => {
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 font-sans text-xs text-on-surface/50 text-center md:text-left">
           <p>© {new Date().getFullYear()} {businessName} {shortName}. All culinary &amp; brand rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <a className="hover:text-primary transition-colors" href="#" onClick={(e) => handleDummy(e, 'Privacy Policy', `${businessName} takes guest data privacy with absolute seriousness. Data is never shared or sold.`)}>
-              Privacy
+            <a className="hover:text-primary transition-colors" href="/privacy">
+              Privacy Policy
             </a>
-            <a className="hover:text-primary transition-colors" href="#" onClick={(e) => handleDummy(e, 'Terms of Hospitality', 'Standard restaurant service guidelines, hygiene protocols, and guest booking policies apply.')}>
+            <a className="hover:text-primary transition-colors" href="/terms">
               Terms of Service
             </a>
             <a className="hover:text-primary transition-colors" href="#" onClick={(e) => handleDummy(e, 'Hygiene Standards', hygieneMsg)}>

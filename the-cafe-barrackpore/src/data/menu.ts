@@ -7,6 +7,7 @@ export interface MenuItem {
   description: string;
   image?: string;
   tag?: string | null;
+  allergens?: string[];
 }
 
 export const menuData: MenuItem[] = [

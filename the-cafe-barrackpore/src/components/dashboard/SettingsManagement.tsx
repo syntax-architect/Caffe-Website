@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { fetchRestaurantSettings, updateRestaurantSettings } from '../../services/dashboardService';
 import { RESTAURANT_PRESETS, PRESET_REGIONS } from '../../config/restaurantPresets';
 import { getCountryTaxProfile } from '../../config/taxProfiles';
 import { useNotification } from '../../hooks/useNotification';
+import { checkPaymentHealth, sendTestPayment, type PaymentHealthStatus } from '../../services/paymentService';
 import type { RestaurantSettings } from '../../types/dashboard';
 
 export const SettingsManagement: React.FC = () => {
-  const { isOwner } = useAuth();
+  const { user, isOwner } = useAuth();
   const { addNotification } = useNotification();
   const { updateRestaurantConfig } = useSiteConfig();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  // Change Password State
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   // Form Fields - Operations
   const [businessName, setBusinessName] = useState('');
@@ -49,13 +57,46 @@ export const SettingsManagement: React.FC = () => {
   const [serviceChargeLabel, setServiceChargeLabel] = useState('Service Charge');
   const [serviceChargeTaxable, setServiceChargeTaxable] = useState(false);
 
-  // Form Fields - Payment Architecture (Phase 1J)
-  const [paymentEnabled, setPaymentEnabled] = useState(false);
-  const [paymentProvider, setPaymentProvider] = useState<'stripe' | 'razorpay' | 'demo'>('stripe');
+  // Form Fields - Payment Architecture
+  const [paymentsEnabled, setPaymentsEnabled] = useState(false);
+  const [paymentProvider, setPaymentProvider] = useState<'stripe' | 'razorpay' | 'none' | 'demo'>('none');
   const [paymentMode, setPaymentMode] = useState<'disabled' | 'online' | 'optional'>('disabled');
+  const [allowPayAtCounter, setAllowPayAtCounter] = useState(true);
+  const [healthStatus, setHealthStatus] = useState<PaymentHealthStatus | null>(null);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState(false);
 
   // Tax Legal Note (informational)
   const [taxLegalNote, setTaxLegalNote] = useState('');
+
+  const refreshPaymentHealth = async () => {
+    setIsCheckingHealth(true);
+    try {
+      const status = await checkPaymentHealth();
+      setHealthStatus(status);
+    } catch {
+      // ignore
+    } finally {
+      setIsCheckingHealth(false);
+    }
+  };
+
+  const handleSendTestPayment = async () => {
+    if (!isOwner || isSendingTest) return;
+    setIsSendingTest(true);
+    try {
+      const res = await sendTestPayment(paymentProvider as any, 100, currency);
+      if (res.success) {
+        addNotification('success', 'Test Payment Sent', res.message || 'Test payment registered successfully.');
+      } else {
+        addNotification('error', 'Test Payment Failed', res.error || 'Failed to send test payment.');
+      }
+    } catch (err: any) {
+      addNotification('error', 'Test Payment Error', err.message || 'Unexpected error.');
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -90,9 +131,12 @@ export const SettingsManagement: React.FC = () => {
         setPostalCode(data.postal_code || '');
 
         // Payment fields
-        setPaymentEnabled(data.payment_enabled ?? false);
-        setPaymentProvider((data.payment_provider as any) || 'stripe');
+        setPaymentsEnabled(data.payments_enabled ?? data.payment_enabled ?? false);
+        setPaymentProvider((data.payment_provider as any) || 'none');
         setPaymentMode((data.payment_mode as any) || 'disabled');
+        setAllowPayAtCounter(data.allow_pay_at_counter ?? true);
+
+        refreshPaymentHealth();
 
         setIsLoading(false);
       })
@@ -145,9 +189,10 @@ export const SettingsManagement: React.FC = () => {
     if (!postalCode || postalCode === '700120') setPostalCode(preset.addressSample.postalCode);
 
     if (preset.payments) {
-      setPaymentEnabled(preset.payments.enabled);
+      setPaymentsEnabled(preset.payments.enabled);
       setPaymentProvider(preset.payments.provider as any);
       setPaymentMode(preset.payments.mode);
+      setAllowPayAtCounter(preset.payments.allow_pay_at_counter ?? true);
     }
 
     addNotification('info', `Preset Applied: ${preset.name}`, `Loaded ${taxProfile.config.label} ${taxProfile.config.rate > 0 ? (taxProfile.config.rate * 100) + '%' : ''} tax config for ${preset.name}.`);
@@ -190,9 +235,11 @@ export const SettingsManagement: React.FC = () => {
         city: city.trim() || null,
         state_region: stateRegion.trim() || null,
         postal_code: postalCode.trim() || null,
-        payment_enabled: paymentEnabled,
+        payment_enabled: paymentsEnabled,
+        payments_enabled: paymentsEnabled,
         payment_provider: paymentProvider,
         payment_mode: paymentMode,
+        allow_pay_at_counter: allowPayAtCounter,
         service_charge_enabled: serviceChargeEnabled,
         service_charge_rate: parseFloat(serviceChargeRate) / 100 || 0,
         service_charge_label: serviceChargeLabel.trim() || 'Service Charge',
@@ -247,13 +294,16 @@ export const SettingsManagement: React.FC = () => {
             country: updated.country === 'IN' ? 'India' : updated.country || '',
           },
           payments: {
-            enabled: paymentEnabled,
+            enabled: paymentsEnabled,
             provider: paymentProvider,
             mode: paymentMode,
+            payments_enabled: paymentsEnabled,
+            allow_pay_at_counter: allowPayAtCounter,
           },
         });
 
-        addNotification('success', 'Settings Saved', 'Operational and international settings updated.');
+        await refreshPaymentHealth();
+        addNotification('success', 'Settings Saved', 'Operational and payment gateway settings updated.');
       } else {
         addNotification('error', 'Update Failed', res.error || 'Failed to update settings.');
       }
@@ -261,6 +311,42 @@ export const SettingsManagement: React.FC = () => {
       addNotification('error', 'Error', 'Failed to save settings.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword) {
+      addNotification('error', 'Validation Error', 'Please enter a new password.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      addNotification('error', 'Validation Error', 'Password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      addNotification('error', 'Validation Error', 'Passwords do not match. Please verify both fields.');
+      return;
+    }
+    if (!supabase || !isSupabaseConfigured) {
+      addNotification('error', 'Service Unavailable', 'Authentication service is not configured.');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        addNotification('error', 'Password Change Failed', error.message);
+      } else {
+        addNotification('success', 'Password Updated', 'Your security password has been changed successfully.');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch (err: any) {
+      addNotification('error', 'Error', err.message || 'An unexpected error occurred.');
+    } finally {
+      setIsUpdatingPassword(false);
     }
   };
 
@@ -730,22 +816,22 @@ export const SettingsManagement: React.FC = () => {
                     Payment Architecture & Checkout
                   </h3>
                   <p className="text-xs text-zinc-400 mt-0.5">
-                    Configure customer digital payments via Stripe, Razorpay, or testing simulator.
+                    Configure customer digital payments via Razorpay (India UPI/cards) or Stripe (Global). Edge Function secrets hold all API credentials securely.
                   </p>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <label htmlFor="payment-enabled-toggle" className="text-xs text-zinc-400 font-mono">
-                    Payment Active
+                    Payments Active
                   </label>
                   <input
                     id="payment-enabled-toggle"
                     type="checkbox"
-                    checked={paymentEnabled}
+                    checked={paymentsEnabled}
                     disabled={!isOwner}
                     onChange={(e) => {
                       const checked = e.target.checked;
-                      setPaymentEnabled(checked);
+                      setPaymentsEnabled(checked);
                       if (!checked) setPaymentMode('disabled');
                       else if (paymentMode === 'disabled') setPaymentMode('online');
                     }}
@@ -754,16 +840,120 @@ export const SettingsManagement: React.FC = () => {
                 </div>
               </div>
 
+              {/* Gateway Health & Connection Status */}
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Gateway Status:</span>
+                    {paymentProvider === 'none' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-zinc-800 text-zinc-400 border border-zinc-700">
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+                        Disabled (None)
+                      </span>
+                    ) : paymentProvider === 'demo' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-amber-950/40 text-amber-300 border border-amber-500/30">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                        Simulator Active (Dev Only)
+                      </span>
+                    ) : healthStatus?.providers[paymentProvider]?.connected ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-950/40 text-emerald-300 border border-emerald-500/30">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                        Connected
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-rose-950/40 text-rose-300 border border-rose-500/30">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                        Not connected
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={isCheckingHealth}
+                      onClick={refreshPaymentHealth}
+                      className="px-3 py-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-xs text-zinc-300 font-mono transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                      title="Check gateway secrets presence in Supabase Edge Functions"
+                    >
+                      <span className={`material-symbols-outlined text-sm ${isCheckingHealth ? 'animate-spin' : ''}`}>
+                        refresh
+                      </span>
+                      {isCheckingHealth ? 'Checking...' : 'Check Status'}
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={!isOwner || isSendingTest || paymentProvider === 'none'}
+                      onClick={handleSendTestPayment}
+                      className="px-3.5 py-1.5 rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-xs text-[#D4AF37] font-mono font-medium transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                      title="Simulate a small test payment to verify edge functions"
+                    >
+                      <span className={`material-symbols-outlined text-sm ${isSendingTest ? 'animate-spin' : ''}`}>
+                        {isSendingTest ? 'progress_activity' : 'send'}
+                      </span>
+                      {isSendingTest ? 'Sending...' : 'Send Test Payment'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Secret Presence Details (Booleans Only - Zero Secret Leakage) */}
+                {paymentProvider === 'razorpay' && (
+                  <div className="pt-2 border-t border-white/[0.04] grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-mono">
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
+                      <span className="text-zinc-400">RAZORPAY_KEY_ID:</span>
+                      <span className={healthStatus?.providers.razorpay.hasKeyId ? 'text-emerald-400' : 'text-rose-400'}>
+                        {healthStatus?.providers.razorpay.hasKeyId ? '✓ Configured' : '✗ Missing'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
+                      <span className="text-zinc-400">RAZORPAY_KEY_SECRET:</span>
+                      <span className={healthStatus?.providers.razorpay.hasKeySecret ? 'text-emerald-400' : 'text-rose-400'}>
+                        {healthStatus?.providers.razorpay.hasKeySecret ? '✓ Configured' : '✗ Missing'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
+                      <span className="text-zinc-400">WEBHOOK_SECRET:</span>
+                      <span className={healthStatus?.providers.razorpay.hasWebhookSecret ? 'text-emerald-400' : 'text-amber-400'}>
+                        {healthStatus?.providers.razorpay.hasWebhookSecret ? '✓ Configured' : '○ Optional'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {paymentProvider === 'stripe' && (
+                  <div className="pt-2 border-t border-white/[0.04] grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
+                      <span className="text-zinc-400">STRIPE_SECRET_KEY:</span>
+                      <span className={healthStatus?.providers.stripe.hasSecretKey ? 'text-emerald-400' : 'text-rose-400'}>
+                        {healthStatus?.providers.stripe.hasSecretKey ? '✓ Configured' : '✗ Missing'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
+                      <span className="text-zinc-400">STRIPE_WEBHOOK_SECRET:</span>
+                      <span className={healthStatus?.providers.stripe.hasWebhookSecret ? 'text-emerald-400' : 'text-amber-400'}>
+                        {healthStatus?.providers.stripe.hasWebhookSecret ? '✓ Configured' : '○ Optional'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[10px] text-zinc-500 font-mono">
+                  🔒 Security Policy: Secret keys live strictly in Supabase Edge Function secrets. They are never stored in the database or returned to the browser.
+                </p>
+              </div>
+
               {/* Provider Selection Cards */}
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-2">
-                  Active Payment Provider Adapter
+                  Active Payment Provider
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
-                    { id: 'stripe', title: 'Stripe', sub: 'Global Cards, Apple & Google Pay', icon: 'credit_card' },
+                    { id: 'none', title: 'None / Counter Only', sub: 'In-person cash or counter payment', icon: 'money_off' },
                     { id: 'razorpay', title: 'Razorpay', sub: 'India UPI, Net Banking & Wallets', icon: 'account_balance' },
-                    { id: 'demo', title: 'Demo Simulator', sub: 'Local Testing & Demonstration', icon: 'science' },
+                    { id: 'stripe', title: 'Stripe', sub: 'Global Cards, Apple & Google Pay', icon: 'credit_card' },
+                    ...(import.meta.env.DEV ? [{ id: 'demo', title: 'Demo Simulator', sub: 'Local Testing & Dev Demonstration', icon: 'science' }] : []),
                   ].map((p) => {
                     const isSelected = paymentProvider === p.id;
                     return (
@@ -792,6 +982,23 @@ export const SettingsManagement: React.FC = () => {
                 </div>
               </div>
 
+              {/* Allow Pay At Counter Toggle */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/[0.08]">
+                <div>
+                  <h4 className="font-bold text-white text-sm">Allow Pay at Counter</h4>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Permits guests to settle with cash or card at the counter/table, and provides a recovery option if an online payment fails.
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={allowPayAtCounter}
+                  disabled={!isOwner}
+                  onChange={(e) => setAllowPayAtCounter(e.target.checked)}
+                  className="w-5 h-5 rounded accent-[#D4AF37] cursor-pointer"
+                />
+              </div>
+
               {/* Payment Mode Selector */}
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
@@ -803,12 +1010,12 @@ export const SettingsManagement: React.FC = () => {
                   onChange={(e) => setPaymentMode(e.target.value as 'disabled' | 'online' | 'optional')}
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 >
-                  <option value="disabled" className="bg-[#120F0D]">Disabled (Pay at counter / WhatsApp verification only)</option>
+                  <option value="disabled" className="bg-[#120F0D]">Disabled (Pay at counter / manual verification only)</option>
                   <option value="online" className="bg-[#120F0D]">Online Required (Customer must complete digital payment)</option>
                   <option value="optional" className="bg-[#120F0D]">Optional (Customer chooses Pay Online or Pay at Counter)</option>
                 </select>
                 <p className="text-[11px] text-zinc-500 mt-1.5">
-                  In optional mode, customers can pay via UPI/Card immediately or pay the server in cash upon delivery.
+                  In optional mode, customers can pay via UPI/Card immediately or pay the server at the counter/table upon delivery.
                 </p>
               </div>
             </div>
@@ -967,6 +1174,91 @@ export const SettingsManagement: React.FC = () => {
                 placeholder="e.g. Special weekend degustation menu featuring artisanal wood-fired sourdough pizzas."
                 className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] resize-none"
               />
+            </div>
+          </div>
+
+          {/* SECTION 6: SECURITY & PASSWORD MANAGEMENT */}
+          <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+                    Security Credentials
+                  </span>
+                  <h3 className="font-serif text-lg font-bold text-white mt-0.5">Change Staff Password</h3>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-stone-400 font-mono">
+                  <span className="material-symbols-outlined text-sm text-emerald-400">shield</span>
+                  <span>{user?.email || 'Logged In Account'}</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Update your personal staff access password. Passwords must be at least 6 characters long.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div>
+                  <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    New Security Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Minimum 6 characters"
+                      disabled={isUpdatingPassword}
+                      className="w-full bg-[#070605] border border-white/[0.1] rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white transition-colors"
+                      aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        {showNewPassword ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter new password"
+                    disabled={isUpdatingPassword}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleChangePassword}
+                  disabled={isUpdatingPassword || !newPassword || !confirmPassword}
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider hover:brightness-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2 shadow-md"
+                >
+                  {isUpdatingPassword ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-[#070605] border-t-transparent rounded-full animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-sm">lock_reset</span>
+                      <span>Update Password</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 

@@ -49,8 +49,10 @@ export interface AddressConfiguration {
 
 export interface PaymentConfiguration {
   enabled: boolean;
+  payments_enabled?: boolean;
   provider: PaymentProvider;
   mode: PaymentMode;
+  allow_pay_at_counter?: boolean;
   publishableKey?: string;
 }
 

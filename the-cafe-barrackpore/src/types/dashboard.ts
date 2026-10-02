@@ -66,8 +66,10 @@ export interface RestaurantSettings {
   state_region?: string | null;
   postal_code?: string | null;
   payment_enabled?: boolean;
+  payments_enabled?: boolean;
   payment_provider?: PaymentProvider;
   payment_mode?: PaymentMode;
+  allow_pay_at_counter?: boolean;
 }
 
 export interface DashboardNotification {
