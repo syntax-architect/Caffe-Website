@@ -109,23 +109,14 @@ async function prerender() {
       pageHtml = pageHtml.replace('</head>', `    <!-- Multi-Language Hreflangs -->\n    ${hreflangTags}\n  </head>`);
     }
 
-    // 7. JSON-LD structured data
+    // 7. JSON-LD structured data (placed at end of body to keep head parser instantaneous)
     const schemaContent =
       seo.structuredData && seo.structuredData.length > 0
         ? JSON.stringify(seo.structuredData.length === 1 ? seo.structuredData[0] : seo.structuredData, null, 2)
         : '';
 
-    if (schemaContent) {
-      const scriptTag = `<script type="application/ld+json" id="restaurant-schema">\n${schemaContent}\n    </script>`;
-      if (pageHtml.includes('id="restaurant-schema"')) {
-        pageHtml = pageHtml.replace(
-          /<script\s+type="application\/ld\+json"\s+id="restaurant-schema">.*?<\/script>/is,
-          scriptTag
-        );
-      } else {
-        pageHtml = pageHtml.replace('</head>', `  ${scriptTag}\n  </head>`);
-      }
-    }
+    // Remove any placeholder schema from head
+    pageHtml = pageHtml.replace(/<script\s+type="application\/ld\+json"\s+id="restaurant-schema">.*?<\/script>\s*/is, '');
 
     // 8. Inject pre-rendered body markup into <div id="root">
     const cleanHtml = html;
@@ -133,7 +124,10 @@ async function prerender() {
     const rootStart = pageHtml.indexOf('<div id="root">');
     const bodyEnd = pageHtml.indexOf('</body>', rootStart);
     if (rootStart !== -1 && bodyEnd !== -1) {
-      pageHtml = pageHtml.substring(0, rootStart) + `<div id="root">${cleanHtml}</div>\n  ` + pageHtml.substring(bodyEnd);
+      const schemaTag = schemaContent
+        ? `\n    <script type="application/ld+json" id="restaurant-schema">\n${schemaContent}\n    </script>\n  `
+        : '\n  ';
+      pageHtml = pageHtml.substring(0, rootStart) + `<div id="root">${cleanHtml}</div>` + schemaTag + pageHtml.substring(bodyEnd);
     }
 
     const targetFilePath = path.resolve(distDir, route.file);

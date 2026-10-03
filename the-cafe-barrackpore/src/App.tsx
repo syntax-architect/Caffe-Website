@@ -29,8 +29,15 @@ export const AppLayout: React.FC = () => {
 
   useEffect(() => {
     setMounted(true);
-    const timer = setTimeout(() => setShowConsent(true), 2500);
-    return () => clearTimeout(timer);
+    const triggerConsent = () => setShowConsent(true);
+    window.addEventListener('scroll', triggerConsent, { once: true, passive: true });
+    window.addEventListener('pointerdown', triggerConsent, { once: true, passive: true });
+    window.addEventListener('keydown', triggerConsent, { once: true, passive: true });
+    return () => {
+      window.removeEventListener('scroll', triggerConsent);
+      window.removeEventListener('pointerdown', triggerConsent);
+      window.removeEventListener('keydown', triggerConsent);
+    };
   }, []);
 
   return (
@@ -93,7 +100,7 @@ function App() {
     };
     if (typeof window !== 'undefined') {
       window.addEventListener('scroll', prefetchDrawers, { once: true, passive: true });
-      setTimeout(prefetchDrawers, 12000);
+      window.addEventListener('pointerdown', prefetchDrawers, { once: true, passive: true });
     }
   }, []);
 

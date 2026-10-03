@@ -12,14 +12,6 @@ export const ScrollSequence: React.FC = () => {
     const isNarrow = window.innerWidth < 768;
     return hasTouch || isMobileUA || isNarrow;
   };
-
-  const [isMobile, setIsMobile] = React.useState(checkIsMobile());
-  
-  useEffect(() => {
-    const handleResize = () => setIsMobile(checkIsMobile());
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
   
   useEffect(() => {
     const isMobileRef = checkIsMobile();
@@ -96,12 +88,6 @@ export const ScrollSequence: React.FC = () => {
     };
     
     window.addEventListener('resize', handleResize, { passive: true });
-    // Defer initial sizing until idle or first interaction to eliminate initial mount reflow
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(handleResize, { timeout: 3000 });
-    } else {
-      setTimeout(handleResize, 500);
-    }
 
     // Helper to instantiate and manage a frame image with WebP-to-JPEG fallback
     const ensureFrame = (index: number, priority = false): HTMLImageElement => {
@@ -131,6 +117,7 @@ export const ScrollSequence: React.FC = () => {
     const startPhaseA = () => {
       if (phaseAStarted) return;
       phaseAStarted = true;
+      handleResize();
       const firstImg = ensureFrame(1, !isMobileRef);
       firstImg.onload = () => {
         if (canvasRef.current && firstImg.naturalWidth > 0) {
@@ -388,19 +375,16 @@ export const ScrollSequence: React.FC = () => {
   return (
     <section 
       id="scroll-sequence-section" 
-      className="relative w-full bg-background"
-      style={{ height: isMobile ? 'calc(100dvh + 700px)' : 'calc(100vh + 3200px)' }}
+      className="relative w-full bg-background h-[calc(100dvh+700px)] lg:h-[calc(100vh+3200px)]"
     >
       <div 
-        className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-black"
-        style={isMobile ? {} : { maskImage: 'radial-gradient(circle, black 40%, transparent 100%)', WebkitMaskImage: 'radial-gradient(circle, black 40%, transparent 100%)' }}
+        className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-black lg:[mask-image:radial-gradient(circle,black_40%,transparent_100%)] lg:[-webkit-mask-image:radial-gradient(circle,black_40%,transparent_100%)]"
       >
         {/* Canvas Frame Sequence (Used on both mobile and desktop) */}
         <canvas 
           ref={canvasRef}
           id="scroll-video-canvas" 
-          className="absolute inset-0 w-full h-full opacity-60 transform-gpu will-change-transform"
-          style={isMobile ? {} : { filter: 'contrast(1.25) brightness(0.9) saturate(1.1)' }}
+          className="absolute inset-0 w-full h-full opacity-60 transform-gpu will-change-transform lg:[filter:contrast(1.25)_brightness(0.9)_saturate(1.1)]"
         />
         
         {/* Subtle noise overlay (desktop only to save mobile GPU/CPU) */}

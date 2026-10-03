@@ -8,10 +8,10 @@ export const AboutVibe: React.FC = () => {
   const images = (aboutVibe?.images && aboutVibe.images.length > 0)
     ? aboutVibe.images
     : [
-        { src: '/images/components/comp_img_0_highres.jpg', alt: 'Midnight Velvet Booth Seating' },
-        { src: '/images/components/comp_img_2_highres.jpg', alt: 'Live Acoustic & Reading Nook' },
-        { src: '/images/components/comp_img_3_highres.jpg', alt: 'Signature Brew Bar & Mixology' },
-        { src: '/images/components/comp_img_1_highres.jpg', alt: 'Artisan Platters and Comfort Food' },
+        { src: '/images/components/comp_img_0.webp', alt: 'Midnight Velvet Booth Seating' },
+        { src: '/images/components/comp_img_2.webp', alt: 'Live Acoustic & Reading Nook' },
+        { src: '/images/components/comp_img_3.webp', alt: 'Signature Brew Bar & Mixology' },
+        { src: '/images/components/comp_img_1.webp', alt: 'Artisan Platters and Comfort Food' },
       ];
   const sectionRef = useRef<HTMLElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);

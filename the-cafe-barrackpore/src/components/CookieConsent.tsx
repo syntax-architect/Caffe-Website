@@ -7,9 +7,7 @@ export const CookieConsent: React.FC = () => {
     try {
       const consent = localStorage.getItem('cafe_cookie_consent');
       if (!consent) {
-        // Small delay so it smoothly slides up after initial paint
-        const timer = setTimeout(() => setIsVisible(true), 2500);
-        return () => clearTimeout(timer);
+        setIsVisible(true);
       }
     } catch {
       // Storage unavailable
