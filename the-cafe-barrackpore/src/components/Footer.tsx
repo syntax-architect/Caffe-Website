@@ -153,23 +153,23 @@ export const Footer: React.FC = () => {
               Cuisine &amp; Curations
             </h4>
             <div className="flex flex-col gap-2.5 text-xs font-sans">
-              <a className="hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
+              <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
                 <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
                 <span>Artisanal Single-Origin Brews</span>
               </a>
-              <a className="hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'chef-specials')}>
+              <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'chef-specials')}>
                 <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
                 <span>Chef's Signature Banquets</span>
               </a>
-              <a className="hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
+              <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
                 <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
                 <span>Wood-Fired Pizzas &amp; Dim Sums</span>
               </a>
-              <a className="hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
+              <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
                 <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
                 <span>Lounge Mocktails &amp; Cold Drips</span>
               </a>
-              <a className="hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'gallery')}>
+              <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'gallery')}>
                 <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
                 <span>Atmosphere &amp; Private Booths</span>
               </a>
@@ -225,7 +225,7 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center gap-2.5 pt-1">
                 <span className="material-symbols-outlined text-primary text-base shrink-0 font-light">phone_in_talk</span>
-                <a className="hover:text-primary transition-colors font-medium" href={`tel:${phone}`}>
+                <a className="text-on-surface/85 hover:text-primary transition-colors font-medium" href={`tel:${phone}`}>
                   {displayPhone}
                 </a>
               </div>

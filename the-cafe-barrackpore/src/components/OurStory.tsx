@@ -41,10 +41,8 @@ export const OurStory: React.FC = () => {
     });
   }, [scrollYProgress]);
 
-  // High-performance WebP story asset
-  const storyImageSrc = (ourStory?.src && !ourStory.src.includes('story-luxury-pour'))
-    ? ourStory.src
-    : '/images/story-pour.webp';
+  // High-performance story photography asset
+  const storyImageSrc = ourStory?.src || '/images/story-luxury-pour.jpg';
 
   const chapters: StoryChapter[] = [
     {
@@ -95,22 +93,22 @@ export const OurStory: React.FC = () => {
         <div className="relative w-full h-full p-1.5 sm:p-2 rounded-[2rem] sm:rounded-[2.5rem] lg:rounded-[3rem] bg-gradient-to-b from-white/15 via-white/[0.04] to-white/10 ring-1 ring-[#D4AF37]/35 shadow-[0_30px_90px_rgba(0,0,0,0.95)]">
           <div className="relative w-full h-full rounded-[calc(2rem-0.375rem)] sm:rounded-[calc(2.5rem-0.5rem)] lg:rounded-[calc(3rem-0.5rem)] overflow-hidden bg-[#0A0706]">
             
-            {/* 1. CRYSTAL-CLEAR CINEMATIC BACKGROUND IMAGE (High visibility, zero black smothering) */}
+            {/* 1. CRYSTAL-CLEAR CINEMATIC BACKGROUND IMAGE (Barista pour on left, editorial space on right) */}
             <motion.img
               src={storyImageSrc}
               alt={ourStory?.alt || 'The Café Barrackpore Artisanal Coffee Pour'}
               style={{ scale: bgScale }}
-              className="absolute inset-0 w-full h-full object-cover object-[center_35%] lg:object-center filter brightness-[0.98] contrast-[1.08] saturate-[1.05]"
+              className="absolute inset-0 w-full h-full object-cover object-[25%_center] md:object-[30%_center] lg:object-center filter brightness-[0.98] contrast-[1.08] saturate-[1.05]"
               loading="lazy"
               decoding="async"
             />
 
-            {/* 2. REFINED SUBTLE VIGNETTES (Keeps photography bright, warm and visible) */}
+            {/* 2. REFINED SUBTLE VIGNETTES (Protects typography readability while leaving the left pour crystal clear) */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/35 pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/75 hidden md:block pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/20 to-black/80 hidden md:block pointer-events-none" />
 
-            {/* Ambient Golden Filament Lighting Flare */}
-            <div className="absolute top-10 left-10 w-80 h-80 bg-[#D4AF37]/20 blur-[100px] rounded-full pointer-events-none" />
+            {/* Ambient Golden Filament Lighting Flare (Aligned with top-right glowing pendant bulb) */}
+            <div className="absolute top-6 right-8 sm:top-10 sm:right-16 w-80 h-80 bg-[#D4AF37]/25 blur-[100px] rounded-full pointer-events-none" />
 
             {/* 3. PINNED HUD TELEMETRY HEADER */}
             <div className="absolute top-4 left-4 right-4 sm:top-7 sm:left-8 sm:right-8 flex items-center justify-between z-20 pointer-events-none">
@@ -128,8 +126,8 @@ export const OurStory: React.FC = () => {
               </div>
             </div>
 
-            {/* 4. FLOATING EDITORIAL CHAPTER CARD (Positioned gracefully, never clipped) */}
-            <div className="absolute inset-x-4 bottom-14 sm:bottom-16 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-8 md:left-auto md:max-w-xl z-20">
+            {/* 4. FLOATING EDITORIAL CHAPTER CARD (Positioned gracefully on right, zero overlap with coffee pour) */}
+            <div className="absolute inset-x-4 bottom-14 sm:bottom-16 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-6 lg:right-10 md:left-auto md:max-w-lg lg:max-w-xl z-20">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentChapter.id}

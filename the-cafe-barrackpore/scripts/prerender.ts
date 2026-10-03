@@ -27,6 +27,21 @@ async function prerender() {
 
   const baseTemplate = fs.readFileSync(templatePath, 'utf-8');
 
+  // Inlining stylesheet to eliminate render-blocking stylesheet requests
+  const assetsDir = path.resolve(distDir, 'assets');
+  let inlinedTemplate = baseTemplate;
+  if (fs.existsSync(assetsDir)) {
+    const cssFile = fs.readdirSync(assetsDir).find(f => f.startsWith('index-') && f.endsWith('.css'));
+    if (cssFile) {
+      const cssContent = fs.readFileSync(path.resolve(assetsDir, cssFile), 'utf-8');
+      inlinedTemplate = inlinedTemplate.replace(
+        new RegExp(`<link[^>]+href="[^"]*${cssFile}"[^>]*>`, 'i'),
+        `<style id="app-styles">\n${cssContent}\n</style>`
+      );
+      console.log(`⚡ Inlined critical CSS "${cssFile}" (${Math.round(cssContent.length / 1024)} kB) into HTML`);
+    }
+  }
+
   // 1. Build SSR server entry
   console.log('📦 Compiling SSR bundle with Vite...');
   execSync('npx vite build --ssr src/entry-server.tsx --outDir dist-server', {
@@ -44,7 +59,7 @@ async function prerender() {
     const { html, seo } = render(route.url);
 
     // Build head tags replacement
-    let pageHtml = baseTemplate;
+    let pageHtml = inlinedTemplate;
 
     // 1. Replace document title
     pageHtml = pageHtml.replace(/<title>.*?<\/title>/is, `<title>${seo.title}</title>`);
