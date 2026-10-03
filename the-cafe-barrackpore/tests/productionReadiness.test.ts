@@ -115,6 +115,7 @@ const requiredMigrationHeaders = [
   '012_provider_agnostic_payments.sql',
   '013_owner_features.sql',
   '014_order_caps_and_direct_insert_lockdown.sql',
+  '013_security_hardening.sql',
 ];
 
 for (const header of requiredMigrationHeaders) {

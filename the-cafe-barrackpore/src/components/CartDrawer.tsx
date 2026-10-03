@@ -60,6 +60,7 @@ export const CartDrawer: React.FC = () => {
   const [paidAmount, setPaidAmount] = useState<number | null>(null);
   const [confirmedTotal, setConfirmedTotal] = useState<number | null>(null);
   const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+  const [paymentToken, setPaymentToken] = useState<string | null>(null);
 
   const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false);
@@ -67,6 +68,7 @@ export const CartDrawer: React.FC = () => {
     setSubmissionError(null);
     setPaymentFailureReason(null);
     setConfirmedTotal(null);
+    setPaymentToken(null);
   }, [setIsDrawerOpen]);
 
   const drawerRef = useFocusTrap(isDrawerOpen, handleCloseDrawer);
@@ -305,11 +307,16 @@ export const CartDrawer: React.FC = () => {
           return;
         }
 
+        if (orderResult.paymentToken) {
+          setPaymentToken(orderResult.paymentToken);
+        }
+
         // 3. Create payment session via provider abstraction
         const sessionResult = await createPaymentSession(
           {
             orderId: orderResult.orderId || activeRef,
             orderRef: activeRef,
+            paymentToken: orderResult.paymentToken,
             amount: Math.max(0, authoritativeTotal - effectiveDiscount),
             currency: restaurantConfig.currency,
             customerName: customerName.trim(),
@@ -330,9 +337,9 @@ export const CartDrawer: React.FC = () => {
 
         // Open provider-specific checkout (Razorpay modal with UPI/Cards, or Stripe Checkout URL)
         if (restaurantConfig.payments.provider === 'razorpay' && (sessionResult.razorpayOrderId || sessionResult.orderId)) {
-          openRazorpayCheckout(sessionResult, activeRef);
+          openRazorpayCheckout(sessionResult, activeRef, orderResult.paymentToken);
         } else if (restaurantConfig.payments.provider === 'stripe' && sessionResult.checkoutUrl) {
-          startListeningForPayment(activeRef);
+          startListeningForPayment(activeRef, orderResult.paymentToken);
           window.location.href = sessionResult.checkoutUrl;
         } else {
           setStep('payment_process');
@@ -393,13 +400,14 @@ export const CartDrawer: React.FC = () => {
   };
 
   // Realtime subscription & polling fallback to wait for verified webhook reconciliation
-  const startListeningForPayment = (activeRef: string) => {
+  const startListeningForPayment = (activeRef: string, activePaymentToken?: string | null) => {
     setIsVerifyingPayment(true);
     setStep('payment_process');
 
     let isSubscribed = true;
     let intervalId: any = null;
     let realtimeChannel: any = null;
+    const tokenToUse = activePaymentToken || paymentToken;
 
     const onConfirmed = (amountPaid: number, total: number) => {
       if (!isSubscribed) return;
@@ -446,25 +454,42 @@ export const CartDrawer: React.FC = () => {
         )
         .subscribe();
 
-      // 2. Polling fallback every 2.5s
+      // 2. Polling fallback every 2.5s using get_order_status_by_token RPC
       let elapsed = 0;
       intervalId = setInterval(async () => {
         if (!isSubscribed || !supabase) return;
         elapsed += 2.5;
 
         try {
-          const { data: currentOrder } = await supabase
-            .from('orders')
-            .select('payment_status, total, payment_amount')
-            .eq('order_ref', activeRef)
-            .maybeSingle();
+          if (tokenToUse) {
+            const { data: statusData, error: statusErr } = await supabase.rpc('get_order_status_by_token', {
+              p_order_ref: activeRef,
+              p_payment_token: tokenToUse,
+            });
 
-          if (currentOrder?.payment_status === 'paid') {
-            onConfirmed(currentOrder.payment_amount ?? currentOrder.total, currentOrder.total);
-            return;
-          } else if (currentOrder?.payment_status === 'failed') {
-            onFailed('Payment declined or failed.');
-            return;
+            if (!statusErr && statusData) {
+              if (statusData.payment_status === 'paid') {
+                onConfirmed(statusData.payment_amount ?? statusData.total, statusData.total);
+                return;
+              } else if (statusData.payment_status === 'failed') {
+                onFailed('Payment declined or failed.');
+                return;
+              }
+            }
+          } else {
+            const { data: currentOrder } = await supabase
+              .from('orders')
+              .select('payment_status, total, payment_amount')
+              .eq('order_ref', activeRef)
+              .maybeSingle();
+
+            if (currentOrder?.payment_status === 'paid') {
+              onConfirmed(currentOrder.payment_amount ?? currentOrder.total, currentOrder.total);
+              return;
+            } else if (currentOrder?.payment_status === 'failed') {
+              onFailed('Payment declined or failed.');
+              return;
+            }
           }
         } catch (err) {
           console.warn('Polling check error:', err);
@@ -478,7 +503,7 @@ export const CartDrawer: React.FC = () => {
   };
 
   // Launch standard Razorpay Checkout modal for UPI, Cards, Net Banking
-  const openRazorpayCheckout = (sessionResult: PaymentCheckoutResult, activeRef: string) => {
+  const openRazorpayCheckout = (sessionResult: PaymentCheckoutResult, activeRef: string, activePaymentToken?: string | null) => {
     const loadScript = (): Promise<boolean> => {
       return new Promise((resolve) => {
         if ((window as any).Razorpay) {
@@ -527,7 +552,7 @@ export const CartDrawer: React.FC = () => {
         },
         handler: function (_response: any) {
           // Frontend never mutates status to 'paid'; begins awaiting webhook verification
-          startListeningForPayment(activeRef);
+          startListeningForPayment(activeRef, activePaymentToken || paymentToken);
         },
         modal: {
           ondismiss: function () {

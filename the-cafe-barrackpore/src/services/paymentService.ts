@@ -575,31 +575,32 @@ export const sendTestPayment = async (
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { error: orderErr } = await supabase
-        .from('orders')
-        .insert({
+      const { data: rpcData, error: rpcError } = await supabase.rpc('create_order_atomic', {
+        p_order: {
           order_ref: testRef,
           customer_name: 'Test Payment Simulator',
           customer_phone: '+919999999999',
           order_type: 'dine_in',
           table_number: '99',
           special_requests: 'Simulated test transaction from staff settings',
-          subtotal: amount,
-          total: amount,
           currency: currency.toUpperCase(),
-          status: 'pending',
           source: 'website',
-          payment_required: true,
-          payment_status: 'pending',
+          payment_method: 'online',
           payment_provider: provider,
-        });
+          payment_amount: amount,
+        },
+        p_items: [],
+      });
 
-      if (orderErr) {
-        return { success: false, error: `Could not insert test order: ${orderErr.message}` };
+      if (rpcError) {
+        return { success: false, error: `Could not create test order: ${rpcError.message}` };
       }
 
       const { data: createData, error: createErr } = await supabase.functions.invoke('create-payment', {
-        body: { order_ref: testRef },
+        body: {
+          order_ref: testRef,
+          payment_token: rpcData?.payment_token,
+        },
       });
 
       if (createErr) {

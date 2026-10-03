@@ -79,7 +79,7 @@ Follow these 10 steps to provision a new client's database:
    - Open **SQL Editor** in the Supabase Dashboard.
    - Open `supabase/all_migrations_combined.sql` from the repository.
    - Paste the complete contents into the SQL Editor and click **Run**.
-   - This atomically applies migrations 001 through 008 in exact dependency order:
+   - This atomically applies migrations 001 through 013 in exact dependency order:
      - Orders, Order Items, and Atomic RPC (`create_order_atomic`)
      - Reservations schema and validation
      - Staff profiles, RBAC, and `is_active_staff` functions
@@ -88,6 +88,11 @@ Follow these 10 steps to provision a new client's database:
      - Kitchen Realtime publication and state machine (`update_order_status_kitchen`)
      - International localization and currency safety
      - Payment architecture and audit ledger (`payments`)
+     - Menu & secure orders RPC with atomic recalculation (`009_menu_and_secure_orders.sql`)
+     - Menu & site content key-value CMS (`010_menu_and_site_content.sql`)
+     - Multi-tenant restaurant_id isolation & allergen badges (`011_multi_tenant_and_allergens.sql`)
+     - Provider-agnostic payment architecture & ledger (`012_provider_agnostic_payments.sql`)
+     - Strict security hardening (`013_security_hardening.sql`)
 
 3. **Verify Row Level Security (RLS)**:
    - Navigate to **Authentication → Policies**.

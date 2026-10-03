@@ -7,7 +7,7 @@
     "dev": "vite --host",
     "build": "tsc -b && vite build && npx tsx scripts/prerender.ts",
     "lint": "oxlint",
-    "test": "npx tsx tests/productionReadiness.test.ts && npx tsx tests/paymentFoundation.test.ts && npx tsx tests/internationalization.test.ts && npx tsx tests/kitchenDisplay.test.ts && npx tsx tests/orderFoundation.test.ts && npx tsx tests/authFoundation.test.ts && npx tsx tests/dashboardFoundation.test.ts && npx tsx tests/persistenceAndAvailability.test.ts && npx tsx tests/qrOrderingFoundation.test.ts && npx tsx tests/reservationFoundation.test.ts && npx tsx tests/translationCompleteness.test.ts",
+    "test": "npx tsx tests/productionReadiness.test.ts && npx tsx tests/paymentFoundation.test.ts && npx tsx tests/internationalization.test.ts && npx tsx tests/kitchenDisplay.test.ts && npx tsx tests/orderFoundation.test.ts && npx tsx tests/authFoundation.test.ts && npx tsx tests/dashboardFoundation.test.ts && npx tsx tests/persistenceAndAvailability.test.ts && npx tsx tests/qrOrderingFoundation.test.ts && npx tsx tests/reservationFoundation.test.ts && npx tsx tests/translationCompleteness.test.ts && npx tsx tests/databaseSecurityHardening.test.ts",
     "audit": "npm audit --omit=dev",
     "preview": "vite preview --host"
   },

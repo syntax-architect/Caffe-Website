@@ -17,8 +17,8 @@ Perform this verification before handing over the digital platform to a paying r
 ---
 
 ### Phase 2: Database & Security Integrity
-- [ ] All 8 SQL migrations applied via `supabase/all_migrations_combined.sql`.
-- [ ] Row Level Security (RLS) is enabled on all 8 application tables.
+- [ ] All 13 SQL migrations (001–013) applied via `supabase/all_migrations_combined.sql`.
+- [ ] Row Level Security (RLS) is enabled on all application tables.
 - [ ] `public.staff_profiles` contains at least one active `owner` user profile.
 - [ ] `public.is_active_staff` helper is configured with `SECURITY DEFINER` and safe `search_path`.
 - [ ] `orders` and `order_items` tables have Realtime publication enabled (`supabase_realtime`).
@@ -71,7 +71,7 @@ Perform this verification before handing over the digital platform to a paying r
 Run the complete automated verification suite before client sign-off:
 
 ```bash
-# 1. Complete Test Suite (All 10 suites)
+# 1. Complete Test Suite (All 12 suites)
 npx tsx tests/productionReadiness.test.ts
 npx tsx tests/paymentFoundation.test.ts
 npx tsx tests/internationalization.test.ts
@@ -82,6 +82,8 @@ npx tsx tests/dashboardFoundation.test.ts
 npx tsx tests/persistenceAndAvailability.test.ts
 npx tsx tests/qrOrderingFoundation.test.ts
 npx tsx tests/reservationFoundation.test.ts
+npx tsx tests/translationCompleteness.test.ts
+npx tsx tests/databaseSecurityHardening.test.ts
 
 # 2. Strict Linting Check
 npm run lint
@@ -93,5 +95,5 @@ npm run build
 **Required Sign-Off**:
 - [ ] 0 lint warnings, 0 lint errors
 - [ ] 0 TypeScript errors
-- [ ] 10/10 test suites passed
+- [ ] 12/12 test suites passed
 - [ ] Production build completed successfully

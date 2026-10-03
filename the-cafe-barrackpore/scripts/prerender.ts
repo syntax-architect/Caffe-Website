@@ -143,7 +143,19 @@ async function prerender() {
     // Remove any placeholder schema from head
     pageHtml = pageHtml.replace(/<script\s+type="application\/ld\+json"\s+id="restaurant-schema">.*?<\/script>\s*/is, '');
 
-    // 8. Inject pre-rendered body markup into <div id="root">
+    // 8. Extract client script and modulepreloads from head to prevent bandwidth contention during critical font and FCP/LCP render
+    const clientScriptMatch = pageHtml.match(/<script\s+type="module"[^>]*src="\/assets\/index-[^"]+"[^>]*><\/script>/i)
+      || pageHtml.match(/<script\s+type="module"[^>]*><\/script>/i);
+    let clientScriptTag = '';
+    if (clientScriptMatch) {
+      clientScriptTag = clientScriptMatch[0];
+      pageHtml = pageHtml.replace(clientScriptTag, '');
+    }
+
+    // Remove modulepreloads from head so they don't block critical fonts on 1.6 Mbps connection
+    pageHtml = pageHtml.replace(/<link\s+rel="modulepreload"[^>]*>\s*/gi, '');
+
+    // 9. Inject pre-rendered body markup into <div id="root">
     const cleanHtml = html;
 
     const rootStart = pageHtml.indexOf('<div id="root">');
@@ -152,7 +164,8 @@ async function prerender() {
       const schemaTag = schemaContent
         ? `\n    <script type="application/ld+json" id="restaurant-schema">\n${schemaContent}\n    </script>\n  `
         : '\n  ';
-      pageHtml = pageHtml.substring(0, rootStart) + `<div id="root">${cleanHtml}</div>` + schemaTag + pageHtml.substring(bodyEnd);
+      const scriptTag = clientScriptTag ? `\n    ${clientScriptTag}\n  ` : '\n  ';
+      pageHtml = pageHtml.substring(0, rootStart) + `<div id="root">${cleanHtml}</div>` + schemaTag + scriptTag + pageHtml.substring(bodyEnd);
     }
 
     const targetFilePath = path.resolve(distDir, route.file);

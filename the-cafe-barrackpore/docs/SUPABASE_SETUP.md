@@ -488,5 +488,89 @@ Phase 1J adds the authoritative payment layer to support restaurant customer pay
 5. **Edge Function Webhook Dispatcher**:
    - `supabase/functions/payment-webhook/index.ts` validates provider webhook signatures, enforces idempotency, and mutates `orders` and `payments` tables atomically.
 
+---
+
+## 17. Migration 009: Menu & Secure Orders Architecture (`009_menu_and_secure_orders.sql`)
+
+1. **Atomic Server-Side Procedures**:
+   - `create_order_atomic(JSONB, JSONB)`: Validates order header and line items in a single PostgreSQL transaction.
+   - Prices and line totals are strictly calculated from database `menu_items` rows — client totals are ignored.
+   - Enforces row-level table locks and sets explicit `search_path = public, pg_temp` on `SECURITY DEFINER` procedures to eliminate search path hijack vulnerabilities.
+
+2. **Atomic Reservation Booking**:
+   - `create_reservation_atomic(JSONB)`: Enforces party size (1–20 guests), valid phone numbers, future operating dates, and operational booking hours.
+
+---
+
+## 18. Migration 010: Menu Categories & Site Content CMS (`010_menu_and_site_content.sql`)
+
+1. **`site_content` Key-Value CMS**:
+   - Dynamic JSONB store for hero headlines, story vignettes, atmosphere photography cards, specials platters, and brand assets.
+   - Backed by Row Level Security: public read, owner/manager write.
+
+2. **Structured Menu Foundation**:
+   - `menu_categories`: Display order, category labels, icons, and descriptions.
+   - `menu_items`: Base prices, dietary flags (`is_veg`, `is_vegan`, `is_gluten_free`), spice levels, and descriptions.
+
+---
+
+## 19. Migration 011: Multi-Tenant Isolation & Allergen Badges (`011_multi_tenant_and_allergens.sql`)
+
+1. **Multi-Tenant Scoping**:
+   - Adds indexed `restaurant_id` column across orders, menu items, categories, and settings.
+   - Tenant isolation enforced via helper `get_auth_restaurant_id()`.
+
+2. **Allergen & Nutritional Disclosures**:
+   - Introduces allergen arrays (`allergens TEXT[]`) and dietary certification fields across menu items.
+
+---
+
+## 20. Migration 012: Provider-Agnostic Payment Engine (`012_provider_agnostic_payments.sql`)
+
+1. **Multi-Gateway Ledger**:
+   - Extends `payments` table with provider tracking, raw metadata JSONB, failure codes, and refund status.
+   - Supports seamless runtime switching between Razorpay (UPI, Netbanking, Cards) and Stripe (Cards, Wallets).
+
+2. **Webhook Idempotency & Reconciliation**:
+   - Guarantees idempotent ledger updates using unique constraints on `(order_ref, provider_payment_id)`.
+
+---
+
+## 21. Migration 013: Security Hardening & Principle of Least Privilege (`013_security_hardening.sql`)
+
+Migration 013 enforces bank-grade security standards across database tables, RLS policies, and Edge Functions:
+
+1. **Orders & Order Items SELECT Policy Hardening**:
+   - Completely removes `anon` condition from `orders` and `order_items` SELECT policies.
+   - Only `service_role` and active staff of the matching restaurant (`is_active_staff(auth.uid())`) may SELECT orders.
+
+2. **Tables & Availability Granular RLS**:
+   - Drops all legacy `FOR ALL` policies on `restaurant_tables` and `menu_item_availability`.
+   - Anon receives strictly granular `SELECT` on active dining tables (`active = true`) and availability.
+   - `INSERT`, `UPDATE`, and `DELETE` are granted exclusively to active `owner` and `manager` staff.
+   - Mandatory `WITH CHECK` clauses accompany every `UPDATE` policy that defines `USING`.
+
+3. **Broad Privilege Revocation & Explicit Re-Grants**:
+   - `REVOKE INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public FROM anon;`
+   - `REVOKE ALL ON TABLE public.orders FROM anon;`
+   - `REVOKE ALL ON TABLE public.order_items FROM anon;`
+   - `REVOKE ALL ON TABLE public.payments FROM anon;`
+   - `REVOKE ALL ON TABLE public.staff_profiles FROM anon;`
+   - Re-grants only safe public reads: `menu_categories`, `menu_items`, `site_content`, `restaurant_tables`, `menu_item_availability`, `restaurant_settings`.
+
+4. **Cryptographic Payment Tokens & Non-Sequential Order References**:
+   - Order references use `generate_order_reference()` producing `gen_random_uuid()` 10+ character random entropy (`CB-YYYY-XXXXXXXXXX`), preventing sequence enumeration attacks.
+   - `create_order_atomic` generates a 32-byte cryptographically random `payment_token`, stores its SHA-256 hash in `orders.payment_token_hash`, and returns the raw token once to the browser.
+   - Customer polling uses `get_order_status_by_token(p_order_ref, p_payment_token)` SECURITY DEFINER RPC.
+
+5. **Tenant ID Lockdown & Quantity Caps**:
+   - `create_order_atomic` ignores client-provided `p_order.restaurant_id` and derives `restaurant_id` strictly from `restaurant_settings`.
+   - Enforces 1–50 quantity caps per line item.
+
+6. **Edge Function Token Verification & Zero Fallbacks**:
+   - `create-payment`, `create-razorpay-order`, and `create-stripe-checkout` require `order_ref` + `payment_token`, verify SHA-256 hash against `payment_token_hash`, and pass the token in redirect/callback URLs.
+   - Zero hardcoded fallbacks to `'INR'`, `'The Café Barrackpore'`, or `'http://localhost:5173'`.
+   - `PUBLIC_SITE_URL` is strictly required; CORS uses `ALLOWED_ORIGIN` secret without wildcard `'*'`.
+
 
 
