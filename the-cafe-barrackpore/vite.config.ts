@@ -10,12 +10,26 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('framer-motion') || id.includes('motion-dom') || id.includes('motion-utils')) return 'vendor-framer';
-            if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('scheduler')) return 'vendor-react';
-            if (id.includes('@supabase')) return 'vendor-supabase';
-            if (id.includes('lenis')) return 'vendor-lenis';
-            if (id.includes('dompurify')) return 'vendor-dompurify';
-            if (id.includes('qrcode')) return 'vendor-qrcode';
+            const normalized = id.replace(/\\/g, '/');
+            if (
+              normalized.includes('/react/') ||
+              normalized.includes('/react-dom/') ||
+              normalized.includes('/scheduler/') ||
+              normalized.includes('/react-is/')
+            ) {
+              return 'vendor-react';
+            }
+            if (
+              normalized.includes('framer-motion') ||
+              normalized.includes('motion-dom') ||
+              normalized.includes('motion-utils')
+            ) {
+              return 'vendor-framer';
+            }
+            if (normalized.includes('@supabase')) return 'vendor-supabase';
+            if (normalized.includes('lenis')) return 'vendor-lenis';
+            if (normalized.includes('dompurify')) return 'vendor-dompurify';
+            if (normalized.includes('qrcode')) return 'vendor-qrcode';
             return 'vendor';
           }
         }

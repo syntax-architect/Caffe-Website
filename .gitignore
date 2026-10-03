@@ -53,6 +53,7 @@ skills-lock.json
 # Dependencies and OS files
 node_modules/
 dist/
+dist-server/
 *.log
 *-report*.json
 lighthouse-report*.json
