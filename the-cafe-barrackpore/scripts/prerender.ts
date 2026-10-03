@@ -144,15 +144,16 @@ async function prerender() {
     pageHtml = pageHtml.replace(/<script\s+type="application\/ld\+json"\s+id="restaurant-schema">.*?<\/script>\s*/is, '');
 
     // 8. Extract client script and modulepreloads from head to prevent bandwidth contention during critical font and FCP/LCP render
-    const clientScriptMatch = pageHtml.match(/<script\s+type="module"[^>]*src="\/assets\/index-[^"]+"[^>]*><\/script>/i)
-      || pageHtml.match(/<script\s+type="module"[^>]*><\/script>/i);
+    const clientScriptMatch = pageHtml.match(/<script\s+type="module"[^>]*src="(\/assets\/index-[^"]+)"[^>]*><\/script>/i)
+      || pageHtml.match(/<script\s+type="module"[^>]*src="([^"]+)"[^>]*><\/script>/i);
     let clientScriptTag = '';
-    if (clientScriptMatch) {
-      clientScriptTag = clientScriptMatch[0];
-      pageHtml = pageHtml.replace(clientScriptTag, '');
+    if (clientScriptMatch && clientScriptMatch[1]) {
+      const src = clientScriptMatch[1];
+      pageHtml = pageHtml.replace(clientScriptMatch[0], '');
+      clientScriptTag = `<script type="module" src="${src}"></script>`;
     }
 
-    // Remove modulepreloads from head so they don't block critical fonts on 1.6 Mbps connection
+    // Remove modulepreloads entirely so they don't block critical fonts on 1.6 Mbps connection
     pageHtml = pageHtml.replace(/<link\s+rel="modulepreload"[^>]*>\s*/gi, '');
 
     // 9. Inject pre-rendered body markup into <div id="root">

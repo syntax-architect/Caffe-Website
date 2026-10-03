@@ -36,15 +36,17 @@ export const Hero: React.FC = React.memo(() => {
         className="absolute top-0 right-0 bottom-0 w-full md:w-[60%] lg:w-[66%] xl:w-[64%] h-full pointer-events-none select-none overflow-hidden z-0"
       >
         <div className="relative w-full h-full">
-          <img
-            src={heroImageSrc}
-            alt={heroImageAlt}
-            width="1200"
-            height="800"
-            className="w-full h-full object-cover object-[70%_center] lg:object-center filter brightness-[0.94] contrast-[1.08] saturate-[1.08]"
-            loading="eager"
-            fetchPriority="high"
-          />
+          <picture>
+            <source media="(max-width: 768px)" srcSet="/images/hero-bar-mobile.webp" type="image/webp" />
+            <img
+              src={heroImageSrc}
+              alt={heroImageAlt}
+              width="1200"
+              height="800"
+              className="w-full h-full object-cover object-[70%_center] lg:object-center filter brightness-[0.94] contrast-[1.08] saturate-[1.08]"
+              loading="eager"
+            />
+          </picture>
 
           {/* Seamless multi-stop horizontal gradient blend: pure obsidian espresso on left fading into warm amber hospitality glow on right */}
           <div 
@@ -106,7 +108,7 @@ export const Hero: React.FC = React.memo(() => {
           </h1>
 
           {/* Atmospheric description with instant clarity */}
-          <p className="font-sans text-base sm:text-lg lg:text-[1.125rem] text-[#E3DACD]/85 font-light leading-relaxed max-w-[44ch] mb-8 sm:mb-10">
+          <p className="font-sans text-base sm:text-lg lg:text-[1.125rem] text-[#E3DACD] font-normal leading-relaxed max-w-[44ch] mb-8 sm:mb-10">
             {descriptionText}
           </p>
 

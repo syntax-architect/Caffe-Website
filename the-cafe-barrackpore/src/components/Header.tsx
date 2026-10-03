@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { clientDetails } from '../config/client';
 import { useUI } from '../context/UIContext';

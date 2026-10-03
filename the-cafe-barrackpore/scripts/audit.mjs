@@ -18,7 +18,7 @@ serverProc.stdout.on('data', (chunk) => {
     console.log('Static server ready. Starting Lighthouse mobile audit...');
     try {
       execSync(
-        `npx lighthouse http://127.0.0.1:4173 --form-factor=mobile --output=json --output-path="${reportPath}" --chrome-flags="--headless=new --no-sandbox" --quiet`,
+        `npx lighthouse http://127.0.0.1:4173 --form-factor=mobile --output=json --output-path="${reportPath}" --save-assets --chrome-flags="--headless=new --no-sandbox" --quiet`,
         { stdio: 'inherit', cwd: path.resolve(__dirname, '..') }
       );
 
