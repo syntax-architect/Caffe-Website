@@ -147,7 +147,7 @@ const defaultContextValue: SiteConfigContextType = {
     title: 'Special Banquet & Hangout Platters',
     description:
       'Generous sharing platters with sizzling pan-Asian or smoky clay oven selections, made fresh to order.',
-    image: '/images/hero-bar.webp',
+    image: '/images/hero-cinematic.jpg',
   },
   gallery: {
     images: fallbackConfig.gallery.images,
@@ -159,7 +159,7 @@ const defaultContextValue: SiteConfigContextType = {
     title: 'The Cafe Barrackpore | Best Cafe & Pizza in Barrackpore',
     description:
       'Experience cozy elegance at The Cafe Barrackpore. Serving artisanal coffee, wood-fired pizzas, gourmet burgers, and mocktails in Barrackpore.',
-    image: '/images/hero-bar.webp',
+    image: '/images/hero-cinematic.jpg',
   },
   logoUrl: '/logo.webp',
   isLoading: true,

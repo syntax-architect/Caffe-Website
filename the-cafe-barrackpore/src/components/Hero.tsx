@@ -17,10 +17,10 @@ export const Hero: React.FC = () => {
     setIsReservationOpen(true);
   };
 
-  // High-performance WebP hero asset (preloaded in head)
-  const heroImageSrc = (!hero?.src || hero.src.includes('hero-cinematic'))
-    ? '/images/hero-bar.webp'
-    : hero.src;
+  // High-performance WebP hero asset
+  const heroImageSrc = (hero?.src && !hero.src.includes('hero-cinematic'))
+    ? hero.src
+    : '/images/hero-bar.webp';
   const heroImageAlt = hero?.alt || 'The Café Barrackpore — Nocturnal Cocktail & Espresso Lounge';
 
   const descriptionText = hero?.subtext || 
