@@ -10,6 +10,9 @@ import { MenuManagement } from '../dashboard/MenuManagement';
 import { ContentManagement } from '../dashboard/ContentManagement';
 import { StaffManagement } from '../dashboard/StaffManagement';
 import { SettingsManagement } from '../dashboard/SettingsManagement';
+import { CustomersManagement } from '../dashboard/CustomersManagement';
+import { DiscountsManagement } from '../dashboard/DiscountsManagement';
+import { AuditLogManagement } from '../dashboard/AuditLogManagement';
 
 // Route-level code-splitting for Kitchen Display System
 const KitchenDisplayApp = lazy(() =>
@@ -72,9 +75,21 @@ export const StaffApp: React.FC = () => {
       title: 'Website Content',
       subtitle: 'Customer-facing homepage headlines, stories, and ambiance photography',
     },
+    '/staff/customers': {
+      title: 'Customer Directory',
+      subtitle: 'Guest profiles, ordering frequency, and opt-in marketing consent',
+    },
+    '/staff/discounts': {
+      title: 'Discounts & Happy Hours',
+      subtitle: 'Promotional coupon codes and scheduled happy-hour price discounts',
+    },
     '/staff/staff': {
       title: 'Staff Roster',
       subtitle: 'Terminal account access and operational role assignments',
+    },
+    '/staff/audit': {
+      title: 'Security Audit Log',
+      subtitle: 'Immutable record of staff logins, price updates, refunds, and permission changes',
     },
     '/staff/settings': {
       title: 'Operations Settings',
@@ -99,6 +114,28 @@ export const StaffApp: React.FC = () => {
         return <MenuManagement />;
       case '/staff/content':
         return <ContentManagement />;
+      case '/staff/customers':
+        if (!isOwner && !isManager) {
+          return (
+            <div className="py-16 text-center text-xs text-outline">
+              <span className="material-symbols-outlined text-3xl mb-2 text-amber-400 block">lock</span>
+              <p className="font-semibold text-sm text-on-surface">Customer Directory Restricted</p>
+              <p className="mt-1">Only restaurant owners and managers have access to customer data.</p>
+            </div>
+          );
+        }
+        return <CustomersManagement />;
+      case '/staff/discounts':
+        if (!isOwner && !isManager) {
+          return (
+            <div className="py-16 text-center text-xs text-outline">
+              <span className="material-symbols-outlined text-3xl mb-2 text-amber-400 block">lock</span>
+              <p className="font-semibold text-sm text-on-surface">Discount Management Restricted</p>
+              <p className="mt-1">Only restaurant owners and managers can configure promotional codes.</p>
+            </div>
+          );
+        }
+        return <DiscountsManagement />;
       case '/staff/staff':
         if (!isOwner && !isManager) {
           return (
@@ -110,6 +147,17 @@ export const StaffApp: React.FC = () => {
           );
         }
         return <StaffManagement />;
+      case '/staff/audit':
+        if (!isOwner && !isManager) {
+          return (
+            <div className="py-16 text-center text-xs text-outline">
+              <span className="material-symbols-outlined text-3xl mb-2 text-amber-400 block">lock</span>
+              <p className="font-semibold text-sm text-on-surface">Security Audit Log Restricted</p>
+              <p className="mt-1">Only restaurant owners and managers can inspect the security audit trail.</p>
+            </div>
+          );
+        }
+        return <AuditLogManagement />;
       case '/staff/settings':
         if (!isOwner) {
           return (

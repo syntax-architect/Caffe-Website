@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import type { StaffProfile, AuthContextType, AuthSignInResult } from '../types/auth';
+import type { StaffProfile, AuthContextType, AuthSignInResult, MfaEnrollResult } from '../types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -9,6 +9,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [staffProfile, setStaffProfile] = useState<StaffProfile | null>(null);
+  const [isMfaAwaiting, setIsMfaAwaiting] = useState<boolean>(false);
+  const [mfaChallengeData, setMfaChallengeData] = useState<{ factorId: string; challengeId: string } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (!supabase || !isSupabaseConfigured) return false;
     return true;
@@ -16,6 +18,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   /**
    * Fetches the authoritative staff profile from public.staff_profiles
+   * Scoped and verified strictly by database RLS
    */
   const fetchStaffProfile = useCallback(async (userId: string): Promise<StaffProfile | null> => {
     const client = supabase;
@@ -46,6 +49,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const client = supabase;
     if (!client || !isSupabaseConfigured) {
+      setIsLoading(false);
+      return;
+    }
+
+    const isPublicRoute = typeof window !== 'undefined' && !window.location.pathname.startsWith('/staff');
+    let hasAuthToken = false;
+    try {
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        hasAuthToken = Object.keys(localStorage).some(k => k.includes('auth-token') || k.includes('sb-'));
+      }
+    } catch {
+      hasAuthToken = false;
+    }
+
+    if (isPublicRoute && !hasAuthToken) {
       setIsLoading(false);
       return;
     }
@@ -141,7 +159,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   /**
    * Sign in strictly using supabase.auth.signInWithPassword AND verified active staff_profiles record.
-   * Otherwise sign out and return an error.
+   * Enforces Supabase MFA verification for accounts with enrolled TOTP factors (and owners).
    */
   const signIn = async (email: string, password: string): Promise<AuthSignInResult> => {
     const cleanEmail = email.trim().toLowerCase();
@@ -214,6 +232,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
       }
 
+      // Check MFA Status (Supabase Multi-Factor Authentication)
+      const factorsRes = await client.auth.mfa.listFactors();
+      const verifiedTotp = factorsRes.data?.totp?.find((f) => f.status === 'verified');
+
+      if (verifiedTotp) {
+        const challengeRes = await client.auth.mfa.challenge({ factorId: verifiedTotp.id });
+        if (!challengeRes.error && challengeRes.data) {
+          setIsMfaAwaiting(true);
+          setMfaChallengeData({ factorId: verifiedTotp.id, challengeId: challengeRes.data.id });
+          setIsLoading(false);
+          return {
+            success: true,
+            mfaRequired: true,
+            factorId: verifiedTotp.id,
+            challengeId: challengeRes.data.id,
+          };
+        }
+      }
+
+      // Record successful login audit event
+      client.rpc('record_audit_event', {
+        p_action: 'staff_login',
+        p_target_type: 'auth',
+        p_target_id: data.user.id,
+        p_details: { email: cleanEmail, role: profile.role },
+      }).then(null, () => null);
+
       setSession(data.session);
       setUser(data.user);
       setStaffProfile(profile);
@@ -230,13 +275,97 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   /**
-   * Signs the staff member out and resets state
+   * Completes Supabase MFA TOTP verification
+   */
+  const verifyMfaCode = async (code: string): Promise<AuthSignInResult> => {
+    const client = supabase;
+    if (!client || !mfaChallengeData) {
+      return { success: false, error: 'No active MFA challenge found. Please log in again.' };
+    }
+
+    setIsLoading(true);
+    try {
+      const verifyRes = await client.auth.mfa.verify({
+        factorId: mfaChallengeData.factorId,
+        challengeId: mfaChallengeData.challengeId,
+        code: code.trim(),
+      });
+
+      if (verifyRes.error) {
+        setIsLoading(false);
+        return {
+          success: false,
+          error: verifyRes.error.message || 'Invalid verification code. Please check your authenticator app.',
+        };
+      }
+
+      setIsMfaAwaiting(false);
+      setMfaChallengeData(null);
+
+      // Refresh current session and profile
+      const { data: sessionData } = await client.auth.getSession();
+      if (sessionData.session?.user) {
+        const profile = await fetchStaffProfile(sessionData.session.user.id);
+        setSession(sessionData.session);
+        setUser(sessionData.session.user);
+        setStaffProfile(profile);
+
+        // Record audit event
+        client.rpc('record_audit_event', {
+          p_action: 'mfa_verified',
+          p_target_type: 'auth',
+          p_target_id: sessionData.session.user.id,
+          p_details: { aal: 'aal2' },
+        }).then(null, () => null);
+      }
+
+      setIsLoading(false);
+      return { success: true };
+    } catch (err: any) {
+      setIsLoading(false);
+      return { success: false, error: err.message || 'Failed to verify MFA code.' };
+    }
+  };
+
+  /**
+   * Enrolls a new TOTP MFA factor for the current user
+   */
+  const enrollMfa = async (): Promise<MfaEnrollResult> => {
+    const client = supabase;
+    if (!client || !user) {
+      return { success: false, error: 'You must be signed in to configure two-factor authentication.' };
+    }
+
+    try {
+      const res = await client.auth.mfa.enroll({
+        factorType: 'totp',
+        issuer: 'The Café Barrackpore',
+        friendlyName: `Staff (${user.email})`,
+      });
+
+      if (res.error) {
+        return { success: false, error: res.error.message };
+      }
+
+      return {
+        success: true,
+        factorId: res.data.id,
+        qrCode: res.data.totp.qr_code,
+        secret: res.data.totp.secret,
+      };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to initiate MFA setup.' };
+    }
+  };
+
+  /**
+   * Signs the staff member out locally
    */
   const signOut = async (): Promise<void> => {
     setIsLoading(true);
     try {
       if (supabase && isSupabaseConfigured) {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: 'local' });
       }
     } catch (err) {
       console.warn('[Auth] Error signing out of Supabase:', err);
@@ -244,6 +373,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(null);
       setSession(null);
       setStaffProfile(null);
+      setIsMfaAwaiting(false);
+      setMfaChallengeData(null);
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Global sign out: Revokes ALL active refresh tokens across every device and browser
+   */
+  const signOutEverywhere = async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      if (supabase && isSupabaseConfigured) {
+        if (user) {
+          // Log global revocation in audit log
+          await supabase.rpc('record_audit_event', {
+            p_action: 'staff_logout_everywhere',
+            p_target_type: 'auth',
+            p_target_id: user.id,
+            p_details: { email: user.email, scope: 'global' },
+          }).then(null, () => null);
+        }
+
+        await supabase.auth.signOut({ scope: 'global' });
+      }
+    } catch (err) {
+      console.warn('[Auth] Error during global sign out:', err);
+    } finally {
+      setUser(null);
+      setSession(null);
+      setStaffProfile(null);
+      setIsMfaAwaiting(false);
+      setMfaChallengeData(null);
       setIsLoading(false);
     }
   };
@@ -295,8 +457,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isOwner,
         isManager,
         isStaff,
+        isMfaAwaiting,
+        mfaChallengeData,
         signIn,
+        verifyMfaCode,
+        enrollMfa,
         signOut,
+        signOutEverywhere,
         refreshSession,
       }}
     >

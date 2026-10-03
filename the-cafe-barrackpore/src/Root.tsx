@@ -4,7 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { SiteConfigProvider } from './context/SiteConfigContext';
 import { I18nProvider } from './i18n';
 
-const App = lazy(() => import('./App'));
+import App from './App';
 const QROrderingPage = lazy(() => import('./components/QROrderingPage').then(m => ({ default: m.QROrderingPage })));
 const QRCodeGenerator = lazy(() => import('./components/QRCodeGenerator').then(m => ({ default: m.QRCodeGenerator })));
 const StaffLoginPage = lazy(() => import('./components/staff/StaffLoginPage').then(m => ({ default: m.StaffLoginPage })));
@@ -13,6 +13,8 @@ const ProtectedRoute = lazy(() => import('./components/staff/ProtectedRoute').th
 const StaffApp = lazy(() => import('./components/staff/StaffApp').then(m => ({ default: m.StaffApp })));
 const PrivacyPolicyPage = lazy(() => import('./components/legal/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
 const TermsPage = lazy(() => import('./components/legal/TermsPage').then(m => ({ default: m.TermsPage })));
+
+import { MetaTags } from './components/MetaTags';
 
 export const Root: React.FC = () => {
   const pathname = typeof window !== 'undefined' ? window.location.pathname.replace(/\/$/, '') : '';
@@ -35,32 +37,45 @@ export const Root: React.FC = () => {
   return (
     <I18nProvider>
       <SiteConfigProvider>
+        <MetaTags pathname={pathname} />
         <AuthProvider>
-          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
-            {isPrivacyRoute ? (
+          {isPrivacyRoute ? (
+            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
               <PrivacyPolicyPage />
-            ) : isTermsRoute ? (
+            </Suspense>
+          ) : isTermsRoute ? (
+            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
               <TermsPage />
-            ) : isResetPassword ? (
+            </Suspense>
+          ) : isResetPassword ? (
+            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
               <ResetPasswordPage />
-            ) : isStaffLogin ? (
+            </Suspense>
+          ) : isStaffLogin ? (
+            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
               <StaffLoginPage />
-            ) : isStaffRoute ? (
+            </Suspense>
+          ) : isStaffRoute ? (
+            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
               <ProtectedRoute>
                 <StaffApp />
               </ProtectedRoute>
-            ) : isGeneratorRoute ? (
+            </Suspense>
+          ) : isGeneratorRoute ? (
+            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
               <QRCodeGenerator />
-            ) : isQRRoute ? (
+            </Suspense>
+          ) : isQRRoute ? (
+            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
               <TableProvider>
                 <QROrderingPage />
               </TableProvider>
-            ) : (
-              <TableProvider>
-                <App />
-              </TableProvider>
-            )}
-          </Suspense>
+            </Suspense>
+          ) : (
+            <TableProvider>
+              <App />
+            </TableProvider>
+          )}
         </AuthProvider>
       </SiteConfigProvider>
     </I18nProvider>

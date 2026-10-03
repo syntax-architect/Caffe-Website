@@ -14,6 +14,7 @@ export interface StaffProfile {
   full_name: string;
   role: StaffRole;
   active: boolean;
+  restaurant_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +24,17 @@ export interface StaffProfile {
  */
 export interface AuthSignInResult {
   success: boolean;
+  error?: string;
+  mfaRequired?: boolean;
+  factorId?: string;
+  challengeId?: string;
+}
+
+export interface MfaEnrollResult {
+  success: boolean;
+  factorId?: string;
+  qrCode?: string;
+  secret?: string;
   error?: string;
 }
 
@@ -40,7 +52,12 @@ export interface AuthContextType {
   isOwner: boolean;
   isManager: boolean;
   isStaff: boolean;
+  isMfaAwaiting: boolean;
+  mfaChallengeData: { factorId: string; challengeId: string } | null;
   signIn: (email: string, password: string) => Promise<AuthSignInResult>;
+  verifyMfaCode: (code: string) => Promise<AuthSignInResult>;
+  enrollMfa: () => Promise<MfaEnrollResult>;
   signOut: () => Promise<void>;
+  signOutEverywhere: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }

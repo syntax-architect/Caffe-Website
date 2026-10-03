@@ -1,10 +1,12 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, hydrateRoot } from 'react-dom/client';
 import './index.css';
 import Root from './Root';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Root />
-  </StrictMode>,
-);
+const rootEl = document.getElementById('root')!;
+
+// When static pre-rendered HTML is present, hydrate seamlessly without layout flashing
+if (rootEl.hasChildNodes() && !rootEl.querySelector('.initial-loader')) {
+  hydrateRoot(rootEl, <Root />);
+} else {
+  createRoot(rootEl).render(<Root />);
+}

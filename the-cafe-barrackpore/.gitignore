@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+lighthouse-report.json
+*-report.json
 
 # Environment variables
 .env

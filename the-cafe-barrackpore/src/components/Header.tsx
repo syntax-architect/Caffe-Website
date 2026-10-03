@@ -78,15 +78,17 @@ export const Header: React.FC = () => {
           className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1" 
           href="#" 
           onClick={(e) => handleNavClick(e, 'root')}
-          aria-label={`${businessName} Home`}
         >
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-[#D4AF37]/35 bg-[#160E0A] flex items-center justify-center transition-all duration-300 group-hover:border-[#D4AF37] group-hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] overflow-hidden shrink-0">
             <img 
               src={logoUrl || "/logo.webp"} 
               alt={`${businessName} Crest`} 
+              width="44"
+              height="44"
               className="w-full h-full object-contain" 
-              fetchPriority="high" 
-              decoding="sync" 
+              loading="lazy"
+              fetchPriority="low"
+              decoding="async" 
             />
           </div>
           <div className="flex flex-col">
@@ -123,7 +125,9 @@ export const Header: React.FC = () => {
             aria-label={`View order bag with ${cartCount} items`}
             title="View Order Bag"
           >
-            <span className="material-symbols-outlined text-primary text-xl font-light">shopping_bag</span>
+            <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-r from-primary to-[#F3E5AB] text-[#18110c] font-sans text-[11px] font-extrabold flex items-center justify-center shadow-[0_2px_8px_rgba(212,175,55,0.4)] animate-in zoom-in duration-200">
                 {cartCount}
@@ -139,9 +143,9 @@ export const Header: React.FC = () => {
           >
             <span>Book a Table</span>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#18110c]/15 group-hover/btn:bg-[#18110c]/25 flex items-center justify-center transition-all duration-300 group-hover/btn:scale-105">
-              <span className="material-symbols-outlined text-[15px] sm:text-[16px] text-[#18110c]">
-                table_restaurant
-              </span>
+              <svg className="w-4 h-4 text-[#18110c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M10 14h4M6 18h12M7 6v14M17 6v14" />
+              </svg>
             </div>
           </button>
 

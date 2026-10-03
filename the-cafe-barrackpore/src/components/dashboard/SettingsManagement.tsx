@@ -69,6 +69,13 @@ export const SettingsManagement: React.FC = () => {
   // Tax Legal Note (informational)
   const [taxLegalNote, setTaxLegalNote] = useState('');
 
+  // Owner Notifications & Customer Engagement
+  const [googleReviewLink, setGoogleReviewLink] = useState('');
+  const [ownerNotificationPhone, setOwnerNotificationPhone] = useState('');
+  const [ownerNotificationEmail, setOwnerNotificationEmail] = useState('');
+  const [ownerNotificationMethod, setOwnerNotificationMethod] = useState<'email' | 'whatsapp' | 'both' | 'none'>('none');
+  const [lowStockAlertThreshold, setLowStockAlertThreshold] = useState('5');
+
   const refreshPaymentHealth = async () => {
     setIsCheckingHealth(true);
     try {
@@ -135,6 +142,13 @@ export const SettingsManagement: React.FC = () => {
         setPaymentProvider((data.payment_provider as any) || 'none');
         setPaymentMode((data.payment_mode as any) || 'disabled');
         setAllowPayAtCounter(data.allow_pay_at_counter ?? true);
+
+        // Owner notification & engagement fields
+        setGoogleReviewLink(data.google_review_link || '');
+        setOwnerNotificationPhone(data.owner_notification_phone || data.phone || '');
+        setOwnerNotificationEmail(data.owner_notification_email || data.email || '');
+        setOwnerNotificationMethod(data.owner_notification_method || 'none');
+        setLowStockAlertThreshold(String(data.low_stock_alert_threshold ?? 5));
 
         refreshPaymentHealth();
 
@@ -245,6 +259,11 @@ export const SettingsManagement: React.FC = () => {
         service_charge_label: serviceChargeLabel.trim() || 'Service Charge',
         service_charge_taxable: serviceChargeTaxable,
         service_charge_optional: false,
+        google_review_link: googleReviewLink.trim() || null,
+        owner_notification_phone: ownerNotificationPhone.trim() || null,
+        owner_notification_email: ownerNotificationEmail.trim() || null,
+        owner_notification_method: ownerNotificationMethod,
+        low_stock_alert_threshold: parseInt(lowStockAlertThreshold, 10) || 5,
       };
 
       const res = await updateRestaurantSettings(updated);
@@ -1177,7 +1196,117 @@ export const SettingsManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* SECTION 6: SECURITY & PASSWORD MANAGEMENT */}
+          {/* SECTION 6: OWNER REPORTS, NOTIFICATIONS & ENGAGEMENT */}
+          <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+                  Owner Operations
+                </span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">
+                  Daily Sales Summaries, Alerts & Reviews
+                </h3>
+                <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                  Configure automated end-of-day sales digests, low-stock threshold alerts, and customer review links.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Daily Digest Channel */}
+                <div>
+                  <label className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2">
+                    Daily Sales Summary Channel
+                  </label>
+                  <select
+                    value={ownerNotificationMethod}
+                    disabled={!isOwner}
+                    onChange={(e) => setOwnerNotificationMethod(e.target.value as any)}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] cursor-pointer"
+                  >
+                    <option value="none">Disabled (No daily digest)</option>
+                    <option value="email">Email Only</option>
+                    <option value="whatsapp">WhatsApp Only</option>
+                    <option value="both">Both WhatsApp & Email</option>
+                  </select>
+                  <p className="text-[10px] text-zinc-500 mt-1">Dispatches daily at closing time with gross revenue, tickets, and top items.</p>
+                </div>
+
+                {/* Low Stock Alert Threshold */}
+                <div>
+                  <label className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2">
+                    Low-Stock Alert Threshold
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={lowStockAlertThreshold}
+                      disabled={!isOwner}
+                      onChange={(e) => setLowStockAlertThreshold(e.target.value)}
+                      placeholder="5"
+                      className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                    <span className="absolute right-3 top-2.5 text-[10px] font-mono text-zinc-500">units</span>
+                  </div>
+                  <p className="text-[10px] text-zinc-500 mt-1">Items at or below this count appear in dashboard stock alerts.</p>
+                </div>
+
+                {/* Owner WhatsApp Phone */}
+                <div>
+                  <label className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2">
+                    Owner WhatsApp Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={ownerNotificationPhone}
+                    disabled={!isOwner}
+                    onChange={(e) => setOwnerNotificationPhone(e.target.value)}
+                    placeholder="+918420507105"
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  />
+                  <p className="text-[10px] text-zinc-500 mt-1">Target mobile number for automated WhatsApp sales digests.</p>
+                </div>
+
+                {/* Owner Notification Email */}
+                <div>
+                  <label className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2">
+                    Owner Report Email
+                  </label>
+                  <input
+                    type="email"
+                    value={ownerNotificationEmail}
+                    disabled={!isOwner}
+                    onChange={(e) => setOwnerNotificationEmail(e.target.value)}
+                    placeholder="owner@thecafe.com"
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  />
+                  <p className="text-[10px] text-zinc-500 mt-1">Target email inbox for daily sales summary attachments.</p>
+                </div>
+              </div>
+
+              {/* Google Review URL */}
+              <div className="pt-2 border-t border-white/[0.06]">
+                <label className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm text-amber-400">star</span>
+                  <span>Google Review Link (Customer Post-Order Prompt)</span>
+                </label>
+                <input
+                  type="url"
+                  value={googleReviewLink}
+                  disabled={!isOwner}
+                  onChange={(e) => setGoogleReviewLink(e.target.value)}
+                  placeholder="https://search.google.com/local/writereview?placeid=..."
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                />
+                <p className="text-[10px] text-zinc-500 mt-1">
+                  Shown to diners on the checkout confirmation screen after their order is successfully received.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 7: SECURITY & PASSWORD MANAGEMENT */}
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
               <div className="flex items-center justify-between">

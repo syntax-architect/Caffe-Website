@@ -65,6 +65,9 @@ export interface CreateOrderPayload {
   tax_options?: TaxCalculationOptions;
   restaurant_id?: string;
   captcha_token?: string;
+  marketing_consent?: boolean;
+  discount_code?: string | null;
+  discount_amount?: number;
 }
 
 export interface OrderRecord {
@@ -86,6 +89,9 @@ export interface OrderRecord {
   payment_reference?: string | null;
   payment_amount?: number | null;
   paid_at?: string | null;
+  marketing_consent?: boolean;
+  discount_code?: string | null;
+  discount_amount?: number | null;
   created_at: string;
   updated_at: string;
 }

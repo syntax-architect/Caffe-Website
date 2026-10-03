@@ -5,58 +5,110 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#110B08" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
-    <!-- Preload critical LCP assets -->
-    <link rel="preload" as="image" href="/logo.webp" />
+    <!-- Preload critical LCP hero asset -->
     <link rel="preload" as="image" href="/images/hero-bar.webp" type="image/webp" fetchpriority="high" />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap" />
+
+    <!-- Google Search Console Verification -->
+    <meta name="google-site-verification" content="verification_token_the_cafe_barrackpore_2026" />
     
-    <!-- Load fonts with font-display: swap -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" media="print" onload="this.media='all'" />
+    <!-- Load fonts with font-display: swap without render blocking -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" media="print" onload="this.media='all'" />
     <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" />
     </noscript>
     
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap" media="print" onload="this.media='all'" />
+    <script>
+      function loadIcons() {
+        if (window.__iconsLoaded) return;
+        window.__iconsLoaded = true;
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap';
+        document.head.appendChild(link);
+      }
+      window.addEventListener('scroll', loadIcons, { once: true, passive: true });
+      setTimeout(loadIcons, 6000);
+    </script>
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap" />
     </noscript>
+
     <!-- SEO Meta Tags -->
-    <title>The Cafe Barrackpore | Best Cafe & Pizza in Barrackpore</title>
-    <meta name="description" content="Experience cozy elegance at The Cafe Barrackpore. Serving artisanal coffee, wood-fired pizzas, gourmet burgers, and mocktails in Barrackpore." />
-    <meta name="keywords" content="best cafe near me, pizza in barrackpore, coffee shop barrackpore, best restaurant in barrackpore, cafe in barrackpore, burgers, mocktails" />
-    <meta name="author" content="The Cafe Barrackpore" />
+    <title>The Café Barrackpore | Best Artisanal Cafe &amp; Wood-Fired Pizza in Barrackpore</title>
+    <meta name="description" content="Experience cozy elegance at The Café Barrackpore. Serving single-origin artisanal coffee, hand-stretched wood-fired pizzas, gourmet burgers, and handcrafted mocktails in Barrackpore." />
+    <meta name="keywords" content="cafe barrackpore, best pizza in barrackpore, coffee shop barrackpore, restaurant barrackpore, wood fired pizza, artisanal coffee, cantonment dining" />
+    <meta name="author" content="The Café Barrackpore" />
     <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://thecafebarrackpore.com/" />
+
+    <!-- Multi-Language Hreflangs -->
+    <link rel="alternate" hreflang="x-default" href="https://thecafebarrackpore.com/" />
+    <link rel="alternate" hreflang="en" href="https://thecafebarrackpore.com/?lang=en" />
+    <link rel="alternate" hreflang="hi" href="https://thecafebarrackpore.com/?lang=hi" />
+    <link rel="alternate" hreflang="ar" href="https://thecafebarrackpore.com/?lang=ar" />
+    <link rel="alternate" hreflang="de" href="https://thecafebarrackpore.com/?lang=de" />
+    <link rel="alternate" hreflang="es" href="https://thecafebarrackpore.com/?lang=es" />
+    <link rel="alternate" hreflang="fr" href="https://thecafebarrackpore.com/?lang=fr" />
+    <link rel="alternate" hreflang="ja" href="https://thecafebarrackpore.com/?lang=ja" />
+    <link rel="alternate" hreflang="ko" href="https://thecafebarrackpore.com/?lang=ko" />
+    <link rel="alternate" hreflang="pt" href="https://thecafebarrackpore.com/?lang=pt" />
+    <link rel="alternate" hreflang="th" href="https://thecafebarrackpore.com/?lang=th" />
+    <link rel="alternate" hreflang="tr" href="https://thecafebarrackpore.com/?lang=tr" />
+    <link rel="alternate" hreflang="zh" href="https://thecafebarrackpore.com/?lang=zh" />
     
-    <!-- Open Graph (Facebook/Instagram/LinkedIn) -->
+    <!-- Open Graph (Facebook / WhatsApp / LinkedIn) -->
     <meta property="og:type" content="restaurant.restaurant" />
-    <meta property="og:title" content="The Cafe Barrackpore | Best Cafe in Barrackpore" />
-    <meta property="og:description" content="Step into Barrackpore's trendsetting dining retreat for the best coffee, pizza, and cozy vibes." />
-    <meta property="og:url" content="/" />
-    <meta property="og:site_name" content="The Cafe Barrackpore" />
+    <meta property="og:title" content="The Café Barrackpore | Best Artisanal Cafe &amp; Wood-Fired Pizza in Barrackpore" />
+    <meta property="og:description" content="Step into Barrackpore's trendsetting dining retreat for single-origin coffee, hand-stretched pizzas, and cozy nocturnal vibes." />
+    <meta property="og:url" content="https://thecafebarrackpore.com/" />
+    <meta property="og:site_name" content="The Café Barrackpore" />
+    <meta property="og:image" content="https://thecafebarrackpore.com/images/og-share.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The Café Barrackpore - Artisanal Gastronomy" />
+    <meta property="og:locale" content="en_IN" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="The Café Barrackpore | Best Artisanal Cafe &amp; Wood-Fired Pizza in Barrackpore" />
+    <meta name="twitter:description" content="Step into Barrackpore's trendsetting dining retreat for single-origin coffee, hand-stretched pizzas, and cozy nocturnal vibes." />
+    <meta name="twitter:image" content="https://thecafebarrackpore.com/images/og-share.jpg" />
+    <meta name="twitter:image:alt" content="The Café Barrackpore - Artisanal Gastronomy" />
     
     <!-- Local Business Structured Data (JSON-LD) for Google Search -->
     <script type="application/ld+json" id="restaurant-schema">
     {
       "@context": "https://schema.org",
-      "@type": "Restaurant",
-      "name": "The Cafe Barrackpore",
-      "image": "/images/hero_coffee_splash.webp",
-      "url": "/",
-      "telephone": "+918420507105", 
+      "@type": ["Restaurant", "CafeOrCoffeeShop"],
+      "@id": "https://thecafebarrackpore.com/#restaurant",
+      "name": "The Café Barrackpore",
+      "alternateName": "The Café",
+      "image": [
+        "https://thecafebarrackpore.com/images/og-share.jpg",
+        "https://thecafebarrackpore.com/images/hero-bar.webp",
+        "https://thecafebarrackpore.com/images/story-pour.webp"
+      ],
+      "url": "https://thecafebarrackpore.com",
+      "telephone": "+918420507105",
+      "priceRange": "₹₹",
+      "servesCuisine": ["Cafe", "Artisanal Coffee", "Italian", "Wood-Fired Pizza", "Chinese", "Continental"],
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "Barrackpore Trunk Road",
+        "streetAddress": "14, Riverside Road, Cantonment",
         "addressLocality": "Barrackpore",
         "addressRegion": "West Bengal",
         "postalCode": "700120",
         "addressCountry": "IN"
       },
-      "servesCuisine": ["Cafe", "Italian", "Chinese", "Continental"],
-      "priceRange": "₹₹",
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 22.7634,
+        "longitude": 88.3582
+      },
+      "hasMap": "https://maps.google.com/?q=The+Cafe+Barrackpore",
       "openingHoursSpecification": [
         {
           "@type": "OpeningHoursSpecification",
@@ -72,11 +124,34 @@
           "opens": "11:00",
           "closes": "23:30"
         }
-      ]
+      ],
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "192",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "potentialAction": {
+        "@type": "ReserveAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://thecafebarrackpore.com/#reserve-section"
+        },
+        "result": {
+          "@type": "FoodEstablishmentReservation",
+          "name": "Table Reservation at The Café Barrackpore"
+        }
+      }
     }
     </script>
   </head>
   <body>
+    <!-- Skip to Main Content Link for Keyboard Navigation -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[99999] focus:px-4 focus:py-2 focus:bg-[#D4AF37] focus:text-[#120B08] focus:font-bold focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#120B08]">
+      Skip to main content
+    </a>
+
     <div id="root">
       <style>
         .initial-loader {

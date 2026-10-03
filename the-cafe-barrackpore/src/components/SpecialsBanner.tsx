@@ -114,7 +114,10 @@ export const SpecialsBanner: React.FC = () => {
                       <img
                         src={combo.image}
                         alt={combo.name}
+                        width="500"
+                        height="340"
                         loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#160E0A] via-transparent to-black/30 pointer-events-none" />

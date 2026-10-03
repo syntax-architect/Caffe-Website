@@ -7,8 +7,8 @@ export const CookieConsent: React.FC = () => {
     try {
       const consent = localStorage.getItem('cafe_cookie_consent');
       if (!consent) {
-        // Small delay so it smoothly slides up after page load
-        const timer = setTimeout(() => setIsVisible(true), 1200);
+        // Small delay so it smoothly slides up after initial paint
+        const timer = setTimeout(() => setIsVisible(true), 2500);
         return () => clearTimeout(timer);
       }
     } catch {
@@ -19,6 +19,10 @@ export const CookieConsent: React.FC = () => {
   const handleConsent = (choice: 'all' | 'essential') => {
     try {
       localStorage.setItem('cafe_cookie_consent', JSON.stringify({ choice, timestamp: Date.now() }));
+      window.dispatchEvent(new CustomEvent('cafe:cookie_consent_changed', { detail: { choice } }));
+      if (choice === 'all') {
+        import('../services/analyticsService').then((m) => m.initAnalytics());
+      }
     } catch {
       // Ignore
     }
@@ -28,10 +32,10 @@ export const CookieConsent: React.FC = () => {
   if (!isVisible) return null;
 
   return (
-    <aside
-      role="dialog"
-      aria-live="polite"
-      aria-label="Cookie consent banner"
+    <div
+      role="region"
+      aria-label="Cookie Consent Banner"
+      aria-labelledby="cookie-consent-title"
       className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom duration-500"
     >
       <div className="p-1 rounded-2xl bg-gradient-to-r from-[#D4AF37]/50 via-amber-600/40 to-[#D4AF37]/50 shadow-[0_12px_40px_rgba(0,0,0,0.85)] border border-[#D4AF37]/30">
@@ -41,7 +45,7 @@ export const CookieConsent: React.FC = () => {
               <span className="material-symbols-outlined text-[18px]">cookie</span>
             </div>
             <div className="flex-1">
-              <h3 className="text-xs font-serif font-bold text-white tracking-wide">
+              <h3 id="cookie-consent-title" className="text-xs font-serif font-bold text-white tracking-wide">
                 Bespoke Dining Experience &amp; Privacy
               </h3>
               <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
@@ -76,7 +80,7 @@ export const CookieConsent: React.FC = () => {
           </div>
         </div>
       </div>
-    </aside>
+    </div>
   );
 };
 

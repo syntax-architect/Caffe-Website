@@ -112,6 +112,9 @@ const requiredMigrationHeaders = [
   '009_menu_and_secure_orders.sql',
   '010_menu_and_site_content.sql',
   '011_multi_tenant_and_allergens.sql',
+  '012_provider_agnostic_payments.sql',
+  '013_owner_features.sql',
+  '014_order_caps_and_direct_insert_lockdown.sql',
 ];
 
 for (const header of requiredMigrationHeaders) {
@@ -124,7 +127,13 @@ for (const header of requiredMigrationHeaders) {
 if (!combinedSql.includes('SECURITY DEFINER') || !combinedSql.includes('ENABLE ROW LEVEL SECURITY')) {
   throw new Error('Test 4 failed: Missing RLS or SECURITY DEFINER in combined migration.');
 }
-console.log('✔ Test 4: Combined migration chain integrity (001-008, RLS, RPC) verified');
+
+// Verify direct insert lockdown from anon/authenticated
+if (!combinedSql.includes('REVOKE INSERT ON TABLE public.orders FROM anon, authenticated') ||
+    !combinedSql.includes('REVOKE INSERT ON TABLE public.reservations FROM anon, authenticated')) {
+  throw new Error('Test 4 failed: Direct INSERT revocation missing from combined migration.');
+}
+console.log('✔ Test 4: Combined migration chain integrity (001-014, RLS, RPC, Direct Insert Lockdown) verified');
 
 // -------------------------------------------------------------
 // 5. Environment Template Separation (.env.example)

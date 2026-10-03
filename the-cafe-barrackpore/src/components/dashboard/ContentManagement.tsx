@@ -22,6 +22,7 @@ export const ContentManagement: React.FC = () => {
       'Where artisan coffee meets handcrafted cocktails & gourmet comfort food in a strictly premium, nocturnal setting.'
   );
   const [heroImage, setHeroImage] = useState(siteConfig.hero.src || '/images/hero-bar.webp');
+  const [heroAlt, setHeroAlt] = useState(siteConfig.hero.alt || 'The Café Barrackpore Hero Visual');
 
   const [aboutTitle, setAboutTitle] = useState(
     siteConfig.ourStory.title || 'Crafting Barrackpore’s finest nocturnal escape'
@@ -30,6 +31,7 @@ export const ContentManagement: React.FC = () => {
     siteConfig.ourStory.description ||
       'We believe that true luxury lies in the details. From sourcing the most vibrant, local ingredients from surrounding farms to hand-selecting the perfect acoustic backdrop, every element of our space is intentionally curated.'
   );
+  const [aboutAlt, setAboutAlt] = useState(siteConfig.ourStory.alt || 'The Café Barrackpore Interior Sanctuary');
 
   const [specialsTitle, setSpecialsTitle] = useState(
     siteConfig.specials.title || 'Special Banquet & Hangout Platters'
@@ -48,18 +50,20 @@ export const ContentManagement: React.FC = () => {
       heroSubtext !==
         (siteConfig.hero.subtext ||
           'Where artisan coffee meets handcrafted cocktails & gourmet comfort food in a strictly premium, nocturnal setting.') ||
-      heroImage !== (siteConfig.hero.src || '/images/hero-bar.webp')
+      heroImage !== (siteConfig.hero.src || '/images/hero-bar.webp') ||
+      heroAlt !== (siteConfig.hero.alt || 'The Café Barrackpore Hero Visual')
     );
-  }, [heroHeading, heroSubtext, heroImage, siteConfig.hero]);
+  }, [heroHeading, heroSubtext, heroImage, heroAlt, siteConfig.hero]);
 
   const isAboutDirty = useMemo(() => {
     return (
       aboutTitle !== (siteConfig.ourStory.title || 'Crafting Barrackpore’s finest nocturnal escape') ||
       aboutDescription !==
         (siteConfig.ourStory.description ||
-          'We believe that true luxury lies in the details. From sourcing the most vibrant, local ingredients from surrounding farms to hand-selecting the perfect acoustic backdrop, every element of our space is intentionally curated.')
+          'We believe that true luxury lies in the details. From sourcing the most vibrant, local ingredients from surrounding farms to hand-selecting the perfect acoustic backdrop, every element of our space is intentionally curated.') ||
+      aboutAlt !== (siteConfig.ourStory.alt || 'The Café Barrackpore Interior Sanctuary')
     );
-  }, [aboutTitle, aboutDescription, siteConfig.ourStory]);
+  }, [aboutTitle, aboutDescription, aboutAlt, siteConfig.ourStory]);
 
   const isSpecialsDirty = useMemo(() => {
     return (
@@ -119,12 +123,14 @@ export const ContentManagement: React.FC = () => {
           headline: heroHeading.trim(),
           subtext: heroSubtext.trim(),
           src: heroImage,
-          alt: 'The Café Barrackpore Hero Visual',
+          alt: heroAlt.trim(),
         });
       } else if (activeTab === 'about') {
         success = await siteConfig.updateSection('ourStory', {
           title: aboutTitle.trim(),
           description: aboutDescription.trim(),
+          src: siteConfig.ourStory.src,
+          alt: aboutAlt.trim(),
         });
       } else if (activeTab === 'specials') {
         success = await siteConfig.updateSection('specials', {
@@ -400,6 +406,23 @@ export const ContentManagement: React.FC = () => {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Hero Image Accessible Alt Text (WCAG Compliance)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={heroAlt}
+                  onChange={(e) => {
+                    setHeroAlt(e.target.value);
+                    setSaveStatus('idle');
+                  }}
+                  placeholder="e.g. Artisanal beverage and cocktail bar at The Café Barrackpore"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
               {renderSaveButton('Hero Section')}
             </div>
           </div>
@@ -445,6 +468,23 @@ export const ContentManagement: React.FC = () => {
                     setSaveStatus('idle');
                   }}
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white leading-relaxed focus:outline-none focus:border-[#D4AF37] resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Story Image Accessible Alt Text (WCAG Compliance)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={aboutAlt}
+                  onChange={(e) => {
+                    setAboutAlt(e.target.value);
+                    setSaveStatus('idle');
+                  }}
+                  placeholder="e.g. Artisanal espresso pour and sanctuary atmosphere at The Café Barrackpore"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
 
@@ -528,8 +568,25 @@ export const ContentManagement: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-[11px] text-zinc-400 truncate max-w-[160px]">{img.alt}</span>
+                    <div className="flex flex-col gap-1.5 pt-1">
+                      <label className="text-[9px] uppercase font-mono font-bold tracking-wider text-zinc-400">
+                        Accessible Alt Text / Description
+                      </label>
+                      <input
+                        type="text"
+                        value={img.alt}
+                        onChange={(e) => {
+                          const next = [...galleryImages];
+                          next[idx] = { ...next[idx], alt: e.target.value };
+                          setGalleryImages(next);
+                          setSaveStatus('idle');
+                        }}
+                        placeholder={`Description for photo #${idx + 1}`}
+                        className="w-full bg-[#120F0D] border border-white/[0.1] rounded-lg px-2.5 py-1.5 text-[11px] text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end pt-1">
                       <label className="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer">
                         <span>Replace Photo</span>
                         <input

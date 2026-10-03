@@ -86,6 +86,43 @@ const v5 = validateOrderPayload(emptyCart);
 if (v5.valid) throw new Error('Expected empty cart to fail validation!');
 console.log('✔ Empty cart rejected properly:', v5.error);
 
+// 6. Test Exceeding Max 40 Items Cap
+const tooManyItems = {
+  customer_name: 'Rahul Sharma',
+  customer_phone: '9876543210',
+  order_type: 'takeaway' as const,
+  items: Array.from({ length: 41 }, (_, i) => ({
+    id: `item-${i + 1}`,
+    name: `Item ${i + 1}`,
+    price: 100,
+    quantity: 1,
+  })),
+};
+const vTooMany = validateOrderPayload(tooManyItems);
+if (vTooMany.valid) throw new Error('Expected order with > 40 items to fail validation!');
+console.log('✔ Max 40 items cap rejected properly:', vTooMany.error);
+
+// 7. Test Item Quantity Cap (1 - 50)
+const qtyZero = {
+  customer_name: 'Rahul Sharma',
+  customer_phone: '9876543210',
+  order_type: 'takeaway' as const,
+  items: [{ id: 'item-1', name: 'Item 1', price: 100, quantity: 0 }],
+};
+const vQtyZero = validateOrderPayload(qtyZero);
+if (vQtyZero.valid) throw new Error('Expected 0 quantity to fail validation!');
+console.log('✔ 0 quantity rejected properly:', vQtyZero.error);
+
+const qtyOverFifty = {
+  customer_name: 'Rahul Sharma',
+  customer_phone: '9876543210',
+  order_type: 'takeaway' as const,
+  items: [{ id: 'item-1', name: 'Item 1', price: 100, quantity: 51 }],
+};
+const vQtyOverFifty = validateOrderPayload(qtyOverFifty);
+if (vQtyOverFifty.valid) throw new Error('Expected quantity > 50 to fail validation!');
+console.log('✔ Quantity > 50 rejected properly:', vQtyOverFifty.error);
+
 // 8. Test Demo Mode Order Submission
 async function runAsyncTests() {
   console.log('\nTest 8: Demo mode order creation:');

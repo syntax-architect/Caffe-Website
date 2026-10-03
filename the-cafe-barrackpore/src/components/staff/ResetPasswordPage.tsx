@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { validateStrongPassword } from '../../utils/security';
 
 export const ResetPasswordPage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
@@ -18,8 +19,11 @@ export const ResetPasswordPage: React.FC = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setErrorMessage('Password must be at least 6 characters long.');
+    const passwordValidation = validateStrongPassword(newPassword);
+    if (!passwordValidation.valid) {
+      setErrorMessage(
+        `Password does not meet enterprise security requirements: ${passwordValidation.errors.join(' ')}`
+      );
       return;
     }
 

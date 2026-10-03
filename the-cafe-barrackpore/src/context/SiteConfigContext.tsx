@@ -214,31 +214,60 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
         const content = await fetchAllSiteContent();
         if (!isMounted) return;
 
-        setConfig((prev) => ({
-          ...prev,
-          hero: {
-            src: content.hero.src || defaultContextValue.hero.src,
-            alt: content.hero.alt || defaultContextValue.hero.alt,
-            headline: content.hero.headline || defaultContextValue.hero.headline,
-            subtext: content.hero.subtext || defaultContextValue.hero.subtext,
-          },
-          ourStory: {
-            src: content.story.src || defaultContextValue.ourStory.src,
-            alt: content.story.alt || defaultContextValue.ourStory.alt,
-            title: content.story.title || defaultContextValue.ourStory.title,
-            description: content.story.description || defaultContextValue.ourStory.description,
-          },
-          specials: {
-            title: content.specials.title || defaultContextValue.specials.title,
-            description: content.specials.description || defaultContextValue.specials.description,
-            image: content.specials.image || defaultContextValue.specials.image,
-          },
-          gallery: {
-            images: content.gallery.images || defaultContextValue.gallery.images,
-          },
-          isLoading: false,
-          error: null,
-        }));
+        setConfig((prev) => {
+          const heroSrc = content.hero.src || defaultContextValue.hero.src;
+          const heroAlt = content.hero.alt || defaultContextValue.hero.alt;
+          const heroHeadline = content.hero.headline || defaultContextValue.hero.headline;
+          const heroSubtext = content.hero.subtext || defaultContextValue.hero.subtext;
+
+          const storySrc = content.story.src || defaultContextValue.ourStory.src;
+          const storyAlt = content.story.alt || defaultContextValue.ourStory.alt;
+          const storyTitle = content.story.title || defaultContextValue.ourStory.title;
+          const storyDesc = content.story.description || defaultContextValue.ourStory.description;
+
+          const specialsTitle = content.specials.title || defaultContextValue.specials.title;
+          const specialsDesc = content.specials.description || defaultContextValue.specials.description;
+          const specialsImage = content.specials.image || defaultContextValue.specials.image;
+
+          const hasHeroChanged =
+            heroSrc !== prev.hero.src ||
+            heroAlt !== prev.hero.alt ||
+            heroHeadline !== prev.hero.headline ||
+            heroSubtext !== prev.hero.subtext;
+
+          const hasStoryChanged =
+            storySrc !== prev.ourStory.src ||
+            storyAlt !== prev.ourStory.alt ||
+            storyTitle !== prev.ourStory.title ||
+            storyDesc !== prev.ourStory.description;
+
+          const hasSpecialsChanged =
+            specialsTitle !== prev.specials.title ||
+            specialsDesc !== prev.specials.description ||
+            specialsImage !== prev.specials.image;
+
+          if (!hasHeroChanged && !hasStoryChanged && !hasSpecialsChanged && !prev.isLoading) {
+            return prev;
+          }
+
+          return {
+            ...prev,
+            hero: hasHeroChanged
+              ? { src: heroSrc, alt: heroAlt, headline: heroHeadline, subtext: heroSubtext }
+              : prev.hero,
+            ourStory: hasStoryChanged
+              ? { src: storySrc, alt: storyAlt, title: storyTitle, description: storyDesc }
+              : prev.ourStory,
+            specials: hasSpecialsChanged
+              ? { title: specialsTitle, description: specialsDesc, image: specialsImage }
+              : prev.specials,
+            gallery: {
+              images: content.gallery.images || defaultContextValue.gallery.images,
+            },
+            isLoading: false,
+            error: null,
+          };
+        });
       } catch (err: any) {
         if (!isMounted) return;
         console.warn('[SiteConfigContext] Failed loading site_content, using defaults:', err);
@@ -246,25 +275,32 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
       }
     };
 
-    loadContent();
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(loadContent, { timeout: 2000 });
+    } else {
+      setTimeout(loadContent, 600);
+    }
 
-    // Attach Realtime subscription so updates in ContentManagement show instantly on public site
-    const unsubscribe = subscribeToSiteContentChanges((key, value) => {
-      if (!isMounted || !value) return;
+    // Attach Realtime subscription only on staff/admin routes where content editing happens
+    let unsubscribe = () => {};
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/staff')) {
+      unsubscribe = subscribeToSiteContentChanges((key, value) => {
+        if (!isMounted || !value) return;
 
-      setConfig((prev) => {
-        if (key === 'hero') {
-          return { ...prev, hero: { ...prev.hero, ...value } };
-        } else if (key === 'story' || key === 'ourStory') {
-          return { ...prev, ourStory: { ...prev.ourStory, ...value } };
-        } else if (key === 'specials') {
-          return { ...prev, specials: { ...prev.specials, ...value } };
-        } else if (key === 'gallery') {
-          return { ...prev, gallery: { images: value.images || value } };
-        }
-        return prev;
+        setConfig((prev) => {
+          if (key === 'hero') {
+            return { ...prev, hero: { ...prev.hero, ...value } };
+          } else if (key === 'story' || key === 'ourStory') {
+            return { ...prev, ourStory: { ...prev.ourStory, ...value } };
+          } else if (key === 'specials') {
+            return { ...prev, specials: { ...prev.specials, ...value } };
+          } else if (key === 'gallery') {
+            return { ...prev, gallery: { images: value.images || value } };
+          }
+          return prev;
+        });
       });
-    });
+    }
 
     return () => {
       isMounted = false;
@@ -312,20 +348,28 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
 
   useEffect(() => {
     let isMounted = true;
-    fetchRestaurantSettings()
-      .then((settings) => {
-        if (!isMounted) return;
-        if (settings) {
-          const mapped = mapSettingsToConfig(settings);
-          setRestaurantConfig(mapped);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(RESTAURANT_CONFIG_STORAGE_KEY, JSON.stringify(mapped));
+    const syncSettings = () => {
+      fetchRestaurantSettings()
+        .then((settings) => {
+          if (!isMounted) return;
+          if (settings) {
+            const mapped = mapSettingsToConfig(settings);
+            setRestaurantConfig(mapped);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(RESTAURANT_CONFIG_STORAGE_KEY, JSON.stringify(mapped));
+            }
           }
-        }
-      })
-      .catch((err) => {
-        console.warn('Unable to load restaurant settings, retaining fallback:', err);
-      });
+        })
+        .catch((err) => {
+          console.warn('Unable to load restaurant settings, retaining fallback:', err);
+        });
+    };
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(syncSettings, { timeout: 2500 });
+    } else {
+      setTimeout(syncSettings, 800);
+    }
 
     return () => {
       isMounted = false;

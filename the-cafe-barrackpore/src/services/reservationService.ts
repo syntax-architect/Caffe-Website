@@ -3,6 +3,7 @@ import type { CreateReservationPayload, ReservationResult } from '../types/reser
 import { generateClientReservationRef } from '../utils/orderCalculations';
 import { validatePhoneNumber } from '../utils/phone';
 import { enforceRateLimit } from '../utils/rateLimiter';
+import { verifyTurnstileToken } from '../utils/security';
 
 /**
  * Validates reservation payload prior to submission.
@@ -62,6 +63,16 @@ export const createReservation = async (
       success: false,
       reservationRef,
       error: rateLimit.error || 'Too many reservation attempts. Please wait a moment before trying again.',
+    };
+  }
+
+  // 0b. Server-side / Edge Turnstile CAPTCHA and IP/Phone rate check
+  const captchaVerification = await verifyTurnstileToken('reservation', payload.captcha_token, payload.customer_phone);
+  if (!captchaVerification.success) {
+    return {
+      success: false,
+      reservationRef,
+      error: captchaVerification.error || 'Security verification failed.',
     };
   }
 
@@ -141,37 +152,13 @@ export const createReservation = async (
         continue;
       }
 
-      // Attempt 2: Direct insert fallback (if RPC is not yet applied)
-      const { data: insertData, error: insertError } = await supabase
-        .from('reservations')
-        .insert({
-          reservation_ref: reservationRef,
-          restaurant_id: restaurantId,
-          customer_name: payload.customer_name.trim(),
-          customer_phone: normalizedPhone,
-          reservation_date: payload.reservation_date,
-          reservation_time: payload.reservation_time.trim(),
-          party_size: Math.floor(Number(payload.party_size)),
-          special_requests: payload.special_requests?.trim() || null,
-          status: 'pending',
-          source: 'website',
-        })
-        .select('id, reservation_ref')
-        .single();
-
-      if (insertError) {
-        if (insertError.code === '23505') {
-          reservationRef = generateClientReservationRef();
-          continue;
-        }
-        throw insertError;
+      if (rpcError) {
+        return {
+          success: false,
+          reservationRef,
+          error: rpcError.message || 'Failed to submit reservation.',
+        };
       }
-
-      return {
-        success: true,
-        reservationId: insertData.id,
-        reservationRef: insertData.reservation_ref,
-      };
     } catch (err: unknown) {
       if (attempt >= maxAttempts) {
         console.error('[reservationService] Supabase reservation error:', err);

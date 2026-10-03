@@ -82,7 +82,22 @@ export const Menu: React.FC = () => {
       }
     };
 
-    loadData();
+    // Defer loading dynamic menu until menu section approaches viewport (within 400px)
+    const menuEl = document.getElementById('menu-section');
+    if (typeof window !== 'undefined' && 'IntersectionObserver' in window && menuEl) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting) {
+            loadData();
+            observer.disconnect();
+          }
+        },
+        { rootMargin: '400px 0px' }
+      );
+      observer.observe(menuEl);
+    } else {
+      loadData();
+    }
 
     // Live Supabase Realtime synchronization across all tables
     const unsubscribe = subscribeToMenuRealtime(() => {
@@ -141,6 +156,9 @@ export const Menu: React.FC = () => {
               transition={{ duration: 0.2, ease: 'easeOut' }}
               src={hoveredImage}
               loading="lazy"
+              decoding="async"
+              width="256"
+              height="256"
               alt="Menu Preview"
               className="hidden lg:block fixed z-[100] w-64 h-64 object-cover rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 pointer-events-none"
               style={{
@@ -412,8 +430,11 @@ export const Menu: React.FC = () => {
                           <img
                             src={displayImage}
                             alt={item.name}
+                            width="64"
+                            height="64"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             loading="lazy"
+                            decoding="async"
                           />
                         </div>
                       ) : (
@@ -521,7 +542,7 @@ export const Menu: React.FC = () => {
         )}
 
         {!isLoading && filteredMenu.length === 0 && (
-          <div className="py-20 flex flex-col items-center justify-center text-on-surface/50">
+          <div className="py-20 flex flex-col items-center justify-center text-on-surface/75">
             <span className="material-symbols-outlined text-4xl mb-4 opacity-50">
               search_off
             </span>

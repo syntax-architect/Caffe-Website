@@ -121,16 +121,20 @@ export const ScrollSequence: React.FC = () => {
       return img;
     };
 
-    // PHASE A: Load initial frame immediately and paint as soon as ready
-    const firstImg = ensureFrame(1, true);
-    firstImg.onload = () => {
-      if (canvasRef.current && firstImg.naturalWidth > 0) {
-        drawImageCover(context, firstImg, cachedWinWidth, cachedWinHeight);
-      }
+    // PHASE A: Load initial frames strictly on demand when user scrolls towards sequence
+    let phaseAStarted = false;
+    const startPhaseA = () => {
+      if (phaseAStarted) return;
+      phaseAStarted = true;
+      const firstImg = ensureFrame(1, !isMobileRef);
+      firstImg.onload = () => {
+        if (canvasRef.current && firstImg.naturalWidth > 0) {
+          drawImageCover(context, firstImg, cachedWinWidth, cachedWinHeight);
+        }
+      };
+      ensureFrame(2, false);
+      ensureFrame(3, false);
     };
-    // Prime the next two frames so first scroll movement is instant
-    ensureFrame(2, true);
-    ensureFrame(3, true);
 
     // Chunks loader for Phase B and Phase C
     let phaseBStarted = false;
@@ -170,19 +174,15 @@ export const ScrollSequence: React.FC = () => {
       }
     };
 
-    // PHASE B: Preload first block when approaching viewport within 800px
+    // PHASE B: Preload initial small chunk when section enters viewport
     const startPhaseB = () => {
       if (phaseBStarted) return;
       phaseBStarted = true;
-      const phaseBLimit = isMobileRef ? 20 : 30;
-      loadChunk(phaseBLimit, () => {
-        if (isVisible) {
-          startPhaseC();
-        }
-      });
+      const phaseBLimit = isMobileRef ? 12 : 24;
+      loadChunk(phaseBLimit);
     };
 
-    // PHASE C: Background preload remaining frames when section is active in viewport
+    // PHASE C: Background preload remaining frames only when user scrolls through sequence
     const startPhaseC = () => {
       if (phaseCStarted) return;
       phaseCStarted = true;
@@ -281,30 +281,41 @@ export const ScrollSequence: React.FC = () => {
       }
     };
 
-    // Phase B trigger: Approach observer (800px margin before section reaches viewport)
+    let userHasScrolled = typeof window !== 'undefined' && window.scrollY > 10;
+    const onFirstUserScroll = () => {
+      userHasScrolled = true;
+      if (isVisible) {
+        startPhaseA();
+        startPhaseB();
+        triggerRender();
+      }
+    };
+    window.addEventListener('scroll', onFirstUserScroll, { passive: true, once: true });
+
+    // Phase A trigger: Approach observer (only when user scrolls near within 150px)
     const section = document.getElementById('scroll-sequence-section');
     const approachObserver = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          startPhaseB();
+        if (entries[0]?.isIntersecting && userHasScrolled) {
+          startPhaseA();
         }
       },
-      { threshold: 0, rootMargin: '800px 0px 800px 0px' }
+      { threshold: 0, rootMargin: isMobileRef ? '100px 0px 100px 0px' : '250px 0px 250px 0px' }
     );
 
-    // Phase C & render visibility observer
+    // Phase B & render visibility observer (when section actually enters viewport)
     const visibilityObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           isVisible = entry.isIntersecting;
-          if (entry.isIntersecting) {
+          if (entry.isIntersecting && userHasScrolled) {
+            startPhaseA();
             startPhaseB();
-            startPhaseC();
             triggerRender();
           }
         });
       },
-      { threshold: 0, rootMargin: '200px' }
+      { threshold: 0, rootMargin: '50px 0px' }
     );
 
     if (section) {
@@ -320,6 +331,11 @@ export const ScrollSequence: React.FC = () => {
       if (scrollableDistance > 0) {
         targetProgress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
 
+        // Start progressive Phase C when user has scrolled 10% through the sequence
+        if (targetProgress > 0.1) {
+          startPhaseC();
+        }
+
         // Prioritize buffered loading around current scroll position if user scrolls ahead
         const targetFrame = Math.floor(targetProgress * (frameCount - 1)) + 1;
         const startWindow = Math.max(1, targetFrame - 2);
@@ -334,9 +350,9 @@ export const ScrollSequence: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Initial setup
-    handleScroll();
-    currentProgress = targetProgress;
+    // Initial setup without forced synchronous layout calculation
+    targetProgress = 0;
+    currentProgress = 0;
     triggerRender();
 
     return () => {
@@ -390,15 +406,15 @@ export const ScrollSequence: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-transparent" />
         
         {/* Floating text that appears during scroll */}
-        <div className="relative z-10 max-w-[1320px] mx-auto px-4 sm:px-6 w-full flex flex-col items-center justify-center text-center h-full">
-          <h2 ref={text1Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-on-surface font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
-            Crafted to <span className="text-primary italic font-serif">Perfection</span>
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 w-full flex flex-col items-center justify-center text-center h-full">
+          <h2 ref={text1Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F5F2F0] font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
+            Crafted to <br className="sm:hidden" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] italic font-serif">Perfection.</span>
           </h2>
-          <h2 ref={text2Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-on-surface font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
-            Every Drop <span className="text-primary italic font-serif">Matters</span>
+          <h2 ref={text2Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F5F2F0] font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
+            Every Drop <br className="sm:hidden" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] italic font-serif">Matters.</span>
           </h2>
-          <h2 ref={text3Ref} className="font-headline-lg text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-on-surface font-medium tracking-tight opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
-            The True <span className="text-primary italic font-serif">Lounge</span> Experience
+          <h2 ref={text3Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F5F2F0] font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
+            The True <br className="sm:hidden" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] italic font-serif">Lounge</span> Experience
           </h2>
         </div>
       </div>

@@ -14,11 +14,6 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
 import Stripe from 'https://esm.sh/stripe@14.25.0?target=deno';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature, x-razorpay-signature, x-razorpay-event-id',
-};
-
 /**
  * Constant-time Razorpay HMAC-SHA256 signature verification using Web Crypto API.
  */
@@ -49,14 +44,10 @@ async function verifyRazorpaySignature(body: string, signature: string, secret: 
 }
 
 serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
@@ -76,7 +67,7 @@ serve(async (req: Request) => {
     if (!provider || (provider !== 'stripe' && provider !== 'razorpay')) {
       return new Response(
         JSON.stringify({ error: 'Missing or unsupported payment provider. Must be "stripe" or "razorpay".' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -87,7 +78,7 @@ serve(async (req: Request) => {
     if (!supabaseServiceKey) {
       return new Response(
         JSON.stringify({ error: 'Server configuration error: SUPABASE_SERVICE_ROLE_KEY is required for webhook reconciliation.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -112,7 +103,7 @@ serve(async (req: Request) => {
       if (!signature) {
         return new Response(JSON.stringify({ error: 'Missing stripe-signature header' }), {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
         });
       }
 
@@ -122,7 +113,7 @@ serve(async (req: Request) => {
       if (!stripeWebhookSecret) {
         return new Response(
           JSON.stringify({ error: 'STRIPE_WEBHOOK_SECRET not configured on server' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
       }
 
@@ -136,7 +127,7 @@ serve(async (req: Request) => {
       } catch (err: any) {
         return new Response(
           JSON.stringify({ error: `Stripe webhook signature verification failed: ${err.message}` }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
       }
 
@@ -176,7 +167,7 @@ serve(async (req: Request) => {
       if (!signature) {
         return new Response(JSON.stringify({ error: 'Missing x-razorpay-signature header' }), {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
         });
       }
 
@@ -184,7 +175,7 @@ serve(async (req: Request) => {
       if (!razorpayWebhookSecret) {
         return new Response(
           JSON.stringify({ error: 'RAZORPAY_WEBHOOK_SECRET not configured on server' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
       }
 
@@ -192,7 +183,7 @@ serve(async (req: Request) => {
       if (!isValid) {
         return new Response(
           JSON.stringify({ error: 'Razorpay HMAC-SHA256 signature verification failed' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
       }
 
@@ -201,7 +192,7 @@ serve(async (req: Request) => {
       } catch {
         return new Response(JSON.stringify({ error: 'Malformed JSON payload from Razorpay' }), {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
         });
       }
 
@@ -250,7 +241,7 @@ serve(async (req: Request) => {
             idempotent: true,
             status: existingPayment.status,
           }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
         );
       }
     }
@@ -258,7 +249,7 @@ serve(async (req: Request) => {
     if (!orderRef) {
       return new Response(
         JSON.stringify({ error: 'Could not resolve order_ref from webhook payload notes/metadata' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -274,7 +265,7 @@ serve(async (req: Request) => {
     if (orderErr || !order) {
       return new Response(
         JSON.stringify({ error: `Order not found in database for order_ref: ${orderRef}` }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -292,7 +283,7 @@ serve(async (req: Request) => {
           JSON.stringify({
             error: `Currency mismatch: webhook reported ${paidCurrency} but order expects ${expectedCurrency}`,
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
       }
 
@@ -301,7 +292,7 @@ serve(async (req: Request) => {
           JSON.stringify({
             error: `Amount mismatch: webhook reported ${paidAmountInSmallestUnits} but order expects ${expectedAmountUnits}`,
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
       }
 
@@ -391,12 +382,12 @@ serve(async (req: Request) => {
         provider,
         providerPaymentId,
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
     return new Response(
       JSON.stringify({ error: error.message || 'Internal webhook error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 });

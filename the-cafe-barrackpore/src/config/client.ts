@@ -15,4 +15,5 @@ export const clientDetails = {
   tagline2: "Craving an Unmatched Culinary Evening?",
   description: "A refined nocturnal retreat blending candlelit comfort with modern gastronomy, artisanal roasts, and signature beverages.",
   elfsightId: "YOUR_ELFSIGHT_WIDGET_ID", // E.g., '1234567-89ab-cdef-0123-456789abcdef'
+  googleReviewLink: "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID", // Replace with actual Google Place ID
 };

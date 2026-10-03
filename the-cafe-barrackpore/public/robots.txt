@@ -1,0 +1,21 @@
+# Robots.txt for The Café Barrackpore
+# Search Engine Crawlers & Optimization Directives
+User-agent: *
+Allow: /
+Allow: /privacy
+Allow: /terms
+Allow: /images/
+
+# Strictly block internal staff operational portals and table QR order endpoints from search index
+Disallow: /staff
+Disallow: /staff/
+Disallow: /staff/*
+Disallow: /qr
+Disallow: /qr/
+Disallow: /qr/*
+Disallow: /qr-generator
+Disallow: /reset-password
+Disallow: /kitchen
+
+# Canonical XML Sitemap
+Sitemap: https://thecafebarrackpore.com/sitemap.xml

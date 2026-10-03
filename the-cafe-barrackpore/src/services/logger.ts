@@ -43,6 +43,8 @@ export function sanitizeLogData(input: unknown): unknown {
   return input;
 }
 
+import { Sentry } from '../lib/sentry';
+
 const isDev = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.DEV : false;
 
 export const logger = {
@@ -57,7 +59,17 @@ export const logger = {
   },
 
   error: (context: string, message: string, err?: unknown) => {
-    const sanitizedErr = err instanceof Error ? { name: err.name, message: err.message } : sanitizeLogData(err);
+    // 1. Telemetry error dispatch to Sentry
+    Sentry.captureException(err, { context, message });
+
+    // 2. In production, strictly hide stack traces and internal metadata
+    if (!isDev) {
+      const safeMessage = err instanceof Error ? `${err.name}: ${err.message}` : 'Operation failed';
+      console.error(`[${context}] ${message} - ${safeMessage}`);
+      return;
+    }
+
+    const sanitizedErr = err instanceof Error ? { name: err.name, message: err.message, stack: err.stack } : sanitizeLogData(err);
     console.error(`[${context}] ${message}`, sanitizedErr);
   },
 };

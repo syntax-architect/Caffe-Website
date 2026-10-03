@@ -132,6 +132,9 @@ export const Gallery: React.FC = () => {
                     {/* Photography Image */}
                     <img 
                       loading="lazy" 
+                      decoding="async"
+                      width="600"
+                      height="450"
                       src={img?.src} 
                       alt={img?.alt || "The Café Barrackpore Hospitality"}
                       className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
@@ -184,6 +187,9 @@ export const Gallery: React.FC = () => {
                 <img 
                   src={selectedPhoto.data.src} 
                   alt={selectedPhoto.data.alt} 
+                  width="1200"
+                  height="800"
+                  decoding="async"
                   className="w-full h-full max-h-[75vh] object-contain"
                 />
               </div>

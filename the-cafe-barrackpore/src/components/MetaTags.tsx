@@ -1,22 +1,32 @@
 import React, { useEffect } from 'react';
 import { useSiteConfig } from '../context/SiteConfigContext';
-import { getPublicSiteOrigin } from '../utils/url';
+import { generatePageSEO } from '../utils/seo';
+import { initAnalytics } from '../services/analyticsService';
 
-export const MetaTags: React.FC = () => {
+interface MetaTagsProps {
+  pathname?: string;
+}
+
+export const MetaTags: React.FC<MetaTagsProps> = ({ pathname }) => {
   const { seo, restaurantConfig } = useSiteConfig();
 
   useEffect(() => {
-    const origin = getPublicSiteOrigin();
-    const effectiveTitle = seo?.title || `${restaurantConfig.businessName} | Artisanal Dining & Coffee`;
-    const effectiveDesc =
-      seo?.description ||
-      `Experience refined dining and handcrafted cuisine at ${restaurantConfig.businessName} in ${restaurantConfig.address.city}.`;
-    const effectiveImage = seo?.image || `${origin}/images/hero-bar.webp`;
+    // Initialize analytics if consent is present
+    initAnalytics();
 
-    // 1. Document Title
-    document.title = effectiveTitle;
+    const currentPath =
+      pathname || (typeof window !== 'undefined' ? window.location.pathname : '/');
 
-    // Helper to safely set meta tag
+    const seoData = generatePageSEO({
+      pathname: currentPath,
+      restaurantConfig,
+      seoConfig: seo,
+    });
+
+    // 1. Title
+    document.title = seoData.title;
+
+    // Helper to safely set or update meta tag
     const setMeta = (attr: 'name' | 'property', key: string, content: string) => {
       let meta = document.querySelector(`meta[${attr}="${key}"]`);
       if (!meta) {
@@ -28,71 +38,70 @@ export const MetaTags: React.FC = () => {
     };
 
     // 2. Standard Meta Tags
-    setMeta('name', 'description', effectiveDesc);
+    setMeta('name', 'description', seoData.description);
+    setMeta('name', 'robots', seoData.robots);
     setMeta('name', 'author', restaurantConfig.businessName);
 
-    // 3. Open Graph Meta Tags
-    setMeta('property', 'og:title', effectiveTitle);
-    setMeta('property', 'og:description', effectiveDesc);
-    setMeta('property', 'og:image', effectiveImage);
+    // 3. Open Graph Tags
+    setMeta('property', 'og:title', seoData.title);
+    setMeta('property', 'og:description', seoData.description);
+    setMeta('property', 'og:type', seoData.ogType);
+    setMeta('property', 'og:url', seoData.canonicalUrl);
     setMeta('property', 'og:site_name', restaurantConfig.businessName);
-    setMeta('property', 'og:url', typeof window !== 'undefined' ? window.location.href : origin);
+    setMeta('property', 'og:image', seoData.ogImage);
+    setMeta('property', 'og:image:width', seoData.ogImageWidth.toString());
+    setMeta('property', 'og:image:height', seoData.ogImageHeight.toString());
+    setMeta('property', 'og:image:alt', seoData.ogImageAlt);
+    setMeta('property', 'og:locale', restaurantConfig.locale?.replace('-', '_') || 'en_IN');
 
-    // 4. Canonical Link Tag
+    // 4. Twitter Card Tags
+    setMeta('name', 'twitter:card', seoData.twitterCard);
+    setMeta('name', 'twitter:title', seoData.title);
+    setMeta('name', 'twitter:description', seoData.description);
+    setMeta('name', 'twitter:image', seoData.ogImage);
+    setMeta('name', 'twitter:image:alt', seoData.ogImageAlt);
+
+    // 5. Canonical Link
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!canonical) {
       canonical = document.createElement('link');
       canonical.rel = 'canonical';
       document.head.appendChild(canonical);
     }
-    canonical.href =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}${window.location.pathname}`
-        : origin;
+    canonical.href = seoData.canonicalUrl;
 
-    // 5. Schema.org JSON-LD Structured Data
-    try {
-      const script = document.getElementById('restaurant-schema');
-      if (script) {
-        const schema = {
-          '@context': 'https://schema.org',
-          '@type': 'Restaurant',
-          name: restaurantConfig.businessName,
-          image: effectiveImage,
-          url: origin,
-          telephone: restaurantConfig.contact.phone,
-          address: {
-            '@type': 'PostalAddress',
-            streetAddress: restaurantConfig.address.line1,
-            addressLocality: restaurantConfig.address.city,
-            addressRegion: restaurantConfig.address.region,
-            postalCode: restaurantConfig.address.postalCode,
-            addressCountry: restaurantConfig.country,
-          },
-          priceRange: `${restaurantConfig.currencySymbol}${restaurantConfig.currencySymbol}`,
-          openingHoursSpecification: [
-            {
-              '@type': 'OpeningHoursSpecification',
-              dayOfWeek: [
-                'Monday',
-                'Tuesday',
-                'Wednesday',
-                'Thursday',
-                'Friday',
-                'Saturday',
-                'Sunday',
-              ],
-              opens: restaurantConfig.openingTime || '11:00',
-              closes: restaurantConfig.closingTime || '23:00',
-            },
-          ],
-        };
-        script.textContent = JSON.stringify(schema, null, 2);
-      }
-    } catch {
-      // Ignored in non-DOM or restricted environments
+    // 6. Multi-language Hreflang Alternates
+    // Remove existing hreflang tags to avoid duplicates on route changes
+    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((el) => el.remove());
+    for (const h of seoData.hreflangs) {
+      const link = document.createElement('link');
+      link.rel = 'alternate';
+      link.hreflang = h.lang;
+      link.href = h.href;
+      document.head.appendChild(link);
     }
-  }, [seo, restaurantConfig]);
+
+    // 7. Structured Data (JSON-LD)
+    let schemaScript = document.getElementById('restaurant-schema') as HTMLScriptElement | null;
+    if (!schemaScript) {
+      schemaScript = document.createElement('script');
+      schemaScript.id = 'restaurant-schema';
+      schemaScript.type = 'application/ld+json';
+      document.head.appendChild(schemaScript);
+    }
+
+    if (seoData.structuredData.length > 0) {
+      schemaScript.textContent = JSON.stringify(
+        seoData.structuredData.length === 1 ? seoData.structuredData[0] : seoData.structuredData,
+        null,
+        2
+      );
+    } else {
+      schemaScript.textContent = '';
+    }
+  }, [pathname, seo, restaurantConfig]);
 
   return null;
 };
+
+export default MetaTags;

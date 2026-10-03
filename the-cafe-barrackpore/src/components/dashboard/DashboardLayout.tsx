@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useStaffSessionTimeout } from '../../hooks/useStaffSessionTimeout';
 import { useNotification } from '../../hooks/useNotification';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useSiteConfig } from '../../context/SiteConfigContext';
@@ -20,9 +21,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   title,
   subtitle,
 }) => {
-  const { staffProfile, role, signOut, isOwner, isManager } = useAuth();
+  const { staffProfile, role, signOut, signOutEverywhere, isOwner, isManager } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotification();
   const { restaurantConfig } = useSiteConfig();
+
+  // Enforce automatic 30-minute inactivity logout on staff screens
+  useStaffSessionTimeout();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -49,13 +53,23 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     { label: 'Tables & QR', path: '/staff/tables', icon: 'qr_code_2', access: true },
     { label: 'Menu Availability', path: '/staff/menu', icon: 'menu_book', access: true },
     { label: 'Website Content', path: '/staff/content', icon: 'auto_stories', access: true },
+    { label: 'Customers', path: '/staff/customers', icon: 'contact_page', access: isOwner || isManager },
+    { label: 'Discounts & Happy Hour', path: '/staff/discounts', icon: 'local_offer', access: isOwner || isManager },
     { label: 'Staff Roster', path: '/staff/staff', icon: 'group', access: isOwner || isManager },
+    { label: 'Security Audit', path: '/staff/audit', icon: 'shield', access: isOwner || isManager },
     { label: 'Settings', path: '/staff/settings', icon: 'tune', access: isOwner },
   ].filter((item) => item.access);
 
   const handleSignOut = async () => {
     await signOut();
     window.location.href = '/staff/login';
+  };
+
+  const handleSignOutEverywhere = async () => {
+    if (window.confirm('Revoke all sessions and sign out across every browser and device?')) {
+      await signOutEverywhere();
+      window.location.href = '/staff/login';
+    }
   };
 
   const handleNavClick = (path: string) => {
@@ -223,6 +237,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             >
               <span className="material-symbols-outlined text-sm">logout</span>
               Sign Out
+            </button>
+            <button
+              type="button"
+              onClick={handleSignOutEverywhere}
+              title="Sign Out Everywhere (Revoke All Active Sessions)"
+              className="p-2.5 rounded-xl bg-white/[0.05] hover:bg-red-950/40 hover:text-red-300 hover:border-red-500/40 border border-white/[0.08] text-stone-400 transition-colors shrink-0"
+            >
+              <span className="material-symbols-outlined text-base">lock_reset</span>
             </button>
             <a
               href="/"

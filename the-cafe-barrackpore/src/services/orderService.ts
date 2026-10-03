@@ -4,6 +4,7 @@ import { calculateOrderTotals, generateClientOrderRef } from '../utils/orderCalc
 import { validatePhoneNumber } from '../utils/phone';
 import { isItemAvailable } from './menuAvailabilityService';
 import { enforceRateLimit } from '../utils/rateLimiter';
+import { verifyTurnstileToken } from '../utils/security';
 
 /**
  * Validates checkout payload prior to database submission.
@@ -38,6 +39,17 @@ export const validateOrderPayload = (payload: CreateOrderPayload): { valid: bool
     return { valid: false, error: 'Cannot submit an order with an empty cart.' };
   }
 
+  if (payload.items.length > 40) {
+    return { valid: false, error: 'Order cannot contain more than 40 distinct items.' };
+  }
+
+  for (const item of payload.items) {
+    const qty = Number(item.quantity);
+    if (!Number.isInteger(qty) || qty < 1 || qty > 50) {
+      return { valid: false, error: 'Item quantity must be between 1 and 50.' };
+    }
+  }
+
   return { valid: true };
 };
 
@@ -54,6 +66,16 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
       success: false,
       orderRef: payload.order_ref || generateClientOrderRef(),
       error: rateLimit.error || 'Too many order attempts. Please wait a moment before trying again.',
+    };
+  }
+
+  // 0b. Server-side / Edge Turnstile CAPTCHA and IP/Phone rate check
+  const captchaVerification = await verifyTurnstileToken('order', payload.captcha_token, payload.customer_phone);
+  if (!captchaVerification.success) {
+    return {
+      success: false,
+      orderRef: payload.order_ref || generateClientOrderRef(),
+      error: captchaVerification.error || 'Security verification failed.',
     };
   }
 
@@ -142,6 +164,9 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
           payment_provider: paymentProvider,
           payment_reference: paymentReference,
           payment_amount: paymentAmount,
+          discount_code: payload.discount_code || null,
+          discount_amount: payload.discount_amount || 0,
+          marketing_consent: payload.marketing_consent ?? false,
           created_at: existingIdx !== -1 ? existing[existingIdx].created_at : new Date().toISOString(),
           updated_at: new Date().toISOString(),
           items: totals.lineItems.map((li, idx) => ({
@@ -161,6 +186,38 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
         }
 
         localStorage.setItem('cafe_demo_orders', JSON.stringify(existing.slice(0, 50)));
+
+        // Sync customer directory in demo mode
+        try {
+          const custRaw = localStorage.getItem('cafe_demo_customers');
+          const custs = custRaw ? JSON.parse(custRaw) : [];
+          const existingCustIdx = custs.findIndex((c: any) => c.phone === normalizedPhone);
+          const nowStr = new Date().toISOString();
+          if (existingCustIdx >= 0) {
+            custs[existingCustIdx].order_count += 1;
+            custs[existingCustIdx].total_spent += totals.total;
+            custs[existingCustIdx].last_order_at = nowStr;
+            if (payload.marketing_consent !== undefined) {
+              custs[existingCustIdx].marketing_consent = payload.marketing_consent;
+            }
+          } else {
+            custs.unshift({
+              id: `cust-${Date.now()}`,
+              name: payload.customer_name.trim(),
+              phone: normalizedPhone,
+              email: null,
+              marketing_consent: payload.marketing_consent ?? false,
+              order_count: 1,
+              total_spent: totals.total,
+              last_order_at: nowStr,
+              first_order_at: nowStr,
+              created_at: nowStr,
+              updated_at: nowStr,
+            });
+          }
+          localStorage.setItem('cafe_demo_customers', JSON.stringify(custs));
+        } catch { /* ignore */ }
+
         localStorage.setItem('cafe_latest_order_event', JSON.stringify({ event: 'created', order: demoOrder, ts: Date.now() }));
         window.dispatchEvent(new CustomEvent('cafe:order-created', { detail: demoOrder }));
       } catch (err) {
@@ -215,95 +272,18 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
       }
 
       // Check for unique constraint violation on order_ref (PostgreSQL 23505)
-      // If this was an explicit retry with the same ref, update the existing order instead
       if (rpcError && rpcError.code === '23505') {
-        const { data: existingOrder } = await supabase
-          .from('orders')
-          .select('id, payment_status')
-          .eq('order_ref', orderRef)
-          .single();
-
-        if (existingOrder && (existingOrder.payment_status === 'pending' || existingOrder.payment_status === 'failed')) {
-          // Safe reuse of pending/failed order
-          await supabase
-            .from('orders')
-            .update({
-              payment_status: paymentStatus,
-              payment_provider: paymentProvider,
-              payment_reference: paymentReference,
-              payment_amount: paymentAmount,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', existingOrder.id);
-
-          return {
-            success: true,
-            orderId: existingOrder.id,
-            orderRef,
-          };
-        }
-
         orderRef = generateClientOrderRef();
         continue;
       }
 
-      // Attempt 2: Direct relational insert fallback (if RPC is not yet applied)
-      const { data: orderData, error: orderInsertError } = await supabase
-        .from('orders')
-        .insert({
-          order_ref: orderRef,
-          restaurant_id: restaurantId,
-          customer_name: payload.customer_name.trim(),
-          customer_phone: normalizedPhone,
-          order_type: payload.order_type,
-          table_number: payload.order_type === 'dine_in' ? payload.table_number?.trim() : null,
-          special_requests: payload.special_requests?.trim() || null,
-          subtotal: totals.subtotal,
-          total: totals.total,
-          currency: orderCurrency,
-          status: 'pending',
-          source: payload.source || 'website',
-          payment_required: paymentRequired,
-          payment_status: paymentStatus,
-          payment_provider: paymentProvider,
-          payment_reference: paymentReference,
-          payment_amount: paymentAmount,
-        })
-        .select('id, order_ref')
-        .single();
-
-      if (orderInsertError) {
-        if (orderInsertError.code === '23505') {
-          orderRef = generateClientOrderRef();
-          continue;
-        }
-        throw orderInsertError;
+      if (rpcError) {
+        return {
+          success: false,
+          orderRef,
+          error: rpcError.message || 'Failed to submit order.',
+        };
       }
-
-      const orderId = orderData.id;
-
-      // Insert line items
-      const itemsToInsert = totals.lineItems.map((item) => ({
-        order_id: orderId,
-        restaurant_id: restaurantId,
-        menu_item_id: item.menu_item_id,
-        item_name: item.item_name,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        line_total: item.line_total,
-      }));
-
-      const { error: itemsInsertError } = await supabase.from('order_items').insert(itemsToInsert);
-
-      if (itemsInsertError) {
-        console.error('[orderService] Failed to insert order line items:', itemsInsertError);
-      }
-
-      return {
-        success: true,
-        orderId,
-        orderRef: orderData.order_ref,
-      };
     } catch (err: unknown) {
       if (attempt >= maxAttempts) {
         console.error('[orderService] Supabase order submission error:', err);

@@ -17,6 +17,11 @@ import {
 import { TurnstileWidget } from './TurnstileWidget';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { PaymentCheckoutResult } from '../types/payment';
+import {
+  getActiveHappyHour,
+  validateDiscountCode,
+} from '../services/ownerService';
+import type { ActiveHappyHour, DiscountValidationResult } from '../types/owner';
 
 type DrawerStep = 'cart' | 'details' | 'review' | 'payment_process' | 'payment_failed' | 'confirmed';
 type OrderType = 'dine-in' | 'takeaway';
@@ -39,6 +44,14 @@ export const CartDrawer: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  // Marketing Consent & Promotions
+  const [marketingConsent, setMarketingConsent] = useState(true);
+  const [activeHappyHour, setActiveHappyHour] = useState<ActiveHappyHour | null>(null);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountValidationResult | null>(null);
+  const [discountError, setDiscountError] = useState<string | null>(null);
+  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false);
 
   // Payment Architecture State (Phase 1J)
   const [paymentMethodChoice, setPaymentMethodChoice] = useState<'online' | 'counter'>('online');
@@ -73,6 +86,51 @@ export const CartDrawer: React.FC = () => {
     serviceCharge: restaurantConfig.tax.serviceCharge,
     rules: restaurantConfig.tax.rules,
   });
+
+  // Fetch active happy hour when drawer is open
+  useEffect(() => {
+    if (isDrawerOpen) {
+      getActiveHappyHour().then(setActiveHappyHour);
+    }
+  }, [isDrawerOpen]);
+
+  // Promotions and Happy Hour Calculations
+  const happyHourDiscount = activeHappyHour && !appliedDiscount
+    ? Math.round(totals.subtotal * (activeHappyHour.discount_percentage / 100))
+    : 0;
+  const effectiveDiscount = appliedDiscount
+    ? (appliedDiscount.discount_amount || 0)
+    : happyHourDiscount;
+  const finalPayableTotal = Math.max(0, totals.total - effectiveDiscount);
+  const activeDiscountLabel = appliedDiscount
+    ? `Promo (${appliedDiscount.code})`
+    : activeHappyHour
+    ? `${activeHappyHour.label} (${activeHappyHour.discount_percentage}% OFF)`
+    : null;
+
+  const handleApplyPromoCode = async () => {
+    if (!promoCodeInput.trim()) return;
+    setIsValidatingDiscount(true);
+    setDiscountError(null);
+    try {
+      const res = await validateDiscountCode(promoCodeInput.trim(), totals.subtotal);
+      if (res.valid) {
+        setAppliedDiscount(res);
+        setPromoCodeInput('');
+      } else {
+        setDiscountError(res.error || 'Invalid discount code.');
+      }
+    } catch {
+      setDiscountError('Failed to validate discount code.');
+    } finally {
+      setIsValidatingDiscount(false);
+    }
+  };
+
+  const handleRemoveDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountError(null);
+  };
 
   // Payment Configuration Resolution
   const isPaymentEnabled = Boolean(
@@ -146,8 +204,11 @@ export const CartDrawer: React.FC = () => {
         : 'Takeaway';
 
     const notesSection = orderNotes.trim() ? `%0A%0ASpecial Notes: ${encodeURIComponent(orderNotes.trim())}` : '';
+    const discountSection = effectiveDiscount > 0
+      ? `%0A*Discount (${encodeURIComponent(activeDiscountLabel || 'Promo')}):* -${encodeURIComponent(formatPrice(effectiveDiscount))}`
+      : '';
 
-    const text = `*${encodeURIComponent(restaurantConfig.businessName.toUpperCase())}*%0A*NEW ORDER: ${finalRef}*%0A%0A*Customer:* ${encodeURIComponent(customerName.trim())}%0A*Phone:* ${phone.trim()}%0A*Order Type:* ${encodeURIComponent(serviceInfo)}${notesSection}%0A%0A---%0A${orderLines}%0A---%0A%0A*Total: ${encodeURIComponent(formatPrice(totals.total))}*%0A%0APlease confirm this order.`;
+    const text = `*${encodeURIComponent(restaurantConfig.businessName.toUpperCase())}*%0A*NEW ORDER: ${finalRef}*%0A%0A*Customer:* ${encodeURIComponent(customerName.trim())}%0A*Phone:* ${phone.trim()}%0A*Order Type:* ${encodeURIComponent(serviceInfo)}${notesSection}%0A%0A---%0A${orderLines}%0A---${discountSection}%0A%0A*Total: ${encodeURIComponent(formatPrice(finalPayableTotal))}*%0A%0APlease confirm this order.`;
 
     const cleanTargetPhone = (restaurantConfig.contact.whatsapp || clientDetails.whatsapp).replace(/\D/g, '');
     window.open(`https://wa.me/${cleanTargetPhone}?text=${text}`, '_blank');
@@ -223,7 +284,10 @@ export const CartDrawer: React.FC = () => {
           payment_required: true,
           payment_status: 'pending',
           payment_provider: restaurantConfig.payments.provider,
-          payment_amount: authoritativeTotal,
+          payment_amount: Math.max(0, authoritativeTotal - effectiveDiscount),
+          discount_code: appliedDiscount?.code || (activeHappyHour ? activeHappyHour.label : null),
+          discount_amount: effectiveDiscount,
+          marketing_consent: marketingConsent,
           captcha_token: captchaToken || undefined,
           tax_options: {
             enabled: restaurantConfig.tax.enabled,
@@ -246,7 +310,7 @@ export const CartDrawer: React.FC = () => {
           {
             orderId: orderResult.orderId || activeRef,
             orderRef: activeRef,
-            amount: authoritativeTotal,
+            amount: Math.max(0, authoritativeTotal - effectiveDiscount),
             currency: restaurantConfig.currency,
             customerName: customerName.trim(),
             customerPhone: normalizedPhone,
@@ -287,7 +351,10 @@ export const CartDrawer: React.FC = () => {
           currency: restaurantConfig.currency,
           payment_required: false,
           payment_status: 'not_required',
-          payment_amount: totals.total,
+          payment_amount: finalPayableTotal,
+          discount_code: appliedDiscount?.code || (activeHappyHour ? activeHappyHour.label : null),
+          discount_amount: effectiveDiscount,
+          marketing_consent: marketingConsent,
           captcha_token: captchaToken || undefined,
           tax_options: {
             enabled: restaurantConfig.tax.enabled,
@@ -305,7 +372,7 @@ export const CartDrawer: React.FC = () => {
           } else {
             setOrderRef(result.orderRef);
             setPaidAmount(null);
-            setConfirmedTotal(totals.total);
+            setConfirmedTotal(finalPayableTotal);
             setStep('confirmed');
             clearCart();
           }
@@ -1016,6 +1083,22 @@ export const CartDrawer: React.FC = () => {
                       className="w-full bg-[#0D0705] border border-white/10 rounded-xl px-4 py-2.5 text-on-surface font-sans text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40 transition-colors resize-none placeholder:text-white/20"
                     />
                   </div>
+
+                  {/* Marketing Opt-in Consent */}
+                  <label className="flex items-start gap-3 p-3.5 rounded-xl bg-[#0D0705] border border-white/10 hover:border-primary/30 transition-colors cursor-pointer group mt-1">
+                    <input
+                      type="checkbox"
+                      checked={marketingConsent}
+                      onChange={(e) => setMarketingConsent(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-white/20 text-[#D4AF37] focus:ring-[#D4AF37]/40 bg-black/40 accent-[#D4AF37] cursor-pointer"
+                    />
+                    <div className="flex-1 text-xs font-sans text-on-surface/80 group-hover:text-on-surface">
+                      <span className="font-semibold text-white">Join The Café Inner Circle</span>
+                      <p className="text-[11px] text-on-surface/60 mt-0.5 leading-relaxed">
+                        Keep me updated with chef specials, happy hours, and exclusive offers via WhatsApp / SMS.
+                      </p>
+                    </div>
+                  </label>
                 </div>
 
                 {/* Footer Submit */}
@@ -1144,6 +1227,77 @@ export const CartDrawer: React.FC = () => {
                     <TurnstileWidget action="order" onVerify={(token) => setCaptchaToken(token)} />
                   </div>
 
+                  {/* Happy Hour Active Banner */}
+                  {activeHappyHour && (
+                    <div className="p-3.5 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/30 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-amber-400 text-lg">local_fire_department</span>
+                        <div>
+                          <p className="text-xs font-semibold text-white">{activeHappyHour.label}</p>
+                          <p className="text-[10px] text-stone-400">Happy hour discount active until {activeHappyHour.end_time}</p>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#F3C766] border border-[#D4AF37]/30 text-xs font-mono font-bold">
+                        {activeHappyHour.discount_percentage}% OFF
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Promotional Code Entry */}
+                  <div className="p-3.5 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/20 flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-on-surface/75 font-medium uppercase tracking-wider text-[10px]">
+                        Promotional Coupon Code
+                      </span>
+                      {appliedDiscount && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveDiscount}
+                          className="text-[10px] text-red-400 hover:underline cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    {appliedDiscount ? (
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
+                        <div className="flex items-center gap-2 font-mono font-bold">
+                          <span className="material-symbols-outlined text-sm">verified</span>
+                          <span>{appliedDiscount.code}</span>
+                        </div>
+                        <span className="font-semibold font-mono text-[11px]">
+                          -{formatPrice(appliedDiscount.discount_amount || 0)} applied
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoCodeInput}
+                          onChange={(e) => {
+                            setPromoCodeInput(e.target.value.toUpperCase());
+                            if (discountError) setDiscountError(null);
+                          }}
+                          placeholder="e.g. WELCOME10"
+                          className="flex-1 bg-[#0D0705] border border-white/10 rounded-xl px-3 py-2 text-xs text-white uppercase font-mono tracking-wider focus:outline-none focus:border-[#D4AF37]"
+                        />
+                        <button
+                          type="button"
+                          disabled={isValidatingDiscount || !promoCodeInput.trim()}
+                          onClick={handleApplyPromoCode}
+                          className="px-4 py-2 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#F3C766] hover:bg-[#D4AF37]/30 text-xs font-semibold cursor-pointer disabled:opacity-50 transition-colors"
+                        >
+                          {isValidatingDiscount ? '...' : 'Apply'}
+                        </button>
+                      </div>
+                    )}
+
+                    {discountError && (
+                      <p className="text-[11px] text-red-400 font-sans">{discountError}</p>
+                    )}
+                  </div>
+
                   {/* Total Amount Box with Configurable Tax */}
                   <div className="p-4 rounded-2xl bg-[#140D09] border border-[#D4AF37]/30 flex flex-col gap-2">
                     <div className="flex justify-between items-center text-xs text-on-surface/70">
@@ -1162,10 +1316,18 @@ export const CartDrawer: React.FC = () => {
                         <span className="font-serif text-xs text-primary/80 tabular-nums">{formatPrice((totals as any).serviceCharge)}</span>
                       </div>
                     )}
+                    {effectiveDiscount > 0 && (
+                      <div className="flex justify-between items-center text-xs text-emerald-400">
+                        <span>{activeDiscountLabel || 'Promotional Discount'}</span>
+                        <span className="font-serif text-xs font-semibold tabular-nums">
+                          -{formatPrice(effectiveDiscount)}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center pt-2 border-t border-white/5">
                       <span className="font-sans text-xs font-semibold uppercase tracking-wider text-on-surface">Total Amount</span>
                       <span className="font-serif text-2xl font-normal text-primary tabular-nums">
-                        {formatPrice(totals.total)}
+                        {formatPrice(finalPayableTotal)}
                       </span>
                     </div>
                   </div>
@@ -1214,7 +1376,7 @@ export const CartDrawer: React.FC = () => {
                       {isSubmitting
                         ? 'Processing...'
                         : isOnlinePayment
-                        ? `Pay Securely · ${formatPrice(totals.total)}`
+                        ? `Pay Securely · ${formatPrice(finalPayableTotal)}`
                         : restaurantConfig.contact.primaryMethod === 'whatsapp'
                         ? 'Send via WhatsApp'
                         : 'Place Order (Pay at Counter)'}
@@ -1378,7 +1540,7 @@ export const CartDrawer: React.FC = () => {
 
             {/* STEP: ORDER CONFIRMED (Section 16) */}
             {activeStep === 'confirmed' && (
-              <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-5 bg-[#130C08]">
+              <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-5 bg-[#130C08] overflow-y-auto">
                 <div className="w-20 h-20 rounded-full bg-[#1C120D] border border-primary/40 flex items-center justify-center text-primary shadow-[0_0_30px_rgba(212,175,55,0.25)]">
                   <span className="material-symbols-outlined text-4xl">check_circle</span>
                 </div>
@@ -1426,16 +1588,68 @@ export const CartDrawer: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-[#160E0A] border border-white/10 w-full max-w-sm flex items-center justify-between text-xs font-sans">
-                  <span className="text-on-surface/60">Questions regarding your order?</span>
+                {/* Contact Actions: Call, WhatsApp, Maps */}
+                <div className="w-full max-w-sm grid grid-cols-3 gap-2">
                   <a
                     href={`tel:${restaurantConfig.contact.phone}`}
-                    className="text-primary font-semibold flex items-center gap-1 hover:underline"
+                    className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-[#160E0A] border border-white/10 hover:border-primary/30 transition-colors"
                   >
-                    <span className="material-symbols-outlined text-sm">call</span>
-                    <span>{restaurantConfig.contact.displayPhone}</span>
+                    <span className="material-symbols-outlined text-lg text-primary">call</span>
+                    <span className="text-[9px] uppercase tracking-wider font-semibold text-on-surface/70">Call</span>
+                  </a>
+                  <a
+                    href={`https://wa.me/${(restaurantConfig.contact.whatsapp || clientDetails.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(`Hi! I just placed order ${orderRef}. Thank you!`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-[#160E0A] border border-white/10 hover:border-emerald-500/30 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-lg text-emerald-400">chat</span>
+                    <span className="text-[9px] uppercase tracking-wider font-semibold text-on-surface/70">WhatsApp</span>
+                  </a>
+                  <a
+                    href={clientDetails.googleMapsLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-[#160E0A] border border-white/10 hover:border-sky-500/30 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-lg text-sky-400">location_on</span>
+                    <span className="text-[9px] uppercase tracking-wider font-semibold text-on-surface/70">Directions</span>
                   </a>
                 </div>
+
+                {/* Order Again Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Items are still in the cart context from this session - just reset to cart step
+                    setStep('cart');
+                  }}
+                  className="w-full max-w-sm h-11 rounded-full border border-[#D4AF37]/30 text-primary hover:bg-[#D4AF37]/10 font-sans text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-base">replay</span>
+                  <span>Order Again</span>
+                </button>
+
+                {/* Google Review Link */}
+                {(clientDetails.googleReviewLink && clientDetails.googleReviewLink !== 'https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID') && (
+                  <a
+                    href={clientDetails.googleReviewLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full max-w-sm p-3.5 rounded-2xl bg-[#160E0A] border border-white/10 hover:border-primary/25 flex items-center justify-between text-xs font-sans transition-colors group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-base text-amber-400">star</span>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-on-surface font-semibold">Enjoyed your experience?</p>
+                        <p className="text-on-surface/50 text-[10px] mt-0.5">Leave us a Google Review ★★★★★</p>
+                      </div>
+                    </div>
+                    <span className="material-symbols-outlined text-sm text-primary group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+                  </a>
+                )}
 
                 <button
                   type="button"

@@ -70,6 +70,11 @@ export interface RestaurantSettings {
   payment_provider?: PaymentProvider;
   payment_mode?: PaymentMode;
   allow_pay_at_counter?: boolean;
+  google_review_link?: string | null;
+  owner_notification_phone?: string | null;
+  owner_notification_email?: string | null;
+  owner_notification_method?: 'email' | 'whatsapp' | 'both' | 'none';
+  low_stock_alert_threshold?: number;
 }
 
 export interface DashboardNotification {

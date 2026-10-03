@@ -21,6 +21,7 @@ export interface MenuItem {
   sort_order?: number;
   tag?: string | null;
   allergens?: string[];
+  stock_count?: number | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -37,4 +38,5 @@ export interface EditableMenuItemInput {
   available?: boolean;
   sort_order?: number;
   allergens?: string[];
+  stock_count?: number | null;
 }

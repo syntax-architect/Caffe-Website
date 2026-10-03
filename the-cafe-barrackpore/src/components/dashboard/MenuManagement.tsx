@@ -40,6 +40,7 @@ export const MenuManagement: React.FC = () => {
   const [formImageUrl, setFormImageUrl] = useState<string>('');
   const [formAvailable, setFormAvailable] = useState<boolean>(true);
   const [formAllergens, setFormAllergens] = useState<string[]>([]);
+  const [formStockCount, setFormStockCount] = useState<string>('');
 
   // Build category dictionary for labels
   const categoryLabels = useMemo(() => {
@@ -101,6 +102,7 @@ export const MenuManagement: React.FC = () => {
     setFormImageUrl(item.image_url || item.image || '');
     setFormAvailable(item.available !== false);
     setFormAllergens(item.allergens || []);
+    setFormStockCount(item.stock_count !== undefined && item.stock_count !== null ? String(item.stock_count) : '');
   };
 
   const handleOpenAdd = () => {
@@ -114,6 +116,7 @@ export const MenuManagement: React.FC = () => {
     setFormImageUrl('');
     setFormAvailable(true);
     setFormAllergens([]);
+    setFormStockCount('');
     setIsAddingItem(true);
   };
 
@@ -154,6 +157,7 @@ export const MenuManagement: React.FC = () => {
       image_url: formImageUrl.trim() || undefined,
       sort_order: editingItem?.sort_order ?? items.length + 1,
       allergens: formAllergens,
+      stock_count: formStockCount.trim() !== '' ? parseInt(formStockCount, 10) : null,
     });
 
     setIsSavingItem(false);
@@ -432,6 +436,7 @@ export const MenuManagement: React.FC = () => {
                   <th className="py-3.5 px-4">Category</th>
                   <th className="py-3.5 px-4">Diet</th>
                   <th className="py-3.5 px-4">Price</th>
+                  <th className="py-3.5 px-4">Stock Inventory</th>
                   <th className="py-3.5 px-4">Service Status</th>
                   <th className="py-3.5 px-6 text-right">Actions</th>
                 </tr>
@@ -509,6 +514,22 @@ export const MenuManagement: React.FC = () => {
 
                       <td className="py-4 px-4 font-mono font-bold text-white text-sm">
                         {formatPrice(item.price)}
+                      </td>
+
+                      <td className="py-4 px-4 font-mono text-[11px]">
+                        {item.stock_count === null || item.stock_count === undefined ? (
+                          <span className="text-zinc-500 font-sans text-[10px]">Unlimited</span>
+                        ) : item.stock_count === 0 ? (
+                          <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] font-bold">
+                            SOLD OUT (0)
+                          </span>
+                        ) : item.stock_count <= 5 ? (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
+                            Low Stock ({item.stock_count})
+                          </span>
+                        ) : (
+                          <span className="text-zinc-300">{item.stock_count} units</span>
+                        )}
                       </td>
 
                       <td className="py-4 px-4">
@@ -629,6 +650,21 @@ export const MenuManagement: React.FC = () => {
                         </option>
                       ))}
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                      Stock Count (Empty = Unlimited)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={formStockCount}
+                      onChange={(e) => setFormStockCount(e.target.value)}
+                      placeholder="Unlimited"
+                      className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
                   </div>
                 </div>
 

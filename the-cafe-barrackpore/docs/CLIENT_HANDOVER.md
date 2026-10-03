@@ -59,13 +59,38 @@ Collect the following parameters from the restaurant owner before deployment:
 
 ---
 
-### 3. Staff Role-Based Access Guide & Official Credentials
+### 3. Staff Role-Based Access Guide & Initial Owner Setup
 
-#### Official Portal Access
-- **Portal URL**: `/staff/login` (or `/staff`)
-- **Default Administrator Email**: `admin@gmail.com`
-- **Default Administrator Password**: `admin123`
-- **Auto-Fill**: The login terminal features an instant "Auto-Fill" pill and pre-populated values for zero-friction access.
+#### Initial Restaurant Owner Setup (Supabase Auth & Database)
+For security in production, default credentials and auto-fill mechanisms are strictly disallowed. The restaurant owner account must be provisioned directly via Supabase Auth and the `staff_profiles` database table:
+
+1. **Create the Owner User in Supabase Auth**:
+   - Navigate to your Supabase Project Dashboard → **Authentication** → **Users**.
+   - Click **Add User** → **Create User**.
+   - Enter the owner's official email address and a strong, secure password.
+   - Ensure **Auto Confirm User?** is checked so the account is active immediately without requiring email verification.
+   - Click **Create User**.
+
+2. **Retrieve the User UID**:
+   - Locate the newly created user in the Users table and copy their unique **User UID** (a UUID such as `a1b2c3d4-e5f6-7890-abcd-ef1234567890`).
+
+3. **Insert the Owner Profile in `staff_profiles`**:
+   - In your Supabase Dashboard, open the **SQL Editor** and run the following SQL command:
+     ```sql
+     INSERT INTO public.staff_profiles (user_id, full_name, role, active, restaurant_id)
+     VALUES (
+       '<COPIED_USER_UID>',
+       'Restaurant Owner',
+       'owner',
+       true,
+       'the-cafe-barrackpore'
+     );
+     ```
+
+4. **Log in to the Hospitality Portal**:
+   - Navigate to `/staff/login` (or `/staff`).
+   - Enter the owner's email and password created in step 1 to access the full Owner Dashboard.
+   - Once logged in, the Owner can invite or manage managers and staff directly through the dashboard under **Staff Management** without needing manual database queries.
 
 The platform implements 3 distinct operational roles:
 

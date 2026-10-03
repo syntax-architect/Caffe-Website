@@ -1,0 +1,164 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { execSync } from 'node:child_process';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, '..');
+const distDir = path.resolve(projectRoot, 'dist');
+const distServerDir = path.resolve(projectRoot, 'dist-server');
+
+const routes = [
+  { url: '/', file: 'index.html' },
+  { url: '/privacy', file: 'privacy/index.html' },
+  { url: '/terms', file: 'terms/index.html' },
+];
+
+async function prerender() {
+  console.log('\n======================================================');
+  console.log('🚀 Starting Full Pre-rendering / Static Site Generation');
+  console.log('======================================================\n');
+
+  const templatePath = path.resolve(distDir, 'index.html');
+  if (!fs.existsSync(templatePath)) {
+    throw new Error(`[prerender] dist/index.html template not found. Run "vite build" first.`);
+  }
+
+  // 1. Build SSR server entry
+  console.log('📦 Compiling SSR bundle with Vite...');
+  execSync('npx vite build --ssr src/entry-server.tsx --outDir dist-server', {
+    cwd: projectRoot,
+    stdio: 'inherit',
+  });
+
+  // 2. Import compiled SSR module
+  const serverEntryPath = path.resolve(distServerDir, 'entry-server.js');
+  const serverEntryUrl = pathToFileURL(serverEntryPath).href;
+  const { render } = await import(serverEntryUrl);
+
+  const baseTemplate = fs.readFileSync(templatePath, 'utf-8');
+
+  for (const route of routes) {
+    console.log(`⚡ Pre-rendering route: "${route.url}" -> ${route.file}`);
+    const { html, seo } = render(route.url);
+
+    // Build head tags replacement
+    let pageHtml = baseTemplate;
+
+    // 1. Replace document title
+    pageHtml = pageHtml.replace(/<title>.*?<\/title>/is, `<title>${seo.title}</title>`);
+
+    // 2. Replace description meta
+    if (pageHtml.includes('name="description"')) {
+      pageHtml = pageHtml.replace(
+        /<meta\s+name="description"\s+content=".*?"\s*\/?>/i,
+        `<meta name="description" content="${seo.description}" />`
+      );
+    } else {
+      pageHtml = pageHtml.replace('</head>', `  <meta name="description" content="${seo.description}" />\n  </head>`);
+    }
+
+    // 3. Update Robots
+    if (pageHtml.includes('name="robots"')) {
+      pageHtml = pageHtml.replace(
+        /<meta\s+name="robots"\s+content=".*?"\s*\/?>/i,
+        `<meta name="robots" content="${seo.robots}" />`
+      );
+    } else {
+      pageHtml = pageHtml.replace('</head>', `  <meta name="robots" content="${seo.robots}" />\n  </head>`);
+    }
+
+    // 4. Update Canonical
+    const canonicalTag = `<link rel="canonical" href="${seo.canonicalUrl}" />`;
+    if (pageHtml.includes('rel="canonical"')) {
+      pageHtml = pageHtml.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>/i, canonicalTag);
+    } else {
+      pageHtml = pageHtml.replace('</head>', `  ${canonicalTag}\n  </head>`);
+    }
+
+    // 5. Open Graph & Twitter Cards
+    const ogAndTwitterTags = `
+    <!-- Pre-rendered Open Graph & Twitter Cards -->
+    <meta property="og:type" content="${seo.ogType}" />
+    <meta property="og:title" content="${seo.title}" />
+    <meta property="og:description" content="${seo.description}" />
+    <meta property="og:url" content="${seo.canonicalUrl}" />
+    <meta property="og:image" content="${seo.ogImage}" />
+    <meta property="og:image:width" content="${seo.ogImageWidth}" />
+    <meta property="og:image:height" content="${seo.ogImageHeight}" />
+    <meta property="og:image:alt" content="${seo.ogImageAlt}" />
+    <meta property="og:site_name" content="The Café Barrackpore" />
+    <meta name="twitter:card" content="${seo.twitterCard}" />
+    <meta name="twitter:title" content="${seo.title}" />
+    <meta name="twitter:description" content="${seo.description}" />
+    <meta name="twitter:image" content="${seo.ogImage}" />
+    <meta name="twitter:image:alt" content="${seo.ogImageAlt}" />
+    <meta name="google-site-verification" content="verification_token_the_cafe_barrackpore_2026" />
+    `;
+
+    // Remove legacy hardcoded OG tags before injecting clean new ones
+    pageHtml = pageHtml.replace(/<meta\s+property="og:.*?"\s+content=".*?"\s*\/?>\s*/gi, '');
+    pageHtml = pageHtml.replace('</head>', `${ogAndTwitterTags}\n  </head>`);
+
+    // 6. Hreflang alternates
+    if (seo.hreflangs && seo.hreflangs.length > 0) {
+      const hreflangTags = seo.hreflangs
+        .map((h: { lang: string; href: string }) => `<link rel="alternate" hreflang="${h.lang}" href="${h.href}" />`)
+        .join('\n    ');
+      pageHtml = pageHtml.replace('</head>', `    <!-- Multi-Language Hreflangs -->\n    ${hreflangTags}\n  </head>`);
+    }
+
+    // 7. JSON-LD structured data
+    const schemaContent =
+      seo.structuredData && seo.structuredData.length > 0
+        ? JSON.stringify(seo.structuredData.length === 1 ? seo.structuredData[0] : seo.structuredData, null, 2)
+        : '';
+
+    if (schemaContent) {
+      const scriptTag = `<script type="application/ld+json" id="restaurant-schema">\n${schemaContent}\n    </script>`;
+      if (pageHtml.includes('id="restaurant-schema"')) {
+        pageHtml = pageHtml.replace(
+          /<script\s+type="application\/ld\+json"\s+id="restaurant-schema">.*?<\/script>/is,
+          scriptTag
+        );
+      } else {
+        pageHtml = pageHtml.replace('</head>', `  ${scriptTag}\n  </head>`);
+      }
+    }
+
+    // 8. Inject pre-rendered body markup into <div id="root">
+    const cleanHtml = html;
+
+    const rootStart = pageHtml.indexOf('<div id="root">');
+    const bodyEnd = pageHtml.indexOf('</body>', rootStart);
+    if (rootStart !== -1 && bodyEnd !== -1) {
+      pageHtml = pageHtml.substring(0, rootStart) + `<div id="root">${cleanHtml}</div>\n  ` + pageHtml.substring(bodyEnd);
+    }
+
+    const targetFilePath = path.resolve(distDir, route.file);
+    const targetDir = path.dirname(targetFilePath);
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    fs.writeFileSync(targetFilePath, pageHtml, 'utf-8');
+    const stats = fs.statSync(targetFilePath);
+    console.log(`✔ Successfully generated ${route.file} (${Math.round(stats.size / 1024)} kB of real HTML)`);
+  }
+
+  // 9. Clean up temporary dist-server directory
+  try {
+    fs.rmSync(distServerDir, { recursive: true, force: true });
+    console.log('🧹 Cleaned up temporary SSR compile artifacts.');
+  } catch (err) {
+    // Ignore cleanup error
+  }
+
+  console.log('\n🎉 ALL PUBLIC PAGES PRE-RENDERED SUCCESSFULLY FOR SEARCH CRAWLERS!\n');
+}
+
+prerender().catch((err) => {
+  console.error('[prerender] Fatal error during static site generation:', err);
+  process.exit(1);
+});

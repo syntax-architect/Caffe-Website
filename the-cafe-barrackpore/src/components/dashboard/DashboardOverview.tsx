@@ -5,6 +5,9 @@ import { fetchDashboardOverview } from '../../services/dashboardService';
 import type { DashboardOverviewData } from '../../types/dashboard';
 import { createOrder } from '../../services/orderService';
 import { unlockAudioContext, playKitchenOrderBell } from '../../services/soundService';
+import { fetchOwnerAnalytics, fetchLowStockItems } from '../../services/ownerService';
+import type { OwnerAnalytics } from '../../types/owner';
+import type { StockAlertItem } from '../../services/ownerService';
 
 interface DashboardOverviewProps {
   onNavigate: (path: string) => void;
@@ -18,6 +21,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [simulationMessage, setSimulationMessage] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState<OwnerAnalytics | null>(null);
+  const [lowStockItems, setLowStockItems] = useState<StockAlertItem[]>([]);
 
   // Dynamic greeting based on current hour
   const getGreeting = () => {
@@ -36,6 +41,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
         setIsLoading(false);
         setIsRefreshing(false);
       });
+    fetchOwnerAnalytics().then(setAnalytics).catch(console.error);
+    fetchLowStockItems().then(setLowStockItems).catch(console.error);
   };
 
   const handleSimulateTableOrder = async () => {
@@ -89,6 +96,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
         setIsLoading(false);
       }
     });
+    fetchOwnerAnalytics().then((a) => { if (isMounted) setAnalytics(a); });
+    fetchLowStockItems().then((items) => { if (isMounted) setLowStockItems(items); });
     return () => {
       isMounted = false;
     };
@@ -160,7 +169,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
       </section>
 
       {/* KPI Cards Grid - Double-Bezel Hardware Architecture */}
-      <section aria-label="Key Performance Indicators" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section aria-label="Key Performance Indicators" className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {/* KPI 1: Today's Orders */}
         <div className="group p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
@@ -252,7 +261,137 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             </div>
           </div>
         </div>
+
+        {/* KPI 5: Average Order Value */}
+        <div className="group p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
+          <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
+            <div className="flex items-center justify-between text-stone-400 mb-2">
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-sky-400 font-semibold">
+                Average Order Value
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400">
+                <span className="material-symbols-outlined text-base">moving</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-2xl sm:text-3xl font-serif font-bold text-sky-400 tracking-tight">
+                {isLoading ? '...' : formatPrice(analytics?.averageOrderValue || 0)}
+              </p>
+              <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
+                <span className="text-stone-300 font-mono text-[10px]">AOV</span>
+                <span>• Today</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 6: Repeat Customers */}
+        <div className="group p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
+          <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
+            <div className="flex items-center justify-between text-stone-400 mb-2">
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-violet-400 font-semibold">
+                Repeat Customers
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/25 flex items-center justify-center text-violet-400">
+                <span className="material-symbols-outlined text-base">loyalty</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-2xl sm:text-3xl font-serif font-bold text-violet-300 tracking-tight">
+                {isLoading ? '...' : (analytics?.repeatCustomerCount || 0)}
+              </p>
+              <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
+                <span className="text-stone-300 font-mono text-[10px]">Loyalty</span>
+                <span>• Returning</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
+
+      {/* ---------------- NEW OWNER SECTIONS ---------------- */}
+      {lowStockItems.length > 0 && (
+        <section aria-label="Stock Alerts" className="p-1 rounded-2xl bg-gradient-to-b from-red-500/[0.08] to-white/[0.02] border border-red-500/[0.15] shadow-lg">
+          <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-red-500/[0.08] p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="material-symbols-outlined text-red-400 text-lg">inventory_2</span>
+              <h3 className="text-xs uppercase tracking-[0.16em] font-bold text-red-300">Low Stock Alerts</h3>
+              <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 text-[10px] font-bold border border-red-500/30">{lowStockItems.length} items</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {lowStockItems.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                  <span className="text-xs text-white font-medium truncate">{item.name}</span>
+                  {item.stock_count === 0 ? (
+                    <span className="px-2 py-0.5 rounded-full bg-red-500/25 text-red-300 text-[10px] font-bold border border-red-500/40">SOLD OUT</span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/30">{item.stock_count} left</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Selling Items */}
+        <section aria-label="Top Selling Items" className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-xl">
+          <div className="rounded-[calc(2rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-6 h-full">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="material-symbols-outlined text-[#D4AF37]">star</span>
+              <h3 className="font-serif text-lg font-bold text-white tracking-wide">Top Selling Items</h3>
+            </div>
+            <div className="space-y-2">
+              {(analytics?.topSellingItems || []).map((item, index) => (
+                <div key={item.item_name} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <div className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-md bg-[#D4AF37]/10 flex items-center justify-center text-xs font-bold text-[#F3C766]">{index + 1}</span>
+                    <span className="text-sm font-medium text-white">{item.item_name}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-emerald-400">{formatPrice(item.total_revenue)}</div>
+                    <div className="text-[10px] text-stone-400">{item.total_quantity} sold</div>
+                  </div>
+                </div>
+              ))}
+              {(!analytics?.topSellingItems || analytics.topSellingItems.length === 0) && (
+                <div className="text-center py-6 text-stone-500 text-sm">No sales data available</div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Busiest Hours */}
+        <section aria-label="Busiest Hours" className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-xl">
+          <div className="rounded-[calc(2rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-6 h-full flex flex-col">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="material-symbols-outlined text-[#D4AF37]">bar_chart</span>
+              <h3 className="font-serif text-lg font-bold text-white tracking-wide">Peak Hours</h3>
+            </div>
+            
+            <div className="flex items-end gap-1 h-32 mt-auto">
+              {(analytics?.busiestHours || []).map((h) => {
+                const maxCount = Math.max(...(analytics?.busiestHours || []).map((x) => x.order_count), 1);
+                const heightPct = (h.order_count / maxCount) * 100;
+                return (
+                  <div key={h.hour} className="flex-1 flex flex-col items-center gap-1">
+                    <div
+                      className="w-full rounded-t-md bg-gradient-to-t from-[#D4AF37]/60 to-[#D4AF37] min-h-[2px] transition-all"
+                      style={{ height: `${heightPct}%` }}
+                      title={`${h.order_count} orders, ${formatPrice(h.revenue)}`}
+                    />
+                    <span className="text-[9px] text-stone-500 font-mono">{h.hour > 12 ? h.hour - 12 : h.hour}{h.hour >= 12 ? 'p' : 'a'}</span>
+                  </div>
+                );
+              })}
+              {(!analytics?.busiestHours || analytics.busiestHours.length === 0) && (
+                <div className="w-full text-center text-stone-500 text-sm mb-12">No hourly data available</div>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
 
       {/* Operational Quick Actions Dock */}
       <section aria-label="Operations Quick Actions">

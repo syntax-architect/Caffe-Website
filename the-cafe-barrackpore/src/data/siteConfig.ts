@@ -1,7 +1,7 @@
 export const siteConfig = {
   hero: {
     image: "/images/hero-bar.webp",
-    alt: "Premium Lounge Bar"
+    alt: "The Café Barrackpore — Nocturnal Cocktail & Espresso Lounge"
   },
   ourStory: {
     image: "/images/story-pour.webp",

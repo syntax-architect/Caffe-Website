@@ -16,11 +16,19 @@ export function useMenuAvailability() {
   // Initial load
   useEffect(() => {
     let isMounted = true;
-    fetchAvailabilityMap().then((map) => {
-      if (!isMounted) return;
-      setAvailabilityMap(map);
-      setIsLoading(false);
-    });
+    const load = () => {
+      fetchAvailabilityMap().then((map) => {
+        if (!isMounted) return;
+        setAvailabilityMap(map);
+        setIsLoading(false);
+      });
+    };
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(load, { timeout: 3000 });
+    } else {
+      setTimeout(load, 1000);
+    }
 
     return () => {
       isMounted = false;

@@ -1,0 +1,11 @@
+# The Café Barrackpore
+> Artisanal Cafe & Wood-Fired Kitchen in Cantonment, Barrackpore, West Bengal.
+
+The Café Barrackpore is a premium nocturnal dining destination offering single-origin artisanal coffee, hand-stretched wood-fired pizzas, gourmet burgers, oriental momos, and handcrafted mocktails.
+
+## Canonical Links
+- [Home & Curated Menu](https://thecafebarrackpore.com/#menu-section)
+- [Table Reservation](https://thecafebarrackpore.com/#reserve-section)
+- [Our Story & Philosophy](https://thecafebarrackpore.com/#our-story)
+- [Privacy Policy](https://thecafebarrackpore.com/privacy)
+- [Terms of Service](https://thecafebarrackpore.com/terms)

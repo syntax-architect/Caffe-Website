@@ -4,18 +4,15 @@ import { useSiteConfig } from '../context/SiteConfigContext';
 
 export const AboutVibe: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
   const { aboutVibe } = useSiteConfig();
-  const images = aboutVibe.images;
+  const images = aboutVibe?.images || [
+    { src: '/images/components/comp_img_0.webp', alt: 'Midnight Velvet Booth Seating' },
+    { src: '/images/components/comp_img_2.webp', alt: 'Live Acoustic & Reading Nook' },
+    { src: '/images/components/comp_img_3.webp', alt: 'Signature Brew Bar & Mixology' },
+    { src: '/images/components/comp_img_1.webp', alt: 'Artisan Platters and Comfort Food' },
+  ];
   const sectionRef = useRef<HTMLElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    const check = () => setIsDesktop(typeof window !== 'undefined' && window.innerWidth >= 1024);
-    check();
-    window.addEventListener('resize', check, { passive: true });
-    return () => window.removeEventListener('resize', check);
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -58,225 +55,165 @@ export const AboutVibe: React.FC = () => {
     offset: ["start end", "end start"]
   });
   
-  const yPos = useTransform(scrollYProgress, [0, 1], [-40, 40]);
+  const yPos1 = useTransform(scrollYProgress, [0, 1], [-20, 20]);
+  const yPos2 = useTransform(scrollYProgress, [0, 1], [20, -20]);
 
   return (
-    <>
-      <section ref={sectionRef} id="about-and-vibe" className="w-full py-16 lg:py-24 bg-[#170F0B] relative overflow-hidden border-t border-white/5 scroll-mt-24">
-        <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12">
+    <section ref={sectionRef} id="about-and-vibe" className="w-full py-24 lg:py-40 bg-[#0a0807] relative overflow-hidden border-t border-white/5 scroll-mt-24">
+      {/* Background ambient texture */}
+      <div className="hidden sm:block absolute inset-0 pointer-events-none mix-blend-overlay opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+
+      <div className="max-w-[1400px] mx-auto px-6 sm:px-12">
+        
+        {/* Top: Editorial Narrative */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-12 mb-20 lg:mb-32 relative z-10">
+          <motion.h2 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="font-sans text-5xl lg:text-7xl xl:text-8xl text-[#F5F2F0] font-medium tracking-tighter leading-[0.9]"
+          >
+            The <br className="hidden sm:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] italic font-serif pr-2">Atmosphere.</span>
+          </motion.h2>
           
-          {/* Top Section: Narrative & 4 Photo Grid (Balanced Heights) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-            
-            {/* Left Narrative Column (6 cols) */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.7 }}
-              className="lg:col-span-6 flex flex-col gap-5"
-            >
-              <div className="inline-flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                <span className="editorial-eyebrow">The Atmosphere &amp; Essence</span>
-              </div>
-              
-              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-on-surface font-normal tracking-tight leading-[1.12]">
-                Cozy Elegance Meets <br className="hidden sm:block" />
-                <span className="text-primary italic font-light">Nocturnal Radiance</span>
-              </h2>
-
-              <p className="font-sans text-sm sm:text-base text-on-surface/80 leading-relaxed font-light">
-                Step into Barrackpore's trendsetting dining retreat. Inspired by British-colonial vintage charms blended with a nocturnal lounge glow, our tufted sapphire velvet booths and golden filament fixtures create an intimate sanctuary.
-              </p>
-
-              <p className="font-sans text-xs sm:text-sm text-on-surface/65 leading-relaxed font-light -mt-2">
-                Whether sinking into a candlelit date night, catching up with friends over single-origin pour-overs, or enjoying live weekend acoustic sessions, every detail is curated for relaxed sophistication.
-              </p>
-              
-              {/* 4 Feature Amenities Grid (2x2 Luxury Double-Bezel Cards on Mobile) */}
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 pt-1">
-                <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-[#1C120D] to-[#120B08] border border-[#D4AF37]/25 shadow-md flex flex-col gap-1 active:scale-[0.98] transition-transform">
-                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-base">weekend</span>
-                  </div>
-                  <span className="font-serif text-xs sm:text-sm text-on-surface font-medium mt-1">Private Velvet Booths</span>
-                  <span className="font-sans text-[10px] sm:text-[11px] text-on-surface/60 line-clamp-2">Tufted comfort with bespoke low-candlelight.</span>
-                </div>
-                
-                <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-[#1C120D] to-[#120B08] border border-[#D4AF37]/25 shadow-md flex flex-col gap-1 active:scale-[0.98] transition-transform">
-                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-base">photo_camera</span>
-                  </div>
-                  <span className="font-serif text-xs sm:text-sm text-on-surface font-medium mt-1">Instagram Art Wall</span>
-                  <span className="font-sans text-[10px] sm:text-[11px] text-on-surface/60 line-clamp-2">Iconic neon accents &amp; curated visual moments.</span>
-                </div>
-
-                <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-[#1C120D] to-[#120B08] border border-[#D4AF37]/25 shadow-md flex flex-col gap-1 active:scale-[0.98] transition-transform">
-                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-base">ramen_dining</span>
-                  </div>
-                  <span className="font-serif text-xs sm:text-sm text-on-surface font-medium mt-1">Continental &amp; Asian</span>
-                  <span className="font-sans text-[10px] sm:text-[11px] text-on-surface/60 line-clamp-2">Artisanal pizzas, gourmet dim sums &amp; sips.</span>
-                </div>
-
-                <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-[#1C120D] to-[#120B08] border border-[#D4AF37]/25 shadow-md flex flex-col gap-1 active:scale-[0.98] transition-transform">
-                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-base">local_cafe</span>
-                  </div>
-                  <span className="font-serif text-xs sm:text-sm text-on-surface font-medium mt-1">Late Night Kitchen</span>
-                  <span className="font-sans text-[10px] sm:text-[11px] text-on-surface/60 line-clamp-2">Craft pours &amp; comfort food till 11:30 PM.</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Right Visual Artistry Layout (2x2 Grid on Mobile, Staggered on Desktop) */}
-            <motion.div 
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.8 }}
-              className="lg:col-span-6 grid grid-cols-2 gap-2.5 sm:gap-4"
-            >
-              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-44 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500">
-                <motion.img loading="lazy" alt={images[0].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[0].src} style={isDesktop ? { y: yPos, scale: 1.15 } : {}} />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-2.5 sm:p-4">
-                  <span className="font-serif text-[11px] sm:text-sm font-medium text-primary">Midnight Booths</span>
-                  <p className="font-sans text-[9px] sm:text-[11px] text-on-surface/75 mt-0.5 line-clamp-1 sm:line-clamp-none">Intimate dining crafted for evenings.</p>
-                </div>
-              </div>
-
-              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-44 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500 sm:translate-y-3">
-                <motion.img loading="lazy" alt={images[1].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[1].src} style={isDesktop ? { y: yPos, scale: 1.15 } : {}} />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-2.5 sm:p-4">
-                  <span className="font-serif text-[11px] sm:text-sm font-medium text-primary">Acoustic Nook</span>
-                  <p className="font-sans text-[9px] sm:text-[11px] text-on-surface/75 mt-0.5 line-clamp-1 sm:line-clamp-none">Warm vinyl &amp; live serenades.</p>
-                </div>
-              </div>
-
-              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-44 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500">
-                <motion.img loading="lazy" alt={images[2].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[2].src} style={isDesktop ? { y: yPos, scale: 1.15 } : {}} />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-2.5 sm:p-4">
-                  <span className="font-serif text-[11px] sm:text-sm font-medium text-primary">Espresso Bar</span>
-                  <p className="font-sans text-[9px] sm:text-[11px] text-on-surface/75 mt-0.5 line-clamp-1 sm:line-clamp-none">Specialty beans &amp; pour-overs.</p>
-                </div>
-              </div>
-
-              <div className="group relative rounded-2xl overflow-hidden shadow-xl bg-[#140D09] h-44 sm:h-56 lg:h-64 border border-[#D4AF37]/20 hover:border-[#D4AF37]/50 transition-colors duration-500 sm:translate-y-3">
-                <motion.img loading="lazy" alt={images[3].alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={images[3].src} style={isDesktop ? { y: yPos, scale: 1.15 } : {}} />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#140D09] via-transparent to-transparent flex flex-col justify-end p-2.5 sm:p-4">
-                  <span className="font-serif text-[11px] sm:text-sm font-medium text-primary">Comfort Bites</span>
-                  <p className="font-sans text-[9px] sm:text-[11px] text-on-surface/75 mt-0.5 line-clamp-1 sm:line-clamp-none">Wood-fired thin crusts &amp; dim sums.</p>
-                </div>
-              </div>
-            </motion.div>
-
-          </div>
-
-          {/* Bottom Section: Full-Width 2-Column Experience Showcase (No Blank Space) */}
-          <div className="mt-10 lg:mt-14 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
-            
-            {/* Column 1: Live Atmosphere Metrics (6 cols) */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="lg:col-span-6 p-5 sm:p-6 rounded-2xl bg-[#140D09] border border-[#D4AF37]/20 flex flex-col justify-between gap-4 shadow-xl"
-            >
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-base">tune</span>
-                  <span className="font-sans text-xs uppercase tracking-wider text-primary font-semibold">Live Atmosphere Metrics</span>
-                </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Optimal Ambience
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-y-3.5 gap-x-4">
-                <div>
-                  <span className="font-sans text-[10px] uppercase tracking-wider text-on-surface/50 block">Soundscape</span>
-                  <span className="font-sans text-xs sm:text-sm font-medium text-on-surface">Lo-Fi &amp; Soul (~62 dB)</span>
-                </div>
-                <div>
-                  <span className="font-sans text-[10px] uppercase tracking-wider text-on-surface/50 block">Lighting Temp</span>
-                  <span className="font-sans text-xs sm:text-sm font-medium text-primary">Warm Amber (2200K)</span>
-                </div>
-                <div>
-                  <span className="font-sans text-[10px] uppercase tracking-wider text-on-surface/50 block">Aroma Profile</span>
-                  <span className="font-sans text-xs sm:text-sm font-medium text-on-surface">Smoked Vanilla &amp; Arabica</span>
-                </div>
-                <div>
-                  <span className="font-sans text-[10px] uppercase tracking-wider text-on-surface/50 block">Best Hours</span>
-                  <span className="font-sans text-xs sm:text-sm font-medium text-on-surface">7:00 PM – 11:30 PM</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Column 2: Lounge Soundscape Audio & Guest Amenities (6 cols) */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="lg:col-span-6 p-5 sm:p-6 rounded-2xl bg-[#140D09] border border-[#D4AF37]/20 flex flex-col justify-between gap-4 shadow-xl"
-            >
-              {/* Soundscape Audio Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
-                    <span className="material-symbols-outlined text-base">graphic_eq</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className="font-sans text-xs uppercase tracking-wider text-primary font-semibold">Lounge Soundscape</span>
-                      <div className="flex items-end gap-[2px] h-3 overflow-hidden">
-                        <div className={`w-0.5 bg-primary rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_1s_ease-in-out_infinite_alternate]' : 'h-1'}`} />
-                        <div className={`w-0.5 bg-primary rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_0.8s_ease-in-out_infinite_alternate]' : 'h-1'}`} style={{ animationDelay: '150ms' }} />
-                        <div className={`w-0.5 bg-primary rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_1.2s_ease-in-out_infinite_alternate]' : 'h-1'}`} style={{ animationDelay: '300ms' }} />
-                        <div className={`w-0.5 bg-primary rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_0.9s_ease-in-out_infinite_alternate]' : 'h-1'}`} style={{ animationDelay: '100ms' }} />
-                      </div>
-                    </div>
-                    <span className="font-sans text-xs text-on-surface/70 mt-0.5">Acoustic Lo-Fi &amp; Velvet Jazz</span>
-                  </div>
-                </div>
-
-                <button 
-                  id="music-toggle-btn" 
-                  onClick={toggleAudio} 
-                  data-playing={isPlaying} 
-                  className={`h-8 px-4 rounded-full text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
-                    isPlaying 
-                      ? 'bg-primary text-background' 
-                      : 'border border-primary/40 text-primary hover:bg-primary/10'
-                  }`}
-                  aria-label={isPlaying ? 'Pause Lounge Audio' : 'Play Lounge Audio'}
-                >
-                  <span className="material-symbols-outlined text-sm">{isPlaying ? 'pause' : 'play_arrow'}</span>
-                  <span className="label-text font-sans uppercase tracking-wider">{isPlaying ? 'Pause Audio' : 'Play Vibe'}</span>
-                </button>
-              </div>
-
-              {/* Guest Comfort Amenities */}
-              <div className="flex flex-wrap items-center gap-2 text-[11px] text-on-surface/65 font-sans">
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/5">
-                  <span className="material-symbols-outlined text-primary text-xs">wifi</span> High-Speed Wi-Fi
-                </span>
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/5">
-                  <span className="material-symbols-outlined text-primary text-xs">power</span> Power at Every Booth
-                </span>
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/5">
-                  <span className="material-symbols-outlined text-primary text-xs">two_wheeler</span> Dedicated Parking
-                </span>
-              </div>
-            </motion.div>
-
-          </div>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="font-sans text-lg text-[#E3DACD]/60 max-w-[40ch] leading-relaxed font-light"
+          >
+            Inspired by British-colonial vintage charms blended with a nocturnal lounge glow, our tufted sapphire velvet booths and golden filament fixtures create an intimate sanctuary for relaxed sophistication.
+          </motion.p>
         </div>
-      </section>
 
-    </>
+        {/* The Asymmetrical Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 relative z-10">
+          
+          {/* Main Visual Cell (Tall Portrait) */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="md:col-span-5 md:row-span-2 p-2 rounded-[2rem] lg:rounded-[2.5rem] bg-white/[0.02] border border-white/5 shadow-2xl backdrop-blur-sm"
+          >
+            <div className="relative w-full h-full min-h-[400px] lg:min-h-[600px] rounded-[calc(2rem-0.5rem)] lg:rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-[#0a0807] group">
+              <motion.img 
+                loading="lazy" 
+                decoding="async" 
+                alt={images[0]?.alt} 
+                src={images[0]?.src} 
+                style={{ y: yPos1 }}
+                className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+              <div className="absolute bottom-6 left-6 right-6">
+                <span className="block font-sans text-xs uppercase tracking-widest text-[#D4AF37] mb-2 font-semibold">01</span>
+                <span className="block font-serif text-2xl text-white italic">Private Velvet Booths</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Top Right Cell (Audio Lounge & Metrics) */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="md:col-span-7 p-2 rounded-[2rem] lg:rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-sm"
+          >
+            <div className="relative w-full h-full p-8 lg:p-12 rounded-[calc(2rem-0.5rem)] lg:rounded-[calc(2.5rem-0.5rem)] bg-gradient-to-br from-[#1C120D] to-[#0a0807] border border-white/[0.05] flex flex-col justify-between gap-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={toggleAudio}
+                    className="w-14 h-14 rounded-full bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] transition-all duration-500 hover:scale-105 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/20"
+                  >
+                    <span className="material-symbols-outlined text-[24px]">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                  </button>
+                  <div>
+                    <h3 className="font-sans text-sm uppercase tracking-widest text-white font-medium mb-1">Lounge Soundscape</h3>
+                    <div className="flex items-end gap-1 h-4">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className={`w-1 bg-[#D4AF37] rounded-full transition-all duration-300 ${isPlaying ? 'animate-[eq_1s_ease-in-out_infinite_alternate]' : 'h-1'}`} style={{ animationDelay: `${i * 150}ms` }} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-sans text-xs uppercase tracking-widest text-emerald-400 font-medium">Live</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-8 pt-8 border-t border-white/5">
+                <div>
+                  <span className="block font-sans text-[10px] uppercase tracking-widest text-white/40 mb-1">Lighting</span>
+                  <span className="block font-serif text-lg text-white">Warm Amber <span className="text-[#D4AF37] italic">2200K</span></span>
+                </div>
+                <div>
+                  <span className="block font-sans text-[10px] uppercase tracking-widest text-white/40 mb-1">Aroma</span>
+                  <span className="block font-serif text-lg text-white">Smoked Vanilla & Arabica</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Bottom Right Cell 1 (Image) */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="md:col-span-3 lg:col-span-4 p-2 rounded-[2rem] bg-white/[0.02] border border-white/5 backdrop-blur-sm"
+          >
+            <div className="relative w-full h-[300px] lg:h-[400px] rounded-[calc(2rem-0.5rem)] overflow-hidden bg-[#0a0807] group">
+              <motion.img 
+                loading="lazy" 
+                decoding="async" 
+                alt={images[1]?.alt} 
+                src={images[1]?.src} 
+                style={{ y: yPos2 }}
+                className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+              <div className="absolute bottom-6 left-6">
+                <span className="block font-sans text-[10px] uppercase tracking-widest text-[#D4AF37] mb-1 font-semibold">02</span>
+                <span className="block font-sans text-sm text-white font-light">Iconic Neon Accents</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Bottom Right Cell 2 (Image) */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="md:col-span-4 lg:col-span-3 p-2 rounded-[2rem] bg-white/[0.02] border border-white/5 backdrop-blur-sm"
+          >
+            <div className="relative w-full h-[300px] lg:h-[400px] rounded-[calc(2rem-0.5rem)] overflow-hidden bg-[#0a0807] group">
+              <motion.img 
+                loading="lazy" 
+                decoding="async" 
+                alt={images[2]?.alt} 
+                src={images[2]?.src} 
+                style={{ y: yPos1 }}
+                className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+              <div className="absolute bottom-6 left-6">
+                <span className="block font-sans text-[10px] uppercase tracking-widest text-[#D4AF37] mb-1 font-semibold">03</span>
+                <span className="block font-sans text-sm text-white font-light">Curated Plating</span>
+              </div>
+            </div>
+          </motion.div>
+
+        </div>
+      </div>
+    </section>
   );
 };

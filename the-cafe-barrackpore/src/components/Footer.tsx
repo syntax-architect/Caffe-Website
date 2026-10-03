@@ -94,7 +94,7 @@ export const Footer: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full border border-[#D4AF37]/35 bg-[#160E0A] flex items-center justify-center overflow-hidden shadow-[0_0_12px_rgba(212,175,55,0.15)] shrink-0">
-                <img src="/logo.webp" alt={`${businessName} Crest`} className="w-full h-full object-contain" />
+                <img src="/logo.webp" alt={`${businessName} Crest`} width="40" height="40" loading="lazy" decoding="async" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className="font-serif text-base text-on-surface font-semibold tracking-tight">{businessName}</span>
@@ -243,23 +243,23 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Legal & Discrete Staff Login */}
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 font-sans text-xs text-on-surface/50 text-center md:text-left">
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 font-sans text-xs text-on-surface/75 text-center md:text-left">
           <p>© {new Date().getFullYear()} {businessName} {shortName}. All culinary &amp; brand rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <a className="hover:text-primary transition-colors" href="/privacy">
+            <a className="hover:text-primary transition-colors text-on-surface/80" href="/privacy">
               Privacy Policy
             </a>
-            <a className="hover:text-primary transition-colors" href="/terms">
+            <a className="hover:text-primary transition-colors text-on-surface/80" href="/terms">
               Terms of Service
             </a>
-            <a className="hover:text-primary transition-colors" href="#" onClick={(e) => handleDummy(e, 'Hygiene Standards', hygieneMsg)}>
+            <a className="hover:text-primary transition-colors text-on-surface/80" href="#" onClick={(e) => handleDummy(e, 'Hygiene Standards', hygieneMsg)}>
               Hygiene &amp; Safety
             </a>
-            <span className="text-white/10 hidden sm:inline">•</span>
+            <span className="text-white/20 hidden sm:inline">•</span>
             {/* Discrete Staff Access Link */}
             <a 
               href="/staff/login" 
-              className="text-on-surface/40 hover:text-primary transition-colors inline-flex items-center gap-1 font-medium"
+              className="text-on-surface/70 hover:text-primary transition-colors inline-flex items-center gap-1 font-medium"
               title="Staff & Management Portal"
             >
               <span className="material-symbols-outlined text-[13px]">lock</span>

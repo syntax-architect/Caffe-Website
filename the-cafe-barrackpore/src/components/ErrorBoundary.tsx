@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Sentry } from '../lib/sentry';
 
 interface Props {
   children?: ReactNode;
@@ -19,7 +20,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
+    Sentry.captureException(error, { componentStack: errorInfo.componentStack });
+    const isDev = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.DEV : false;
+    if (isDev) {
+      console.error('Uncaught error in component tree:', error, errorInfo);
+    }
   }
 
   public render() {
