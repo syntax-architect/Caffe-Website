@@ -15,6 +15,7 @@ import { VIPClub } from './components/VIPClub';
 import { SpecialsBanner } from './components/SpecialsBanner';
 import { Menu } from './components/Menu';
 import { Footer } from './components/Footer';
+import { Preloader } from './components/Preloader';
 
 // Code-split heavy interactive modal overlays (only fetched when user opens them or on idle)
 const CartDrawer = lazy(() => import('./components/CartDrawer').then(module => ({ default: module.CartDrawer })));
@@ -42,6 +43,7 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen">
+      <Preloader />
       <Header />
       <main id="main-content" className="w-full pt-20">
         {/* Ambient Golden Mesh Lighting - Hidden on mobile to save GPU */}
