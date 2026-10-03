@@ -102,6 +102,7 @@ async function prerender() {
     pageHtml = pageHtml.replace('</head>', `${ogAndTwitterTags}\n  </head>`);
 
     // 6. Hreflang alternates
+    pageHtml = pageHtml.replace(/<link\s+rel="alternate"\s+hreflang=".*?"\s+href=".*?"\s*\/?>\s*/gi, '');
     if (seo.hreflangs && seo.hreflangs.length > 0) {
       const hreflangTags = seo.hreflangs
         .map((h: { lang: string; href: string }) => `<link rel="alternate" hreflang="${h.lang}" href="${h.href}" />`)

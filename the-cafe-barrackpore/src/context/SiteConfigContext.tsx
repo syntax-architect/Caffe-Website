@@ -25,6 +25,7 @@ export interface SpecialsConfig {
   title: string;
   description: string;
   image?: string;
+  combos?: import('../services/siteContentService').SpecialCombo[];
 }
 
 export interface SEOConfig {
@@ -119,7 +120,7 @@ export interface SiteConfigContextType {
   isLoading: boolean;
   error: Error | null;
   updateSection: (
-    section: 'hero' | 'ourStory' | 'specials' | 'gallery',
+    section: 'hero' | 'ourStory' | 'aboutVibe' | 'specials' | 'gallery' | 'branding',
     data: any
   ) => Promise<boolean>;
 
@@ -258,12 +259,19 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
             ourStory: hasStoryChanged
               ? { src: storySrc, alt: storyAlt, title: storyTitle, description: storyDesc }
               : prev.ourStory,
-            specials: hasSpecialsChanged
-              ? { title: specialsTitle, description: specialsDesc, image: specialsImage }
-              : prev.specials,
+            aboutVibe: {
+              images: content.aboutVibe?.images || prev.aboutVibe.images,
+            },
+            specials: {
+              title: specialsTitle,
+              description: specialsDesc,
+              image: specialsImage,
+              combos: content.specials?.combos || prev.specials.combos,
+            },
             gallery: {
               images: content.gallery.images || defaultContextValue.gallery.images,
             },
+            logoUrl: content.branding?.logoUrl || prev.logoUrl,
             isLoading: false,
             error: null,
           };
@@ -275,10 +283,17 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
       }
     };
 
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(loadContent, { timeout: 2000 });
+    const isPublicPage = typeof window !== 'undefined' && !window.location.pathname.startsWith('/staff');
+    if (isPublicPage) {
+      const scheduleLoad = () => {
+        if (!isMounted) return;
+        loadContent();
+      };
+      window.addEventListener('scroll', scheduleLoad, { once: true, passive: true });
+      window.addEventListener('pointerdown', scheduleLoad, { once: true, passive: true });
+      setTimeout(scheduleLoad, 8000);
     } else {
-      setTimeout(loadContent, 600);
+      loadContent();
     }
 
     // Attach Realtime subscription only on staff/admin routes where content editing happens
@@ -292,10 +307,14 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
             return { ...prev, hero: { ...prev.hero, ...value } };
           } else if (key === 'story' || key === 'ourStory') {
             return { ...prev, ourStory: { ...prev.ourStory, ...value } };
+          } else if (key === 'aboutVibe') {
+            return { ...prev, aboutVibe: { images: value.images || value } };
           } else if (key === 'specials') {
             return { ...prev, specials: { ...prev.specials, ...value } };
           } else if (key === 'gallery') {
             return { ...prev, gallery: { images: value.images || value } };
+          } else if (key === 'branding') {
+            return { ...prev, logoUrl: value.logoUrl || prev.logoUrl };
           }
           return prev;
         });
@@ -309,7 +328,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
   }, []);
 
   const updateSection = async (
-    section: 'hero' | 'ourStory' | 'specials' | 'gallery',
+    section: 'hero' | 'ourStory' | 'aboutVibe' | 'specials' | 'gallery' | 'branding',
     data: any
   ): Promise<boolean> => {
     // 1. Persist to authoritative Supabase site_content table
@@ -321,10 +340,14 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
           return { ...prev, hero: { ...prev.hero, ...data } };
         } else if (section === 'ourStory') {
           return { ...prev, ourStory: { ...prev.ourStory, ...data } };
+        } else if (section === 'aboutVibe') {
+          return { ...prev, aboutVibe: { images: data.images || data } };
         } else if (section === 'specials') {
           return { ...prev, specials: { ...prev.specials, ...data } };
         } else if (section === 'gallery') {
           return { ...prev, gallery: { images: data.images || data } };
+        } else if (section === 'branding') {
+          return { ...prev, logoUrl: data.logoUrl || prev.logoUrl };
         }
         return prev;
       });
@@ -354,7 +377,12 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
           if (!isMounted) return;
           if (settings) {
             const mapped = mapSettingsToConfig(settings);
-            setRestaurantConfig(mapped);
+            setRestaurantConfig((prev) => {
+              if (JSON.stringify(prev) === JSON.stringify(mapped)) {
+                return prev;
+              }
+              return mapped;
+            });
             if (typeof window !== 'undefined') {
               localStorage.setItem(RESTAURANT_CONFIG_STORAGE_KEY, JSON.stringify(mapped));
             }
@@ -365,10 +393,17 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
         });
     };
 
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(syncSettings, { timeout: 2500 });
+    const isPublicPage = typeof window !== 'undefined' && !window.location.pathname.startsWith('/staff');
+    if (isPublicPage) {
+      const scheduleSync = () => {
+        if (!isMounted) return;
+        syncSettings();
+      };
+      window.addEventListener('scroll', scheduleSync, { once: true, passive: true });
+      window.addEventListener('pointerdown', scheduleSync, { once: true, passive: true });
+      setTimeout(scheduleSync, 8000);
     } else {
-      setTimeout(syncSettings, 800);
+      syncSettings();
     }
 
     return () => {

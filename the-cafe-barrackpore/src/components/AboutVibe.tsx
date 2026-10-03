@@ -5,12 +5,14 @@ import { useSiteConfig } from '../context/SiteConfigContext';
 export const AboutVibe: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const { aboutVibe } = useSiteConfig();
-  const images = aboutVibe?.images || [
-    { src: '/images/components/comp_img_0.webp', alt: 'Midnight Velvet Booth Seating' },
-    { src: '/images/components/comp_img_2.webp', alt: 'Live Acoustic & Reading Nook' },
-    { src: '/images/components/comp_img_3.webp', alt: 'Signature Brew Bar & Mixology' },
-    { src: '/images/components/comp_img_1.webp', alt: 'Artisan Platters and Comfort Food' },
-  ];
+  const images = (aboutVibe?.images && aboutVibe.images.length > 0)
+    ? aboutVibe.images
+    : [
+        { src: '/images/components/comp_img_0.webp', alt: 'Midnight Velvet Booth Seating' },
+        { src: '/images/components/comp_img_2.webp', alt: 'Live Acoustic & Reading Nook' },
+        { src: '/images/components/comp_img_3.webp', alt: 'Signature Brew Bar & Mixology' },
+        { src: '/images/components/comp_img_1.webp', alt: 'Artisan Platters and Comfort Food' },
+      ];
   const sectionRef = useRef<HTMLElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 

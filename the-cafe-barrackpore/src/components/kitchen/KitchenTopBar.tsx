@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { KitchenConnectionStatus, KitchenFilter } from '../../services/kitchenService';
 import { unlockAudioContext, playKitchenOrderBell } from '../../services/soundService';
+import { useSiteConfig } from '../../context/SiteConfigContext';
 
 interface KitchenTopBarProps {
   connectionStatus: KitchenConnectionStatus;
@@ -37,6 +38,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
   onRefresh,
   onSimulateTestOrder,
 }) => {
+  const { logoUrl } = useSiteConfig();
   const [currentTime, setCurrentTime] = useState<string>('');
   const [currentDate, setCurrentDate] = useState<string>('');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
@@ -137,7 +139,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
 
         <div className="flex items-center gap-2 pl-1 border-l border-white/[0.08]">
           <div className="w-7 h-7 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/35 flex items-center justify-center p-1">
-            <img src="/logo.webp" alt="Logo" className="w-full h-full object-contain filter invert" />
+            <img src={logoUrl || "/logo.webp"} alt="Logo" className="w-full h-full object-contain filter invert" />
           </div>
           <div>
             <h1 className="font-serif text-sm font-bold tracking-[0.14em] uppercase text-white leading-none">

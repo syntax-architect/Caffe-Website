@@ -55,6 +55,9 @@ export const SpecialsBanner: React.FC = () => {
   const { addToCart } = useCart();
   const { showToast } = useUI();
   const { specials, formatPrice, restaurantConfig } = useSiteConfig();
+  const combos = (specials?.combos && specials.combos.length > 0)
+    ? specials.combos
+    : SPECIAL_COMBOS;
 
   return (
     <section id="chef-specials" className="w-full py-20 lg:py-28 bg-[#0D0705] relative border-t border-white/5 scroll-mt-28 overflow-hidden">
@@ -102,7 +105,7 @@ export const SpecialsBanner: React.FC = () => {
 
             {/* 3-Platter Double-Bezel Card Carousel (Horizontal Snap on Mobile, 3-Col Grid on Desktop) */}
             <div className="flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 pb-2 md:pb-0">
-              {SPECIAL_COMBOS.map((combo) => (
+              {combos.map((combo) => (
                 <div
                   key={combo.id}
                   className="min-w-[86vw] max-w-[340px] sm:min-w-[320px] md:min-w-0 md:max-w-none snap-center flex-shrink-0 group rounded-[2rem] p-1.5 bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/10 hover:border-[#D4AF37]/50 shadow-xl transition-all duration-500 flex flex-col hover:-translate-y-1.5"

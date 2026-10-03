@@ -6,7 +6,7 @@ import { useSiteConfig } from '../context/SiteConfigContext';
 import { buildTableQrUrl } from '../utils/url';
 
 export const QRCodeGenerator: React.FC = () => {
-  const { restaurantConfig } = useSiteConfig();
+  const { restaurantConfig, logoUrl } = useSiteConfig();
   const [tableInput, setTableInput] = useState<string>('07');
   const [copied, setCopied] = useState<boolean>(false);
 
@@ -111,7 +111,7 @@ export const QRCodeGenerator: React.FC = () => {
       <div className="max-w-sm w-full bg-white border-2 border-stone-200 rounded-3xl p-8 shadow-xl flex flex-col items-center text-center print:border-none print:shadow-none print:p-4 print:max-w-none print:w-full">
         {/* Branding */}
         <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mb-4 p-3 shadow-md">
-          <img src="/logo.webp" alt="Logo" className="w-full h-full object-contain filter invert" />
+          <img src={logoUrl || "/logo.webp"} alt="Logo" className="w-full h-full object-contain filter invert" />
         </div>
 
         <h1 className="text-xl font-bold font-serif uppercase tracking-[0.18em] text-stone-900 mb-1">

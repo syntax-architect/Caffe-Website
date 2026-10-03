@@ -24,10 +24,24 @@ export function useMenuAvailability() {
       });
     };
 
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(load, { timeout: 3000 });
+    const isPublicPage = typeof window !== 'undefined' && !window.location.pathname.startsWith('/staff');
+    if (isPublicPage) {
+      const scheduleLoad = () => {
+        if (!isMounted) return;
+        fetchAvailabilityMap().then((map) => {
+          if (!isMounted) return;
+          setAvailabilityMap((prev) => {
+            if (JSON.stringify(prev) === JSON.stringify(map)) return prev;
+            return map;
+          });
+          setIsLoading(false);
+        });
+      };
+      window.addEventListener('scroll', scheduleLoad, { once: true, passive: true });
+      window.addEventListener('pointerdown', scheduleLoad, { once: true, passive: true });
+      setTimeout(scheduleLoad, 8000);
     } else {
-      setTimeout(load, 1000);
+      load();
     }
 
     return () => {

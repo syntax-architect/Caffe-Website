@@ -1,6 +1,9 @@
 import React, { useEffect } from 'react';
+import { useSiteConfig } from '../../context/SiteConfigContext';
 
 export const PrivacyPolicyPage: React.FC = () => {
+  const { logoUrl } = useSiteConfig();
+
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = 'Privacy Policy | The Café Barrackpore';
@@ -13,7 +16,7 @@ export const PrivacyPolicyPage: React.FC = () => {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <a href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-full border border-[#D4AF37]/40 bg-[#1C120D] flex items-center justify-center overflow-hidden shadow-sm group-hover:border-[#D4AF37] transition-colors">
-              <img src="/logo.webp" alt="The Café Crest" className="w-full h-full object-contain" />
+              <img src={logoUrl || "/logo.webp"} alt="The Café Crest" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="font-serif text-base text-white font-semibold tracking-tight">The Café</span>

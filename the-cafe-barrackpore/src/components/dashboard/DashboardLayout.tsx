@@ -23,7 +23,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
   const { staffProfile, role, signOut, signOutEverywhere, isOwner, isManager } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotification();
-  const { restaurantConfig } = useSiteConfig();
+  const { restaurantConfig, logoUrl } = useSiteConfig();
 
   // Enforce automatic 30-minute inactivity logout on staff screens
   useStaffSessionTimeout();
@@ -100,7 +100,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </button>
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center p-1">
-              <img src="/logo.webp" alt="Logo" className="w-full h-full object-contain filter invert" />
+              <img src={logoUrl || "/logo.webp"} alt="Logo" className="w-full h-full object-contain filter invert" />
             </div>
             <span className="font-serif text-sm font-bold tracking-wider text-[#D4AF37] uppercase">
               The Café
@@ -140,7 +140,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <div className="p-1 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
               <div className="w-10 h-10 rounded-[calc(1rem-0.25rem)] bg-gradient-to-br from-[#1C1713] to-[#0A0807] border border-[#D4AF37]/35 flex items-center justify-center p-2 shadow-inner">
                 <img
-                  src="/logo.webp"
+                  src={logoUrl || "/logo.webp"}
                   alt="The Café Barrackpore"
                   className="w-full h-full object-contain filter invert contrast-125"
                 />

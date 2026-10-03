@@ -11,7 +11,7 @@ const IconZomato = () => <svg className="w-4 h-4" fill="none" stroke="currentCol
 
 export const Footer: React.FC = () => {
   const { showModal, setIsReservationOpen } = useUI();
-  const { restaurantConfig } = useSiteConfig();
+  const { restaurantConfig, logoUrl } = useSiteConfig();
 
   const businessName = restaurantConfig?.businessName || clientDetails.businessName;
   const shortName = restaurantConfig?.shortName || clientDetails.shortName;
@@ -94,7 +94,7 @@ export const Footer: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full border border-[#D4AF37]/35 bg-[#160E0A] flex items-center justify-center overflow-hidden shadow-[0_0_12px_rgba(212,175,55,0.15)] shrink-0">
-                <img src="/logo.webp" alt={`${businessName} Crest`} width="40" height="40" loading="lazy" decoding="async" className="w-full h-full object-contain" />
+                <img src={logoUrl || "/logo.webp"} alt={`${businessName} Crest`} width="40" height="40" loading="lazy" decoding="async" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className="font-serif text-base text-on-surface font-semibold tracking-tight">{businessName}</span>

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { isStaffAccountLocked, recordStaffLoginFailure, resetStaffLoginFailures } from '../../utils/security';
+import { useSiteConfig } from '../../context/SiteConfigContext';
 
 export const StaffLoginPage: React.FC = () => {
+  const { logoUrl } = useSiteConfig();
   const { signIn, verifyMfaCode, isMfaAwaiting, isLoading, isAuthenticated, isActiveStaff } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -217,7 +219,7 @@ export const StaffLoginPage: React.FC = () => {
               <div className="relative mb-5 group">
                 <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#1F1914] to-[#0A0807] border border-[#D4AF37]/40 flex items-center justify-center p-3.5 shadow-[0_0_30px_rgba(212,175,55,0.18)] transition-transform duration-500 group-hover:scale-105">
                   <img
-                    src="/logo.webp"
+                    src={logoUrl || "/logo.webp"}
                     alt="The Café Barrackpore"
                     className="w-full h-full object-contain filter invert contrast-125"
                   />

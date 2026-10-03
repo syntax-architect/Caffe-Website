@@ -15,10 +15,23 @@ export interface StoryContent {
   alt: string;
 }
 
+export interface SpecialCombo {
+  id: string;
+  name: string;
+  category: string;
+  diet: 'all' | 'nv' | 'veg';
+  price: number;
+  badge: string;
+  serves: string;
+  description: string;
+  image: string;
+}
+
 export interface SpecialsContent {
   title: string;
   description: string;
   image: string;
+  combos?: SpecialCombo[];
 }
 
 export interface GalleryContent {
@@ -28,19 +41,33 @@ export interface GalleryContent {
   }>;
 }
 
+export interface AboutVibeContent {
+  images: Array<{
+    src: string;
+    alt: string;
+  }>;
+}
+
+export interface BrandingContent {
+  logoUrl: string;
+  alt: string;
+}
+
 export interface AllSiteContent {
   hero: HeroContent;
   story: StoryContent;
+  aboutVibe: AboutVibeContent;
   specials: SpecialsContent;
   gallery: GalleryContent;
+  branding: BrandingContent;
 }
 
 export const DEFAULT_SITE_CONTENT: AllSiteContent = {
   hero: {
     headline: 'Step Into Barrackpore’s Trendsetting Dining Retreat',
     subtext: 'Where artisan coffee meets handcrafted cocktails & gourmet comfort food in a strictly premium, nocturnal setting.',
-    src: '/images/hero-bar.webp',
-    alt: 'The Café Barrackpore Hero Visual',
+    src: '/images/hero-cinematic.jpg',
+    alt: 'The Café Barrackpore — Nocturnal Cocktail & Espresso Lounge',
   },
   story: {
     title: 'Crafting Barrackpore’s finest nocturnal escape',
@@ -49,10 +76,53 @@ export const DEFAULT_SITE_CONTENT: AllSiteContent = {
     src: '/images/story-pour.webp',
     alt: 'Artisanal Espresso Pour',
   },
+  aboutVibe: {
+    images: [
+      { src: '/images/components/comp_img_0_highres.jpg', alt: 'Midnight Velvet Booth Seating' },
+      { src: '/images/components/comp_img_2.webp', alt: 'Live Acoustic & Reading Nook' },
+      { src: '/images/components/comp_img_3.webp', alt: 'Signature Brew Bar & Mixology' },
+      { src: '/images/components/comp_img_1.webp', alt: 'Artisan Platters and Comfort Food' },
+    ],
+  },
   specials: {
     title: 'Special Banquet & Hangout Platters',
     description: 'Generous sharing platters with sizzling pan-Asian or smoky clay oven selections, made fresh to order.',
     image: '/images/hero-bar.webp',
+    combos: [
+      {
+        id: 'combo-chinese-platter',
+        name: 'Chinese Platter',
+        category: 'mains-platters',
+        diet: 'nv',
+        price: 380,
+        badge: 'CHINESE BANQUET',
+        serves: '2–3 Guests',
+        description: 'Delicate steamed momos, golden spring rolls & wok-tossed spicy chilli bites.',
+        image: '/images/platters/platter-chinese.webp',
+      },
+      {
+        id: 'combo-tandoori-platter',
+        name: 'Tandoori Platter',
+        category: 'mains-platters',
+        diet: 'nv',
+        price: 450,
+        badge: 'TANDOORI ROYALE',
+        serves: '2–3 Guests',
+        description: 'Smoky clay oven kebabs, succulent tikka, fresh mint chutney & garlic butter naan.',
+        image: '/images/platters/platter-tandoori.webp',
+      },
+      {
+        id: 'combo-rice-noodles-bowl',
+        name: 'Rice & Noodles Bowl',
+        category: 'mains-platters',
+        diet: 'all',
+        price: 240,
+        badge: 'PAN-ASIAN SHARING',
+        serves: '1–2 Guests',
+        description: 'Wok-tossed Hakka noodles, fragrant fried rice & crispy Manchurian gravy.',
+        image: '/images/platters/platter-bowl.webp',
+      },
+    ],
   },
   gallery: {
     images: [
@@ -61,6 +131,10 @@ export const DEFAULT_SITE_CONTENT: AllSiteContent = {
       { src: '/images/gallery-beans.webp', alt: 'Artisanal Coffee Beans' },
       { src: '/images/gallery-guitar.webp', alt: 'Acoustic Weekend Guitar' },
     ],
+  },
+  branding: {
+    logoUrl: '/logo.webp',
+    alt: 'The Café Barrackpore Crest',
   },
 };
 
@@ -90,12 +164,22 @@ export async function fetchAllSiteContent(): Promise<AllSiteContent> {
           content.hero = { ...DEFAULT_SITE_CONTENT.hero, ...row.value };
         } else if ((row.key === 'story' || row.key === 'ourStory') && row.value) {
           content.story = { ...DEFAULT_SITE_CONTENT.story, ...row.value };
+        } else if (row.key === 'aboutVibe' && row.value) {
+          content.aboutVibe = {
+            images: Array.isArray(row.value.images) ? row.value.images : DEFAULT_SITE_CONTENT.aboutVibe.images,
+          };
         } else if (row.key === 'specials' && row.value) {
-          content.specials = { ...DEFAULT_SITE_CONTENT.specials, ...row.value };
+          content.specials = {
+            ...DEFAULT_SITE_CONTENT.specials,
+            ...row.value,
+            combos: Array.isArray(row.value.combos) ? row.value.combos : DEFAULT_SITE_CONTENT.specials.combos,
+          };
         } else if (row.key === 'gallery' && row.value) {
           content.gallery = {
             images: Array.isArray(row.value.images) ? row.value.images : DEFAULT_SITE_CONTENT.gallery.images,
           };
+        } else if (row.key === 'branding' && row.value) {
+          content.branding = { ...DEFAULT_SITE_CONTENT.branding, ...row.value };
         }
       }
     }
@@ -112,7 +196,7 @@ export async function fetchAllSiteContent(): Promise<AllSiteContent> {
  * Enforces RLS: only active staff with role 'owner' or 'manager' are allowed.
  */
 export async function updateSiteContent(
-  key: 'hero' | 'story' | 'ourStory' | 'specials' | 'gallery',
+  key: 'hero' | 'story' | 'ourStory' | 'aboutVibe' | 'specials' | 'gallery' | 'branding',
   value: Record<string, any>
 ): Promise<{ success: boolean; error?: string }> {
   const canonicalKey = key === 'ourStory' ? 'story' : key;
@@ -136,6 +220,7 @@ export async function updateSiteContent(
       .upsert({
         key: canonicalKey,
         value,
+        restaurant_id: 'the-cafe-barrackpore',
         updated_at: new Date().toISOString(),
       }, { onConflict: 'key' });
 

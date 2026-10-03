@@ -95,8 +95,13 @@ export const ScrollSequence: React.FC = () => {
       }
     };
     
-    window.addEventListener('resize', handleResize);
-    handleResize();
+    window.addEventListener('resize', handleResize, { passive: true });
+    // Defer initial sizing until idle or first interaction to eliminate initial mount reflow
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(handleResize, { timeout: 3000 });
+    } else {
+      setTimeout(handleResize, 500);
+    }
 
     // Helper to instantiate and manage a frame image with WebP-to-JPEG fallback
     const ensureFrame = (index: number, priority = false): HTMLImageElement => {
@@ -398,8 +403,8 @@ export const ScrollSequence: React.FC = () => {
           style={isMobile ? {} : { filter: 'contrast(1.25) brightness(0.9) saturate(1.1)' }}
         />
         
-        {/* Subtle noise overlay */}
-        <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-20" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+        {/* Subtle noise overlay (desktop only to save mobile GPU/CPU) */}
+        <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-20 hidden md:block" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
         
         {/* Dark overlays to blend image into background */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />

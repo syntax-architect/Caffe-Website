@@ -17,14 +17,14 @@ export const Hero: React.FC = () => {
     setIsReservationOpen(true);
   };
 
-  // High-performance WebP hero asset
+  // High-performance WebP hero asset (preloaded in head)
   const heroImageSrc = (!hero?.src || hero.src.includes('hero-cinematic'))
     ? '/images/hero-bar.webp'
     : hero.src;
   const heroImageAlt = hero?.alt || 'The Café Barrackpore — Nocturnal Cocktail & Espresso Lounge';
 
   const descriptionText = hero?.subtext || 
-    "Where artisan coffee meets handcrafted cocktails, wood-fired comfort food and late-night atmosphere in Barrackpore's most refined nocturnal retreat.";
+    "Where artisan coffee meets handcrafted cocktails & gourmet comfort food in a strictly premium, nocturnal setting.";
 
   return (
     <section 
@@ -43,7 +43,8 @@ export const Hero: React.FC = () => {
             height="800"
             className="w-full h-full object-cover object-[70%_center] lg:object-center filter brightness-[0.94] contrast-[1.08] saturate-[1.08]"
             fetchPriority="high"
-            decoding="sync"
+            loading="eager"
+            decoding="async"
           />
 
           {/* Seamless multi-stop horizontal gradient blend: pure obsidian espresso on left fading into warm amber hospitality glow on right */}

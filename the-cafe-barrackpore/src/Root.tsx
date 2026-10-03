@@ -38,45 +38,47 @@ export const Root: React.FC = () => {
     <I18nProvider>
       <SiteConfigProvider>
         <MetaTags pathname={pathname} />
-        <AuthProvider>
-          {isPrivacyRoute ? (
-            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
-              <PrivacyPolicyPage />
-            </Suspense>
-          ) : isTermsRoute ? (
-            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
-              <TermsPage />
-            </Suspense>
-          ) : isResetPassword ? (
-            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
-              <ResetPasswordPage />
-            </Suspense>
-          ) : isStaffLogin ? (
-            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
-              <StaffLoginPage />
-            </Suspense>
-          ) : isStaffRoute ? (
-            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
-              <ProtectedRoute>
-                <StaffApp />
-              </ProtectedRoute>
-            </Suspense>
-          ) : isGeneratorRoute ? (
-            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
-              <QRCodeGenerator />
-            </Suspense>
-          ) : isQRRoute ? (
-            <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
-              <TableProvider>
-                <QROrderingPage />
-              </TableProvider>
-            </Suspense>
-          ) : (
+        {isStaffRoute || isStaffLogin || isResetPassword ? (
+          <AuthProvider>
+            {isResetPassword ? (
+              <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+                <ResetPasswordPage />
+              </Suspense>
+            ) : isStaffLogin ? (
+              <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+                <StaffLoginPage />
+              </Suspense>
+            ) : (
+              <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+                <ProtectedRoute>
+                  <StaffApp />
+                </ProtectedRoute>
+              </Suspense>
+            )}
+          </AuthProvider>
+        ) : isPrivacyRoute ? (
+          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+            <PrivacyPolicyPage />
+          </Suspense>
+        ) : isTermsRoute ? (
+          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+            <TermsPage />
+          </Suspense>
+        ) : isGeneratorRoute ? (
+          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+            <QRCodeGenerator />
+          </Suspense>
+        ) : isQRRoute ? (
+          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
             <TableProvider>
-              <App />
+              <QROrderingPage />
             </TableProvider>
-          )}
-        </AuthProvider>
+          </Suspense>
+        ) : (
+          <TableProvider>
+            <App />
+          </TableProvider>
+        )}
       </SiteConfigProvider>
     </I18nProvider>
   );
