@@ -29,3 +29,6 @@ lighthouse-report.json
 *.njsproj
 *.sln
 *.sw?
+
+# Explicitly ensure application data is tracked
+!src/data/**

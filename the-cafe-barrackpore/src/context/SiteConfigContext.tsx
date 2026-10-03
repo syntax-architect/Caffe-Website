@@ -162,7 +162,7 @@ const defaultContextValue: SiteConfigContextType = {
     image: '/images/hero-cinematic.jpg',
   },
   logoUrl: '/logo.webp',
-  isLoading: true,
+  isLoading: false,
   error: null,
   updateSection: async () => false,
 
@@ -241,7 +241,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
             specialsDesc !== prev.specials.description ||
             specialsImage !== prev.specials.image;
 
-          if (!hasHeroChanged && !hasStoryChanged && !hasSpecialsChanged && !prev.isLoading) {
+          if (!hasHeroChanged && !hasStoryChanged && !hasSpecialsChanged) {
             return prev;
           }
 
@@ -266,7 +266,6 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
               images: content.gallery.images || defaultContextValue.gallery.images,
             },
             logoUrl: content.branding?.logoUrl || prev.logoUrl,
-            isLoading: false,
             error: null,
           };
         });
@@ -285,7 +284,8 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
       };
       window.addEventListener('scroll', scheduleLoad, { once: true, passive: true });
       window.addEventListener('pointerdown', scheduleLoad, { once: true, passive: true });
-      setTimeout(scheduleLoad, 8000);
+      window.addEventListener('keydown', scheduleLoad, { once: true, passive: true });
+      window.addEventListener('touchstart', scheduleLoad, { once: true, passive: true });
     } else {
       loadContent();
     }

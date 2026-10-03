@@ -75,20 +75,20 @@ export default {
         "space-md": "1rem"
       },
       fontFamily: {
-        sans: ["Outfit", "sans-serif"],
+        sans: ["Outfit", "'Outfit-Fallback'", "sans-serif"],
         serif: ["'Playfair Display'", "serif"],
-        "body-lg": ["Outfit", "sans-serif"],
-        "label-sm": ["Outfit", "sans-serif"],
-        "label-lg": ["Outfit", "sans-serif"],
-        "body-sm": ["Outfit", "sans-serif"],
+        "body-lg": ["Outfit", "'Outfit-Fallback'", "sans-serif"],
+        "label-sm": ["Outfit", "'Outfit-Fallback'", "sans-serif"],
+        "label-lg": ["Outfit", "'Outfit-Fallback'", "sans-serif"],
+        "body-sm": ["Outfit", "'Outfit-Fallback'", "sans-serif"],
         "headline-lg": ["'Playfair Display'", "serif"],
         "display-lg-mobile": ["'Playfair Display'", "serif"],
         "headline-lg-mobile": ["'Playfair Display'", "serif"],
-        "label-md": ["Outfit", "sans-serif"],
+        "label-md": ["Outfit", "'Outfit-Fallback'", "sans-serif"],
         "display-lg": ["'Playfair Display'", "serif"],
         "headline-md": ["'Playfair Display'", "serif"],
         "headline-sm": ["'Playfair Display'", "serif"],
-        "body-md": ["Outfit", "sans-serif"]
+        "body-md": ["Outfit", "'Outfit-Fallback'", "sans-serif"]
       },
       fontSize: {
         "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],

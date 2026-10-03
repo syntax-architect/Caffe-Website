@@ -45,7 +45,8 @@ export function useMenuAvailability() {
       };
       window.addEventListener('scroll', scheduleLoad, { once: true, passive: true });
       window.addEventListener('pointerdown', scheduleLoad, { once: true, passive: true });
-      setTimeout(scheduleLoad, 8000);
+      window.addEventListener('keydown', scheduleLoad, { once: true, passive: true });
+      window.addEventListener('touchstart', scheduleLoad, { once: true, passive: true });
     } else {
       load();
     }

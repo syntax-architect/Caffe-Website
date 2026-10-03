@@ -119,15 +119,15 @@ export function generatePageSEO(options: {
     const currencySymbol = config.currencySymbol || '₹';
 
     // Group menu items by category for MenuSection
-    const menuSections = rawCategories.map((cat) => {
+    const menuSections = rawCategories.map((cat: MenuCategory) => {
       const itemsInCat = rawItems
-        .filter((item) => item.category_id === cat.id || item.category === cat.id || item.category === cat.name)
+        .filter((item: MenuItem) => item.category_id === cat.id || item.category === cat.id || item.category === cat.name)
         .slice(0, 15); // Top 15 per section for rich snippets
 
       return {
         '@type': 'MenuSection',
         name: cat.name,
-        hasMenuItem: itemsInCat.map((item) => ({
+        hasMenuItem: itemsInCat.map((item: MenuItem) => ({
           '@type': 'MenuItem',
           name: item.name,
           description: item.description || `${item.name} freshly prepared at ${businessName}`,

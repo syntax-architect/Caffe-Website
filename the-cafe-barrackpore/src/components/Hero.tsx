@@ -42,7 +42,6 @@ export const Hero: React.FC = () => {
             width="1200"
             height="800"
             className="w-full h-full object-cover object-[70%_center] lg:object-center filter brightness-[0.94] contrast-[1.08] saturate-[1.08]"
-            fetchPriority="high"
             loading="eager"
             decoding="async"
           />

@@ -46,7 +46,7 @@
 .windsurf/
 .zcode/
 .zencoder/
-data/
+/data/
 skills/
 skills-lock.json
 
