@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { useSiteConfig } from '../context/SiteConfigContext';
 
 interface StoryChapter {
@@ -15,31 +14,39 @@ interface StoryChapter {
 export const OurStory: React.FC = () => {
   const { ourStory } = useSiteConfig();
   const containerRef = useRef<HTMLElement>(null);
-  const shouldReduceMotion = useReducedMotion();
   const [activeChapterIndex, setActiveChapterIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
 
-  // Scroll tracking across the sticky section
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  });
-
-  // Smooth subtle zoom & pan on the background image
-  const bgScale = useTransform(scrollYProgress, [0, 1], shouldReduceMotion ? [1, 1] : [1.0, 1.1]);
-  const progressLineWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
-
-  // Track active chapter based on scroll progress
+  // High-performance scroll tracking across the sticky section using rAF
   useEffect(() => {
-    return scrollYProgress.on('change', (v) => {
-      if (v < 0.34) {
-        setActiveChapterIndex(0);
-      } else if (v < 0.68) {
-        setActiveChapterIndex(1);
-      } else {
-        setActiveChapterIndex(2);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (!containerRef.current) return;
+          const rect = containerRef.current.getBoundingClientRect();
+          const totalDistance = rect.height - window.innerHeight;
+          if (totalDistance <= 0) return;
+          const currentDistance = -rect.top;
+          const p = Math.max(0, Math.min(1, currentDistance / totalDistance));
+          setProgress(p);
+          if (p < 0.34) {
+            setActiveChapterIndex(0);
+          } else if (p < 0.68) {
+            setActiveChapterIndex(1);
+          } else {
+            setActiveChapterIndex(2);
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
-    });
-  }, [scrollYProgress]);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // High-performance story photography asset
   const storyImageSrc = ourStory?.src || '/images/story-luxury-pour.jpg';
@@ -94,11 +101,11 @@ export const OurStory: React.FC = () => {
           <div className="relative w-full h-full rounded-[calc(2rem-0.375rem)] sm:rounded-[calc(2.5rem-0.5rem)] lg:rounded-[calc(3rem-0.5rem)] overflow-hidden bg-[#0A0706]">
             
             {/* 1. CRYSTAL-CLEAR CINEMATIC BACKGROUND IMAGE (Barista pour on left, editorial space on right) */}
-            <motion.img
+            <img
               src={storyImageSrc}
               alt={ourStory?.alt || 'The Café Barrackpore Artisanal Coffee Pour'}
-              style={{ scale: bgScale }}
-              className="absolute inset-0 w-full h-full object-cover object-[25%_center] md:object-[30%_center] lg:object-center filter brightness-[0.98] contrast-[1.08] saturate-[1.05]"
+              style={{ transform: `scale(${1 + progress * 0.1})` }}
+              className="absolute inset-0 w-full h-full object-cover object-[25%_center] md:object-[30%_center] lg:object-center filter brightness-[0.98] contrast-[1.08] saturate-[1.05] transition-transform duration-100 ease-out"
               loading="lazy"
               decoding="async"
               fetchPriority="low"
@@ -129,67 +136,61 @@ export const OurStory: React.FC = () => {
 
             {/* 4. FLOATING EDITORIAL CHAPTER CARD (Positioned gracefully on right, zero overlap with coffee pour) */}
             <div className="absolute inset-x-4 bottom-14 sm:bottom-16 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-6 lg:right-10 md:left-auto md:max-w-lg lg:max-w-xl z-20">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentChapter.id}
-                  initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.98 }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                  className="p-1 sm:p-1.5 rounded-[1.75rem] sm:rounded-[2.25rem] bg-gradient-to-br from-white/20 via-white/[0.06] to-white/10 ring-1 ring-[#D4AF37]/35 shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
-                >
-                  <div className="rounded-[calc(1.75rem-0.25rem)] sm:rounded-[calc(2.25rem-0.375rem)] bg-[#0E0907]/90 backdrop-blur-2xl p-5 sm:p-8 md:p-10 border border-white/10 flex flex-col gap-4 sm:gap-6">
-                    
-                    {/* Chapter Header */}
-                    <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                      <div className="inline-flex items-center gap-2">
-                        <span className="font-mono text-xs font-semibold text-[#D4AF37] tracking-wider">
-                          {currentChapter.step}
-                        </span>
-                        <span className="text-white/25">/</span>
-                        <span className="font-sans text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] uppercase text-[#E3DACD]">
-                          {currentChapter.badge}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        {chapters.map((ch, idx) => (
-                          <div
-                            key={ch.id}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${
-                              activeChapterIndex === idx
-                                ? 'w-6 bg-[#D4AF37]'
-                                : 'w-1.5 bg-white/20'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Chapter Headline */}
-                    <h3 className="font-sans text-2xl sm:text-3xl lg:text-4xl xl:text-[2.6rem] font-medium tracking-tight text-[#F5F2F0] leading-[1.08]">
-                      <span>{currentChapter.title} </span>
-                      <span className="font-serif italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#E3DACD]">
-                        {currentChapter.titleItalic}
+              <div
+                key={currentChapter.id}
+                className="p-1 sm:p-1.5 rounded-[1.75rem] sm:rounded-[2.25rem] bg-gradient-to-br from-white/20 via-white/[0.06] to-white/10 ring-1 ring-[#D4AF37]/35 shadow-[0_20px_50px_rgba(0,0,0,0.85)] animate-fade-in transition-all duration-300"
+              >
+                <div className="rounded-[calc(1.75rem-0.25rem)] sm:rounded-[calc(2.25rem-0.375rem)] bg-[#0E0907]/90 backdrop-blur-2xl p-5 sm:p-8 md:p-10 border border-white/10 flex flex-col gap-4 sm:gap-6">
+                  
+                  {/* Chapter Header */}
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div className="inline-flex items-center gap-2">
+                      <span className="font-mono text-xs font-semibold text-[#D4AF37] tracking-wider">
+                        {currentChapter.step}
                       </span>
-                    </h3>
-
-                    {/* Chapter Description */}
-                    <p className="font-sans text-xs sm:text-sm lg:text-base text-[#E3DACD]/85 font-light leading-relaxed">
-                      {currentChapter.description}
-                    </p>
-
-                    {/* Chapter Footnote */}
-                    <div className="pt-1 flex items-center gap-2.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
-                      <span className="font-sans text-xs text-[#D4AF37] font-medium tracking-wide">
-                        {currentChapter.highlight}
+                      <span className="text-white/25">/</span>
+                      <span className="font-sans text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] uppercase text-[#E3DACD]">
+                        {currentChapter.badge}
                       </span>
                     </div>
 
+                    <div className="flex items-center gap-1.5">
+                      {chapters.map((ch, idx) => (
+                        <div
+                          key={ch.id}
+                          className={`h-1.5 rounded-full transition-all duration-300 ${
+                            activeChapterIndex === idx
+                              ? 'w-6 bg-[#D4AF37]'
+                              : 'w-1.5 bg-white/20'
+                          }`}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </motion.div>
-              </AnimatePresence>
+
+                  {/* Chapter Headline */}
+                  <h3 className="font-sans text-2xl sm:text-3xl lg:text-4xl xl:text-[2.6rem] font-medium tracking-tight text-[#F5F2F0] leading-[1.08]">
+                    <span>{currentChapter.title} </span>
+                    <span className="font-serif italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#E3DACD]">
+                      {currentChapter.titleItalic}
+                    </span>
+                  </h3>
+
+                  {/* Chapter Description */}
+                  <p className="font-sans text-xs sm:text-sm lg:text-base text-[#E3DACD]/85 font-light leading-relaxed">
+                    {currentChapter.description}
+                  </p>
+
+                  {/* Chapter Footnote */}
+                  <div className="pt-1 flex items-center gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                    <span className="font-sans text-xs text-[#D4AF37] font-medium tracking-wide">
+                      {currentChapter.highlight}
+                    </span>
+                  </div>
+
+                </div>
+              </div>
             </div>
 
             {/* 5. PINNED SCRUB TELEMETRY PROGRESS BAR */}
@@ -202,9 +203,9 @@ export const OurStory: React.FC = () => {
                 <span>CHAPTER 0{activeChapterIndex + 1} / 03</span>
               </div>
               <div className="w-full h-[2.5px] bg-white/10 rounded-full overflow-hidden">
-                <motion.div
-                  style={{ width: progressLineWidth }}
-                  className="h-full bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#E3DACD]"
+                <div
+                  style={{ width: `${progress * 100}%` }}
+                  className="h-full bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#E3DACD] transition-all duration-75 ease-out"
                 />
               </div>
             </div>

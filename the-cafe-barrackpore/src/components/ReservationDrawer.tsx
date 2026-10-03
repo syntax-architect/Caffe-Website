@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUI } from '../context/UIContext';
 import { clientDetails } from '../config/client';
@@ -24,6 +24,17 @@ export const ReservationDrawer: React.FC = () => {
   }, [setIsReservationOpen]);
 
   const drawerRef = useFocusTrap(isReservationOpen, handleClose);
+
+  // Lock body scroll and isolate Lenis while reservation drawer is open
+  useEffect(() => {
+    if (isReservationOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isReservationOpen]);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -143,10 +154,11 @@ export const ReservationDrawer: React.FC = () => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            className="fixed top-0 right-0 h-[100dvh] w-full max-w-[460px] bg-[#130C08]/95 backdrop-blur-2xl border-l border-[#D4AF37]/25 z-[210] flex flex-col focus:outline-none shadow-[-25px_0_60px_rgba(0,0,0,0.85)]"
+            className="fixed top-0 right-0 h-[100dvh] w-full max-w-[460px] bg-[#130C08]/95 backdrop-blur-2xl border-l border-[#D4AF37]/25 z-[210] flex flex-col focus:outline-none shadow-[-25px_0_60px_rgba(0,0,0,0.85)] overscroll-contain"
+            data-lenis-prevent
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[#D4AF37]/15 bg-[#160E0A]/80">
+            <div className="flex items-center justify-between p-6 border-b border-[#D4AF37]/15 bg-[#160E0A]/80 shrink-0">
               <div>
                 <span className="editorial-eyebrow text-[10px] block mb-1">Hospitality Reservations</span>
                 <h2 id="reservation-drawer-title" className="font-serif text-2xl text-on-surface font-normal">Book a Table</h2>
@@ -163,7 +175,8 @@ export const ReservationDrawer: React.FC = () => {
 
             {/* Form Content or Confirmation */}
             {confirmedRef ? (
-              <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-6 bg-[#130C08]">
+              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-center p-6 text-center gap-6 bg-[#130C08] overscroll-contain custom-scrollbar"
+                data-lenis-prevent>
                 <div className="w-20 h-20 rounded-full bg-[#1C120D] border border-primary/40 flex items-center justify-center text-primary shadow-[0_0_30px_rgba(212,175,55,0.25)]">
                   <span className="material-symbols-outlined text-4xl">event_available</span>
                 </div>
@@ -206,7 +219,8 @@ export const ReservationDrawer: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar bg-[#130C08]">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar bg-[#130C08] overscroll-contain"
+                  data-lenis-prevent>
                   <form id="reservation-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
                     
                     {/* Name */}
@@ -351,7 +365,7 @@ export const ReservationDrawer: React.FC = () => {
                 </div>
 
                 {/* Footer / Submit */}
-                <div className="p-6 border-t border-[#D4AF37]/15 bg-[#160E0A]/90">
+                <div className="p-6 border-t border-[#D4AF37]/15 bg-[#160E0A]/90 shrink-0">
                   {submissionError && (
                     <div className="p-4 mb-3 rounded-xl bg-error/10 border border-error/30 text-xs flex flex-col gap-2">
                       <div className="flex items-center gap-1.5 font-bold text-red-400">

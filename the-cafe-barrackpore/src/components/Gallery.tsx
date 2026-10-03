@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { clientDetails } from '../config/client';
 
@@ -58,13 +57,7 @@ export const Gallery: React.FC = () => {
       <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
         
         {/* Section Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-14 md:mb-18 text-center max-w-2xl mx-auto"
-        >
+        <div className="mb-14 md:mb-18 text-center max-w-2xl mx-auto">
           <div className="inline-flex items-center justify-center gap-2 mb-3">
             <span className="w-2 h-2 rounded-full bg-primary" />
             <span className="editorial-eyebrow">Visual Chronicles</span>
@@ -75,7 +68,7 @@ export const Gallery: React.FC = () => {
           <p className="font-sans text-sm sm:text-base text-on-surface/70 mt-3 font-light leading-relaxed">
             A glimpse into the nocturnal atmosphere, handcrafted cuisine, and acoustic energy at Barrackpore’s premier dining retreat.
           </p>
-        </motion.div>
+        </div>
 
         {hasElfsight ? (
           <div className="w-full">
@@ -95,12 +88,8 @@ export const Gallery: React.FC = () => {
                   : "lg:col-span-1 lg:row-span-1";
 
               return (
-                <motion.div 
+                <div 
                   key={idx}
-                  initial={{ opacity: 0, y: 25 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
                   onClick={() => setSelectedPhoto({ index: idx, data: { ...img, ...meta } })}
                   className={`${spanClass} rounded-[2rem] p-1.5 bg-gradient-to-b from-white/10 via-white/[0.04] to-transparent border border-white/10 hover:border-[#D4AF37]/50 shadow-xl transition-all duration-500 cursor-pointer group flex flex-col hover:-translate-y-1`}
                 >
@@ -132,15 +121,15 @@ export const Gallery: React.FC = () => {
                     {/* Photography Image */}
                     <img 
                       loading="lazy" 
-                      decoding="async"
-                      width="600"
-                      height="450"
+                      decoding="async" 
+                      width="600" 
+                      height="450" 
                       src={img?.src} 
                       alt={img?.alt || "The Café Barrackpore Hospitality"}
                       className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                     />
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
@@ -149,64 +138,59 @@ export const Gallery: React.FC = () => {
       </div>
 
       {/* Luxury Fullscreen Lightbox Modal */}
-      <AnimatePresence>
-        {selectedPhoto && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[250] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 sm:p-8"
-            onClick={() => setSelectedPhoto(null)}
-          >
-            {/* Top Close Bar */}
-            <div className="absolute top-6 left-6 right-6 flex items-center justify-between text-on-surface z-30 max-w-5xl mx-auto w-full">
-              <div className="flex items-center gap-3">
-                <span className="font-sans text-xs uppercase tracking-widest text-primary font-semibold">
-                  0{selectedPhoto.index + 1} / 04
-                </span>
-                <span className="text-white/20">|</span>
-                <span className="font-sans text-xs uppercase tracking-wider text-on-surface/75">
-                  {selectedPhoto.data.tag}
-                </span>
-              </div>
-              <button 
-                onClick={() => setSelectedPhoto(null)}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-on-surface transition-colors cursor-pointer"
-                aria-label="Close photograph lightbox"
-              >
-                <span className="material-symbols-outlined text-lg">close</span>
-              </button>
+      {selectedPhoto && (
+        <div 
+          className="fixed inset-0 z-[250] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 sm:p-8 animate-fade-in transition-opacity duration-300"
+          onClick={() => setSelectedPhoto(null)}
+        >
+          {/* Top Close Bar */}
+          <div className="absolute top-6 left-6 right-6 flex items-center justify-between text-on-surface z-30 max-w-5xl mx-auto w-full">
+            <div className="flex items-center gap-3">
+              <span className="font-sans text-xs uppercase tracking-widest text-primary font-semibold">
+                0{selectedPhoto.index + 1} / 04
+              </span>
+              <span className="text-white/20">|</span>
+              <span className="font-sans text-xs uppercase tracking-wider text-on-surface/75">
+                {selectedPhoto.data.tag}
+              </span>
             </div>
-
-            {/* Modal Image Container with Double Bezel */}
-            <div 
-              className="relative max-w-4xl max-h-[75vh] rounded-[2rem] p-1.5 bg-gradient-to-b from-white/15 to-white/5 border border-[#D4AF37]/35 shadow-2xl bg-[#160E0A]"
-              onClick={(e) => e.stopPropagation()}
+            <button 
+              onClick={() => setSelectedPhoto(null)}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-on-surface transition-colors cursor-pointer"
+              aria-label="Close photograph lightbox"
             >
-              <div className="rounded-[calc(2rem-0.375rem)] overflow-hidden max-h-[calc(75vh-12px)]">
-                <img 
-                  src={selectedPhoto.data.src} 
-                  alt={selectedPhoto.data.alt} 
-                  width="1200"
-                  height="800"
-                  decoding="async"
-                  className="w-full h-full max-h-[75vh] object-contain"
-                />
-              </div>
-            </div>
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
 
-            {/* Modal Caption */}
-            <div className="mt-6 text-center max-w-xl z-30" onClick={(e) => e.stopPropagation()}>
-              <p className="font-serif text-lg sm:text-xl text-on-surface font-light">
-                {selectedPhoto.data.caption}
-              </p>
-              <p className="font-sans text-xs text-primary/80 mt-1 uppercase tracking-widest">
-                The Café Barrackpore
-              </p>
+          {/* Modal Image Container with Double Bezel */}
+          <div 
+            className="relative max-w-4xl max-h-[75vh] rounded-[2rem] p-1.5 bg-gradient-to-b from-white/15 to-white/5 border border-[#D4AF37]/35 shadow-2xl bg-[#160E0A]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="rounded-[calc(2rem-0.375rem)] overflow-hidden max-h-[calc(75vh-12px)]">
+              <img 
+                src={selectedPhoto.data.src} 
+                alt={selectedPhoto.data.alt} 
+                width="1200"
+                height="800"
+                decoding="async"
+                className="w-full h-full max-h-[75vh] object-contain"
+              />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+
+          {/* Modal Caption */}
+          <div className="mt-6 text-center max-w-xl z-30" onClick={(e) => e.stopPropagation()}>
+            <p className="font-serif text-lg sm:text-xl text-on-surface font-light">
+              {selectedPhoto.data.caption}
+            </p>
+            <p className="font-sans text-xs text-primary/80 mt-1 uppercase tracking-widest">
+              The Café Barrackpore
+            </p>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

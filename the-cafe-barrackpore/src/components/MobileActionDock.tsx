@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
 import { clientDetails } from '../config/client';
@@ -50,16 +49,12 @@ export const MobileActionDock: React.FC = () => {
   };
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.aside
-          initial={{ y: 80, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 80, opacity: 0 }}
-          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="lg:hidden fixed bottom-4 inset-x-4 z-40 max-w-[420px] mx-auto pointer-events-auto"
-          aria-label="Mobile Quick Actions"
-        >
+    <aside
+      className={`lg:hidden fixed bottom-4 inset-x-4 z-40 max-w-[420px] mx-auto pointer-events-auto transition-all duration-300 ease-out transform ${
+        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'
+      }`}
+      aria-label="Mobile Quick Actions"
+    >
           {/* Double-Bezel Floating Glass Island Container */}
           <div className="p-1 rounded-full bg-gradient-to-r from-[#D4AF37]/40 via-white/10 to-[#D4AF37]/40 shadow-[0_12px_40px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
             <div className="flex items-center justify-between px-2 py-2 rounded-full bg-[#120B08]/92 border border-white/10 backdrop-blur-2xl">
@@ -165,8 +160,6 @@ export const MobileActionDock: React.FC = () => {
 
             </div>
           </div>
-        </motion.aside>
-      )}
-    </AnimatePresence>
+        </aside>
   );
 };

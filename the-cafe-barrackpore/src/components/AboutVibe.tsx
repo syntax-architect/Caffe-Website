@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { useSiteConfig } from '../context/SiteConfigContext';
 
 export const AboutVibe: React.FC = () => {
@@ -92,41 +91,23 @@ export const AboutVibe: React.FC = () => {
         
         {/* Top: Editorial Narrative */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-12 mb-20 lg:mb-32 relative z-10">
-          <motion.h2 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="font-sans text-5xl lg:text-7xl xl:text-8xl text-[#F5F2F0] font-medium tracking-tighter leading-[0.9]"
-          >
+          <h2 className="font-sans text-5xl lg:text-7xl xl:text-8xl text-[#F5F2F0] font-medium tracking-tighter leading-[0.9]">
             The <br className="hidden sm:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] italic font-serif pr-2">Atmosphere.</span>
-          </motion.h2>
+          </h2>
           
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="font-sans text-lg text-[#E3DACD]/60 max-w-[40ch] leading-relaxed font-light"
-          >
+          <p className="font-sans text-lg text-[#E3DACD]/60 max-w-[40ch] leading-relaxed font-light">
             Inspired by British-colonial vintage charms blended with a nocturnal lounge glow, our tufted sapphire velvet booths and golden filament fixtures create an intimate sanctuary for relaxed sophistication.
-          </motion.p>
+          </p>
         </div>
 
         {/* The Asymmetrical Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 relative z-10">
           
           {/* Main Visual Cell (Tall Portrait) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="md:col-span-5 md:row-span-2 p-2 rounded-[2rem] lg:rounded-[2.5rem] bg-white/[0.02] border border-white/5 shadow-2xl backdrop-blur-sm"
-          >
+          <div className="md:col-span-5 md:row-span-2 p-2 rounded-[2rem] lg:rounded-[2.5rem] bg-white/[0.02] border border-white/5 shadow-2xl backdrop-blur-sm">
             <div className="relative w-full h-full min-h-[400px] lg:min-h-[600px] rounded-[calc(2rem-0.5rem)] lg:rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-[#0a0807] group">
-              <motion.img 
+              <img 
                 loading="lazy" 
                 decoding="async" 
                 fetchPriority="low"
@@ -140,22 +121,16 @@ export const AboutVibe: React.FC = () => {
                 <span className="block font-serif text-2xl text-white italic">Private Velvet Booths</span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Top Right Cell (Audio Lounge & Metrics) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="md:col-span-7 p-2 rounded-[2rem] lg:rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-sm"
-          >
+          <div className="md:col-span-7 p-2 rounded-[2rem] lg:rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-sm">
             <div className="relative w-full h-full p-8 lg:p-12 rounded-[calc(2rem-0.5rem)] lg:rounded-[calc(2.5rem-0.5rem)] bg-gradient-to-br from-[#1C120D] to-[#0a0807] border border-white/[0.05] flex flex-col justify-between gap-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <button 
                     onClick={toggleAudio}
-                    className="w-14 h-14 rounded-full bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] transition-all duration-500 hover:scale-105 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/20"
+                    className="w-14 h-14 rounded-full bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] transition-all duration-500 hover:scale-105 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/20 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[24px]">{isPlaying ? 'pause' : 'play_arrow'}</span>
                   </button>
@@ -185,18 +160,12 @@ export const AboutVibe: React.FC = () => {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Bottom Right Cell 1 (Image) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="md:col-span-3 lg:col-span-4 p-2 rounded-[2rem] bg-white/[0.02] border border-white/5 backdrop-blur-sm"
-          >
+          <div className="md:col-span-3 lg:col-span-4 p-2 rounded-[2rem] bg-white/[0.02] border border-white/5 backdrop-blur-sm">
             <div className="relative w-full h-[300px] lg:h-[400px] rounded-[calc(2rem-0.5rem)] overflow-hidden bg-[#0a0807] group">
-              <motion.img 
+              <img 
                 loading="lazy" 
                 decoding="async" 
                 fetchPriority="low"
@@ -210,18 +179,12 @@ export const AboutVibe: React.FC = () => {
                 <span className="block font-sans text-sm text-white font-light">Iconic Neon Accents</span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Bottom Right Cell 2 (Image) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="md:col-span-4 lg:col-span-3 p-2 rounded-[2rem] bg-white/[0.02] border border-white/5 backdrop-blur-sm"
-          >
+          <div className="md:col-span-4 lg:col-span-3 p-2 rounded-[2rem] bg-white/[0.02] border border-white/5 backdrop-blur-sm">
             <div className="relative w-full h-[300px] lg:h-[400px] rounded-[calc(2rem-0.5rem)] overflow-hidden bg-[#0a0807] group">
-              <motion.img 
+              <img 
                 loading="lazy" 
                 decoding="async" 
                 fetchPriority="low"
@@ -235,7 +198,7 @@ export const AboutVibe: React.FC = () => {
                 <span className="block font-sans text-sm text-white font-light">Curated Plating</span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
         </div>
       </div>

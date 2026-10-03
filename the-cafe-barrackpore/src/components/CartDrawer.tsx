@@ -73,6 +73,17 @@ export const CartDrawer: React.FC = () => {
 
   const drawerRef = useFocusTrap(isDrawerOpen, handleCloseDrawer);
 
+  // Lock body scroll while cart drawer is open
+  useEffect(() => {
+    if (isDrawerOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isDrawerOpen]);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -784,7 +795,8 @@ export const CartDrawer: React.FC = () => {
             {/* STEP 1: CART ITEMS */}
             {activeStep === 'cart' && (
               <>
-                <div className="flex-1 overflow-y-auto min-h-0 p-5 sm:p-6 flex flex-col gap-3 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto min-h-0 p-5 sm:p-6 flex flex-col gap-3 custom-scrollbar overscroll-contain"
+                  data-lenis-prevent>
                   {items.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-on-surface/60 gap-4 py-16">
                       <div className="w-16 h-16 rounded-full bg-[#1C120D] border border-[#D4AF37]/25 flex items-center justify-center text-primary shadow-[0_0_20px_rgba(212,175,55,0.15)]">
@@ -932,7 +944,8 @@ export const CartDrawer: React.FC = () => {
             {/* STEP 2: CHECKOUT DETAILS FORM */}
             {activeStep === 'details' && (
               <form onSubmit={handleProceedToReview} className="flex-1 flex flex-col min-h-0">
-                <div className="flex-1 overflow-y-auto p-5 sm:p-6 flex flex-col gap-4 custom-scrollbar bg-[#130C08]">
+                <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-6 flex flex-col gap-4 custom-scrollbar bg-[#130C08] overscroll-contain"
+                  data-lenis-prevent>
                   {/* Customer Name */}
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="checkout-name" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">

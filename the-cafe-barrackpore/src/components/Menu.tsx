@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import { useDevice } from '../hooks/useDevice';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
@@ -40,8 +39,7 @@ export const Menu: React.FC = () => {
   const [isVegOnly, setIsVegOnly] = useState(false);
 
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const { isTouchDevice } = useDevice();
   const { addToCart } = useCart();
   const { showToast } = useUI();
@@ -110,19 +108,16 @@ export const Menu: React.FC = () => {
 
   // Handle global mouse move when an image is hovered (desktop only)
   useEffect(() => {
+    if (!hoveredImage || isTouchDevice) return;
     const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
+      setMousePos({ x: e.clientX, y: e.clientY });
     };
 
-    if (hoveredImage && !isTouchDevice) {
-      window.addEventListener('mousemove', handleMouseMove);
-    }
-
+    window.addEventListener('mousemove', handleMouseMove);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [hoveredImage, isTouchDevice, mouseX, mouseY]);
+  }, [hoveredImage, isTouchDevice]);
 
   const activeCategoryObj =
     categories.find((c) => c.id === activeCategoryId) || categories[0];
@@ -145,35 +140,23 @@ export const Menu: React.FC = () => {
     <section className="w-full py-16 md:py-24 bg-background scroll-mt-28" id="menu-section">
       <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12 flex flex-col gap-8 md:gap-12 relative">
         {/* Floating Image (Desktop Only) */}
-        <AnimatePresence>
-          {hoveredImage && (
-            <motion.img
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              src={hoveredImage}
-              loading="lazy"
-              decoding="async"
-              width="256"
-              height="256"
-              alt="Menu Preview"
-              className="hidden lg:block fixed z-[100] w-64 h-64 object-cover rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 pointer-events-none"
-              style={{
-                left: mouseX,
-                top: mouseY,
-                x: '20px',
-                y: '20px',
-              }}
-            />
-          )}
-        </AnimatePresence>
+        {hoveredImage && (
+          <img
+            src={hoveredImage}
+            loading="lazy"
+            decoding="async"
+            width="256"
+            height="256"
+            alt="Menu Preview"
+            className="hidden lg:block fixed z-[100] w-64 h-64 object-cover rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 pointer-events-none transition-transform duration-75 animate-fade-in"
+            style={{
+              left: `${mousePos.x + 20}px`,
+              top: `${mousePos.y + 20}px`,
+            }}
+          />
+        )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.6 }}
+        <div
           className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8"
         >
           <div>
@@ -217,16 +200,10 @@ export const Menu: React.FC = () => {
                     : 'bg-white/5 border-white/10'
                 }`}
               >
-                <motion.div
-                  layout
-                  className={`w-4 h-4 rounded-full shadow-sm ${
-                    isVegOnly ? 'bg-emerald-400' : 'bg-on-surface/50'
+                <div
+                  className={`w-4 h-4 rounded-full shadow-sm transition-transform duration-200 ease-out ${
+                    isVegOnly ? 'bg-emerald-400 translate-x-5' : 'bg-on-surface/50 translate-x-0'
                   }`}
-                  initial={false}
-                  animate={{
-                    x: isVegOnly ? 20 : 0,
-                  }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               </button>
             </div>
@@ -260,22 +237,19 @@ export const Menu: React.FC = () => {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Category Narrative Lead */}
         {CATEGORY_DESCRIPTIONS[activeCategoryName] && (
-          <motion.div
+          <div
             key={activeCategoryName}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="flex items-center gap-3 -mt-4 mb-1"
+            className="flex items-center gap-3 -mt-4 mb-1 animate-fade-in"
           >
             <span className="w-8 h-[1px] bg-primary/40 hidden sm:block" />
             <p className="font-serif italic text-sm sm:text-base text-primary/85 font-light">
               {CATEGORY_DESCRIPTIONS[activeCategoryName]}
             </p>
-          </motion.div>
+          </div>
         )}
 
         {isLoading ? (
@@ -288,35 +262,25 @@ export const Menu: React.FC = () => {
             ))}
           </div>
         ) : (
-          <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-            <AnimatePresence mode="popLayout">
-              {displayedMenu.map((item) => {
-                const itemAvailable = item.available && isAvailable(item.id);
-                const displayImage = item.image_url || item.image;
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {displayedMenu.map((item) => {
+              const itemAvailable = item.available && isAvailable(item.id);
+              const displayImage = item.image_url || item.image;
 
-                return (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    whileHover={
-                      itemAvailable
-                        ? { y: -5, transition: { duration: 0.25, ease: 'easeOut' } }
-                        : undefined
-                    }
-                    transition={{ duration: 0.35, ease: 'easeOut' }}
-                    key={item.id}
-                    onMouseEnter={() => {
-                      if (isTouchDevice || !displayImage) return;
-                      setHoveredImage(displayImage);
-                    }}
-                    onMouseLeave={() => setHoveredImage(null)}
-                    className={`relative p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-[#1C120D] via-[#160E0A] to-[#120B08] border border-[#8B6B23]/35 hover:border-[#D4AF37] shadow-lg hover:shadow-[0_12px_32px_rgba(212,175,55,0.18)] transition-all duration-300 group flex flex-col justify-between gap-3.5 sm:gap-4 overflow-hidden active:scale-[0.99] ${
-                      itemAvailable
-                        ? 'cursor-pointer'
-                        : 'opacity-65 grayscale-[30%] bg-[#130B07] border-stone-800/60'
-                    }`}
-                  >
+              return (
+                <div
+                  key={item.id}
+                  onMouseEnter={() => {
+                    if (isTouchDevice || !displayImage) return;
+                    setHoveredImage(displayImage);
+                  }}
+                  onMouseLeave={() => setHoveredImage(null)}
+                  className={`relative p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-[#1C120D] via-[#160E0A] to-[#120B08] border border-[#8B6B23]/35 hover:border-[#D4AF37] shadow-lg hover:shadow-[0_12px_32px_rgba(212,175,55,0.18)] transition-all duration-300 group flex flex-col justify-between gap-3.5 sm:gap-4 overflow-hidden active:scale-[0.99] hover:-translate-y-1 ${
+                    itemAvailable
+                      ? 'cursor-pointer'
+                      : 'opacity-65 grayscale-[30%] bg-[#130B07] border-stone-800/60'
+                  }`}
+                >
                     {/* Top Subtle Amber Glow Line on Hover */}
                     <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37]/0 group-hover:via-[#D4AF37]/80 to-transparent transition-all duration-500 pointer-events-none" />
 
@@ -450,14 +414,12 @@ export const Menu: React.FC = () => {
                         {formatPrice(item.price)}
                       </div>
 
-                      <motion.button
-                        whileHover={itemAvailable ? { scale: 1.05 } : undefined}
-                        whileTap={itemAvailable ? { scale: 0.92 } : undefined}
+                      <button
                         disabled={!itemAvailable}
                         type="button"
-                        className={`h-8 px-4 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all duration-200 ${
+                        className={`h-8 px-4 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 ${
                           itemAvailable
-                            ? 'bg-primary/10 hover:bg-primary text-primary hover:text-[#18110c] border border-primary/30 hover:border-primary shadow-sm hover:shadow-[0_2px_12px_rgba(212,175,55,0.35)] cursor-pointer'
+                            ? 'bg-primary/10 hover:bg-primary text-primary hover:text-[#18110c] border border-primary/30 hover:border-primary shadow-sm hover:shadow-[0_2px_12px_rgba(212,175,55,0.35)] cursor-pointer hover:scale-105'
                             : 'bg-stone-900 border border-stone-800 text-stone-500 cursor-not-allowed'
                         }`}
                         title={
@@ -493,24 +455,20 @@ export const Menu: React.FC = () => {
                           {itemAvailable ? 'add' : 'block'}
                         </span>
                         <span>{itemAvailable ? 'Add' : 'Sold Out'}</span>
-                      </motion.button>
+                      </button>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
-            </AnimatePresence>
-          </motion.div>
+          </div>
         )}
 
         {!isLoading && (hasMore || visibleCount > 6) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <div
             className="flex justify-center gap-4 mt-6 md:mt-8"
           >
             {visibleCount > 6 && (
-              <motion.button
-                whileTap={{ scale: 0.96 }}
+              <button
                 type="button"
                 onClick={() => {
                   setVisibleCount(6);
@@ -520,23 +478,22 @@ export const Menu: React.FC = () => {
                     window.scrollTo({ top: y, behavior: 'smooth' });
                   }
                 }}
-                className="h-11 px-7 rounded-full border border-white/20 text-on-surface/80 hover:bg-white/5 hover:text-white transition-all text-xs font-sans font-semibold tracking-wider uppercase cursor-pointer"
+                className="h-11 px-7 rounded-full border border-white/20 text-on-surface/80 hover:bg-white/5 hover:text-white transition-all text-xs font-sans font-semibold tracking-wider uppercase cursor-pointer active:scale-95"
               >
                 Show Less
-              </motion.button>
+              </button>
             )}
 
             {hasMore && (
-              <motion.button
-                whileTap={{ scale: 0.96 }}
+              <button
                 type="button"
                 onClick={() => setVisibleCount((prev) => prev + 6)}
-                className="h-11 px-7 rounded-full btn-outline-premium text-xs font-semibold cursor-pointer"
+                className="h-11 px-7 rounded-full btn-outline-premium text-xs font-semibold cursor-pointer active:scale-95"
               >
                 Load More Items
-              </motion.button>
+              </button>
             )}
-          </motion.div>
+          </div>
         )}
 
         {!isLoading && filteredMenu.length === 0 && (

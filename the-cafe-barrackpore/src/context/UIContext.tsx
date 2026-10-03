@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback, useMemo, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useCartSafe } from './CartContext';
 
 export type ToastType = 'success' | 'info' | 'warning' | 'error';
@@ -147,25 +146,13 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({
     cartCount > 0;
 
   return (
-    <motion.aside
+    <aside
       role="status"
       aria-live="polite"
       key={toast.id}
-      initial={{ opacity: 0, y: 24, scale: 0.94 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 16, scale: 0.95 }}
-      transition={{ type: 'spring', stiffness: 420, damping: 26 }}
-      drag="y"
-      dragConstraints={{ top: 0, bottom: 0 }}
-      dragElastic={{ top: 0.05, bottom: 0.6 }}
-      onDragEnd={(_e, info) => {
-        if (info.offset.y > 35 || info.velocity.y > 250) {
-          onDismiss();
-        }
-      }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`fixed left-4 right-4 sm:left-auto sm:right-6 max-w-sm sm:max-w-[390px] mx-auto sm:mx-0 z-[125] pointer-events-auto touch-manipulation ${
+      className={`fixed left-4 right-4 sm:left-auto sm:right-6 max-w-sm sm:max-w-[390px] mx-auto sm:mx-0 z-[125] pointer-events-auto touch-manipulation transition-all duration-300 ease-out animate-fade-in ${
         isQrPageWithCart
           ? 'bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-28'
           : 'bottom-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] sm:bottom-6'
@@ -250,7 +237,7 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({
           />
         </div>
       </div>
-    </motion.aside>
+    </aside>
   );
 };
 
@@ -300,63 +287,52 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
       {children}
 
       {/* Refined Luxury Toast Notification */}
-      <AnimatePresence>
-        {activeToast && !cart?.isDrawerOpen && (
-          <ToastNotification
-            toast={activeToast}
-            onDismiss={dismissToast}
-            cartCount={cart?.cartCount ?? 0}
-            onOpenCart={() => cart?.setIsDrawerOpen(true)}
-          />
-        )}
-      </AnimatePresence>
+      {activeToast && !cart?.isDrawerOpen && (
+        <ToastNotification
+          toast={activeToast}
+          onDismiss={dismissToast}
+          cartCount={cart?.cartCount ?? 0}
+          onOpenCart={() => cart?.setIsDrawerOpen(true)}
+        />
+      )}
 
       {/* Modal */}
-      <AnimatePresence>
-        {modalState.isOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[140] bg-black/70 backdrop-blur-xs"
-              onClick={closeModal}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: '-45%', x: '-50%' }}
-              animate={{ opacity: 1, scale: 1, y: '-50%', x: '-50%' }}
-              exit={{ opacity: 0, scale: 0.95, y: '-45%', x: '-50%' }}
-              className="fixed top-1/2 left-1/2 z-[150] w-full max-w-md p-space-lg rounded-2xl bg-surface-container-low border border-outline-variant/30 shadow-2xl flex flex-col gap-space-md"
-              style={{ x: '-50%', y: '-50%' }}
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="font-headline-md text-on-surface font-bold">
-                  {modalState.title}
-                </h3>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
-                >
-                  <span className="material-symbols-outlined text-xl">close</span>
-                </button>
-              </div>
-              <div className="font-body-md text-on-surface-variant leading-relaxed">
-                {modalState.content}
-              </div>
-              <div className="flex justify-end pt-space-sm border-t border-outline-variant/20 mt-space-sm">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-space-md py-2 rounded-xl bg-primary text-on-primary font-label-md font-semibold hover:shadow-lg transition-all"
-                >
-                  Got it
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      {modalState.isOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[140] bg-black/70 backdrop-blur-xs animate-fade-in"
+            onClick={closeModal}
+          />
+          <div
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[150] w-full max-w-md p-space-lg rounded-2xl bg-surface-container-low border border-outline-variant/30 shadow-2xl flex flex-col gap-space-md animate-fade-in"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-headline-md text-on-surface font-bold">
+                {modalState.title}
+              </h3>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+            <div className="font-body-md text-on-surface-variant leading-relaxed">
+              {modalState.content}
+            </div>
+            <div className="flex justify-end pt-space-sm border-t border-outline-variant/20 mt-space-sm">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="px-space-md py-2 rounded-xl bg-primary text-on-primary font-label-md font-semibold hover:shadow-lg transition-all cursor-pointer"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </UIContext.Provider>
   );
 };

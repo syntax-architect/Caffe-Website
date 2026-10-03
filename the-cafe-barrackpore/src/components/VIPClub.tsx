@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export const VIPClub: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -35,11 +34,7 @@ export const VIPClub: React.FC = () => {
       <div className="max-w-[1120px] mx-auto px-4 sm:px-6 relative z-10">
         
         {/* Double-Bezel Gold Foil Master Shell with Machined Luxury Depth */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        <div
           className="group relative rounded-[2.5rem] p-1.5 sm:p-2 bg-gradient-to-b from-[#D4AF37]/55 via-[#F3E5AB]/30 to-[#D4AF37]/50 shadow-[0_35px_90px_rgba(0,0,0,0.95),0_0_50px_rgba(212,175,55,0.18)] ring-1 ring-white/15"
         >
           {/* Inner Core Enclosure with Integrated Photographic Speakeasy Atmosphere */}
@@ -130,66 +125,61 @@ export const VIPClub: React.FC = () => {
 
             {/* 6. Subscription Form & Interactive States */}
             <div className="relative z-10 w-full max-w-md mt-1">
-              <AnimatePresence mode="wait">
-                {isSubscribed ? (
-                  <motion.div 
-                    key="subscribed"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="flex flex-col items-center gap-2.5 p-6 sm:p-8 rounded-2xl bg-gradient-to-b from-[#1C120B]/95 to-[#100906]/95 border border-[#D4AF37]/50 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(212,175,55,0.2)] backdrop-blur-xl"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-primary shadow-inner">
-                      <span className="material-symbols-outlined text-2xl font-light">verified</span>
+              {isSubscribed ? (
+                <div 
+                  key="subscribed"
+                  className="flex flex-col items-center gap-2.5 p-6 sm:p-8 rounded-2xl bg-gradient-to-b from-[#1C120B]/95 to-[#100906]/95 border border-[#D4AF37]/50 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(212,175,55,0.2)] backdrop-blur-xl transition-all duration-300 animate-fade-in"
+                >
+                  <div className="w-12 h-12 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] flex items-center justify-center text-primary shadow-inner">
+                    <span className="material-symbols-outlined text-2xl font-light">verified</span>
+                  </div>
+                  <h3 className="font-serif text-xl sm:text-2xl text-[#FAF6F0] font-normal">Welcome to the Inner Circle</h3>
+                  <p className="font-sans text-xs text-[#FAF6F0]/80 font-light max-w-xs">
+                    Your invitation has been recorded. Discreet seasonal invitations will arrive in your private inbox.
+                  </p>
+                </div>
+              ) : (
+                <form 
+                  key="form"
+                  className="w-full flex flex-col sm:flex-row gap-3 items-center" 
+                  onSubmit={handleSubmit}
+                >
+                  <div className="flex-1 w-full relative group/input">
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#FAF6F0]/50 group-focus-within/input:text-[#E5C158] transition-colors">
+                      <span className="material-symbols-outlined text-base font-light">mail</span>
                     </div>
-                    <h3 className="font-serif text-xl sm:text-2xl text-[#FAF6F0] font-normal">Welcome to the Inner Circle</h3>
-                    <p className="font-sans text-xs text-[#FAF6F0]/80 font-light max-w-xs">
-                      Your invitation has been recorded. Discreet seasonal invitations will arrive in your private inbox.
-                    </p>
-                  </motion.div>
-                ) : (
-                  <form 
-                    key="form"
-                    className="w-full flex flex-col sm:flex-row gap-3 items-center" 
-                    onSubmit={handleSubmit}
+                    <input 
+                      type="email" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your private email" 
+                      required
+                      className="w-full h-12 bg-[#090503]/90 border border-white/25 focus:border-[#D4AF37] ring-1 ring-transparent focus:ring-[#D4AF37]/50 rounded-full pl-12 pr-5 text-sm text-[#FAF6F0] placeholder:text-[#FAF6F0]/40 focus:outline-none transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] backdrop-blur-md"
+                      aria-label="Email address for Inner Circle"
+                    />
+                  </div>
+                  
+                  {/* Island Button-in-Button Submission CTA */}
+                  <button 
+                    type="submit"
+                    disabled={isLoading}
+                    className="group/btn w-full sm:w-auto h-12 pl-7 pr-2.5 rounded-full bg-gradient-to-r from-primary via-[#E5C158] to-primary hover:brightness-110 active:scale-[0.98] text-[#120B07] text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 flex items-center justify-between gap-3 shadow-[0_4px_22px_rgba(212,175,55,0.35)] hover:shadow-[0_8px_32px_rgba(212,175,55,0.55)] disabled:opacity-70 cursor-pointer shrink-0"
                   >
-                    <div className="flex-1 w-full relative group/input">
-                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#FAF6F0]/50 group-focus-within/input:text-[#E5C158] transition-colors">
-                        <span className="material-symbols-outlined text-base font-light">mail</span>
-                      </div>
-                      <input 
-                        type="email" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your private email" 
-                        required
-                        className="w-full h-12 bg-[#090503]/90 border border-white/25 focus:border-[#D4AF37] ring-1 ring-transparent focus:ring-[#D4AF37]/50 rounded-full pl-12 pr-5 text-sm text-[#FAF6F0] placeholder:text-[#FAF6F0]/40 focus:outline-none transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] backdrop-blur-md"
-                        aria-label="Email address for Inner Circle"
-                      />
-                    </div>
-                    
-                    {/* Island Button-in-Button Submission CTA */}
-                    <button 
-                      type="submit"
-                      disabled={isLoading}
-                      className="group/btn w-full sm:w-auto h-12 pl-7 pr-2.5 rounded-full bg-gradient-to-r from-primary via-[#E5C158] to-primary hover:brightness-110 active:scale-[0.98] text-[#120B07] text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 flex items-center justify-between gap-3 shadow-[0_4px_22px_rgba(212,175,55,0.35)] hover:shadow-[0_8px_32px_rgba(212,175,55,0.55)] disabled:opacity-70 cursor-pointer shrink-0"
-                    >
-                      {isLoading ? (
-                        <span className="w-5 h-5 border-2 border-[#120B07] border-t-transparent rounded-full animate-spin mx-auto" />
-                      ) : (
-                        <>
-                          <span>Join Privileges</span>
-                          <div className="w-8 h-8 rounded-full bg-[#120B07]/15 group-hover/btn:bg-[#120B07]/25 flex items-center justify-center transition-all duration-300 group-hover/btn:translate-x-1">
-                            <span className="material-symbols-outlined text-[17px] text-[#120B07]">
-                              arrow_forward
-                            </span>
-                          </div>
-                        </>
-                      )}
-                    </button>
-                  </form>
-                )}
-              </AnimatePresence>
+                    {isLoading ? (
+                      <span className="w-5 h-5 border-2 border-[#120B07] border-t-transparent rounded-full animate-spin mx-auto" />
+                    ) : (
+                      <>
+                        <span>Join Privileges</span>
+                        <div className="w-8 h-8 rounded-full bg-[#120B07]/15 group-hover/btn:bg-[#120B07]/25 flex items-center justify-center transition-all duration-300 group-hover/btn:translate-x-1">
+                          <span className="material-symbols-outlined text-[17px] text-[#120B07]">
+                            arrow_forward
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
             </div>
 
             {/* 7. Discreet Trust & Hospitality Badge */}
@@ -199,7 +189,7 @@ export const VIPClub: React.FC = () => {
             </div>
 
           </div>
-        </motion.div>
+        </div>
 
       </div>
     </section>
