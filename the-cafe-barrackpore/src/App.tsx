@@ -89,7 +89,9 @@ function App() {
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
-    window.scrollTo(0, 0);
+    if (typeof window !== 'undefined' && window.scrollY > 0) {
+      window.scrollTo(0, 0);
+    }
   }, []);
 
   useEffect(() => {

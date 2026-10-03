@@ -11,26 +11,8 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('node_modules')) {
             const normalized = id.replace(/\\/g, '/');
-            if (
-              normalized.includes('/react/') ||
-              normalized.includes('/react-dom/') ||
-              normalized.includes('/scheduler/') ||
-              normalized.includes('/react-is/')
-            ) {
-              return 'vendor-react';
-            }
-            if (
-              normalized.includes('framer-motion') ||
-              normalized.includes('motion-dom') ||
-              normalized.includes('motion-utils')
-            ) {
-              return 'vendor-framer';
-            }
             if (normalized.includes('@supabase')) return 'vendor-supabase';
             if (normalized.includes('lenis')) return 'vendor-lenis';
-            if (normalized.includes('dompurify')) return 'vendor-dompurify';
-            if (normalized.includes('qrcode')) return 'vendor-qrcode';
-            return 'vendor';
           }
         }
       }

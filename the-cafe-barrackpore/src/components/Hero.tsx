@@ -37,7 +37,7 @@ export const Hero: React.FC = React.memo(() => {
       >
         <div className="relative w-full h-full">
           <picture>
-            <source media="(max-width: 768px)" srcSet="/images/hero-bar-mobile.webp" type="image/webp" />
+            <source media="(max-width: 768px)" srcSet="/images/hero-bar-mobile.webp" type="image/webp" width="640" height="357" />
             <img
               src={heroImageSrc}
               alt={heroImageAlt}
@@ -45,6 +45,7 @@ export const Hero: React.FC = React.memo(() => {
               height="800"
               className="w-full h-full object-cover object-[70%_center] lg:object-center filter brightness-[0.94] contrast-[1.08] saturate-[1.08]"
               loading="eager"
+              decoding="async"
             />
           </picture>
 
