@@ -94,22 +94,13 @@ export const Menu: React.FC = () => {
       }
     };
 
-    // Defer loading dynamic menu until menu section approaches viewport (within 400px)
-    const menuEl = document.getElementById('menu-section');
-    if (typeof window !== 'undefined' && 'IntersectionObserver' in window && menuEl) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries[0]?.isIntersecting) {
-            initDataAndRealtime();
-            observer.disconnect();
-          }
-        },
-        { rootMargin: '400px 0px' }
-      );
-      observer.observe(menuEl);
-    } else {
-      initDataAndRealtime();
+    const isPublicPage = typeof window !== 'undefined' && !window.location.pathname.startsWith('/staff');
+    if (isPublicPage) {
+      return;
     }
+
+    // On staff management routes, load dynamic menu and subscribe to realtime updates
+    initDataAndRealtime();
 
     return () => {
       isMounted = false;

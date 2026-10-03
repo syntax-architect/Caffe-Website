@@ -15,7 +15,6 @@ import { VIPClub } from './components/VIPClub';
 import { SpecialsBanner } from './components/SpecialsBanner';
 import { Menu } from './components/Menu';
 import { Footer } from './components/Footer';
-import { Preloader } from './components/Preloader';
 
 // Code-split heavy interactive modal overlays (only fetched when user opens them or on idle)
 const CartDrawer = lazy(() => import('./components/CartDrawer').then(module => ({ default: module.CartDrawer })));
@@ -25,11 +24,9 @@ const CookieConsent = lazy(() => import('./components/CookieConsent').then(modul
 export const AppLayout: React.FC = () => {
   const { isDrawerOpen } = useCart();
   const { isReservationOpen } = useUI();
-  const [mounted, setMounted] = useState(false);
   const [showConsent, setShowConsent] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const triggerConsent = () => setShowConsent(true);
     window.addEventListener('scroll', triggerConsent, { once: true, passive: true });
     window.addEventListener('pointerdown', triggerConsent, { once: true, passive: true });
@@ -43,7 +40,6 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen">
-      <Preloader />
       <Header />
       <main id="main-content" className="w-full pt-20">
         {/* Ambient Golden Mesh Lighting - Hidden on mobile to save GPU */}
@@ -65,8 +61,8 @@ export const AppLayout: React.FC = () => {
         <Footer />
       </ErrorBoundary>
 
-      {/* Overlays mounted strictly after hydration to keep initial critical path zero-overhead */}
-      {mounted && (
+      {/* Overlays mounted strictly on demand to keep critical path zero-overhead */}
+      {(isDrawerOpen || isReservationOpen || showConsent) && (
         <Suspense fallback={null}>
           {isDrawerOpen && <CartDrawer />}
           {isReservationOpen && <ReservationDrawer />}
@@ -89,21 +85,11 @@ export const AppLayout: React.FC = () => {
 
 function App() {
   useEffect(() => {
-    // Prevent browser from restoring scroll position on reload
+    // Scroll to top on fresh load
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
     window.scrollTo(0, 0);
-
-    // Defer drawer prefetch until user interacts or long idle to keep initial network completely clear
-    const prefetchDrawers = () => {
-      import('./components/CartDrawer');
-      import('./components/ReservationDrawer');
-    };
-    if (typeof window !== 'undefined') {
-      window.addEventListener('scroll', prefetchDrawers, { once: true, passive: true });
-      window.addEventListener('pointerdown', prefetchDrawers, { once: true, passive: true });
-    }
   }, []);
 
   useEffect(() => {

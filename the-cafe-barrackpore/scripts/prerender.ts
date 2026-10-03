@@ -64,11 +64,11 @@ async function prerender() {
     // Build head tags replacement starting from baseTemplate
     let pageHtml = baseTemplate;
 
-    // Optimize stylesheet priority: place at the very top of <head> with fetchpriority="high"
-    if (cssHref && cssMatch) {
+    // Inline compiled CSS directly into <head> to eliminate render-blocking network latency
+    if (cssHref && cssMatch && cssContent) {
       pageHtml = pageHtml.replace(cssMatch[0], '');
-      const priorityLink = `<link rel="stylesheet" crossorigin href="${cssHref}" fetchpriority="high">`;
-      pageHtml = pageHtml.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n    ${priorityLink}`);
+      const inlinedStyles = `<style id="critical-app-css">${cssContent}</style>`;
+      pageHtml = pageHtml.replace('</head>', `    ${inlinedStyles}\n  </head>`);
     }
 
     // 1. Replace document title

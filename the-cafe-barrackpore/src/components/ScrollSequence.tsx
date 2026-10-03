@@ -65,7 +65,7 @@ export const ScrollSequence: React.FC = () => {
       
       cachedWinWidth = newWidth;
       cachedWinHeight = newHeight;
-      const dpr = isMobileRef ? 1 : Math.min(window.devicePixelRatio || 1, 1.5); // Cap DPR at 1 on mobile to save GPU memory and eliminate throttling
+      const dpr = Math.min(window.devicePixelRatio || 1, 2); // Allow sharp retina rendering up to 2x DPR
       
       // Only set canvas dimensions if they actually changed to avoid clearing the context
       if (canvas.width !== cachedWinWidth * dpr || canvas.height !== cachedWinHeight * dpr) {
@@ -375,24 +375,25 @@ export const ScrollSequence: React.FC = () => {
   return (
     <section 
       id="scroll-sequence-section" 
-      className="relative w-full bg-background h-[calc(100dvh+700px)] lg:h-[calc(100vh+3200px)]"
+      className="relative w-full bg-background h-[calc(100dvh+500px)] lg:h-[calc(100vh+2000px)]"
     >
-      <div 
-        className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-black lg:[mask-image:radial-gradient(circle,black_40%,transparent_100%)] lg:[-webkit-mask-image:radial-gradient(circle,black_40%,transparent_100%)]"
-      >
-        {/* Canvas Frame Sequence (Used on both mobile and desktop) */}
+      <div className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-[#0a0807]">
+        {/* Canvas Frame Sequence with calibrated Golden Espresso tone */}
         <canvas 
           ref={canvasRef}
           id="scroll-video-canvas" 
-          className="absolute inset-0 w-full h-full opacity-60 transform-gpu will-change-transform lg:[filter:contrast(1.25)_brightness(0.9)_saturate(1.1)]"
+          className="absolute inset-0 w-full h-full opacity-100 transform-gpu will-change-transform contrast-[1.10] brightness-[0.98] saturate-[1.08] sepia-[0.14]"
         />
         
-        {/* Subtle noise overlay (desktop only to save mobile GPU/CPU) */}
-        <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-20 hidden md:block" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+        {/* Brand Palette Gold Tone Harmonizer */}
+        <div className="absolute inset-0 bg-[#D4AF37]/[0.04] pointer-events-none mix-blend-color" />
         
-        {/* Dark overlays to blend image into background */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-transparent" />
+        {/* Subtle cinematic 35mm grain overlay */}
+        <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-15 hidden md:block" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+        
+        {/* Seamless edge blending into deep espresso (#0a0807) */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#0a0807] from-0% via-[#0a0807]/30 via-15% to-transparent to-35%" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#0a0807] from-0% via-[#0a0807]/30 via-15% to-transparent to-35%" />
         
         {/* Floating text that appears during scroll */}
         <div className="relative z-10 max-w-[1400px] mx-auto px-6 w-full flex flex-col items-center justify-center text-center h-full">

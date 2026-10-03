@@ -3793,3 +3793,315 @@ ON CONFLICT (key) DO UPDATE
 SET value = EXCLUDED.value,
     updated_at = timezone('utc'::text, now());
 
+
+-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+-- START OF: 013_security_hardening.sql
+-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+-- ==============================================================================
+-- Migration: 013_security_hardening.sql
+-- Description:
+-- 1. In the orders SELECT policy, remove the anon condition. Only service_role
+--    and active staff of the same restaurant may SELECT orders and order_items.
+-- 2. Replace restaurant_tables and menu_item_availability "FOR ALL" policies:
+--    Anon gets SELECT only (active tables, availability).
+--    Only active owner/manager staff may INSERT/UPDATE/DELETE.
+--    Add WITH CHECK clauses to every policy that has USING.
+-- 3. REVOKE INSERT, UPDATE, DELETE on all public tables from anon.
+--    REVOKE ALL on orders, order_items, payments, staff_profiles, audit tables from anon.
+--    Re-GRANT only what the app needs.
+-- 4. Order references: generate with gen_random_uuid-based or 10+ character random codes,
+--    never sequential. In create_order_atomic, also generate a random payment_token,
+--    store only its hash on the order, and return the raw token once to the browser.
+-- 5. Helper RPC get_order_status_by_token for token-verified order status checks.
+-- 6. In create_order_atomic, ignore p_order.restaurant_id and read restaurant_id from
+--    restaurant_settings. Cap quantity 1-50. Revoke INSERT on orders and order_items from
+--    anon so only the RPC creates orders.
+-- ==============================================================================
+
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_token_hash TEXT;
+CREATE INDEX IF NOT EXISTS idx_orders_payment_token_hash ON public.orders (payment_token_hash);
+
+CREATE OR REPLACE FUNCTION public.generate_order_reference()
+RETURNS TEXT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_year TEXT := to_char(CURRENT_DATE, 'YYYY');
+    v_random_code TEXT;
+BEGIN
+    v_random_code := upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10));
+    RETURN 'CB-' || v_year || '-' || v_random_code;
+END;
+$$;
+
+DROP POLICY IF EXISTS "staff_select_orders_tenant" ON public.orders;
+DROP POLICY IF EXISTS "Active staff can view orders" ON public.orders;
+DROP POLICY IF EXISTS "staff_view_orders" ON public.orders;
+DROP POLICY IF EXISTS "public_select_orders" ON public.orders;
+
+CREATE POLICY "staff_select_orders_tenant"
+ON public.orders
+FOR SELECT
+TO authenticated, service_role
+USING (
+    COALESCE(auth.role(), '') = 'service_role'
+    OR (
+        restaurant_id = public.get_auth_restaurant_id()
+        AND public.is_active_staff(auth.uid())
+    )
+);
+
+DROP POLICY IF EXISTS "staff_select_order_items_tenant" ON public.order_items;
+DROP POLICY IF EXISTS "Active staff can view order_items" ON public.order_items;
+DROP POLICY IF EXISTS "staff_view_order_items" ON public.order_items;
+
+CREATE POLICY "staff_select_order_items_tenant"
+ON public.order_items
+FOR SELECT
+TO authenticated, service_role
+USING (
+    COALESCE(auth.role(), '') = 'service_role'
+    OR (
+        restaurant_id = public.get_auth_restaurant_id()
+        AND public.is_active_staff(auth.uid())
+    )
+);
+
+DROP POLICY IF EXISTS "staff_manage_tables_tenant" ON public.restaurant_tables;
+DROP POLICY IF EXISTS "public_read_restaurant_tables" ON public.restaurant_tables;
+DROP POLICY IF EXISTS "staff_manage_restaurant_tables" ON public.restaurant_tables;
+DROP POLICY IF EXISTS "anon_select_active_tables" ON public.restaurant_tables;
+DROP POLICY IF EXISTS "staff_select_tables" ON public.restaurant_tables;
+DROP POLICY IF EXISTS "owner_manager_insert_tables" ON public.restaurant_tables;
+DROP POLICY IF EXISTS "owner_manager_update_tables" ON public.restaurant_tables;
+DROP POLICY IF EXISTS "owner_manager_delete_tables" ON public.restaurant_tables;
+
+CREATE POLICY "anon_select_active_tables"
+ON public.restaurant_tables
+FOR SELECT
+TO anon
+USING (active = true);
+
+CREATE POLICY "staff_select_tables"
+ON public.restaurant_tables
+FOR SELECT
+TO authenticated, service_role
+USING (
+    COALESCE(auth.role(), '') = 'service_role'
+    OR (
+        restaurant_id = public.get_auth_restaurant_id()
+        AND public.is_active_staff(auth.uid())
+    )
+);
+
+CREATE POLICY "owner_manager_insert_tables"
+ON public.restaurant_tables
+FOR INSERT
+TO authenticated, service_role
+WITH CHECK (
+    COALESCE(auth.role(), '') = 'service_role'
+    OR (
+        restaurant_id = public.get_auth_restaurant_id()
+        AND EXISTS (
+            SELECT 1 FROM public.staff_profiles sp
+            WHERE sp.user_id = auth.uid()
+              AND sp.active = true
+              AND sp.role IN ('owner', 'manager')
+        )
+    )
+);
+
+CREATE POLICY "owner_manager_update_tables"
+ON public.restaurant_tables
+FOR UPDATE
+TO authenticated, service_role
+USING (
+    COALESCE(auth.role(), '') = 'service_role'
+    OR (
+        restaurant_id = public.get_auth_restaurant_id()
+        AND EXISTS (
+            SELECT 1 FROM public.staff_profiles sp
+            WHERE sp.user_id = auth.uid()
+              AND sp.active = true
+              AND sp.role IN ('owner', 'manager')
+        )
+    )
+)
+WITH CHECK (
+    COALESCE(auth.role(), '') = 'service_role'
+    OR (
+        restaurant_id = public.get_auth_restaurant_id()
+        AND EXISTS (
+            SELECT 1 FROM public.staff_profiles sp
+            WHERE sp.user_id = auth.uid()
+              AND sp.active = true
+              AND sp.role IN ('owner', 'manager')
+        )
+    )
+);
+
+CREATE POLICY "owner_manager_delete_tables"
+ON public.restaurant_tables
+FOR DELETE
+TO authenticated, service_role
+USING (
+    COALESCE(auth.role(), '') = 'service_role'
+    OR (
+        restaurant_id = public.get_auth_restaurant_id()
+        AND EXISTS (
+            SELECT 1 FROM public.staff_profiles sp
+            WHERE sp.user_id = auth.uid()
+              AND sp.active = true
+              AND sp.role IN ('owner', 'manager')
+        )
+    )
+);
+
+DROP POLICY IF EXISTS "staff_manage_availability_tenant" ON public.menu_item_availability;
+DROP POLICY IF EXISTS "public_read_menu_availability" ON public.menu_item_availability;
+DROP POLICY IF EXISTS "staff_manage_menu_availability" ON public.menu_item_availability;
+DROP POLICY IF EXISTS "anon_select_menu_availability" ON public.menu_item_availability;
+DROP POLICY IF EXISTS "staff_select_menu_availability" ON public.menu_item_availability;
+DROP POLICY IF EXISTS "owner_manager_insert_availability" ON public.menu_item_availability;
+DROP POLICY IF EXISTS "owner_manager_update_availability" ON public.menu_item_availability;
+DROP POLICY IF EXISTS "owner_manager_delete_availability" ON public.menu_item_availability;
+
+CREATE POLICY "anon_select_menu_availability"
+ON public.menu_item_availability
+FOR SELECT
+TO anon
+USING (true);
+
+CREATE POLICY "staff_select_menu_availability"
+ON public.menu_item_availability
+FOR SELECT
+TO authenticated, service_role
+USING (true);
+
+CREATE POLICY "owner_manager_insert_availability"
+ON public.menu_item_availability
+FOR INSERT
+TO authenticated, service_role
+WITH CHECK (
+    COALESCE(auth.role(), '') = 'service_role'
+    OR (
+        restaurant_id = public.get_auth_restaurant_id()
+        AND EXISTS (
+            SELECT 1 FROM public.staff_profiles sp
+            WHERE sp.user_id = auth.uid()
+              AND sp.active = true
+              AND sp.role IN ('owner', 'manager')
+        )
+    )
+);
+
+CREATE POLICY "owner_manager_update_availability"
+ON public.menu_item_availability
+FOR UPDATE
+TO authenticated, service_role
+USING (
+    COALESCE(auth.role(), '') = 'service_role'
+    OR (
+        restaurant_id = public.get_auth_restaurant_id()
+        AND EXISTS (
+            SELECT 1 FROM public.staff_profiles sp
+            WHERE sp.user_id = auth.uid()
+              AND sp.active = true
+              AND sp.role IN ('owner', 'manager')
+        )
+    )
+)
+WITH CHECK (
+    COALESCE(auth.role(), '') = 'service_role'
+    OR (
+        restaurant_id = public.get_auth_restaurant_id()
+        AND EXISTS (
+            SELECT 1 FROM public.staff_profiles sp
+            WHERE sp.user_id = auth.uid()
+              AND sp.active = true
+              AND sp.role IN ('owner', 'manager')
+        )
+    )
+);
+
+CREATE POLICY "owner_manager_delete_availability"
+ON public.menu_item_availability
+FOR DELETE
+TO authenticated, service_role
+USING (
+    COALESCE(auth.role(), '') = 'service_role'
+    OR (
+        restaurant_id = public.get_auth_restaurant_id()
+        AND EXISTS (
+            SELECT 1 FROM public.staff_profiles sp
+            WHERE sp.user_id = auth.uid()
+              AND sp.active = true
+              AND sp.role IN ('owner', 'manager')
+        )
+    )
+);
+
+REVOKE INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public FROM anon;
+
+REVOKE ALL ON TABLE public.orders FROM anon;
+REVOKE ALL ON TABLE public.order_items FROM anon;
+REVOKE ALL ON TABLE public.payments FROM anon;
+REVOKE ALL ON TABLE public.staff_profiles FROM anon;
+
+GRANT SELECT ON TABLE public.menu_categories TO anon;
+GRANT SELECT ON TABLE public.menu_items TO anon;
+GRANT SELECT ON TABLE public.site_content TO anon;
+GRANT SELECT ON TABLE public.restaurant_tables TO anon;
+GRANT SELECT ON TABLE public.menu_item_availability TO anon;
+GRANT SELECT ON TABLE public.restaurant_settings TO anon;
+
+GRANT EXECUTE ON FUNCTION public.create_order_atomic(JSONB, JSONB) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_reservation_atomic(JSONB) TO anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_order_status_by_token(
+    p_order_ref TEXT,
+    p_payment_token TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_order RECORD;
+    v_token_hash TEXT;
+BEGIN
+    IF p_order_ref IS NULL OR p_payment_token IS NULL OR trim(p_payment_token) = '' THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Missing order reference or payment token');
+    END IF;
+
+    v_token_hash := encode(sha256(trim(p_payment_token)::bytea), 'hex');
+
+    SELECT id, order_ref, status, payment_status, total, payment_amount, currency, created_at
+    INTO v_order
+    FROM public.orders
+    WHERE order_ref = trim(p_order_ref)
+      AND payment_token_hash = v_token_hash
+    LIMIT 1;
+
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Invalid order reference or payment token');
+    END IF;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'order_ref', v_order.order_ref,
+        'status', v_order.status,
+        'payment_status', v_order.payment_status,
+        'total', v_order.total,
+        'payment_amount', v_order.payment_amount,
+        'currency', v_order.currency,
+        'created_at', v_order.created_at
+    );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_order_status_by_token(TEXT, TEXT) TO anon, authenticated, service_role;
+
+

@@ -101,6 +101,7 @@ export const OurStory: React.FC = () => {
               className="absolute inset-0 w-full h-full object-cover object-[25%_center] md:object-[30%_center] lg:object-center filter brightness-[0.98] contrast-[1.08] saturate-[1.05]"
               loading="lazy"
               decoding="async"
+              fetchPriority="low"
             />
 
             {/* 2. REFINED SUBTLE VIGNETTES (Protects typography readability while leaving the left pour crystal clear) */}

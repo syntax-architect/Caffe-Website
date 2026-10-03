@@ -3,7 +3,7 @@ import { smoothScrollTo } from '../utils/scroll';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 
-export const Hero: React.FC = () => {
+export const Hero: React.FC = React.memo(() => {
   const { hero, restaurantConfig } = useSiteConfig();
   const { setIsReservationOpen } = useUI();
 
@@ -43,7 +43,7 @@ export const Hero: React.FC = () => {
             height="800"
             className="w-full h-full object-cover object-[70%_center] lg:object-center filter brightness-[0.94] contrast-[1.08] saturate-[1.08]"
             loading="eager"
-            decoding="async"
+            fetchPriority="high"
           />
 
           {/* Seamless multi-stop horizontal gradient blend: pure obsidian espresso on left fading into warm amber hospitality glow on right */}
@@ -171,4 +171,6 @@ export const Hero: React.FC = () => {
       </div>
     </section>
   );
-};
+});
+
+Hero.displayName = 'Hero';

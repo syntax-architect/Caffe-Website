@@ -1,24 +1,19 @@
 // ==============================================================================
 // Supabase Edge Functions: Hardened CORS Utility
-// Removes all wildcard origins ('*'). Enforces authoritative production origin.
+// Removes all wildcard origins ('*'). Enforces authoritative ALLOWED_ORIGIN secret.
 // ==============================================================================
-
-const PRODUCTION_DOMAIN = 'https://thecafebarrackpore.com';
 
 export function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get('origin') || '';
-  const configuredOrigin = Deno.env.get('ALLOWED_ORIGIN') || Deno.env.get('SITE_URL') || PRODUCTION_DOMAIN;
+  const configuredOrigin = Deno.env.get('ALLOWED_ORIGIN') || Deno.env.get('PUBLIC_SITE_URL') || '';
 
-  // Allowed origin list: Production domain, configured origin override, plus localhost strictly in development
-  const isDev = Deno.env.get('ENVIRONMENT') === 'development' || Deno.env.get('DENO_ENV') === 'development';
-  const allowedOrigins = [configuredOrigin, PRODUCTION_DOMAIN];
+  // Check if incoming origin matches configured ALLOWED_ORIGIN or PUBLIC_SITE_URL
+  const isAllowed = origin && configuredOrigin && (
+    origin.toLowerCase() === configuredOrigin.toLowerCase() ||
+    (Deno.env.get('PUBLIC_SITE_URL') && origin.toLowerCase() === Deno.env.get('PUBLIC_SITE_URL')?.toLowerCase())
+  );
 
-  if (isDev) {
-    allowedOrigins.push('http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000');
-  }
-
-  const isAllowed = origin && allowedOrigins.some((allowed) => allowed.toLowerCase() === origin.toLowerCase());
-  const allowedOriginHeader = isAllowed ? origin : configuredOrigin;
+  const allowedOriginHeader = isAllowed ? origin : (configuredOrigin || '');
 
   return {
     'Access-Control-Allow-Origin': allowedOriginHeader,

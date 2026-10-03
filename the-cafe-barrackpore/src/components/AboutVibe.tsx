@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useSiteConfig } from '../context/SiteConfigContext';
 
 export const AboutVibe: React.FC = () => {
@@ -15,6 +15,37 @@ export const AboutVibe: React.FC = () => {
       ];
   const sectionRef = useRef<HTMLElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isNear, setIsNear] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setIsNear(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '400px' }
+    );
+    observer.observe(el);
+
+    const onScroll = () => {
+      if (window.scrollY > 150) {
+        setIsNear(true);
+        window.removeEventListener('scroll', onScroll);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
+  const placeholderSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Crect width='100%25' height='100%25' fill='%230a0807'/%3E%3C/svg%3E";
 
   useEffect(() => {
     return () => {
@@ -51,14 +82,6 @@ export const AboutVibe: React.FC = () => {
       }
     }
   };
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"]
-  });
-  
-  const yPos1 = useTransform(scrollYProgress, [0, 1], [-20, 20]);
-  const yPos2 = useTransform(scrollYProgress, [0, 1], [20, -20]);
 
   return (
     <section ref={sectionRef} id="about-and-vibe" className="w-full py-24 lg:py-40 bg-[#0a0807] relative overflow-hidden border-t border-white/5 scroll-mt-24">
@@ -106,9 +129,9 @@ export const AboutVibe: React.FC = () => {
               <motion.img 
                 loading="lazy" 
                 decoding="async" 
+                fetchPriority="low"
                 alt={images[0]?.alt} 
-                src={images[0]?.src} 
-                style={{ y: yPos1 }}
+                src={isNear ? images[0]?.src : placeholderSvg} 
                 className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out" 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
@@ -154,11 +177,11 @@ export const AboutVibe: React.FC = () => {
               <div className="grid grid-cols-2 gap-8 pt-8 border-t border-white/5">
                 <div>
                   <span className="block font-sans text-[10px] uppercase tracking-widest text-white/40 mb-1">Lighting</span>
-                  <span className="block font-serif text-lg text-white">Warm Amber <span className="text-[#D4AF37] italic">2200K</span></span>
+                  <span className="block font-sans text-lg text-white font-medium">Warm Amber <span className="text-[#D4AF37] italic font-serif">2200K</span></span>
                 </div>
                 <div>
                   <span className="block font-sans text-[10px] uppercase tracking-widest text-white/40 mb-1">Aroma</span>
-                  <span className="block font-serif text-lg text-white">Smoked Vanilla & Arabica</span>
+                  <span className="block font-sans text-lg text-white font-medium">Smoked Vanilla & Arabica</span>
                 </div>
               </div>
             </div>
@@ -176,9 +199,9 @@ export const AboutVibe: React.FC = () => {
               <motion.img 
                 loading="lazy" 
                 decoding="async" 
+                fetchPriority="low"
                 alt={images[1]?.alt} 
-                src={images[1]?.src} 
-                style={{ y: yPos2 }}
+                src={isNear ? images[1]?.src : placeholderSvg} 
                 className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out" 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
@@ -201,9 +224,9 @@ export const AboutVibe: React.FC = () => {
               <motion.img 
                 loading="lazy" 
                 decoding="async" 
+                fetchPriority="low"
                 alt={images[2]?.alt} 
-                src={images[2]?.src} 
-                style={{ y: yPos1 }}
+                src={isNear ? images[2]?.src : placeholderSvg} 
                 className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out" 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />

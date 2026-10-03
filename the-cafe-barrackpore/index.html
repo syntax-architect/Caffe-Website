@@ -2,11 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#110B08" />
-    <!-- Preload critical primary font for instantaneous zero-latency FCP and LCP text paint -->
+    <!-- Preload critical fonts for instantaneous zero-latency FCP and LCP text paint -->
     <link rel="preload" href="/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high" />
+    <link rel="preload" href="/fonts/playfair-italic.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high" />
+    <link rel="preload" href="/fonts/playfair-normal-600.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high" />
 
     <!-- Google Search Console Verification -->
     <meta name="google-site-verification" content="verification_token_the_cafe_barrackpore_2026" />
@@ -183,33 +186,7 @@
       Skip to main content
     </a>
 
-    <div id="root">
-      <style>
-        .initial-loader {
-          position: fixed;
-          inset: 0;
-          background-color: #1a130f;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 99999;
-        }
-        .initial-loader-spinner {
-          width: 40px;
-          height: 40px;
-          border: 3px solid rgba(212, 175, 55, 0.2);
-          border-top-color: #D4AF37;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      </style>
-      <div class="initial-loader">
-        <div class="initial-loader-spinner"></div>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

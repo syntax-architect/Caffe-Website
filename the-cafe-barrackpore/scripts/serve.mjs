@@ -26,6 +26,8 @@ const MIME_TYPES = {
 
 const COMPRESSIBLE = new Set(['.html', '.js', '.css', '.json', '.svg', '.txt', '.xml']);
 
+const cache = new Map();
+
 const server = http.createServer((req, res) => {
   let reqPath = decodeURI(req.url.split('?')[0]);
   if (reqPath.endsWith('/')) {
@@ -52,25 +54,34 @@ const server = http.createServer((req, res) => {
 
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-  let content = fs.readFileSync(filePath);
+
+  let cached = cache.get(filePath);
+  if (!cached) {
+    const raw = fs.readFileSync(filePath);
+    let gzipped = null;
+    if (COMPRESSIBLE.has(ext)) {
+      gzipped = zlib.gzipSync(raw, { level: 9 });
+    }
+    cached = { raw, gzipped };
+    cache.set(filePath, cached);
+  }
 
   const acceptEncoding = req.headers['accept-encoding'] || '';
-  if (COMPRESSIBLE.has(ext) && acceptEncoding.includes('gzip')) {
-    const gzipped = zlib.gzipSync(content);
+  if (cached.gzipped && acceptEncoding.includes('gzip')) {
     res.writeHead(200, {
       'Content-Type': contentType,
       'Content-Encoding': 'gzip',
-      'Content-Length': gzipped.length,
+      'Content-Length': cached.gzipped.length,
       'Cache-Control': 'public, max-age=31536000, immutable'
     });
-    res.end(gzipped);
+    res.end(cached.gzipped);
   } else {
     res.writeHead(200, {
       'Content-Type': contentType,
-      'Content-Length': content.length,
+      'Content-Length': cached.raw.length,
       'Cache-Control': 'public, max-age=31536000, immutable'
     });
-    res.end(content);
+    res.end(cached.raw);
   }
 });
 

@@ -277,16 +277,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
     };
 
     const isPublicPage = typeof window !== 'undefined' && !window.location.pathname.startsWith('/staff');
-    if (isPublicPage) {
-      const scheduleLoad = () => {
-        if (!isMounted) return;
-        loadContent();
-      };
-      window.addEventListener('scroll', scheduleLoad, { once: true, passive: true });
-      window.addEventListener('pointerdown', scheduleLoad, { once: true, passive: true });
-      window.addEventListener('keydown', scheduleLoad, { once: true, passive: true });
-      window.addEventListener('touchstart', scheduleLoad, { once: true, passive: true });
-    } else {
+    if (!isPublicPage) {
       loadContent();
     }
 
@@ -397,15 +388,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
     };
 
     const isPublicPage = typeof window !== 'undefined' && !window.location.pathname.startsWith('/staff');
-    if (isPublicPage) {
-      const scheduleSync = () => {
-        if (!isMounted) return;
-        syncSettings();
-      };
-      window.addEventListener('scroll', scheduleSync, { once: true, passive: true });
-      window.addEventListener('pointerdown', scheduleSync, { once: true, passive: true });
-      setTimeout(scheduleSync, 8000);
-    } else {
+    if (!isPublicPage) {
       syncSettings();
     }
 

@@ -5,7 +5,7 @@ import { clientDetails } from '../config/client';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 
-export const Header: React.FC = () => {
+export const Header: React.FC = React.memo(() => {
   const { cartCount, setIsDrawerOpen } = useCart();
   const { setIsReservationOpen } = useUI();
   const { restaurantConfig, logoUrl } = useSiteConfig();
@@ -92,7 +92,7 @@ export const Header: React.FC = () => {
             />
           </div>
           <div className="flex flex-col">
-            <span className="font-serif text-base sm:text-lg tracking-tight text-on-surface font-semibold group-hover:text-primary transition-colors">
+            <span className="font-sans text-base sm:text-lg tracking-tight text-on-surface font-semibold group-hover:text-primary transition-colors">
               {businessName}
             </span>
             <span className="font-sans text-[10px] tracking-[0.25em] uppercase text-primary/80 -mt-0.5 font-medium">
@@ -294,4 +294,6 @@ export const Header: React.FC = () => {
       </AnimatePresence>
     </header>
   );
-};
+});
+
+Header.displayName = 'Header';

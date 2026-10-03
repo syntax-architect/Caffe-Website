@@ -3,32 +3,59 @@
 // Description: Provider-agnostic payment order/session creator (Razorpay & Stripe).
 // Reads authoritative order total from the database (NEVER from client).
 // Checks restaurant_settings payment_provider and payments_enabled.
-// Returns the payload required by frontend to trigger checkout (UPI, cards, net banking).
+// Requires order_ref + payment_token and verifies SHA-256 hash against orders.payment_token_hash.
+// Eliminates hardcoded fallbacks ('INR', 'The Café Barrackpore', 'http://localhost:5173').
 // ==============================================================================
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
 import Stripe from 'https://esm.sh/stripe@14.25.0?target=deno';
 
-const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || 'https://thecafebarrackpore.com';
+async function computeSha256(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': allowedOrigin,
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
 
 serve(async (req: Request) => {
+  const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || Deno.env.get('PUBLIC_SITE_URL') || '';
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  };
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
+    const publicSiteUrl = Deno.env.get('PUBLIC_SITE_URL');
+    if (!publicSiteUrl) {
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: PUBLIC_SITE_URL environment variable is required.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const orderRef = (body.order_ref || body.orderRef || '').trim();
+    const paymentToken = (body.payment_token || body.paymentToken || '').trim();
 
-    if (!orderRef) {
+    if (!orderRef || !paymentToken) {
       return new Response(
-        JSON.stringify({ error: 'Missing required parameter: order_ref' }),
+        JSON.stringify({ error: 'Missing required parameters: order_ref and payment_token are required.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -45,10 +72,10 @@ serve(async (req: Request) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 1. Authoritative lookup: read order total from database (never trust client amount)
+    // 1. Authoritative lookup: read order from database (never trust client)
     const { data: order, error: orderErr } = await supabase
       .from('orders')
-      .select('id, order_ref, total, payment_amount, currency, payment_status, payment_provider, customer_name, customer_phone')
+      .select('id, order_ref, total, payment_amount, currency, payment_status, payment_provider, customer_name, customer_phone, payment_token_hash')
       .eq('order_ref', orderRef)
       .maybeSingle();
 
@@ -56,6 +83,15 @@ serve(async (req: Request) => {
       return new Response(
         JSON.stringify({ error: `Order not found for reference: ${orderRef}` }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify payment token hash
+    const expectedHash = await computeSha256(paymentToken);
+    if (!order.payment_token_hash || !timingSafeEqual(order.payment_token_hash, expectedHash)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid payment token for this order.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -74,12 +110,28 @@ serve(async (req: Request) => {
       );
     }
 
-    // 2. Query restaurant settings for provider and payment status
+    // 2. Query restaurant settings for provider, payment status, currency, and business name
     const { data: settings } = await supabase
       .from('restaurant_settings')
       .select('payment_provider, payments_enabled, payment_enabled, allow_pay_at_counter, currency, business_name')
       .limit(1)
       .maybeSingle();
+
+    const effectiveCurrency = (order.currency || settings?.currency)?.toUpperCase();
+    if (!effectiveCurrency) {
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: Currency is not configured in restaurant_settings.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const businessName = settings?.business_name;
+    if (!businessName) {
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: Business name is not configured in restaurant_settings.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const paymentsEnabled = settings?.payments_enabled ?? settings?.payment_enabled ?? true;
     const configuredProvider = (settings?.payment_provider || order.payment_provider || 'none').toLowerCase();
@@ -94,9 +146,7 @@ serve(async (req: Request) => {
       );
     }
 
-    const effectiveCurrency = (order.currency || settings?.currency || 'INR').toUpperCase();
-    const origin = req.headers.get('origin') || Deno.env.get('PUBLIC_SITE_URL') || 'http://localhost:5173';
-    const businessName = settings?.business_name || 'The Café Barrackpore';
+    const cleanBaseUrl = publicSiteUrl.replace(/\/+$/, '');
 
     // -------------------------------------------------------------
     // RAZORPAY ORDER GENERATION (Supports UPI, Cards, Net Banking)
@@ -115,7 +165,6 @@ serve(async (req: Request) => {
       const authHeader = `Basic ${btoa(`${keyId}:${keySecret}`)}`;
       const amountInPaise = Math.round(amount * 100);
 
-      // Create official Razorpay Order for standard modal (UPI, Netbanking, Cards)
       const rzpResponse = await fetch('https://api.razorpay.com/v1/orders', {
         method: 'POST',
         headers: {
@@ -173,10 +222,11 @@ serve(async (req: Request) => {
           provider: 'razorpay',
           orderId: rzpData.id,
           razorpayOrderId: rzpData.id,
-          keyId: keyId, // Public Key ID safe for client SDK
-          amount: rzpData.amount, // in paise
+          keyId: keyId,
+          amount: rzpData.amount,
           currency: rzpData.currency,
           orderRef: order.order_ref,
+          paymentToken: paymentToken,
           businessName: businessName,
           customer: {
             name: order.customer_name || 'Guest',
@@ -226,8 +276,8 @@ serve(async (req: Request) => {
           order_ref: order.order_ref,
           order_id: order.id,
         },
-        success_url: `${origin}/order-success?ref=${order.order_ref}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/checkout?ref=${order.order_ref}&cancelled=true`,
+        success_url: `${cleanBaseUrl}/order-success?ref=${order.order_ref}&token=${encodeURIComponent(paymentToken)}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${cleanBaseUrl}/checkout?ref=${order.order_ref}&token=${encodeURIComponent(paymentToken)}&cancelled=true`,
       });
 
       // Update orders table with session ID
@@ -260,6 +310,7 @@ serve(async (req: Request) => {
           success: true,
           provider: 'stripe',
           orderRef: order.order_ref,
+          paymentToken: paymentToken,
           paymentId: session.id,
           sessionId: session.id,
           checkoutUrl: session.url,
