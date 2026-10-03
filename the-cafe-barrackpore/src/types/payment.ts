@@ -46,6 +46,7 @@ export interface PaymentRecord {
 export interface CreatePaymentParams {
   orderId: string;
   orderRef: string;
+  paymentToken?: string;
   amount: number;
   currency: string;
   customerName: string;
@@ -69,6 +70,7 @@ export interface PaymentCheckoutResult {
   checkoutUrl?: string;
   clientSecret?: string;
   orderRef: string;
+  paymentToken?: string;
   amount: number;
   currency: string;
   customer?: { name?: string; contact?: string; phone?: string; email?: string };

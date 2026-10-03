@@ -40,13 +40,19 @@ export class RazorpayAdapter implements PaymentProviderAdapter {
       // which reads authoritative amount from database and checks provider settings
       if (isSupabaseConfigured && supabase) {
         let { data, error } = await supabase.functions.invoke('create-payment', {
-          body: { order_ref: params.orderRef },
+          body: {
+            order_ref: params.orderRef,
+            payment_token: params.paymentToken,
+          },
         });
 
         // Fallback to create-razorpay-order if create-payment not reachable
         if (error) {
           const fallback = await supabase.functions.invoke('create-razorpay-order', {
-            body: { order_ref: params.orderRef },
+            body: {
+              order_ref: params.orderRef,
+              payment_token: params.paymentToken,
+            },
           });
           if (!fallback.error && fallback.data) {
             data = fallback.data;

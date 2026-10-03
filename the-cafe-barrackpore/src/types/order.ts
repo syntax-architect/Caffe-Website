@@ -126,6 +126,7 @@ export interface OrderResult {
   success: boolean;
   orderId?: string;
   orderRef: string;
+  paymentToken?: string;
   isDemoMode?: boolean;
   error?: string;
 }

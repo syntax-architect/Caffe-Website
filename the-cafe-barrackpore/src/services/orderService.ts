@@ -228,6 +228,7 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
     return {
       success: true,
       orderRef,
+      paymentToken: `demo-token-${Date.now()}`,
       isDemoMode: true,
     };
   }
@@ -268,6 +269,7 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
           success: true,
           orderId: rpcData.order_id,
           orderRef: rpcData.order_ref || orderRef,
+          paymentToken: rpcData.payment_token || undefined,
         };
       }
 
