@@ -1,7 +1,7 @@
 import { renderToString } from 'react-dom/server';
 import { I18nProvider } from './i18n';
 import { SiteConfigProvider } from './context/SiteConfigContext';
-import { AuthProvider } from './context/AuthContext';
+
 import { TableProvider } from './context/TableContext';
 import App from './App';
 import { MetaTags } from './components/MetaTags';
@@ -37,9 +37,7 @@ export function render(url: string): RenderResult {
     <I18nProvider>
       <SiteConfigProvider>
         <MetaTags pathname={cleanUrl} />
-        <AuthProvider>
-          {appComponent}
-        </AuthProvider>
+        {appComponent}
       </SiteConfigProvider>
     </I18nProvider>
   );

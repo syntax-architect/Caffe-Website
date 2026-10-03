@@ -1,10 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { siteConfig as fallbackConfig } from '../data/siteConfig';
-import {
-  fetchAllSiteContent,
-  updateSiteContent,
-  subscribeToSiteContentChanges,
-} from '../services/siteContentService';
+import type { SpecialCombo } from '../services/siteContentService';
 
 export interface ImageAsset {
   src: string;
@@ -25,7 +21,7 @@ export interface SpecialsConfig {
   title: string;
   description: string;
   image?: string;
-  combos?: import('../services/siteContentService').SpecialCombo[];
+  combos?: SpecialCombo[];
 }
 
 export interface SEOConfig {
@@ -42,10 +38,7 @@ import {
   formatRestaurantTime,
   formatRestaurantDateTime,
 } from '../utils/datetime';
-import {
-  fetchRestaurantSettings,
-  updateRestaurantSettings,
-} from '../services/dashboardService';
+
 import type { RestaurantSettings } from '../types/dashboard';
 
 export const RESTAURANT_CONFIG_STORAGE_KEY = 'cafe_restaurant_config';
@@ -212,6 +205,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
 
     const loadContent = async () => {
       try {
+        const { fetchAllSiteContent } = await import('../services/siteContentService');
         const content = await fetchAllSiteContent();
         if (!isMounted) return;
 
@@ -299,26 +293,29 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
     // Attach Realtime subscription only on staff/admin routes where content editing happens
     let unsubscribe = () => {};
     if (typeof window !== 'undefined' && window.location.pathname.startsWith('/staff')) {
-      unsubscribe = subscribeToSiteContentChanges((key, value) => {
-        if (!isMounted || !value) return;
+      import('../services/siteContentService').then(({ subscribeToSiteContentChanges }) => {
+        if (!isMounted) return;
+        unsubscribe = subscribeToSiteContentChanges((key, value) => {
+          if (!isMounted || !value) return;
 
-        setConfig((prev) => {
-          if (key === 'hero') {
-            return { ...prev, hero: { ...prev.hero, ...value } };
-          } else if (key === 'story' || key === 'ourStory') {
-            return { ...prev, ourStory: { ...prev.ourStory, ...value } };
-          } else if (key === 'aboutVibe') {
-            return { ...prev, aboutVibe: { images: value.images || value } };
-          } else if (key === 'specials') {
-            return { ...prev, specials: { ...prev.specials, ...value } };
-          } else if (key === 'gallery') {
-            return { ...prev, gallery: { images: value.images || value } };
-          } else if (key === 'branding') {
-            return { ...prev, logoUrl: value.logoUrl || prev.logoUrl };
-          }
-          return prev;
+          setConfig((prev) => {
+            if (key === 'hero') {
+              return { ...prev, hero: { ...prev.hero, ...value } };
+            } else if (key === 'story' || key === 'ourStory') {
+              return { ...prev, ourStory: { ...prev.ourStory, ...value } };
+            } else if (key === 'aboutVibe') {
+              return { ...prev, aboutVibe: { images: value.images || value } };
+            } else if (key === 'specials') {
+              return { ...prev, specials: { ...prev.specials, ...value } };
+            } else if (key === 'gallery') {
+              return { ...prev, gallery: { images: value.images || value } };
+            } else if (key === 'branding') {
+              return { ...prev, logoUrl: value.logoUrl || prev.logoUrl };
+            }
+            return prev;
+          });
         });
-      });
+      }).catch(() => {});
     }
 
     return () => {
@@ -332,28 +329,33 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
     data: any
   ): Promise<boolean> => {
     // 1. Persist to authoritative Supabase site_content table
-    const result = await updateSiteContent(section, data);
-    if (result.success) {
-      // 2. Immediately update local state
-      setConfig((prev) => {
-        if (section === 'hero') {
-          return { ...prev, hero: { ...prev.hero, ...data } };
-        } else if (section === 'ourStory') {
-          return { ...prev, ourStory: { ...prev.ourStory, ...data } };
-        } else if (section === 'aboutVibe') {
-          return { ...prev, aboutVibe: { images: data.images || data } };
-        } else if (section === 'specials') {
-          return { ...prev, specials: { ...prev.specials, ...data } };
-        } else if (section === 'gallery') {
-          return { ...prev, gallery: { images: data.images || data } };
-        } else if (section === 'branding') {
-          return { ...prev, logoUrl: data.logoUrl || prev.logoUrl };
-        }
-        return prev;
-      });
-      return true;
+    try {
+      const { updateSiteContent } = await import('../services/siteContentService');
+      const result = await updateSiteContent(section, data);
+      if (result.success) {
+        // 2. Immediately update local state
+        setConfig((prev) => {
+          if (section === 'hero') {
+            return { ...prev, hero: { ...prev.hero, ...data } };
+          } else if (section === 'ourStory') {
+            return { ...prev, ourStory: { ...prev.ourStory, ...data } };
+          } else if (section === 'aboutVibe') {
+            return { ...prev, aboutVibe: { images: data.images || data } };
+          } else if (section === 'specials') {
+            return { ...prev, specials: { ...prev.specials, ...data } };
+          } else if (section === 'gallery') {
+            return { ...prev, gallery: { images: data.images || data } };
+          } else if (section === 'branding') {
+            return { ...prev, logoUrl: data.logoUrl || prev.logoUrl };
+          }
+          return prev;
+        });
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
     }
-    return false;
   };
 
   const [restaurantConfig, setRestaurantConfig] = useState<RestaurantLocalizationConfig>(() => {
@@ -372,7 +374,8 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
   useEffect(() => {
     let isMounted = true;
     const syncSettings = () => {
-      fetchRestaurantSettings()
+      import('../services/dashboardService')
+        .then(({ fetchRestaurantSettings }) => fetchRestaurantSettings())
         .then((settings) => {
           if (!isMounted) return;
           if (settings) {
@@ -494,6 +497,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
         payment_mode: merged.payments.mode,
         allow_pay_at_counter: merged.payments.allow_pay_at_counter ?? true,
       };
+      const { updateRestaurantSettings } = await import('../services/dashboardService');
       await updateRestaurantSettings(settingsPayload);
     } catch (err) {
       console.warn('Could not sync restaurant settings to remote store:', err);

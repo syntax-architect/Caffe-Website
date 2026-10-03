@@ -6,12 +6,9 @@ import { useUI } from '../context/UIContext';
 import { useMenuAvailability } from '../hooks/useMenuAvailability';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import {
-  fetchMenuCategories,
-  fetchMenuItems,
-  subscribeToMenuRealtime,
   MENU_CATEGORIES_FALLBACK,
   MENU_ITEMS_FALLBACK,
-} from '../services/menuService';
+} from '../data/menuFallbacks';
 import type { MenuItem, MenuCategory } from '../types/menu';
 
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
@@ -54,9 +51,11 @@ export const Menu: React.FC = () => {
   // Load categories and items from Supabase tables & subscribe to Realtime updates
   useEffect(() => {
     let isMounted = true;
+    let unsubscribe: () => void = () => {};
 
     const loadData = async () => {
       try {
+        const { fetchMenuCategories, fetchMenuItems } = await import('../services/menuService');
         const [cats, items] = await Promise.all([
           fetchMenuCategories(),
           fetchMenuItems(),
@@ -82,13 +81,26 @@ export const Menu: React.FC = () => {
       }
     };
 
+    const initDataAndRealtime = async () => {
+      await loadData();
+      if (!isMounted) return;
+      try {
+        const { subscribeToMenuRealtime } = await import('../services/menuService');
+        unsubscribe = subscribeToMenuRealtime(() => {
+          loadData();
+        });
+      } catch {
+        // Fallback gracefully
+      }
+    };
+
     // Defer loading dynamic menu until menu section approaches viewport (within 400px)
     const menuEl = document.getElementById('menu-section');
     if (typeof window !== 'undefined' && 'IntersectionObserver' in window && menuEl) {
       const observer = new IntersectionObserver(
         (entries) => {
           if (entries[0]?.isIntersecting) {
-            loadData();
+            initDataAndRealtime();
             observer.disconnect();
           }
         },
@@ -96,13 +108,8 @@ export const Menu: React.FC = () => {
       );
       observer.observe(menuEl);
     } else {
-      loadData();
+      initDataAndRealtime();
     }
-
-    // Live Supabase Realtime synchronization across all tables
-    const unsubscribe = subscribeToMenuRealtime(() => {
-      loadData();
-    });
 
     return () => {
       isMounted = false;

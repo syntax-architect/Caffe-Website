@@ -25,7 +25,7 @@ const SPECIAL_COMBOS: SpecialCombo[] = [
     badge: 'CHINESE BANQUET',
     serves: '2–3 Guests',
     description: 'Delicate steamed momos, golden spring rolls & wok-tossed spicy chilli bites.',
-    image: '/images/platters/platter-chinese.webp',
+    image: '/images/platters/platter-chinese-highres.jpg',
   },
   {
     id: 'combo-tandoori-platter',
@@ -36,7 +36,7 @@ const SPECIAL_COMBOS: SpecialCombo[] = [
     badge: 'TANDOORI ROYALE',
     serves: '2–3 Guests',
     description: 'Smoky clay oven kebabs, succulent tikka, fresh mint chutney & garlic butter naan.',
-    image: '/images/platters/platter-tandoori.webp',
+    image: '/images/platters/platter-tandoori-highres.jpg',
   },
   {
     id: 'combo-rice-noodles-bowl',
@@ -47,7 +47,7 @@ const SPECIAL_COMBOS: SpecialCombo[] = [
     badge: 'PAN-ASIAN SHARING',
     serves: '1–2 Guests',
     description: 'Wok-tossed Hakka noodles, fragrant fried rice & crispy Manchurian gravy.',
-    image: '/images/platters/platter-bowl.webp',
+    image: '/images/platters/platter-bowl-highres.jpg',
   },
 ];
 

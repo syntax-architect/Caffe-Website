@@ -25,6 +25,8 @@ async function prerender() {
     throw new Error(`[prerender] dist/index.html template not found. Run "vite build" first.`);
   }
 
+  const baseTemplate = fs.readFileSync(templatePath, 'utf-8');
+
   // 1. Build SSR server entry
   console.log('📦 Compiling SSR bundle with Vite...');
   execSync('npx vite build --ssr src/entry-server.tsx --outDir dist-server', {
@@ -36,8 +38,6 @@ async function prerender() {
   const serverEntryPath = path.resolve(distServerDir, 'entry-server.js');
   const serverEntryUrl = pathToFileURL(serverEntryPath).href;
   const { render } = await import(serverEntryUrl);
-
-  const baseTemplate = fs.readFileSync(templatePath, 'utf-8');
 
   for (const route of routes) {
     console.log(`⚡ Pre-rendering route: "${route.url}" -> ${route.file}`);
@@ -94,7 +94,6 @@ async function prerender() {
     <meta name="twitter:description" content="${seo.description}" />
     <meta name="twitter:image" content="${seo.ogImage}" />
     <meta name="twitter:image:alt" content="${seo.ogImageAlt}" />
-    <meta name="google-site-verification" content="verification_token_the_cafe_barrackpore_2026" />
     `;
 
     // Remove legacy hardcoded OG tags before injecting clean new ones

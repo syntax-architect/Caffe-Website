@@ -73,21 +73,21 @@ export const DEFAULT_SITE_CONTENT: AllSiteContent = {
     title: 'Crafting Barrackpore’s finest nocturnal escape',
     description:
       'We believe that true luxury lies in the details. From sourcing the most vibrant, local ingredients from surrounding farms to hand-selecting the perfect acoustic backdrop, every element of our space is intentionally curated.',
-    src: '/images/story-pour.webp',
+    src: '/images/story-luxury-pour.jpg',
     alt: 'Artisanal Espresso Pour',
   },
   aboutVibe: {
     images: [
       { src: '/images/components/comp_img_0_highres.jpg', alt: 'Midnight Velvet Booth Seating' },
-      { src: '/images/components/comp_img_2.webp', alt: 'Live Acoustic & Reading Nook' },
-      { src: '/images/components/comp_img_3.webp', alt: 'Signature Brew Bar & Mixology' },
-      { src: '/images/components/comp_img_1.webp', alt: 'Artisan Platters and Comfort Food' },
+      { src: '/images/components/comp_img_2_highres.jpg', alt: 'Live Acoustic & Reading Nook' },
+      { src: '/images/components/comp_img_3_highres.jpg', alt: 'Signature Brew Bar & Mixology' },
+      { src: '/images/components/comp_img_1_highres.jpg', alt: 'Artisan Platters and Comfort Food' },
     ],
   },
   specials: {
     title: 'Special Banquet & Hangout Platters',
     description: 'Generous sharing platters with sizzling pan-Asian or smoky clay oven selections, made fresh to order.',
-    image: '/images/hero-bar.webp',
+    image: '/images/hero-cinematic.jpg',
     combos: [
       {
         id: 'combo-chinese-platter',
@@ -98,7 +98,7 @@ export const DEFAULT_SITE_CONTENT: AllSiteContent = {
         badge: 'CHINESE BANQUET',
         serves: '2–3 Guests',
         description: 'Delicate steamed momos, golden spring rolls & wok-tossed spicy chilli bites.',
-        image: '/images/platters/platter-chinese.webp',
+        image: '/images/platters/platter-chinese-highres.jpg',
       },
       {
         id: 'combo-tandoori-platter',
@@ -109,7 +109,7 @@ export const DEFAULT_SITE_CONTENT: AllSiteContent = {
         badge: 'TANDOORI ROYALE',
         serves: '2–3 Guests',
         description: 'Smoky clay oven kebabs, succulent tikka, fresh mint chutney & garlic butter naan.',
-        image: '/images/platters/platter-tandoori.webp',
+        image: '/images/platters/platter-tandoori-highres.jpg',
       },
       {
         id: 'combo-rice-noodles-bowl',
@@ -120,16 +120,16 @@ export const DEFAULT_SITE_CONTENT: AllSiteContent = {
         badge: 'PAN-ASIAN SHARING',
         serves: '1–2 Guests',
         description: 'Wok-tossed Hakka noodles, fragrant fried rice & crispy Manchurian gravy.',
-        image: '/images/platters/platter-bowl.webp',
+        image: '/images/platters/platter-bowl-highres.jpg',
       },
     ],
   },
   gallery: {
     images: [
-      { src: '/images/gallery-couple.webp', alt: 'Nightlife Couple' },
-      { src: '/images/gallery-pizza.webp', alt: 'Wood-Fired Pizza' },
-      { src: '/images/gallery-beans.webp', alt: 'Artisanal Coffee Beans' },
-      { src: '/images/gallery-guitar.webp', alt: 'Acoustic Weekend Guitar' },
+      { src: '/images/gallery-couple-highres.jpg', alt: 'Nightlife Couple' },
+      { src: '/images/gallery-pizza-highres.jpg', alt: 'Wood-Fired Pizza' },
+      { src: '/images/gallery-beans-highres.jpg', alt: 'Artisanal Coffee Beans' },
+      { src: '/images/gallery-guitar-highres.jpg', alt: 'Acoustic Weekend Guitar' },
     ],
   },
   branding: {

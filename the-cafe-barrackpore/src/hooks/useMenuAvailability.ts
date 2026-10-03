@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  fetchAvailabilityMap,
   getLocalAvailabilityMap,
-  setMenuItemAvailability,
   isItemAvailable as checkIsAvailable,
   AVAILABILITY_EVENT,
-} from '../services/menuAvailabilityService';
+} from '../utils/menuAvailability';
 
 export function useMenuAvailability() {
   const [availabilityMap, setAvailabilityMap] = useState<Record<string, boolean>>(
@@ -16,26 +14,34 @@ export function useMenuAvailability() {
   // Initial load
   useEffect(() => {
     let isMounted = true;
-    const load = () => {
-      fetchAvailabilityMap().then((map) => {
+    const load = async () => {
+      try {
+        const { fetchAvailabilityMap } = await import('../services/menuAvailabilityService');
+        const map = await fetchAvailabilityMap();
         if (!isMounted) return;
         setAvailabilityMap(map);
-        setIsLoading(false);
-      });
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     };
 
     const isPublicPage = typeof window !== 'undefined' && !window.location.pathname.startsWith('/staff');
     if (isPublicPage) {
       const scheduleLoad = () => {
         if (!isMounted) return;
-        fetchAvailabilityMap().then((map) => {
-          if (!isMounted) return;
-          setAvailabilityMap((prev) => {
-            if (JSON.stringify(prev) === JSON.stringify(map)) return prev;
-            return map;
+        import('../services/menuAvailabilityService')
+          .then(({ fetchAvailabilityMap }) => fetchAvailabilityMap())
+          .then((map) => {
+            if (!isMounted) return;
+            setAvailabilityMap((prev) => {
+              if (JSON.stringify(prev) === JSON.stringify(map)) return prev;
+              return map;
+            });
+            setIsLoading(false);
+          })
+          .catch(() => {
+            if (isMounted) setIsLoading(false);
           });
-          setIsLoading(false);
-        });
       };
       window.addEventListener('scroll', scheduleLoad, { once: true, passive: true });
       window.addEventListener('pointerdown', scheduleLoad, { once: true, passive: true });
@@ -87,6 +93,7 @@ export function useMenuAvailability() {
 
   const toggleAvailability = useCallback(
     async (itemId: string, nextAvailable: boolean, reason?: string) => {
+      const { setMenuItemAvailability } = await import('../services/menuAvailabilityService');
       const res = await setMenuItemAvailability(itemId, nextAvailable, reason);
       if (res.success) {
         setAvailabilityMap((prev) => ({
@@ -101,9 +108,13 @@ export function useMenuAvailability() {
 
   const refreshAvailability = useCallback(async () => {
     setIsLoading(true);
-    const map = await fetchAvailabilityMap();
-    setAvailabilityMap(map);
-    setIsLoading(false);
+    try {
+      const { fetchAvailabilityMap } = await import('../services/menuAvailabilityService');
+      const map = await fetchAvailabilityMap();
+      setAvailabilityMap(map);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   return {

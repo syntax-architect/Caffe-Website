@@ -1,6 +1,6 @@
 import type { RestaurantLocalizationConfig } from '../types/restaurantConfig';
 import type { SEOConfig } from '../context/SiteConfigContext';
-import { MENU_CATEGORIES_FALLBACK, MENU_ITEMS_FALLBACK } from '../services/menuService';
+import { MENU_CATEGORIES_FALLBACK, MENU_ITEMS_FALLBACK } from '../data/menuFallbacks';
 import type { MenuItem, MenuCategory } from '../types/menu';
 import { getPublicSiteOrigin } from './url';
 

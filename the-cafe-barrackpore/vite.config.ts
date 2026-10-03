@@ -14,6 +14,8 @@ export default defineConfig({
             if (id.includes('framer-motion')) return 'vendor-framer';
             if (id.includes('@supabase')) return 'vendor-supabase';
             if (id.includes('lenis')) return 'vendor-lenis';
+            if (id.includes('dompurify')) return 'vendor-dompurify';
+            if (id.includes('qrcode')) return 'vendor-qrcode';
             return 'vendor';
           }
         }

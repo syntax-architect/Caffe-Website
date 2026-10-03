@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { TableProvider } from './context/TableContext';
-import { AuthProvider } from './context/AuthContext';
+const AuthProvider = lazy(() => import('./context/AuthContext').then(m => ({ default: m.AuthProvider })));
 import { SiteConfigProvider } from './context/SiteConfigContext';
 import { I18nProvider } from './i18n';
 
@@ -39,23 +39,19 @@ export const Root: React.FC = () => {
       <SiteConfigProvider>
         <MetaTags pathname={pathname} />
         {isStaffRoute || isStaffLogin || isResetPassword ? (
-          <AuthProvider>
-            {isResetPassword ? (
-              <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+            <AuthProvider>
+              {isResetPassword ? (
                 <ResetPasswordPage />
-              </Suspense>
-            ) : isStaffLogin ? (
-              <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+              ) : isStaffLogin ? (
                 <StaffLoginPage />
-              </Suspense>
-            ) : (
-              <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+              ) : (
                 <ProtectedRoute>
                   <StaffApp />
                 </ProtectedRoute>
-              </Suspense>
-            )}
-          </AuthProvider>
+              )}
+            </AuthProvider>
+          </Suspense>
         ) : isPrivacyRoute ? (
           <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
             <PrivacyPolicyPage />
