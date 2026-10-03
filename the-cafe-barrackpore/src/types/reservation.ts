@@ -20,6 +20,7 @@ export interface CreateReservationPayload {
   special_requests?: string | null;
   restaurant_id?: string;
   captcha_token?: string;
+  verified_token?: string;
 }
 
 export interface ReservationRecord {

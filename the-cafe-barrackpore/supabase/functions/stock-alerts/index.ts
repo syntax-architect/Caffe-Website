@@ -30,6 +30,16 @@ serve(async (req: Request) => {
       });
     }
 
+    // Require x-cron-secret header matching CRON_SECRET
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    const reqCronSecret = req.headers.get('x-cron-secret');
+    if (!cronSecret || !reqCronSecret || reqCronSecret !== cronSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: invalid or missing cron secret' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Fetch settings for threshold & owner contacts
@@ -39,8 +49,15 @@ serve(async (req: Request) => {
       .eq('id', 'current')
       .maybeSingle();
 
+    if (!settings?.business_name) {
+      return new Response(
+        JSON.stringify({ error: 'Configuration error: business_name must be configured in restaurant_settings' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const threshold = settings?.low_stock_alert_threshold ?? 5;
-    const businessName = settings?.business_name || 'The Café Barrackpore';
+    const businessName = settings.business_name;
     const targetPhone = settings?.owner_notification_phone || settings?.phone;
     const targetEmail = settings?.owner_notification_email || settings?.email;
     const notifyMethod = settings?.owner_notification_method || 'none';

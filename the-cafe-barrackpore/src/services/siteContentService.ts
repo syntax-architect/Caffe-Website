@@ -53,6 +53,13 @@ export interface BrandingContent {
   alt: string;
 }
 
+export interface VIPClubContent {
+  title: string;
+  subtitle: string;
+  src: string;
+  alt: string;
+}
+
 export interface AllSiteContent {
   hero: HeroContent;
   story: StoryContent;
@@ -60,6 +67,7 @@ export interface AllSiteContent {
   specials: SpecialsContent;
   gallery: GalleryContent;
   branding: BrandingContent;
+  vipClub: VIPClubContent;
 }
 
 export const DEFAULT_SITE_CONTENT: AllSiteContent = {
@@ -136,6 +144,12 @@ export const DEFAULT_SITE_CONTENT: AllSiteContent = {
     logoUrl: '/logo.webp',
     alt: 'The Café Barrackpore Crest',
   },
+  vipClub: {
+    title: 'The Nocturnal Society',
+    subtitle: 'An intimate speakeasy membership for Barrackpore’s discerning patrons.',
+    src: '/images/vip-nocturnal-circle.jpg',
+    alt: 'The Café Barrackpore Nocturnal VIP Salon',
+  },
 };
 
 /**
@@ -175,6 +189,24 @@ export function upgradeLegacyImageUrl(url: string | undefined): string {
  */
 export async function fetchAllSiteContent(): Promise<AllSiteContent> {
   const content: AllSiteContent = { ...DEFAULT_SITE_CONTENT };
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('cafe_demo_site_content');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.hero) content.hero = { ...content.hero, ...parsed.hero };
+        if (parsed.story) content.story = { ...content.story, ...parsed.story };
+        if (parsed.aboutVibe) content.aboutVibe = { ...content.aboutVibe, ...parsed.aboutVibe };
+        if (parsed.specials) content.specials = { ...content.specials, ...parsed.specials };
+        if (parsed.gallery) content.gallery = { ...content.gallery, ...parsed.gallery };
+        if (parsed.branding) content.branding = { ...content.branding, ...parsed.branding };
+        if (parsed.vipClub) content.vipClub = { ...content.vipClub, ...parsed.vipClub };
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   if (!isSupabaseConfigured || !supabase) {
     return content;
@@ -224,6 +256,12 @@ export async function fetchAllSiteContent(): Promise<AllSiteContent> {
           };
         } else if (row.key === 'branding' && row.value) {
           content.branding = { ...DEFAULT_SITE_CONTENT.branding, ...row.value };
+        } else if (row.key === 'vipClub' && row.value) {
+          content.vipClub = {
+            ...DEFAULT_SITE_CONTENT.vipClub,
+            ...row.value,
+            src: upgradeLegacyImageUrl(row.value.src || DEFAULT_SITE_CONTENT.vipClub.src),
+          };
         }
       }
     }
@@ -240,10 +278,21 @@ export async function fetchAllSiteContent(): Promise<AllSiteContent> {
  * Enforces RLS: only active staff with role 'owner' or 'manager' are allowed.
  */
 export async function updateSiteContent(
-  key: 'hero' | 'story' | 'ourStory' | 'aboutVibe' | 'specials' | 'gallery' | 'branding',
+  key: 'hero' | 'story' | 'ourStory' | 'aboutVibe' | 'specials' | 'gallery' | 'branding' | 'vipClub',
   value: Record<string, any>
 ): Promise<{ success: boolean; error?: string }> {
   const canonicalKey = key === 'ourStory' ? 'story' : key;
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('cafe_demo_site_content');
+      const parsed = raw ? JSON.parse(raw) : {};
+      parsed[canonicalKey] = value;
+      localStorage.setItem('cafe_demo_site_content', JSON.stringify(parsed));
+    } catch {
+      // ignore
+    }
+  }
 
   if (!isSupabaseConfigured || !supabase) {
     const proc = (globalThis as any).process;

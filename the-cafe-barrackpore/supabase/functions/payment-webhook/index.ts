@@ -275,8 +275,13 @@ serve(async (req: Request) => {
     // PAID EVENT: CHECK AMOUNT AND CURRENCY MATCH
     // -------------------------------------------------------------
     if (eventAction === 'paid') {
-      const expectedAmountUnits = Math.round(Number(order.payment_amount ?? order.total) * 100);
-      const expectedCurrency = (order.currency || 'INR').toUpperCase();
+      if (!order.currency) {
+        return new Response(
+          JSON.stringify({ error: 'Configuration error: order record is missing currency' }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      const expectedCurrency = order.currency.toUpperCase();
 
       if (paidCurrency && paidCurrency !== expectedCurrency) {
         return new Response(

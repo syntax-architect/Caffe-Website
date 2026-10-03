@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { TableProvider } from './context/TableContext';
-const AuthProvider = lazy(() => import('./context/AuthContext').then(m => ({ default: m.AuthProvider })));
+import { AuthProvider } from './context/AuthContext';
 import { SiteConfigProvider } from './context/SiteConfigContext';
 import { I18nProvider } from './i18n';
 
@@ -9,12 +9,26 @@ const QROrderingPage = lazy(() => import('./components/QROrderingPage').then(m =
 const QRCodeGenerator = lazy(() => import('./components/QRCodeGenerator').then(m => ({ default: m.QRCodeGenerator })));
 const StaffLoginPage = lazy(() => import('./components/staff/StaffLoginPage').then(m => ({ default: m.StaffLoginPage })));
 const ResetPasswordPage = lazy(() => import('./components/staff/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
-const ProtectedRoute = lazy(() => import('./components/staff/ProtectedRoute').then(m => ({ default: m.ProtectedRoute })));
+import { ProtectedRoute } from './components/staff/ProtectedRoute';
 const StaffApp = lazy(() => import('./components/staff/StaffApp').then(m => ({ default: m.StaffApp })));
 const PrivacyPolicyPage = lazy(() => import('./components/legal/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
 const TermsPage = lazy(() => import('./components/legal/TermsPage').then(m => ({ default: m.TermsPage })));
 
 import { MetaTags } from './components/MetaTags';
+
+const BrandedLoadingFallback: React.FC = () => (
+  <div className="min-h-screen bg-[#0F0B08] flex flex-col items-center justify-center p-6 text-stone-200">
+    <div className="relative w-12 h-12 mb-4">
+      <div className="w-12 h-12 rounded-full border-2 border-stone-800 border-t-[#D4AF37] animate-spin" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-ping" />
+      </div>
+    </div>
+    <p className="font-serif text-[#D4AF37] tracking-[0.25em] text-xs uppercase font-medium">
+      The Café Barrackpore
+    </p>
+  </div>
+);
 
 export const Root: React.FC = () => {
   const pathname = typeof window !== 'undefined' ? window.location.pathname.replace(/\/$/, '') : '';
@@ -39,8 +53,8 @@ export const Root: React.FC = () => {
       <SiteConfigProvider>
         <MetaTags pathname={pathname} />
         {isStaffRoute || isStaffLogin || isResetPassword ? (
-          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
-            <AuthProvider>
+          <AuthProvider>
+            <Suspense fallback={<BrandedLoadingFallback />}>
               {isResetPassword ? (
                 <ResetPasswordPage />
               ) : isStaffLogin ? (
@@ -50,22 +64,22 @@ export const Root: React.FC = () => {
                   <StaffApp />
                 </ProtectedRoute>
               )}
-            </AuthProvider>
-          </Suspense>
+            </Suspense>
+          </AuthProvider>
         ) : isPrivacyRoute ? (
-          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+          <Suspense fallback={<BrandedLoadingFallback />}>
             <PrivacyPolicyPage />
           </Suspense>
         ) : isTermsRoute ? (
-          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+          <Suspense fallback={<BrandedLoadingFallback />}>
             <TermsPage />
           </Suspense>
         ) : isGeneratorRoute ? (
-          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+          <Suspense fallback={<BrandedLoadingFallback />}>
             <QRCodeGenerator />
           </Suspense>
         ) : isQRRoute ? (
-          <Suspense fallback={<div className="min-h-screen bg-[#120c08] flex items-center justify-center text-[#D4AF37] font-serif">Loading...</div>}>
+          <Suspense fallback={<BrandedLoadingFallback />}>
             <TableProvider>
               <QROrderingPage />
             </TableProvider>

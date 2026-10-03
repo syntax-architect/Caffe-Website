@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Migration: 013_security_hardening.sql
+-- Migration: 016_security_hardening.sql
 -- Description:
 -- 1. In the orders SELECT policy, remove the anon condition. Only service_role
 --    and active staff of the same restaurant may SELECT orders and order_items.
@@ -10,13 +10,18 @@
 -- 3. REVOKE INSERT, UPDATE, DELETE on all public tables from anon.
 --    REVOKE ALL on orders, order_items, payments, staff_profiles, audit tables from anon.
 --    Re-GRANT only what the app needs.
--- 4. Order references: generate with gen_random_uuid-based or 10+ character random codes,
---    never sequential. In create_order_atomic, also generate a random payment_token,
---    store only its hash on the order, and return the raw token once to the browser.
--- 5. Helper RPC get_order_status_by_token for token-verified order status checks.
--- 6. In create_order_atomic, ignore p_order.restaurant_id and read restaurant_id from
---    restaurant_settings. Cap quantity 1-50. Revoke INSERT on orders and order_items from
---    anon so only the RPC creates orders.
+-- 4. verified_tokens table for single-use Cloudflare Turnstile verification
+--    (5-minute expiry, service_role only).
+-- 5. rate_limits table for persistent cross-instance rate limiting (service_role only).
+-- 6. Lock down discount_codes: drop anon policy, REVOKE SELECT from anon,
+--    and add RPC validate_discount_code(code) returning only the discount.
+-- 7. Order references: generate with gen_random_uuid-based or 10+ character random codes,
+--    never sequential. In create_order_atomic, generate random payment_token built from
+--    two gen_random_uuid (dashes removed, 64 hex chars), store only its hash in
+--    payment_token_hash, and return the raw token once to the browser.
+-- 8. Require verified Turnstile token inside create_order_atomic and create_reservation_atomic,
+--    consuming it atomically from verified_tokens.
+-- 9. Helper RPC get_order_status_by_token for token-verified order status checks.
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
@@ -180,7 +185,7 @@ USING (
 
 -- ------------------------------------------------------------------------------
 -- 5. REPLACE menu_item_availability "FOR ALL" POLICIES
---    Anon gets SELECT only (availability). Only active owner/manager staff may INSERT/UPDATE/DELETE.
+--    Anon gets SELECT only. Only active owner/manager staff may INSERT/UPDATE/DELETE.
 --    Add WITH CHECK clauses to every policy that has USING.
 -- ------------------------------------------------------------------------------
 DROP POLICY IF EXISTS "staff_manage_availability_tenant" ON public.menu_item_availability;
@@ -192,21 +197,18 @@ DROP POLICY IF EXISTS "owner_manager_insert_availability" ON public.menu_item_av
 DROP POLICY IF EXISTS "owner_manager_update_availability" ON public.menu_item_availability;
 DROP POLICY IF EXISTS "owner_manager_delete_availability" ON public.menu_item_availability;
 
--- Anon gets SELECT only on availability
 CREATE POLICY "anon_select_menu_availability"
 ON public.menu_item_availability
 FOR SELECT
 TO anon
 USING (true);
 
--- Authenticated staff/service_role gets SELECT
 CREATE POLICY "staff_select_menu_availability"
 ON public.menu_item_availability
 FOR SELECT
 TO authenticated, service_role
 USING (true);
 
--- Only active owner/manager staff may INSERT
 CREATE POLICY "owner_manager_insert_availability"
 ON public.menu_item_availability
 FOR INSERT
@@ -224,7 +226,6 @@ WITH CHECK (
     )
 );
 
--- Only active owner/manager staff may UPDATE (WITH CHECK added)
 CREATE POLICY "owner_manager_update_availability"
 ON public.menu_item_availability
 FOR UPDATE
@@ -254,7 +255,6 @@ WITH CHECK (
     )
 );
 
--- Only active owner/manager staff may DELETE
 CREATE POLICY "owner_manager_delete_availability"
 ON public.menu_item_availability
 FOR DELETE
@@ -273,18 +273,15 @@ USING (
 );
 
 -- ------------------------------------------------------------------------------
--- 6. REVOKE DIRECT DML & SENSITIVE ACCESS FROM anon; RE-GRANT ONLY WHAT IS NEEDED
+-- 6. BROAD PRIVILEGE REVOCATION & SELECTIVE RE-GRANT
 -- ------------------------------------------------------------------------------
--- Revoke INSERT, UPDATE, DELETE on all public tables from anon
 REVOKE INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public FROM anon;
 
--- Revoke ALL on sensitive tables from anon
 REVOKE ALL ON TABLE public.orders FROM anon;
 REVOKE ALL ON TABLE public.order_items FROM anon;
 REVOKE ALL ON TABLE public.payments FROM anon;
 REVOKE ALL ON TABLE public.staff_profiles FROM anon;
 
--- Re-grant SELECT on safe public tables only
 GRANT SELECT ON TABLE public.menu_categories TO anon;
 GRANT SELECT ON TABLE public.menu_items TO anon;
 GRANT SELECT ON TABLE public.site_content TO anon;
@@ -292,12 +289,97 @@ GRANT SELECT ON TABLE public.restaurant_tables TO anon;
 GRANT SELECT ON TABLE public.menu_item_availability TO anon;
 GRANT SELECT ON TABLE public.restaurant_settings TO anon;
 
--- Grant EXECUTE on public RPCs to anon
-GRANT EXECUTE ON FUNCTION public.create_order_atomic(JSONB, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.create_reservation_atomic(JSONB) TO anon, authenticated;
+-- ------------------------------------------------------------------------------
+-- 7. VERIFIED TOKENS TABLE (SINGLE-USE, 5-MIN EXPIRY, SERVICE ROLE ONLY)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.verified_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    token TEXT NOT NULL UNIQUE,
+    action TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_verified_tokens_token ON public.verified_tokens (token);
+CREATE INDEX IF NOT EXISTS idx_verified_tokens_expires_at ON public.verified_tokens (expires_at);
+
+ALTER TABLE public.verified_tokens ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE public.verified_tokens FROM anon, authenticated, public;
+GRANT ALL ON TABLE public.verified_tokens TO service_role;
 
 -- ------------------------------------------------------------------------------
--- 7. SECURE TOKEN-BASED ORDER STATUS RPC (FOR DINERS WITH TOKEN)
+-- 8. RATE LIMITS TABLE (PERSISTENT DISTRIBUTED RATE LIMITING, SERVICE ROLE ONLY)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.rate_limits (
+    key TEXT PRIMARY KEY,
+    count INTEGER NOT NULL DEFAULT 1,
+    reset_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_rate_limits_reset_at ON public.rate_limits (reset_at);
+
+ALTER TABLE public.rate_limits ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE public.rate_limits FROM anon, authenticated, public;
+GRANT ALL ON TABLE public.rate_limits TO service_role;
+
+-- ------------------------------------------------------------------------------
+-- 9. DISCOUNT CODES LOCKDOWN & RPC VALIDATOR
+--    Drop anon policy, REVOKE SELECT from anon, and expose validate_discount_code(code)
+-- ------------------------------------------------------------------------------
+DROP POLICY IF EXISTS "discount_codes_public_validate" ON public.discount_codes;
+REVOKE SELECT ON TABLE public.discount_codes FROM anon;
+
+CREATE OR REPLACE FUNCTION public.validate_discount_code(code TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_discount RECORD;
+BEGIN
+    IF code IS NULL OR trim(code) = '' THEN
+        RETURN jsonb_build_object('valid', false, 'error', 'Discount code is required');
+    END IF;
+
+    SELECT 
+        dc.code AS disc_code,
+        dc.discount_type,
+        dc.discount_value,
+        dc.min_order_amount,
+        dc.max_discount_amount
+    INTO v_discount
+    FROM public.discount_codes dc
+    WHERE UPPER(dc.code) = UPPER(trim(validate_discount_code.code))
+      AND dc.active = true
+      AND (dc.valid_until IS NULL OR dc.valid_until > now())
+      AND (dc.max_uses IS NULL OR dc.used_count < dc.max_uses)
+    LIMIT 1;
+
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('valid', false, 'error', 'Invalid or expired discount code');
+    END IF;
+
+    -- Return only the discount details to protect internal business analytics
+    RETURN jsonb_build_object(
+        'valid', true,
+        'code', v_discount.disc_code,
+        'discount_type', v_discount.discount_type,
+        'discount_value', v_discount.discount_value,
+        'min_order_amount', v_discount.min_order_amount,
+        'max_discount_amount', v_discount.max_discount_amount
+    );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.validate_discount_code(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.validate_discount_code(TEXT) TO anon, authenticated, service_role;
+
+-- ------------------------------------------------------------------------------
+-- 10. SECURE TOKEN-BASED ORDER STATUS RPC (FOR DINERS WITH TOKEN)
 -- ------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.get_order_status_by_token(
     p_order_ref TEXT,
@@ -345,7 +427,7 @@ $$;
 GRANT EXECUTE ON FUNCTION public.get_order_status_by_token(TEXT, TEXT) TO anon, authenticated, service_role;
 
 -- ------------------------------------------------------------------------------
--- 8. HARDENED create_order_atomic WITH TOKEN GENERATION & STRICT RESTAURANT_ID
+-- 11. HARDENED create_order_atomic WITH TURNSTILE VERIFICATION & gen_random_uuid TOKENS
 -- ------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.create_order_atomic(
     p_order JSONB,
@@ -360,6 +442,8 @@ DECLARE
     v_order_id UUID;
     v_order_ref TEXT;
     v_restaurant_id TEXT;
+    v_verified_token TEXT;
+    v_consumed_token_id UUID;
     v_raw_payment_token TEXT;
     v_payment_token_hash TEXT;
     v_item JSONB;
@@ -395,7 +479,23 @@ BEGIN
         RAISE EXCEPTION 'Order cannot contain more than 40 distinct items';
     END IF;
 
-    -- 2. Validate Customer Details
+    -- 2. Turnstile Bot Defense: Require verified single-use token
+    v_verified_token := trim(COALESCE(p_order->>'verified_token', ''));
+    IF v_verified_token = '' THEN
+        RAISE EXCEPTION 'A verified Turnstile token is required to place an order';
+    END IF;
+
+    DELETE FROM public.verified_tokens
+    WHERE token = v_verified_token
+      AND action IN ('order', 'checkout')
+      AND expires_at > now()
+    RETURNING id INTO v_consumed_token_id;
+
+    IF v_consumed_token_id IS NULL THEN
+        RAISE EXCEPTION 'Invalid or expired security token. Please verify again.';
+    END IF;
+
+    -- 3. Validate Customer Details
     IF p_order->>'customer_name' IS NULL OR length(trim(p_order->>'customer_name')) < 2 THEN
         RAISE EXCEPTION 'Invalid customer name: minimum 2 characters required';
     END IF;
@@ -412,7 +512,7 @@ BEGIN
         RAISE EXCEPTION 'Dine-in orders require a valid table_number';
     END IF;
 
-    -- 3. Read restaurant_id strictly from restaurant_settings (IGNORE client-supplied p_order.restaurant_id)
+    -- 4. Read restaurant_id strictly from restaurant_settings (IGNORE client-supplied p_order.restaurant_id)
     SELECT rs.restaurant_id
     INTO v_restaurant_id
     FROM public.restaurant_settings rs
@@ -422,14 +522,14 @@ BEGIN
         v_restaurant_id := 'the-cafe-barrackpore';
     END IF;
 
-    -- 4. Generate order reference using gen_random_uuid-based 10+ character random code (never sequential)
+    -- 5. Generate order reference using gen_random_uuid-based 10+ character random code (never sequential)
     v_order_ref := 'CB-' || to_char(CURRENT_DATE, 'YYYY') || '-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10));
 
-    -- Generate random payment_token (32-byte hex) and compute its SHA-256 hash for storage
-    v_raw_payment_token := encode(gen_random_bytes(32), 'hex');
+    -- Generate random payment_token built from two gen_random_uuid (dashes removed)
+    v_raw_payment_token := replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
     v_payment_token_hash := encode(sha256(v_raw_payment_token::bytea), 'hex');
 
-    -- 5. Determine payment_status strictly on the server
+    -- 6. Determine payment_status strictly on the server
     v_payment_method := lower(trim(COALESCE(
         p_order->>'payment_method',
         p_order->>'payment_provider',
@@ -444,7 +544,7 @@ BEGIN
         v_payment_required := true;
     END IF;
 
-    -- 6. Calculate subtotal and line items strictly server-side
+    -- 7. Calculate subtotal and line items strictly server-side
     FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
     LOOP
         v_item_id := trim(COALESCE(v_item->>'menu_item_id', v_item->>'id', ''));
@@ -501,7 +601,7 @@ BEGIN
         v_computed_subtotal := v_computed_subtotal + v_line_total;
     END LOOP;
 
-    -- 7. Read tax & currency settings
+    -- 8. Read tax & currency settings
     SELECT
         COALESCE(rs.tax_enabled, true),
         COALESCE(rs.tax_mode, 'inclusive'),
@@ -529,7 +629,7 @@ BEGIN
         v_computed_total := v_computed_subtotal;
     END IF;
 
-    -- 8. Insert Order Header with payment_token_hash
+    -- 9. Insert Order Header with payment_token_hash
     INSERT INTO public.orders (
         order_ref,
         restaurant_id,
@@ -574,7 +674,7 @@ BEGIN
     )
     RETURNING id INTO v_order_id;
 
-    -- 9. Insert Line Items
+    -- 10. Insert Line Items
     FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
     LOOP
         v_item_id := trim(COALESCE(v_item->>'menu_item_id', v_item->>'id', ''));
@@ -621,7 +721,7 @@ BEGIN
         );
     END LOOP;
 
-    -- 10. Return order details including raw payment_token ONCE to browser
+    -- 11. Return order details including raw payment_token ONCE to browser
     RETURN jsonb_build_object(
         'success', true,
         'order_id', v_order_id,
@@ -637,3 +737,151 @@ BEGIN
     );
 END;
 $$;
+
+-- ------------------------------------------------------------------------------
+-- 12. HARDENED create_reservation_atomic WITH TURNSTILE VERIFICATION
+-- ------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.create_reservation_atomic(
+    p_reservation JSONB
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_res_id UUID;
+    v_res_ref TEXT;
+    v_restaurant_id TEXT;
+    v_verified_token TEXT;
+    v_consumed_token_id UUID;
+    v_customer_name TEXT;
+    v_customer_phone TEXT;
+    v_party_size INTEGER;
+    v_date DATE;
+    v_time TEXT;
+BEGIN
+    IF p_reservation IS NULL OR jsonb_typeof(p_reservation) <> 'object' THEN
+        RAISE EXCEPTION 'Reservation payload must be a valid JSON object';
+    END IF;
+
+    -- 1. Turnstile Bot Defense: Require verified single-use token
+    v_verified_token := trim(COALESCE(p_reservation->>'verified_token', ''));
+    IF v_verified_token = '' THEN
+        RAISE EXCEPTION 'A verified Turnstile token is required to make a reservation';
+    END IF;
+
+    DELETE FROM public.verified_tokens
+    WHERE token = v_verified_token
+      AND action = 'reservation'
+      AND expires_at > now()
+    RETURNING id INTO v_consumed_token_id;
+
+    IF v_consumed_token_id IS NULL THEN
+        RAISE EXCEPTION 'Invalid or expired security token. Please verify again.';
+    END IF;
+
+    -- 2. Tenant Scoping
+    v_restaurant_id := trim(COALESCE(p_reservation->>'restaurant_id', 'the-cafe-barrackpore'));
+    IF length(v_restaurant_id) < 2 THEN
+        v_restaurant_id := 'the-cafe-barrackpore';
+    END IF;
+
+    -- 3. Customer Name Validation
+    v_customer_name := trim(COALESCE(p_reservation->>'customer_name', ''));
+    IF length(v_customer_name) < 2 THEN
+        RAISE EXCEPTION 'Please enter a valid full name (minimum 2 characters)';
+    END IF;
+
+    -- 4. Customer Phone Validation
+    v_customer_phone := trim(COALESCE(p_reservation->>'customer_phone', ''));
+    IF length(v_customer_phone) < 7 THEN
+        RAISE EXCEPTION 'Please enter a valid phone number';
+    END IF;
+
+    -- 5. Reservation Reference
+    v_res_ref := trim(COALESCE(p_reservation->>'reservation_ref', ''));
+    IF v_res_ref = '' THEN
+        v_res_ref := 'RES-' || to_char(CURRENT_DATE, 'YYYYMMDD') || '-' || upper(substr(md5(random()::text), 1, 6));
+    END IF;
+
+    -- 6. Date Validation
+    IF p_reservation->>'reservation_date' IS NULL OR trim(p_reservation->>'reservation_date') = '' THEN
+        RAISE EXCEPTION 'Please select a reservation date';
+    END IF;
+
+    BEGIN
+        v_date := (p_reservation->>'reservation_date')::DATE;
+    EXCEPTION WHEN OTHERS THEN
+        RAISE EXCEPTION 'Invalid reservation date format';
+    END;
+
+    -- 7. Time Validation
+    v_time := trim(COALESCE(p_reservation->>'reservation_time', ''));
+    IF length(v_time) = 0 THEN
+        RAISE EXCEPTION 'Please select a reservation time';
+    END IF;
+
+    -- 8. Party Size Validation (1 to 20 guests)
+    BEGIN
+        v_party_size := (p_reservation->>'party_size')::INTEGER;
+    EXCEPTION WHEN OTHERS THEN
+        RAISE EXCEPTION 'Invalid party size';
+    END;
+
+    IF v_party_size IS NULL OR v_party_size < 1 OR v_party_size > 20 THEN
+        RAISE EXCEPTION 'Party size must be between 1 and 20 guests';
+    END IF;
+
+    -- 9. Insert reservation record
+    INSERT INTO public.reservations (
+        reservation_ref,
+        restaurant_id,
+        customer_name,
+        customer_phone,
+        reservation_date,
+        reservation_time,
+        party_size,
+        special_requests,
+        status,
+        source,
+        created_at,
+        updated_at
+    )
+    VALUES (
+        v_res_ref,
+        v_restaurant_id,
+        v_customer_name,
+        v_customer_phone,
+        v_date,
+        v_time,
+        v_party_size,
+        NULLIF(trim(p_reservation->>'special_requests'), ''),
+        COALESCE(p_reservation->>'status', 'pending'),
+        COALESCE(p_reservation->>'source', 'website'),
+        now(),
+        now()
+    )
+    RETURNING id INTO v_res_id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'reservation_id', v_res_id,
+        'reservation_ref', v_res_ref,
+        'restaurant_id', v_restaurant_id
+    );
+END;
+$$;
+
+-- ------------------------------------------------------------------------------
+-- 13. EXECUTE PRIVILEGES ON FUNCTIONS
+-- ------------------------------------------------------------------------------
+REVOKE ALL ON FUNCTION public.create_order_atomic(JSONB, JSONB) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.create_reservation_atomic(JSONB) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_order_status_by_token(TEXT, TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.validate_discount_code(TEXT) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION public.create_order_atomic(JSONB, JSONB) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.create_reservation_atomic(JSONB) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.get_order_status_by_token(TEXT, TEXT) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.validate_discount_code(TEXT) TO anon, authenticated, service_role;

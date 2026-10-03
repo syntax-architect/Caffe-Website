@@ -4,7 +4,7 @@ import { useNotification } from '../../hooks/useNotification';
 import { uploadSiteImage } from '../../services/storageService';
 import type { SpecialCombo } from '../../services/siteContentService';
 
-type ContentTab = 'hero' | 'about' | 'vibe' | 'specials' | 'gallery' | 'branding';
+type ContentTab = 'hero' | 'about' | 'vibe' | 'specials' | 'gallery' | 'vip' | 'branding';
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 export const ContentManagement: React.FC = () => {
@@ -104,7 +104,18 @@ export const ContentManagement: React.FC = () => {
   // TAB 5: AMBIANCE GALLERY (4 Photos)
   const [galleryImages, setGalleryImages] = useState<ImageAsset[]>(siteConfig.gallery.images);
 
-  // TAB 6: BRAND IDENTITY & LOGO
+  // TAB 6: VIP CLUB & SPEAKEASY SALON (1 Photo)
+  const [vipTitle, setVipTitle] = useState(
+    siteConfig.vipClub?.title || 'The Nocturnal Society'
+  );
+  const [vipSubtitle, setVipSubtitle] = useState(
+    siteConfig.vipClub?.subtitle ||
+      'An intimate speakeasy membership for Barrackpore’s discerning patrons.'
+  );
+  const [vipImage, setVipImage] = useState(siteConfig.vipClub?.src || '/images/vip-nocturnal-circle.jpg');
+  const [vipAlt, setVipAlt] = useState(siteConfig.vipClub?.alt || 'The Café Barrackpore Nocturnal VIP Salon');
+
+  // TAB 7: BRAND IDENTITY & LOGO
   const [brandLogo, setBrandLogo] = useState(siteConfig.logoUrl || '/logo.webp');
   const [brandLogoAlt, setBrandLogoAlt] = useState('The Café Barrackpore Crest');
 
@@ -131,6 +142,10 @@ export const ContentManagement: React.FC = () => {
     }
 
     if (siteConfig.gallery?.images) setGalleryImages(siteConfig.gallery.images);
+    if (siteConfig.vipClub?.src) setVipImage(siteConfig.vipClub.src);
+    if (siteConfig.vipClub?.title) setVipTitle(siteConfig.vipClub.title);
+    if (siteConfig.vipClub?.subtitle) setVipSubtitle(siteConfig.vipClub.subtitle);
+    if (siteConfig.vipClub?.alt) setVipAlt(siteConfig.vipClub.alt);
     if (siteConfig.logoUrl) setBrandLogo(siteConfig.logoUrl);
   }, [siteConfig]);
 
@@ -175,6 +190,15 @@ export const ContentManagement: React.FC = () => {
     return JSON.stringify(galleryImages) !== JSON.stringify(siteConfig.gallery.images);
   }, [galleryImages, siteConfig.gallery.images]);
 
+  const isVipDirty = useMemo(() => {
+    return (
+      vipTitle !== (siteConfig.vipClub?.title || 'The Nocturnal Society') ||
+      vipSubtitle !== (siteConfig.vipClub?.subtitle || 'An intimate speakeasy membership for Barrackpore’s discerning patrons.') ||
+      vipImage !== (siteConfig.vipClub?.src || '/images/vip-nocturnal-circle.jpg') ||
+      vipAlt !== (siteConfig.vipClub?.alt || 'The Café Barrackpore Nocturnal VIP Salon')
+    );
+  }, [vipTitle, vipSubtitle, vipImage, vipAlt, siteConfig.vipClub]);
+
   const isBrandingDirty = useMemo(() => {
     return (
       brandLogo !== (siteConfig.logoUrl || '/logo.webp') ||
@@ -188,11 +212,12 @@ export const ContentManagement: React.FC = () => {
     if (activeTab === 'vibe') return isVibeDirty;
     if (activeTab === 'specials') return isSpecialsDirty;
     if (activeTab === 'gallery') return isGalleryDirty;
+    if (activeTab === 'vip') return isVipDirty;
     if (activeTab === 'branding') return isBrandingDirty;
     return false;
-  }, [activeTab, isHeroDirty, isAboutDirty, isVibeDirty, isSpecialsDirty, isGalleryDirty, isBrandingDirty]);
+  }, [activeTab, isHeroDirty, isAboutDirty, isVibeDirty, isSpecialsDirty, isGalleryDirty, isVipDirty, isBrandingDirty]);
 
-  const isAnyDirty = isHeroDirty || isAboutDirty || isVibeDirty || isSpecialsDirty || isGalleryDirty || isBrandingDirty;
+  const isAnyDirty = isHeroDirty || isAboutDirty || isVibeDirty || isSpecialsDirty || isGalleryDirty || isVipDirty || isBrandingDirty;
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -251,6 +276,13 @@ export const ContentManagement: React.FC = () => {
       } else if (activeTab === 'gallery') {
         success = await siteConfig.updateSection('gallery', {
           images: galleryImages,
+        });
+      } else if (activeTab === 'vip') {
+        success = await siteConfig.updateSection('vipClub', {
+          title: vipTitle.trim(),
+          subtitle: vipSubtitle.trim(),
+          src: vipImage.trim(),
+          alt: vipAlt.trim(),
         });
       } else if (activeTab === 'branding') {
         success = await siteConfig.updateSection('branding', {
@@ -397,6 +429,7 @@ export const ContentManagement: React.FC = () => {
           { id: 'vibe' as ContentTab, label: 'Atmosphere & Vibe', icon: 'local_fire_department', dirty: isVibeDirty },
           { id: 'specials' as ContentTab, label: 'Banquets & Platters', icon: 'dinner_dining', dirty: isSpecialsDirty },
           { id: 'gallery' as ContentTab, label: 'Ambiance Gallery', icon: 'photo_library', dirty: isGalleryDirty },
+          { id: 'vip' as ContentTab, label: 'VIP Speakeasy Salon', icon: 'hotel_class', dirty: isVipDirty },
           { id: 'branding' as ContentTab, label: 'Brand & Logo', icon: 'badge', dirty: isBrandingDirty },
         ].map((tab) => (
           <button
@@ -942,7 +975,117 @@ export const ContentManagement: React.FC = () => {
         </form>
       )}
 
-      {/* TAB 6: BRAND IDENTITY & LOGO */}
+      {/* TAB 6: VIP CLUB & SPEAKEASY SALON */}
+      {activeTab === 'vip' && (
+        <form onSubmit={handleSaveSection} className="space-y-6">
+          <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Private Salon</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">VIP Club &amp; Speakeasy Sanctuary</h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  The exclusive speakeasy salon showcase photo displayed on the homepage.
+                </p>
+              </div>
+
+              {/* VIP PHOTO PREVIEW & REPLACEMENT */}
+              <div className="space-y-3">
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400">
+                  Speakeasy Salon Background Image
+                </label>
+
+                <div className="relative aspect-[16/9] max-h-72 rounded-2xl overflow-hidden border border-white/[0.1] bg-black/40 group">
+                  <img
+                    src={vipImage}
+                    alt={vipAlt}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                    <span className="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#D4AF37] border border-[#D4AF37]/30">
+                      Live VIP Background Image
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
+                  <label className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0 inline-flex items-center gap-2">
+                    <span className="material-symbols-outlined text-base">cloud_upload</span>
+                    <span>Upload New Photo...</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleImageUpload(e, 'content', (url) => setVipImage(url))}
+                    />
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="Or enter public image URL..."
+                    value={vipImage}
+                    onChange={(e) => {
+                      setVipImage(e.target.value);
+                      setSaveStatus('idle');
+                    }}
+                    className="flex-1 bg-[#070605] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Photo Alt Text
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={vipAlt}
+                  onChange={(e) => {
+                    setVipAlt(e.target.value);
+                    setSaveStatus('idle');
+                  }}
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Salon Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={vipTitle}
+                  onChange={(e) => {
+                    setVipTitle(e.target.value);
+                    setSaveStatus('idle');
+                  }}
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Salon Subtitle
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={vipSubtitle}
+                  onChange={(e) => {
+                    setVipSubtitle(e.target.value);
+                    setSaveStatus('idle');
+                  }}
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              {renderSaveButton('VIP Speakeasy Salon')}
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* TAB 7: BRAND IDENTITY & LOGO */}
       {activeTab === 'branding' && (
         <form onSubmit={handleSaveSection} className="space-y-6">
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">

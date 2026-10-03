@@ -17,10 +17,9 @@ export const Hero: React.FC = React.memo(() => {
     setIsReservationOpen(true);
   };
 
-  // High-performance WebP hero asset
-  const heroImageSrc = (hero?.src && !hero.src.includes('hero-cinematic'))
-    ? hero.src
-    : '/images/hero-bar.webp';
+  // High-performance WebP hero asset with dynamic admin override support
+  const isCustomHero = Boolean(hero?.src && hero.src !== '/images/hero-bar.webp');
+  const heroImageSrc = hero?.src || '/images/hero-bar.webp';
   const heroImageAlt = hero?.alt || 'The Café Barrackpore — Nocturnal Cocktail & Espresso Lounge';
 
   const descriptionText = hero?.subtext || 
@@ -37,7 +36,9 @@ export const Hero: React.FC = React.memo(() => {
       >
         <div className="relative w-full h-full">
           <picture>
-            <source media="(max-width: 768px)" srcSet="/images/hero-bar-mobile.webp" type="image/webp" width="640" height="357" />
+            {!isCustomHero && (
+              <source media="(max-width: 768px)" srcSet="/images/hero-bar-mobile.webp" type="image/webp" width="640" height="357" />
+            )}
             <img
               src={heroImageSrc}
               alt={heroImageAlt}

@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 export const VIPClub: React.FC = () => {
+  const { vipClub } = useSiteConfig();
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const vipImageSrc = vipClub?.src || '/images/vip-nocturnal-circle.jpg';
+  const vipImageAlt = vipClub?.alt || 'The Café Barrackpore Nocturnal VIP Salon';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +48,8 @@ export const VIPClub: React.FC = () => {
             {/* 2. PHOTOGRAPHIC CINEMATIC BACKGROUND IMAGE */}
             <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
               <img
-                src="/images/vip-nocturnal-circle.jpg"
-                alt="The Café Barrackpore Nocturnal VIP Salon"
+                src={vipImageSrc}
+                alt={vipImageAlt}
                 className="w-full h-full object-cover object-[center_35%] filter brightness-[0.88] contrast-[1.08] saturate-[1.12] scale-[1.02] transition-transform duration-1000 ease-out group-hover:scale-105"
                 loading="lazy"
                 decoding="async"

@@ -65,6 +65,7 @@ export interface CreateOrderPayload {
   tax_options?: TaxCalculationOptions;
   restaurant_id?: string;
   captcha_token?: string;
+  verified_token?: string;
   marketing_consent?: boolean;
   discount_code?: string | null;
   discount_amount?: number;

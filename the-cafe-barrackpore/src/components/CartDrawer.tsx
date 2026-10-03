@@ -478,7 +478,7 @@ export const CartDrawer: React.FC = () => {
               p_payment_token: tokenToUse,
             });
 
-            if (!statusErr && statusData) {
+            if (!statusErr && statusData && statusData.success) {
               if (statusData.payment_status === 'paid') {
                 onConfirmed(statusData.payment_amount ?? statusData.total, statusData.total);
                 return;
@@ -486,20 +486,6 @@ export const CartDrawer: React.FC = () => {
                 onFailed('Payment declined or failed.');
                 return;
               }
-            }
-          } else {
-            const { data: currentOrder } = await supabase
-              .from('orders')
-              .select('payment_status, total, payment_amount')
-              .eq('order_ref', activeRef)
-              .maybeSingle();
-
-            if (currentOrder?.payment_status === 'paid') {
-              onConfirmed(currentOrder.payment_amount ?? currentOrder.total, currentOrder.total);
-              return;
-            } else if (currentOrder?.payment_status === 'failed') {
-              onFailed('Payment declined or failed.');
-              return;
             }
           }
         } catch (err) {

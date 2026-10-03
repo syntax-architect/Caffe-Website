@@ -16,8 +16,27 @@ interface DashboardOverviewProps {
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate }) => {
   const { staffProfile } = useAuth();
   const { restaurantConfig, formatPrice } = useSiteConfig();
-  const [data, setData] = useState<DashboardOverviewData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [data, setData] = useState<DashboardOverviewData | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('cafe_dashboard_overview_cache');
+        if (cached) return JSON.parse(cached);
+      } catch {
+        // ignore
+      }
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return !localStorage.getItem('cafe_dashboard_overview_cache');
+      } catch {
+        return true;
+      }
+    }
+    return true;
+  });
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [simulationMessage, setSimulationMessage] = useState<string | null>(null);
@@ -35,7 +54,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
   const loadOverview = () => {
     setIsRefreshing(true);
     fetchDashboardOverview()
-      .then((overview) => setData(overview))
+      .then((overview) => {
+        setData(overview);
+        try {
+          localStorage.setItem('cafe_dashboard_overview_cache', JSON.stringify(overview));
+        } catch {
+          // ignore
+        }
+      })
       .catch((err) => console.error('Failed to load overview:', err))
       .finally(() => {
         setIsLoading(false);
@@ -94,6 +120,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
       if (isMounted) {
         setData(overview);
         setIsLoading(false);
+        try {
+          localStorage.setItem('cafe_dashboard_overview_cache', JSON.stringify(overview));
+        } catch {
+          // ignore
+        }
       }
     });
     fetchOwnerAnalytics().then((a) => { if (isMounted) setAnalytics(a); });

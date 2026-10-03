@@ -1,266 +1,215 @@
-# Enterprise Security Architecture & Operations Guide
-## The Café Barrackpore
+# Security Architecture & Operations Guide
+## The Café Barrackpore — Hospitality Operations Digital System
 
-This document outlines the security architecture, controls, operational procedures, key rotation policies, backup strategies, and incident response checklist implemented to harden The Café Barrackpore web application and database infrastructure to commercial enterprise standards.
+This document provides an accurate, implementation-verified overview of the security architecture, access controls, edge functions, database protections, and operational procedures implemented in The Café Barrackpore web application and database infrastructure.
 
 ---
 
 ## 1. Threat Model & Security Posture Overview
 
-The Café Barrackpore application processes public food orders, table reservations, menu browsing, and staff administrative operations. The security posture enforces **Defense in Depth** across five distinct layers:
+The Café Barrackpore platform processes public food orders, table reservations, menu browsing, and staff operations. The security posture enforces **Defense in Depth** across five distinct layers:
 
 ```
 [ Client Browser / Mobile Web ]
                │
                ▼
-[ Edge Security Headers & Turnstile CAPTCHA ] (CSP, HSTS, X-Frame-Options, Rate Limits)
+[ Edge Security Headers & Cloudflare Turnstile ] (CSP, HSTS, X-Frame-Options, Bot Defense)
                │
                ▼
-[ Edge Functions & API Gateway ] (Strict CORS, Origin Validation, Phone/IP Rate Limiting)
+[ Edge Functions & API Gateway ] (Strict CORS, Upstash/Postgres Rate Limiter, Cron Secret Auth)
                │
                ▼
-[ Supabase Authentication & Auth Rules ] (MFA for Owners, 5-Attempt Lockout, Inactivity Timeout, Global Revocation)
+[ Supabase Authentication & Session Controls ] (5-Attempt Brute-Force Lockout, 30-min Inactivity Timeout, Global Sign Out)
                │
                ▼
-[ PostgreSQL Hardened Core ] (Multi-tenant RLS by restaurant_id, Atomic Validated RPCs, Revoked Public Grants, Audit Triggers)
+[ PostgreSQL Hardened Core ] (Granular RLS, Revoked Public Writes, Single-Use Verified Tokens, Two-UUID Payment Tokens, Atomic SECURITY DEFINER RPCs)
 ```
 
 ---
 
 ## 2. Database Hardening & Row Level Security (RLS)
 
-All database security controls are codified in migration `supabase/migrations/013_security_hardening.sql`.
+All database security controls are codified in migrations `001` through `016`, consolidated into the single deployment script: [`supabase/all_migrations_combined.sql`](file:///supabase/all_migrations_combined.sql).
 
-### 2.1 Multi-Tenant Isolation by `restaurant_id`
-Every single table in the schema enforces Row Level Security (RLS) with explicit policies scoped by `restaurant_id`:
-- `restaurants`
-- `menu_categories`
-- `menu_items`
+### 2.1 Row Level Security (RLS) Enabled Across Tables
+Row Level Security is enabled on all active application tables:
 - `orders`
 - `order_items`
 - `reservations`
-- `customers`
+- `restaurant_tables`
+- `menu_categories`
+- `menu_items`
+- `menu_item_availability`
+- `restaurant_settings`
+- `site_content`
 - `staff_profiles`
-- `discounts`
+- `discount_codes`
 - `payments`
-- `restaurant_content`
-- `order_status_history`
-- `audit_log`
+- `verified_tokens`
+- `rate_limits`
+- `happy_hour_schedules`
 
 ### 2.2 Least-Privilege Grant Revocation
-All default public and anon table privileges have been revoked:
+All default public mutations have been revoked:
 ```sql
-REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon, authenticated, public;
-REVOKE ALL ON ALL ROUTINES IN SCHEMA public FROM anon, authenticated, public;
+REVOKE INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public FROM anon;
+REVOKE ALL ON TABLE public.orders FROM anon;
+REVOKE ALL ON TABLE public.order_items FROM anon;
+REVOKE ALL ON TABLE public.payments FROM anon;
+REVOKE ALL ON TABLE public.staff_profiles FROM anon;
+REVOKE SELECT ON TABLE public.discount_codes FROM anon;
+REVOKE INSERT ON TABLE public.orders FROM anon, authenticated;
+REVOKE INSERT ON TABLE public.reservations FROM anon, authenticated;
 ```
-Only required permissions are explicitly granted:
-- `anon` and `authenticated`: `SELECT` on safe public tables (`menu_categories`, `menu_items`, `restaurant_content`, public `restaurants` fields).
-- `authenticated`: `SELECT`, `INSERT`, `UPDATE` on staff tables governed strictly by the user's role in `staff_profiles`.
 
-### 2.3 Protection of Customer PII
-- Customer phone numbers, emails, order histories, and reservation notes are **never** exposed to the `anon` role via direct `SELECT`.
-- Staff members can only view customer and order data belonging to their assigned `restaurant_id`.
-- The `customers` table cannot be queried by unauthenticated users.
+Only necessary read privileges are granted back to `anon`:
+- `menu_categories` (SELECT)
+- `menu_items` (SELECT)
+- `site_content` (SELECT)
+- `restaurant_tables` (SELECT active tables only)
+- `menu_item_availability` (SELECT)
+- `restaurant_settings` (SELECT)
 
-### 2.4 Atomic Stored Procedures (RPCs)
-Direct `INSERT` on `orders`, `order_items`, and `reservations` is revoked for public/anonymous users. All submissions must route through validated `SECURITY DEFINER` stored procedures:
+### 2.3 Protection of Customer PII & Orders
+- `orders`, `order_items`, and `payments` are completely revoked from `anon`. Scrapers or unauthorized users cannot query customer names, phone numbers, addresses, or order history.
+- Active staff access is restricted by tenant `restaurant_id` and verified using `public.is_active_staff(auth.uid())`.
+- Diners check order status exclusively through `get_order_status_by_token(order_ref, payment_token)`.
 
-#### `create_order_atomic`
-- **Phone Validation:** Strict E.164 / international regex check `^\+?[0-9\s\-()]{7,20}$`.
-- **String Length Limits:** Customer name bounded to 2–100 characters; special requests bounded to 500 characters.
-- **Quantity Clamping:** Each item quantity must be an integer between 1 and 50. Distinct items capped at 40 per order.
-- **Server-Side Pricing Authority:** Ignores any client-supplied `unit_price`, `subtotal`, or `total`. Looks up authoritative prices directly in `public.menu_items` and checks `available = true`. Recomputes subtotal, statutory tax (5% GST), and total server-side.
+### 2.4 Granular Table & Menu Availability Policies
+- `restaurant_tables` and `menu_item_availability` use granular `SELECT`, `INSERT`, `UPDATE`, and `DELETE` policies (no permissive `FOR ALL`).
+- Anonymous users can only `SELECT` active dining tables and availability records.
+- Only active staff with role `owner` or `manager` may mutate tables and menu availability.
+- All `UPDATE` policies include matching `WITH CHECK` clauses.
 
-#### `create_reservation_atomic`
-- **Date/Time Validation:** Enforces ISO date formatting and validates party size between 1 and 20 guests.
-- **Collision Retry:** Prevents reservation reference duplicates with unique indexing.
+### 2.5 Discount Code Protection
+- Direct table `SELECT` on `discount_codes` is revoked from `anon` (dropping the legacy public validate policy).
+- Diners validate promo codes through `validate_discount_code(code)` RPC (`SECURITY DEFINER`), which returns only the discount amount, type, and order thresholds, preventing leakage of usage counts, total limits, or campaign metadata.
 
 ---
 
-## 3. Authentication & Staff Session Security
+## 3. Atomic Stored Procedures (RPCs)
 
-### 3.1 Brute Force Protection & Sliding Lockout
+Direct table `INSERT` into `orders` and `reservations` is prohibited for both anonymous and authenticated users. All orders and reservations must be processed through server-side `SECURITY DEFINER` procedures with `SET search_path = public, pg_temp`:
+
+### 3.1 `create_order_atomic(p_order, p_items)`
+1. **Turnstile Verification:** Consumes a single-use token from `public.verified_tokens`. Raises an exception if the token is missing, invalid, or expired.
+2. **Item & Quantity Clamping:** Caps orders at 40 distinct items. Enforces quantity between 1 and 50 per item.
+3. **Server-Side Pricing Authority:** Ignores any client-supplied unit price, subtotal, or total. Looks up authoritative prices directly in `public.menu_items`, verifies `available = true`, and checks `menu_item_availability`.
+4. **Authoritative Settings:** Overrides client-supplied `restaurant_id` with `public.restaurant_settings`. Computes statutory tax (inclusive or exclusive) server-side.
+5. **Random References:** Generates random order references using `CB-YYYY-XXXXXXXXXX` (never sequential).
+6. **Double-UUID Payment Tokens:** Generates a 64-character raw payment token composed of two concatenated `gen_random_uuid()` calls with dashes stripped. Computes the SHA-256 hash, stores `payment_token_hash` in `public.orders`, and returns the raw token once to the caller.
+
+### 3.2 `create_reservation_atomic(p_reservation)`
+1. **Turnstile Verification:** Consumes a single-use token from `public.verified_tokens` for action `reservation`. Raises an exception if missing or expired.
+2. **Validation:** Validates customer name (>= 2 chars), phone number, party size (1–20 guests), and reservation date/time.
+3. **Collision Resistance:** Generates a unique reservation reference `RS-YYYY-XXXX`.
+
+### 3.3 `get_order_status_by_token(p_order_ref, p_payment_token)`
+- Validates SHA-256 hash of the provided `payment_token` against `orders.payment_token_hash`.
+- Returns only the order's status, payment status, totals, and line items, preventing IDOR access to orders.
+
+---
+
+## 4. Edge Functions, Payment Security & Cron Authorization
+
+### 4.1 Payment Initialization Security
+- Edge functions `create-payment`, `create-razorpay-order`, and `create-stripe-checkout`:
+  - Require both `order_ref` and `payment_token`.
+  - Fetch the order from the database and verify `payment_token` by computing its SHA-256 hash and performing a constant-time `timingSafeEqual` comparison against `orders.payment_token_hash`.
+  - Require the `PUBLIC_SITE_URL` environment variable; zero localhost or fallback domain defaults are permitted in production.
+  - Append `payment_token` to callback/redirect URLs so checkout return handlers can poll status safely.
+
+### 4.2 Payment Webhook Authority (`payment-webhook`)
+- Only the `payment-webhook` Edge Function (operating under the Supabase `service_role`) may write payment records or update order statuses to `paid`.
+- Browser client services (`paymentService.ts` and `orderService.ts`) contain zero direct table writes to `payments` or `orders`.
+- Webhook signatures (Stripe webhook signature, Razorpay webhook signature) are cryptographically validated using `crypto.subtle`.
+- Fails with a 500 configuration error if currency or required order settings are absent (zero hardcoded `'INR'` fallbacks).
+
+### 4.3 Scheduled Cron Functions (`daily-sales-summary` & `stock-alerts`)
+- Require an `x-cron-secret` request header equal to the `CRON_SECRET` environment variable. Returns HTTP `401 Unauthorized` on mismatch.
+- Fetch restaurant name and currency strictly from `public.restaurant_settings`. If unconfigured, the functions abort with a 500 configuration error (zero `'INR'` or `'The Café Barrackpore'` fallbacks).
+
+### 4.4 Bot Defense & Rate Limiting
+- `verify-turnstile` Edge Function verifies Cloudflare Turnstile tokens via Cloudflare's `siteverify` API.
+- Rate limiting is implemented in `supabase/functions/_shared/rateLimiter.ts` using Upstash Redis (if configured via `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`) or the PostgreSQL `public.rate_limits` table via service role client.
+- Successful Turnstile validations issue a 5-minute single-use token inserted into `public.verified_tokens`, which is consumed atomically upon order or reservation creation.
+
+---
+
+## 5. Authentication & Staff Session Security
+
+### 5.1 Brute Force Protection & Account Lockout
 - Managed via `src/utils/security.ts`.
-- **Threshold:** 5 consecutive failed login attempts locks the staff account for **15 minutes**.
-- Lockout counters are tracked per email address with countdown feedback displayed on `StaffLoginPage`.
+- 5 consecutive failed login attempts locks staff login on the client for **15 minutes**.
+- Lockout counters track email addresses with countdown timers displayed on the login interface.
 
-### 3.2 Strong Password Complexity Enforcement
-Password creation and resets (`ResetPasswordPage`) enforce enterprise criteria:
-- Minimum **10 characters** in length
-- At least one uppercase letter (`A-Z`)
-- At least one lowercase letter (`a-z`)
-- At least one numeric digit (`0-9`)
-- At least one special symbol (`!@#$%^&*...`)
+### 5.2 Password Complexity Standards
+- Validated on staff password resets and creations:
+  - Minimum 10 characters
+  - At least one uppercase letter (`A-Z`)
+  - At least one lowercase letter (`a-z`)
+  - At least one numeric digit (`0-9`)
+  - At least one special symbol
 
-### 3.3 Multi-Factor Authentication (MFA / 2FA)
-- Built on Supabase TOTP MFA standard.
-- **Owner Requirement:** Accounts with role `owner` are prompted to register and verify TOTP two-factor authentication upon signing in.
-- Staff members can verify TOTP challenges directly on `StaffLoginPage` without disrupting their login flow.
-
-### 3.4 Inactivity Session Timeout
+### 5.3 Inactivity Session Timeout
 - Governed by `src/hooks/useStaffSessionTimeout.ts`.
-- Automatically tracks user interaction (`mousedown`, `keydown`, `touchstart`, `scroll`) across staff screens.
-- Throttled activity updates terminate the session and clear memory after **30 minutes** of complete inactivity.
+- Tracks user interactions across staff views and terminates the session after **30 minutes** of complete inactivity.
 
-### 3.5 Global Session Revocation ("Sign Out Everywhere")
-- Staff members and administrators can invoke `signOutEverywhere()` from the dashboard toolbar or user menu.
-- Executes `supabase.auth.signOut({ scope: 'global' })`, immediately revoking all issued refresh tokens across all browsers, tablets, and devices.
+### 5.4 Global Session Revocation
+- Staff can invoke `signOutEverywhere()` from the dashboard to execute `supabase.auth.signOut({ scope: 'global' })`, immediately revoking refresh tokens across all devices.
 
-### 3.6 Zero Client-Authority Authorization
-- Access control decisions are **never** made based on values stored in `localStorage` or `sessionStorage`.
-- Roles (`owner`, `manager`, `staff`) are fetched dynamically from `public.staff_profiles` linked to the verified Supabase Auth UID and checked by PostgreSQL RLS on every single query.
+### 5.5 Role-Based Access Control (RBAC)
+- Client roles (`owner`, `manager`, `staff`) are verified against `public.staff_profiles` linked to `auth.uid()`.
+- RLS enforces table permissions at the database layer on every query, ensuring frontend route guards cannot be bypassed.
 
 ---
 
-## 4. API, Edge Functions & Bot Defense
+## 6. Frontend & Asset Security
 
-### 4.1 Cloudflare Turnstile Integration
-- Public order checkout (`CartDrawer`) and reservation booking (`ReservationDrawer`) include Cloudflare Turnstile CAPTCHA verification.
-- Tokens are submitted with payloads and verified server-side via Supabase Edge Function `verify-turnstile` using Cloudflare's `siteverify` endpoint.
-- Protects against scripted order spam, inventory exhaustion, and reservation table locking.
+### 6.1 HTTP Security Headers
+Configured across `public/_headers`, `vercel.json`, and hosting environments:
+- `Content-Security-Policy`: Restricts scripts, styles, images, and fonts to authorized origins and CDNs.
+- `Strict-Transport-Security`: `max-age=63072000; includeSubDomains; preload`
+- `X-Content-Type-Options`: `nosniff`
+- `X-Frame-Options`: `DENY`
+- `Referrer-Policy`: `strict-origin-when-cross-origin`
+- `Permissions-Policy`: `camera=(), microphone=(), geolocation=(), payment=(self)`
 
-### 4.2 Rate Limiting Architecture
-- Implemented in `supabase/functions/_shared/rateLimiter.ts` with Upstash Redis support and local sliding-window fallback:
-  - **Orders:** 5 requests per 60 seconds per IP; 4 requests per 120 seconds per customer phone.
-  - **Reservations:** 5 requests per 60 seconds per IP; 4 requests per 120 seconds per customer phone.
-  - **Authentication:** 5 attempts per 15 minutes per IP/account.
+### 6.2 Upload Sanitization
+- Governed by `src/services/storageService.ts`:
+  - 5 MB maximum file size.
+  - Safe image MIME type whitelist (`jpeg`, `png`, `webp`, `avif`, `svg+xml`).
+  - Strict textual scanning of SVG files to reject embedded `<script>`, event attributes (`onload`, `onerror`), and `javascript:` URLs.
 
-### 4.3 Strict Origin & CORS Policy
-- Configured in `supabase/functions/_shared/cors.ts`.
-- **Zero Wildcards:** Origin `'*'` is strictly rejected.
-- Allows only production domain `https://thecafebarrackpore.com` (and localhost origins strictly during local development).
-- Standard preflight headers:
-  ```http
-  Access-Control-Allow-Origin: https://thecafebarrackpore.com
-  Access-Control-Allow-Methods: POST, GET, OPTIONS
-  Access-Control-Allow-Headers: authorization, x-client-info, apikey, content-type
-  ```
+### 6.3 PII and Secret Scrubbing
+- Client logs in `src/services/logger.ts` strip sensitive order payloads and credentials in production builds.
+- Error boundary (`src/components/ErrorBoundary.tsx`) catches runtime errors and presents friendly messages, suppressing raw database exceptions or stack traces.
 
 ---
 
-## 5. Frontend & Asset Security
+## 7. Secrets Management & Deployment Integrity
 
-### 5.1 HTTP Security Headers
-Configured across `vercel.json`, `public/_headers`, and `render.yaml`:
-```http
-Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://*.sentry.io; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;
-Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-Referrer-Policy: strict-origin-when-cross-origin
-Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(self)
-```
+### 7.1 Single Deployment Script
+- The single authoritative database deployment file is [`supabase/all_migrations_combined.sql`](file:///supabase/all_migrations_combined.sql).
+- The obsolete `consolidated_schema.sql` file has been deleted.
+- Migrations `001` through `016` are sequenced with unique numbers:
+  1. `001_initial_orders.sql`
+  2. `002_reservations.sql`
+  3. `003_staff_profiles.sql`
+  4. `004_restaurant_tables.sql`
+  5. `005_menu_availability.sql`
+  6. `006_kitchen_realtime.sql`
+  7. `007_internationalization.sql`
+  8. `008_payment_architecture.sql`
+  9. `009_menu_and_secure_orders.sql`
+  10. `010_menu_and_site_content.sql`
+  11. `011_multi_tenant_and_allergens.sql`
+  12. `012_provider_agnostic_payments.sql`
+  13. `013_owner_features.sql`
+  14. `014_order_caps_and_direct_insert_lockdown.sql`
+  15. `015_complete_image_sync.sql`
+  16. `016_security_hardening.sql`
 
-### 5.2 XSS Sanitization & Image Upload Hardening
-- **Zero Unsafe HTML:** All dynamic text rendering avoids `dangerouslySetInnerHTML`. Where rich text is required, it is parsed and sanitized using `dompurify`.
-- **Media Upload Validation:** In `src/services/storageService.ts`:
-  - Enforces a **5 MB** maximum file size.
-  - Whitelists safe MIME types: `image/jpeg`, `image/png`, `image/webp`, `image/avif`, `image/svg+xml`.
-  - SVG files undergo deep textual scanning to reject scripts, event handlers (`onload`, `onerror`), and `javascript:` pseudo-protocols.
-  - Files are saved strictly in scoped paths: `staff-uploads/{restaurantId}/{folder}/{timestamp}-{safeName}`.
-
-### 5.3 Production Error Telemetry & Log Sanitization
-- Configured in `src/services/logger.ts`, `src/components/ErrorBoundary.tsx`, and `src/lib/sentry.ts`.
-- In production, console debugging of payloads, customer data, and authentication tokens is stripped.
-- Raw stack traces are suppressed in the user-facing UI and replaced with user-friendly error boundaries.
-- Unhandled application exceptions are scrubbed of PII and dispatched to Sentry.
-
----
-
-## 6. Audit Logging & Compliance
-
-### 6.1 Automated Audit Log Schema
-The `public.audit_log` table captures critical administrative events:
-- Staff logins and logouts
-- Menu item price changes (storing previous price, new price, changed by UID)
-- Order refund issuances and payment status overrides
-- Staff role promotions and demotions
-- Restaurant business settings and tax rate changes
-
-### 6.2 PostgreSQL Automated Triggers
-Automated database triggers guarantee tamper-resistant logging even if queries originate outside the web app:
-- `trg_audit_menu_price_change` on `menu_items` (fired on `UPDATE` of `price`)
-- `trg_audit_staff_profile_change` on `staff_profiles` (fired on `INSERT`, `UPDATE`, `DELETE`)
-- `trg_audit_restaurant_settings_change` on `restaurants` (fired on `UPDATE` of tax/settings)
-- `trg_audit_payment_refund` on `payments` (fired on status transition to `refunded`)
-
-Audit logs can be reviewed by authorized managers and owners directly in the dashboard at `/staff/audit`.
-
----
-
-## 7. Secrets Management & Key Rotation Procedures
-
-### 7.1 Secret Storage Rules
-- `.env` files must **never** be committed to version control. Verified via root `.gitignore`.
-- Production credentials are kept exclusively in hosting secret managers (Vercel Environment Variables, Render Secret Files, Supabase Vault).
-
-### 7.2 Key Rotation Schedule & Runbooks
-
-| Secret / Key | Rotation Frequency | Rotation Procedure |
-| :--- | :--- | :--- |
-| **Supabase JWT Secret** | Annually or upon breach | Supabase Dashboard -> Project Settings -> API -> Generate new JWT secret. Re-deploy web app with new `VITE_SUPABASE_ANON_KEY`. |
-| **Supabase Service Role Key**| Bi-annually | Regenerate in Supabase Dashboard. Immediately update Supabase Edge Functions environment variables. |
-| **Cloudflare Turnstile Secret**| Annually | Cloudflare Dashboard -> Turnstile -> Select Widget -> Rotate Secret Key. Update `TURNSTILE_SECRET_KEY` in Supabase Secrets. |
-| **Payment Gateway Keys** | Quarterly | Razorpay/Stripe Dashboard -> API Keys -> Roll Key (allow 24h grace period). Update backend webhook and checkout secrets. |
-| **Database Passwords** | Bi-annually | Supabase Database Settings -> Reset Database Password. Update connection pooler URI in Edge Functions. |
-
----
-
-## 8. Backup & Disaster Recovery Strategy
-
-### 8.1 Automated Cloud Backups
-- Supabase performs **daily automated physical backups** retained for 7 to 30 days depending on compute tier.
-- Point-in-Time Recovery (PITR) is enabled for production, allowing database restoration to any specific second in the preceding 7 days.
-
-### 8.2 Manual Snapshot Export
-To export a full schema and data snapshot locally:
-```bash
-# Dump complete database schema and data
-pg_dump --clean --if-exists --no-owner --no-privileges \
-  -h db.<project-ref>.supabase.co -U postgres -d postgres > backup_$(date +%Y%m%d_%H%M%S).sql
-```
-
-### 8.3 Disaster Recovery Drill
-1. Provision a standby Supabase staging instance.
-2. Restore latest automated backup or run `supabase/all_migrations_combined.sql`.
-3. Verify RLS policies are active:
-   ```sql
-   SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public';
-   ```
-4. Perform smoke test for order submission via `create_order_atomic`.
-
----
-
-## 9. Security Incident Response Checklist
-
-In the event of a suspected security event (e.g. credential compromise, DDoS, unauthorized staff activity):
-
-### Phase 1: Identification & Triage (0–15 Minutes)
-- [ ] Determine the scope: is it database, authentication, DDoS, or frontend asset breach?
-- [ ] Review recent entries in `public.audit_log` (`SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 100;`).
-- [ ] Check Sentry error spike reports and Cloudflare Turnstile challenge failure rates.
-
-### Phase 2: Containment (15–30 Minutes)
-- [ ] **Revoke all active staff sessions:** Have an owner invoke "Sign Out Everywhere" or trigger global session revocation in Supabase Auth.
-- [ ] **Lock compromised staff accounts:** Set `role = 'inactive'` in `staff_profiles` or delete the user in Supabase Auth.
-- [ ] **Rotate exposed API keys:** If an API key or service-role secret is suspected of exposure, follow Section 7.2 immediately.
-- [ ] **Enable Cloudflare Under Attack Mode:** If public endpoints are undergoing DDoS, toggle Under Attack mode in Cloudflare DNS.
-
-### Phase 3: Investigation & Remediation (30–120 Minutes)
-- [ ] Inspect PostgreSQL access logs via Supabase Log Explorer.
-- [ ] Verify if any customer records were queried or modified.
-- [ ] Patch any identified edge cases or update RLS policies.
-- [ ] Run `npm run build` and run test suite `npm test` to verify clean builds.
-
-### Phase 4: Post-Incident & Recovery
-- [ ] Document the root cause, timeline, impact, and mitigation steps.
-- [ ] Verify database integrity against backup snapshots.
-- [ ] Notify affected stakeholders if PII was accessed in accordance with applicable data privacy regulations.
-
----
-
-## 10. Dependency Vulnerability Management
-
-- Production dependencies (`npm audit --omit=dev`) are continuously verified with **0 vulnerabilities**.
-- Regular scans are run using `npm run audit` and `oxlint`.
-- Any dev-dependency security notices (such as build-time AST/glob parsers) are audited against runtime exploitability and updated without compromising UI or configuration integrity.
+### 7.2 Secrets Separation
+- Public client variables (prefixed with `VITE_`) contain only public identifiers: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_SITE_URL`.
+- Server secrets (`SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `CRON_SECRET`, `TURNSTILE_SECRET_KEY`) reside exclusively in Supabase Vault / Edge Function secrets and are never exposed to the browser.

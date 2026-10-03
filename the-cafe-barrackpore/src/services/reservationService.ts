@@ -135,6 +135,7 @@ export const createReservation = async (
           special_requests: payload.special_requests?.trim() || null,
           status: 'pending',
           source: 'website',
+          verified_token: payload.verified_token || captchaVerification.verified_token || null,
         },
       });
 

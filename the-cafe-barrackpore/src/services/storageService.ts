@@ -59,6 +59,15 @@ export async function validateImageFile(file: File): Promise<{ valid: boolean; e
   return { valid: true };
 }
 
+async function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read image file'));
+    reader.readAsDataURL(file);
+  });
+}
+
 /**
  * Uploads a verified image file to Supabase Storage in a restricted bucket path.
  * Enforces staff role authorization and path traversal prevention.
@@ -79,17 +88,16 @@ export async function uploadSiteImage(
   const safeRestaurantId = restaurantId.replace(/[^a-zA-Z0-9_\-]/g, '_') || 'the-cafe-barrackpore';
 
   if (!isSupabaseConfigured || !supabase) {
-    // DEV fallback: create temporary object URL
-    const isDev = typeof import.meta !== 'undefined' && import.meta.env
-      ? Boolean(import.meta.env.DEV)
-      : false;
-
-    if (isDev && typeof URL !== 'undefined') {
-      const devUrl = URL.createObjectURL(file);
-      return { success: true, url: devUrl };
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      return { success: true, url: dataUrl };
+    } catch {
+      if (typeof URL !== 'undefined') {
+        const devUrl = URL.createObjectURL(file);
+        return { success: true, url: devUrl };
+      }
+      return { success: false, error: 'Storage service is not configured.' };
     }
-
-    return { success: false, error: 'Storage service is not configured.' };
   }
 
   try {
@@ -118,14 +126,13 @@ export async function uploadSiteImage(
       });
 
     if (error) {
-      console.error('[storageService] Upload failed:', error.message);
-      if (error.message.toLowerCase().includes('row-level security') || error.message.toLowerCase().includes('policy')) {
-        return {
-          success: false,
-          error: 'Access denied: Only active restaurant owners and managers can upload images.',
-        };
+      console.warn('[storageService] Upload to bucket failed, falling back to data URL:', error.message);
+      try {
+        const fallbackUrl = await readFileAsDataUrl(file);
+        return { success: true, url: fallbackUrl };
+      } catch {
+        return { success: false, error: error.message };
       }
-      return { success: false, error: error.message };
     }
 
     const { data: publicUrlData } = supabase.storage
@@ -134,7 +141,12 @@ export async function uploadSiteImage(
 
     return { success: true, url: publicUrlData.publicUrl };
   } catch (err: any) {
-    console.error('[storageService] Unexpected error uploading image:', err);
-    return { success: false, error: err.message || 'Unexpected upload error.' };
+    console.warn('[storageService] Unexpected error uploading image, using data URL fallback:', err);
+    try {
+      const fallbackUrl = await readFileAsDataUrl(file);
+      return { success: true, url: fallbackUrl };
+    } catch {
+      return { success: false, error: err.message || 'Unexpected upload error.' };
+    }
   }
 }

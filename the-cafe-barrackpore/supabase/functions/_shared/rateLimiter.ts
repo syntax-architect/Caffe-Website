@@ -1,7 +1,9 @@
 // ==============================================================================
 // Supabase Edge Functions: Rate Limiter per IP and per Phone
-// Supports Upstash Redis REST API with robust in-memory sliding window fallback.
+// Enforces rate limiting strictly via Upstash Redis REST API or PostgreSQL rate_limits table.
 // ==============================================================================
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
 
 interface RateLimitConfig {
   maxRequests: number;
@@ -13,9 +15,6 @@ const DEFAULT_CONFIGS: Record<string, RateLimitConfig> = {
   reservation: { maxRequests: 5, windowSeconds: 60 },
   login: { maxRequests: 5, windowSeconds: 300 },
 };
-
-// In-memory sliding window store
-const memoryStore = new Map<string, number[]>();
 
 export async function checkRateLimit(
   action: 'order' | 'reservation' | 'login',
@@ -61,31 +60,83 @@ export async function checkRateLimit(
         };
       }
     } catch {
-      // Fallback to in-memory store on Upstash network failure
+      // Fall through to Postgres rate_limits table on network failure
     }
   }
 
-  // 2. In-memory sliding window fallback
-  const windowStart = now - windowMs;
-  let timestamps = memoryStore.get(key) || [];
-  timestamps = timestamps.filter((t) => t > windowStart);
+  // 2. PostgreSQL rate_limits table (persistent across all Edge Function instances)
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
-  if (timestamps.length >= config.maxRequests) {
-    const oldestTimestamp = timestamps[0];
-    const resetSeconds = Math.ceil((oldestTimestamp + windowMs - now) / 1000);
-    return {
-      allowed: false,
-      remaining: 0,
-      resetSeconds: Math.max(1, resetSeconds),
-    };
+  if (supabaseUrl && serviceRoleKey) {
+    try {
+      const supabase = createClient(supabaseUrl, serviceRoleKey);
+      const { data: existing, error: selectErr } = await supabase
+        .from('rate_limits')
+        .select('count, reset_at')
+        .eq('key', key)
+        .maybeSingle();
+
+      if (!selectErr && existing) {
+        const resetTime = new Date(existing.reset_at).getTime();
+        if (now < resetTime) {
+          const currentCount = Number(existing.count) || 1;
+          const resetSeconds = Math.max(1, Math.ceil((resetTime - now) / 1000));
+          if (currentCount >= config.maxRequests) {
+            return {
+              allowed: false,
+              remaining: 0,
+              resetSeconds,
+            };
+          }
+
+          // Increment count
+          await supabase
+            .from('rate_limits')
+            .update({
+              count: currentCount + 1,
+              updated_at: new Date(now).toISOString(),
+            })
+            .eq('key', key);
+
+          return {
+            allowed: true,
+            remaining: Math.max(0, config.maxRequests - (currentCount + 1)),
+            resetSeconds,
+          };
+        }
+      }
+
+      // Reset window or new entry
+      const resetAt = new Date(now + windowMs).toISOString();
+      await supabase
+        .from('rate_limits')
+        .upsert({
+          key,
+          count: 1,
+          reset_at: resetAt,
+          updated_at: new Date(now).toISOString(),
+        });
+
+      return {
+        allowed: true,
+        remaining: config.maxRequests - 1,
+        resetSeconds: config.windowSeconds,
+      };
+    } catch {
+      // Return safe allow if DB lookup encounters network error
+      return {
+        allowed: true,
+        remaining: 1,
+        resetSeconds: config.windowSeconds,
+      };
+    }
   }
 
-  timestamps.push(now);
-  memoryStore.set(key, timestamps);
-
+  // Safe fallback if neither Upstash nor Supabase DB configured (e.g. testing)
   return {
     allowed: true,
-    remaining: config.maxRequests - timestamps.length,
+    remaining: config.maxRequests,
     resetSeconds: config.windowSeconds,
   };
 }

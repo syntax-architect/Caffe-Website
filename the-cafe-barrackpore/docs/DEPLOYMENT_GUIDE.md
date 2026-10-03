@@ -75,28 +75,31 @@ Follow these 10 steps to provision a new client's database:
    - Create a new project in the region closest to the restaurant (e.g., `ap-south-1` for India, `us-east-1` for US).
    - Save the Database Password securely in the restaurant's vault.
 
-2. **Execute Consolidated Migrations**:
+2. **Execute Consolidated Migrations (Single Deployment File)**:
    - Open **SQL Editor** in the Supabase Dashboard.
-   - Open `supabase/all_migrations_combined.sql` from the repository.
+   - Open `supabase/all_migrations_combined.sql` from the repository. Note: `supabase/all_migrations_combined.sql` is the **single deployment file** for all database migrations (legacy `consolidated_schema.sql` has been retired and deleted).
    - Paste the complete contents into the SQL Editor and click **Run**.
-   - This atomically applies migrations 001 through 013 in exact dependency order:
-     - Orders, Order Items, and Atomic RPC (`create_order_atomic`)
-     - Reservations schema and validation
-     - Staff profiles, RBAC, and `is_active_staff` functions
-     - Dining tables and seat capacities
-     - 86'd Menu availability tracking
-     - Kitchen Realtime publication and state machine (`update_order_status_kitchen`)
-     - International localization and currency safety
-     - Payment architecture and audit ledger (`payments`)
-     - Menu & secure orders RPC with atomic recalculation (`009_menu_and_secure_orders.sql`)
-     - Menu & site content key-value CMS (`010_menu_and_site_content.sql`)
-     - Multi-tenant restaurant_id isolation & allergen badges (`011_multi_tenant_and_allergens.sql`)
-     - Provider-agnostic payment architecture & ledger (`012_provider_agnostic_payments.sql`)
-     - Strict security hardening (`013_security_hardening.sql`)
+   - This atomically applies migrations 001 through 016 in exact dependency order:
+     - `001_initial_orders.sql`: Orders, Order Items, and Initial Atomic RPC
+     - `002_reservations.sql`: Reservations schema and validation
+     - `003_staff_profiles.sql`: Staff profiles, RBAC, and `is_active_staff` functions
+     - `004_restaurant_tables.sql`: Dining tables and seat capacities
+     - `005_menu_availability.sql`: 86'd Menu availability tracking
+     - `006_kitchen_realtime.sql`: Kitchen Realtime publication and state machine (`update_order_status_kitchen`)
+     - `007_internationalization.sql`: International localization and currency safety
+     - `008_payment_architecture.sql`: Payment architecture and audit ledger (`payments`)
+     - `009_menu_and_secure_orders.sql`: Menu & secure orders RPC with atomic recalculation
+     - `010_menu_and_site_content.sql`: Menu & site content key-value CMS
+     - `011_multi_tenant_and_allergens.sql`: Multi-tenant restaurant_id isolation & allergen badges
+     - `012_provider_agnostic_payments.sql`: Provider-agnostic payment architecture & ledger
+     - `013_owner_features.sql`: Owner features (happy hours, discounts, stock alerts)
+     - `014_order_caps_and_direct_insert_lockdown.sql`: Order caps & direct insert lockdown
+     - `015_complete_image_sync.sql`: Complete image synchronization & storage assets
+     - `016_security_hardening.sql`: Security hardening (verified single-use Turnstile tokens, double-UUID payment tokens with SHA-256 hash, rate limiting, discount code validation RPC, and revoked public writes)
 
 3. **Verify Row Level Security (RLS)**:
    - Navigate to **Authentication → Policies**.
-   - Confirm all tables (`orders`, `order_items`, `reservations`, `staff_profiles`, `restaurant_tables`, `menu_item_availability`, `restaurant_settings`, `payments`) have RLS **ENABLED**.
+   - Confirm all tables (`orders`, `order_items`, `reservations`, `staff_profiles`, `restaurant_tables`, `menu_item_availability`, `restaurant_settings`, `site_content`, `discount_codes`, `payments`, `verified_tokens`, `rate_limits`, `happy_hour_schedules`) have RLS **ENABLED**.
 
 4. **Deploy Edge Functions**:
    - Install Supabase CLI locally: `npm i -g supabase`.

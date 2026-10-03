@@ -5,14 +5,68 @@ import type { StaffProfile, AuthContextType, AuthSignInResult, MfaEnrollResult }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const STAFF_AUTH_CACHE_KEY = 'cb_staff_auth';
+
+interface CachedStaffData {
+  profile: StaffProfile;
+  email?: string;
+}
+
+const getCachedStaffData = (): CachedStaffData | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STAFF_AUTH_CACHE_KEY) || sessionStorage.getItem(STAFF_AUTH_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.profile && parsed.profile.user_id && parsed.profile.active) {
+        return parsed as CachedStaffData;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+};
+
+const setCachedStaffData = (profile: StaffProfile | null, email?: string) => {
+  if (typeof window === 'undefined') return;
+  try {
+    if (profile && profile.active) {
+      localStorage.setItem(STAFF_AUTH_CACHE_KEY, JSON.stringify({ profile, email }));
+      sessionStorage.setItem(STAFF_AUTH_CACHE_KEY, JSON.stringify({ profile, email }));
+    } else {
+      localStorage.removeItem(STAFF_AUTH_CACHE_KEY);
+      sessionStorage.removeItem(STAFF_AUTH_CACHE_KEY);
+    }
+  } catch {
+    // ignore
+  }
+};
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [cachedStaffData] = useState<CachedStaffData | null>(() => getCachedStaffData());
+  const [staffProfile, setStaffProfile] = useState<StaffProfile | null>(cachedStaffData?.profile || null);
+  const [user, setUser] = useState<User | null>(() => {
+    if (cachedStaffData) {
+      return {
+        id: cachedStaffData.profile.user_id,
+        email: cachedStaffData.email || '',
+        app_metadata: {},
+        user_metadata: { full_name: cachedStaffData.profile.full_name },
+        aud: 'authenticated',
+        created_at: cachedStaffData.profile.created_at || '',
+      } as User;
+    }
+    return null;
+  });
   const [session, setSession] = useState<Session | null>(null);
-  const [staffProfile, setStaffProfile] = useState<StaffProfile | null>(null);
   const [isMfaAwaiting, setIsMfaAwaiting] = useState<boolean>(false);
   const [mfaChallengeData, setMfaChallengeData] = useState<{ factorId: string; challengeId: string } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (!supabase || !isSupabaseConfigured) return false;
+    // If an active staff profile was already cached in this browser session,
+    // bypass the blocking loader for immediate render. Background verification will still run.
+    if (cachedStaffData?.profile?.active) return false;
     return true;
   });
 
@@ -77,6 +131,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!isMounted) return;
         if (error) {
           console.warn('[Auth] Error retrieving initial session:', error.message);
+          setCachedStaffData(null);
           setIsLoading(false);
           return;
         }
@@ -86,12 +141,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (!profile || !profile.active) {
             // Require active row in staff_profiles; otherwise sign out
             await client.auth.signOut();
+            setCachedStaffData(null);
             if (isMounted) {
               setSession(null);
               setUser(null);
               setStaffProfile(null);
             }
           } else {
+            setCachedStaffData(profile, initialSession.user.email);
             if (isMounted) {
               setSession(initialSession);
               setUser(initialSession.user);
@@ -99,6 +156,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
           }
         } else {
+          setCachedStaffData(null);
           if (isMounted) {
             setSession(null);
             setUser(null);
@@ -126,12 +184,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const profile = await fetchStaffProfile(newSession.user.id);
         if (!profile || !profile.active) {
           await client.auth.signOut();
+          setCachedStaffData(null);
           if (isMounted) {
             setSession(null);
             setUser(null);
             setStaffProfile(null);
           }
         } else {
+          setCachedStaffData(profile, newSession.user.email);
           if (isMounted) {
             setSession(newSession);
             setUser(newSession.user);
@@ -139,6 +199,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         }
       } else {
+        setCachedStaffData(null);
         if (isMounted) {
           setSession(null);
           setUser(null);
@@ -209,6 +270,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!profile) {
         // Sign out immediately if no staff profile exists
         await client.auth.signOut();
+        setCachedStaffData(null);
         setSession(null);
         setUser(null);
         setStaffProfile(null);
@@ -222,6 +284,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!profile.active) {
         // Sign out immediately if deactivated
         await client.auth.signOut();
+        setCachedStaffData(null);
         setSession(null);
         setUser(null);
         setStaffProfile(null);
@@ -259,6 +322,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         p_details: { email: cleanEmail, role: profile.role },
       }).then(null, () => null);
 
+      setCachedStaffData(profile, cleanEmail);
       setSession(data.session);
       setUser(data.user);
       setStaffProfile(profile);
@@ -306,6 +370,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { data: sessionData } = await client.auth.getSession();
       if (sessionData.session?.user) {
         const profile = await fetchStaffProfile(sessionData.session.user.id);
+        if (profile && profile.active) {
+          setCachedStaffData(profile, sessionData.session.user.email);
+        } else {
+          setCachedStaffData(null);
+        }
         setSession(sessionData.session);
         setUser(sessionData.session.user);
         setStaffProfile(profile);
@@ -370,6 +439,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       console.warn('[Auth] Error signing out of Supabase:', err);
     } finally {
+      setCachedStaffData(null);
       setUser(null);
       setSession(null);
       setStaffProfile(null);
@@ -401,6 +471,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       console.warn('[Auth] Error during global sign out:', err);
     } finally {
+      setCachedStaffData(null);
       setUser(null);
       setSession(null);
       setStaffProfile(null);
@@ -424,10 +495,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const profile = await fetchStaffProfile(data.session.user.id);
           if (!profile || !profile.active) {
             await supabase.auth.signOut();
+            setCachedStaffData(null);
             setSession(null);
             setUser(null);
             setStaffProfile(null);
           } else {
+            setCachedStaffData(profile, data.session.user.email);
             setStaffProfile(profile);
           }
         }

@@ -35,22 +35,27 @@ This guide walks you through setting up Supabase as the backend foundation for *
 
 ---
 
-## 4. Running the Database Migration
+## 4. Running the Database Migrations (Single Deployment File)
 
 1. In the Supabase dashboard sidebar, click on **SQL Editor**.
 2. Click **New Query**.
-3. Open the migration file in this repository:
-   `supabase/migrations/001_initial_orders.sql`
-4. Copy the entire contents of `001_initial_orders.sql` and paste it into the SQL Editor.
+3. Open the single deployment file in this repository:
+   `supabase/all_migrations_combined.sql`
+   *(Note: `all_migrations_combined.sql` is the single deployment file containing all migrations 001 through 016 in dependency order; legacy `consolidated_schema.sql` has been retired and deleted).*
+4. Copy the entire contents of `supabase/all_migrations_combined.sql` and paste it into the SQL Editor.
 5. Click **Run** (or press `Ctrl+Enter` / `Cmd+Enter`).
 6. You should see `Success. No rows returned`.
 
-### What This Migration Creates
-* **`orders` table**: Stores order reference (`order_ref`), customer name, phone number, order type (`dine_in` / `takeaway`), optional table number, special requests, subtotal, total, status, and timestamps.
-* **`order_items` table**: Stores historical snapshot of each menu item purchased (name, quantity, unit price, line total) linked by `order_id` with cascading deletes.
-* **Integrity Constraints**: Enforces positive quantities, non-negative amounts, phone format, and required table numbers for dine-in orders.
-* **Row Level Security (RLS)**: Enforces privacy policies so public users can only INSERT orders, but cannot read or alter existing customer records.
-* **`create_order_atomic` RPC**: An atomic transactional stored procedure that ensures the order header and its items are recorded together in a single operation.
+### What This Migration Chain (001–016) Sets Up
+* **`orders` & `order_items` tables**: Fully audited relational order system with non-sequential random references (`CB-YYYY-XXXXXXXXXX`), server-side pricing, statutory tax calculations, item caps (1–50 qty, 40 distinct items), and double-UUID payment token hashing (`payment_token_hash`).
+* **`reservations` table**: Turnstile-protected reservation system with party-size validation and conflict resistance.
+* **`staff_profiles` table**: Role-based access control (`owner`, `manager`, `staff`) with active status verification.
+* **`restaurant_tables` & `menu_item_availability`**: Granular CRUD policies preventing unauthorized tampering with seating or menu stock.
+* **`restaurant_settings` & `site_content`**: Authoritative multi-tenant settings and CMS content store.
+* **`discount_codes` table**: Locked down with public SELECT revoked; validated solely via `validate_discount_code(code)` RPC.
+* **`verified_tokens` & `rate_limits` tables**: Service-role-only infrastructure for single-use Turnstile bot verification and rate limiting.
+* **`payments` table**: Provider-agnostic audit ledger written exclusively by `payment-webhook`.
+* **Row Level Security (RLS)**: Enforced across all tables with default deny for public mutations.
 
 ---
 

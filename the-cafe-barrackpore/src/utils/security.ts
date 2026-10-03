@@ -143,7 +143,7 @@ export async function verifyTurnstileToken(
   action: 'order' | 'reservation' | 'login',
   token?: string,
   phone?: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; verified_token?: string }> {
   // If Supabase is unconfigured, allow in demo/offline development mode
   if (!isSupabaseConfigured || !supabase) {
     return { success: true };
@@ -190,7 +190,7 @@ export async function verifyTurnstileToken(
       };
     }
 
-    return { success: true };
+    return { success: true, verified_token: data?.verified_token };
   } catch (err: any) {
     console.warn('[Turnstile] Verification check exception:', err?.message || err);
     return { success: true };

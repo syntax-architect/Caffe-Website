@@ -223,28 +223,10 @@ export const createPaymentSession = async (
     updated_at: new Date().toISOString(),
   };
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { error: insertErr } = await supabase.from('payments').insert({
-        order_id: params.orderId,
-        order_ref: params.orderRef,
-        provider: providerName,
-        provider_payment_id: checkoutResult.paymentId || null,
-        amount: params.amount,
-        currency: params.currency.toUpperCase(),
-        status: 'pending',
-        idempotency_key: params.idempotencyKey || null,
-        metadata: paymentRecord.metadata,
-      });
-
-      if (insertErr) {
-        console.warn('[paymentService] Could not insert into payments table:', insertErr.message);
-      }
-    } catch (e) {
-      console.warn('[paymentService] Exception recording payment to Supabase:', e);
-    }
-  } else {
+  if (!isSupabaseConfigured || !supabase) {
     saveDemoPayment(paymentRecord);
+  } else {
+    // Requirement 4: Browser never directly writes to payments table; only server/webhook does.
   }
 
   return checkoutResult;
@@ -309,41 +291,12 @@ export const updateOrderAndPaymentStatus = async (
   const paidAt = status === 'paid' ? new Date().toISOString() : null;
 
   if (isSupabaseConfigured && supabase) {
-    try {
-      // 1. Update orders table
-      const { error: orderErr } = await supabase
-        .from('orders')
-        .update({
-          payment_status: status,
-          payment_provider: providerName,
-          payment_reference: providerPaymentId || null,
-          paid_at: paidAt,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('order_ref', orderRef);
-
-      if (orderErr) {
-        console.error('[paymentService] Failed to update order payment status:', orderErr);
-      }
-
-      // 2. Update payments ledger
-      const { error: payErr } = await supabase
-        .from('payments')
-        .update({
-          status,
-          failure_reason: failureReason || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('order_ref', orderRef);
-
-      if (payErr) {
-        console.warn('[paymentService] Failed to update payments table:', payErr);
-      }
-
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message };
-    }
+    // Requirement 4: Remove all browser writes to payments and orders from paymentService.ts and orderService.ts;
+    // only the payment-webhook (service role) may write them.
+    console.info(
+      `[paymentService] Browser write to orders/payments skipped for ${orderRef}. Status updates are handled exclusively by verified payment webhook.`
+    );
+    return { success: true };
   }
 
   // Local / Demo Mode Update (strictly restricted to DEV environment)
@@ -386,6 +339,7 @@ export const updateOrderAndPaymentStatus = async (
       const pIdx = demoPayments.findIndex((p) => p.order_ref === orderRef);
       if (pIdx !== -1) {
         demoPayments[pIdx].status = status;
+        demoPayments[pIdx].provider = providerName;
         demoPayments[pIdx].failure_reason = failureReason || null;
         demoPayments[pIdx].updated_at = new Date().toISOString();
         localStorage.setItem(DEMO_PAYMENTS_KEY, JSON.stringify(demoPayments));

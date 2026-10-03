@@ -115,7 +115,8 @@ const requiredMigrationHeaders = [
   '012_provider_agnostic_payments.sql',
   '013_owner_features.sql',
   '014_order_caps_and_direct_insert_lockdown.sql',
-  '013_security_hardening.sql',
+  '015_complete_image_sync.sql',
+  '016_security_hardening.sql',
 ];
 
 for (const header of requiredMigrationHeaders) {
@@ -134,7 +135,7 @@ if (!combinedSql.includes('REVOKE INSERT ON TABLE public.orders FROM anon, authe
     !combinedSql.includes('REVOKE INSERT ON TABLE public.reservations FROM anon, authenticated')) {
   throw new Error('Test 4 failed: Direct INSERT revocation missing from combined migration.');
 }
-console.log('✔ Test 4: Combined migration chain integrity (001-014, RLS, RPC, Direct Insert Lockdown) verified');
+console.log('✔ Test 4: Combined migration chain integrity (001-016, RLS, RPC, Direct Insert Lockdown) verified');
 
 // -------------------------------------------------------------
 // 5. Environment Template Separation (.env.example)

@@ -112,14 +112,32 @@ html, body { overflow-x: clip; width: 100%; position: relative; }
   }
 }
 
-/* Material Symbols Layout Stabilization */
-/* Prevents FOUT text (like 'soup_kitchen') from breaking layouts before the icon font loads */
+/* Material Symbols Icon Font Stabilization (Self-Hosted Zero Latency) */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: block;
+  src: url('/fonts/material-symbols-outlined.woff2') format('woff2');
+}
+
 .material-symbols-outlined {
-  max-width: 1em; /* Constrain to 1 character width */
-  overflow: hidden;
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
   vertical-align: middle;
 }

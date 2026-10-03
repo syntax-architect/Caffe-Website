@@ -256,6 +256,7 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
           payment_method: isCounterPayment ? 'counter' : 'online',
           payment_provider: paymentProvider,
           payment_reference: paymentReference,
+          verified_token: payload.verified_token || captchaVerification.verified_token || null,
         },
         p_items: payload.items.map((it: any) => ({
           id: (it as any).menu_item_id || it.id,
@@ -317,30 +318,10 @@ export const updatePendingOrder = async (
   }
 
   if (isSupabaseConfigured && supabase) {
-    try {
-      // Client code may NEVER set payment_status to 'paid'. Only verified webhook (service role) can do so.
-      const updatePayload: Record<string, any> = {
-        payment_provider: updates.payment_provider,
-        payment_reference: updates.payment_reference,
-        updated_at: new Date().toISOString(),
-      };
-      if (updates.payment_status && updates.payment_status !== 'paid') {
-        updatePayload.payment_status = updates.payment_status;
-      }
-
-      const { data, error } = await supabase
-        .from('orders')
-        .update(updatePayload)
-        .eq('order_ref', orderRef)
-        .select('id, order_ref')
-        .single();
-
-      if (error) throw error;
-      return { success: true, orderId: data?.id, orderRef };
-    } catch (err: any) {
-      console.warn('[orderService] Error updating pending order:', err);
-      return { success: false, orderRef, error: err.message };
-    }
+    // Requirement 4: Remove all browser writes to payments and orders from paymentService.ts and orderService.ts;
+    // only the payment-webhook (service role) may write them.
+    console.info(`[orderService] Browser write to orders skipped for ${orderRef}. Order updates are handled exclusively by verified webhooks.`);
+    return { success: true, orderRef };
   }
 
   // Demo fallback

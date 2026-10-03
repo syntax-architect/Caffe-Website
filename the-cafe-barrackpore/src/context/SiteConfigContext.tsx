@@ -30,6 +30,11 @@ export interface SEOConfig {
   image?: string;
 }
 
+export interface VIPClubConfig extends ImageAsset {
+  title?: string;
+  subtitle?: string;
+}
+
 import { DEFAULT_RESTAURANT_CONFIG, RESTAURANT_PRESETS } from '../config/restaurantPresets';
 import type { RestaurantLocalizationConfig } from '../types/restaurantConfig';
 import { formatCurrency } from '../utils/currency';
@@ -108,12 +113,13 @@ export interface SiteConfigContextType {
   aboutVibe: {
     images: ImageAsset[];
   };
+  vipClub: VIPClubConfig;
   seo: SEOConfig;
   logoUrl: string;
   isLoading: boolean;
   error: Error | null;
   updateSection: (
-    section: 'hero' | 'ourStory' | 'aboutVibe' | 'specials' | 'gallery' | 'branding',
+    section: 'hero' | 'ourStory' | 'aboutVibe' | 'specials' | 'gallery' | 'branding' | 'vipClub',
     data: any
   ) => Promise<boolean>;
 
@@ -154,6 +160,12 @@ const defaultContextValue: SiteConfigContextType = {
   },
   aboutVibe: {
     images: fallbackConfig.aboutVibe.images,
+  },
+  vipClub: {
+    src: '/images/vip-nocturnal-circle.jpg',
+    alt: 'The Café Barrackpore Nocturnal VIP Salon',
+    title: 'The Nocturnal Society',
+    subtitle: 'An intimate speakeasy membership for Barrackpore’s discerning patrons.',
   },
   seo: {
     title: 'The Cafe Barrackpore | Best Cafe & Pizza in Barrackpore',
@@ -265,6 +277,12 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
             gallery: {
               images: content.gallery.images || defaultContextValue.gallery.images,
             },
+            vipClub: {
+              src: content.vipClub?.src || defaultContextValue.vipClub.src,
+              alt: content.vipClub?.alt || defaultContextValue.vipClub.alt,
+              title: content.vipClub?.title || defaultContextValue.vipClub.title,
+              subtitle: content.vipClub?.subtitle || defaultContextValue.vipClub.subtitle,
+            },
             logoUrl: content.branding?.logoUrl || prev.logoUrl,
             error: null,
           };
@@ -302,6 +320,8 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
               return { ...prev, gallery: { images: value.images || value } };
             } else if (key === 'branding') {
               return { ...prev, logoUrl: value.logoUrl || prev.logoUrl };
+            } else if (key === 'vipClub') {
+              return { ...prev, vipClub: { ...prev.vipClub, ...value } };
             }
             return prev;
           });
@@ -316,7 +336,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
   }, []);
 
   const updateSection = async (
-    section: 'hero' | 'ourStory' | 'aboutVibe' | 'specials' | 'gallery' | 'branding',
+    section: 'hero' | 'ourStory' | 'aboutVibe' | 'specials' | 'gallery' | 'branding' | 'vipClub',
     data: any
   ): Promise<boolean> => {
     // 1. Persist to authoritative Supabase site_content table
@@ -338,6 +358,8 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
             return { ...prev, gallery: { images: data.images || data } };
           } else if (section === 'branding') {
             return { ...prev, logoUrl: data.logoUrl || prev.logoUrl };
+          } else if (section === 'vipClub') {
+            return { ...prev, vipClub: { ...prev.vipClub, ...data } };
           }
           return prev;
         });

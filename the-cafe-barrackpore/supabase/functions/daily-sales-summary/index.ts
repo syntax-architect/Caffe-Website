@@ -31,6 +31,16 @@ serve(async (req: Request) => {
       });
     }
 
+    // Require x-cron-secret header matching CRON_SECRET
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    const reqCronSecret = req.headers.get('x-cron-secret');
+    if (!cronSecret || !reqCronSecret || reqCronSecret !== cronSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: invalid or missing cron secret' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Fetch restaurant settings
@@ -40,8 +50,15 @@ serve(async (req: Request) => {
       .eq('id', 'current')
       .maybeSingle();
 
-    const businessName = settings?.business_name || 'The Café Barrackpore';
-    const currency = settings?.currency || 'INR';
+    if (!settings?.business_name || !settings?.currency) {
+      return new Response(
+        JSON.stringify({ error: 'Configuration error: business_name and currency must be configured in restaurant_settings' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const businessName = settings.business_name;
+    const currency = settings.currency;
     const currencySymbol = settings?.currency_symbol || '₹';
     const notifyMethod = settings?.owner_notification_method || 'none';
     const targetPhone = settings?.owner_notification_phone || settings?.phone;
@@ -197,7 +214,7 @@ Automated Dispatch by The Café Executive Terminal.`;
               <h4 style="color: #D4AF37; margin: 20px 0 8px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Top 5 Selling Items</h4>
               <pre style="background-color: #0A0705; padding: 12px; border-radius: 6px; font-size: 12px; color: #E4E4E7; white-space: pre-wrap; font-family: monospace;">${topItemsSummary}</pre>
 
-              <p style="color: #71717A; font-size: 11px; margin-top: 24px; text-align: center;">Automated notification from The Café Barrackpore POS platform.</p>
+              <p style="color: #71717A; font-size: 11px; margin-top: 24px; text-align: center;">Automated notification from ${businessName} POS platform.</p>
             </div>
           `;
 

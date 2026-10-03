@@ -349,31 +349,31 @@ export const fetchDashboardOverview = async (): Promise<DashboardOverviewData> =
   try {
     const today = new Date().toISOString().split('T')[0];
 
-    // 1. Fetch today's orders
-    const { data: todayOrders, error: orderErr } = await supabase
-      .from('orders')
-      .select('*')
-      .gte('created_at', `${today}T00:00:00.000Z`)
-      .order('created_at', { ascending: false });
+    // Fetch today's orders, pending orders count, and reservations concurrently
+    const [ordersRes, pendingRes, reservationsRes] = await Promise.all([
+      supabase
+        .from('orders')
+        .select('*')
+        .gte('created_at', `${today}T00:00:00.000Z`)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending'),
+      supabase
+        .from('reservations')
+        .select('*')
+        .eq('reservation_date', today)
+        .order('reservation_time', { ascending: true }),
+    ]);
 
-    if (orderErr) throw orderErr;
+    if (ordersRes.error) throw ordersRes.error;
+    if (pendingRes.error) throw pendingRes.error;
+    if (reservationsRes.error) throw reservationsRes.error;
 
-    // 2. Fetch pending orders count
-    const { count: pendingCount, error: pendingErr } = await supabase
-      .from('orders')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending');
-
-    if (pendingErr) throw pendingErr;
-
-    // 3. Fetch today's reservations
-    const { data: reservations, error: resErr } = await supabase
-      .from('reservations')
-      .select('*')
-      .eq('reservation_date', today)
-      .order('reservation_time', { ascending: true });
-
-    if (resErr) throw resErr;
+    const todayOrders = ordersRes.data;
+    const pendingCount = pendingRes.count;
+    const reservations = reservationsRes.data;
 
     // 4. Calculate KPIs
     const validOrders = todayOrders || [];

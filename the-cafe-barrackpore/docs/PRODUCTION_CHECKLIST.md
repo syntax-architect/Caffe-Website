@@ -17,7 +17,7 @@ Perform this verification before handing over the digital platform to a paying r
 ---
 
 ### Phase 2: Database & Security Integrity
-- [ ] All 13 SQL migrations (001–013) applied via `supabase/all_migrations_combined.sql`.
+- [ ] All 16 SQL migrations (001–016) applied via the single deployment file `supabase/all_migrations_combined.sql`.
 - [ ] Row Level Security (RLS) is enabled on all application tables.
 - [ ] `public.staff_profiles` contains at least one active `owner` user profile.
 - [ ] `public.is_active_staff` helper is configured with `SECURITY DEFINER` and safe `search_path`.

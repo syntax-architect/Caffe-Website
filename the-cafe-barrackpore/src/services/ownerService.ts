@@ -455,46 +455,37 @@ export const validateDiscountCode = async (
   }
 
   try {
-    const { data, error } = await supabase
-      .from('discount_codes')
-      .select('*')
-      .ilike('code', code)
-      .eq('active', true)
-      .maybeSingle();
+    const { data, error } = await supabase.rpc('validate_discount_code', {
+      code: code.trim(),
+    });
 
     if (error) throw error;
-    if (!data) return { valid: false, error: 'Invalid or expired discount code.' };
-
-    const disc = data as DiscountCode;
-
-    if (disc.valid_until && new Date(disc.valid_until) < new Date()) {
-      return { valid: false, error: 'This discount code has expired.' };
+    if (!data || !data.valid) {
+      return { valid: false, error: data?.error || 'Invalid or expired discount code.' };
     }
-    if (disc.max_uses && disc.used_count >= disc.max_uses) {
-      return { valid: false, error: 'This code has reached its usage limit.' };
-    }
-    if (orderTotal < disc.min_order_amount) {
-      return { valid: false, error: `Minimum order amount: ₹${disc.min_order_amount}` };
+
+    if (orderTotal < (data.min_order_amount || 0)) {
+      return { valid: false, error: `Minimum order amount: ₹${data.min_order_amount}` };
     }
 
     let discountAmount = 0;
-    if (disc.discount_type === 'percentage') {
-      discountAmount = Math.round(orderTotal * (disc.discount_value / 100));
-      if (disc.max_discount_amount && discountAmount > disc.max_discount_amount) {
-        discountAmount = disc.max_discount_amount;
+    if (data.discount_type === 'percentage') {
+      discountAmount = Math.round(orderTotal * (data.discount_value / 100));
+      if (data.max_discount_amount && discountAmount > data.max_discount_amount) {
+        discountAmount = data.max_discount_amount;
       }
     } else {
-      discountAmount = disc.discount_value;
+      discountAmount = data.discount_value;
     }
 
     return {
       valid: true,
-      code: disc.code,
-      discount_type: disc.discount_type,
-      discount_value: disc.discount_value,
+      code: data.code,
+      discount_type: data.discount_type,
+      discount_value: data.discount_value,
       discount_amount: discountAmount,
-      max_discount_amount: disc.max_discount_amount,
-      min_order_amount: disc.min_order_amount,
+      max_discount_amount: data.max_discount_amount,
+      min_order_amount: data.min_order_amount,
     };
   } catch (err: any) {
     console.error('[ownerService] Error validating discount:', err);
