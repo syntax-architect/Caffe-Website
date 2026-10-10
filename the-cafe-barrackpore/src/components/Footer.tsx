@@ -45,7 +45,7 @@ export const Footer: React.FC = () => {
         aria-hidden="true" 
       />
 
-      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 pt-16 md:pt-28 pb-28 md:pb-12 relative z-10">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 pt-16 md:pt-28 pb-36 sm:pb-36 md:pb-12 pb-[max(9.5rem,calc(8rem+env(safe-area-inset-bottom)))] relative z-10">
         
         {/* Top Hospitality Callout Banner with Double-Bezel Enclosure */}
         <div className="rounded-[2.5rem] p-1.5 sm:p-2 bg-gradient-to-r from-[#221610] via-[#180F0B] to-[#120B08] ring-1 ring-[#D4AF37]/25 shadow-2xl mb-14 md:mb-20">
@@ -87,11 +87,11 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* 4-Column Editorial Directory */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 mb-14 md:mb-16">
+        {/* Directory Layout: 2-Col Grid on Mobile to eliminate empty right space, 4-Col Grid on Desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 mb-14 md:mb-16">
           
-          {/* Col 1: Brand & Heritage */}
-          <div className="flex flex-col gap-4">
+          {/* Col 1: Brand & Heritage (Full width on mobile/tablet, 1 col on desktop) */}
+          <div className="col-span-2 sm:col-span-2 lg:col-span-1 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full border border-[#D4AF37]/35 bg-[#160E0A] flex items-center justify-center overflow-hidden shadow-[0_0_12px_rgba(212,175,55,0.15)] shrink-0">
                 <img src={logoUrl || "/logo.webp"} alt={`${businessName} Crest`} width="40" height="40" loading="lazy" decoding="async" className="w-full h-full object-contain" />
@@ -102,14 +102,14 @@ export const Footer: React.FC = () => {
               </div>
             </div>
             
-            <p className="font-sans text-xs text-on-surface/65 leading-relaxed font-light">
+            <p className="font-sans text-xs text-on-surface/65 leading-relaxed font-light max-w-md">
               {clientDetails.description}
             </p>
             
             {/* Social Icons in concentric obsidian wells */}
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex items-center gap-2.5 pt-1">
               <a 
-                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm" 
+                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
                 href={clientDetails.instagramLink} 
                 target="_blank" 
                 rel="noopener noreferrer"
@@ -118,7 +118,7 @@ export const Footer: React.FC = () => {
                 <IconInstagram />
               </a>
               <a 
-                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm" 
+                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
                 href={clientDetails.facebookLink} 
                 target="_blank" 
                 rel="noopener noreferrer"
@@ -127,7 +127,7 @@ export const Footer: React.FC = () => {
                 <IconFacebook />
               </a>
               <a 
-                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm" 
+                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
                 href={clientDetails.googleMapsLink} 
                 target="_blank" 
                 rel="noopener noreferrer"
@@ -136,7 +136,7 @@ export const Footer: React.FC = () => {
                 <IconGoogle />
               </a>
               <a 
-                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm" 
+                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
                 href={clientDetails.zomatoLink} 
                 target="_blank" 
                 rel="noopener noreferrer"
@@ -147,96 +147,103 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Col 2: Curations */}
-          <div className="flex flex-col gap-4">
+          {/* Col 2: Curations (Left column on mobile, 1 col on desktop) */}
+          <div className="col-span-1 flex flex-col gap-3.5">
             <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold">
               Cuisine &amp; Curations
             </h4>
             <div className="flex flex-col gap-2.5 text-xs font-sans">
               <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
                 <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                <span>Artisanal Single-Origin Brews</span>
+                <span>Single-Origin Brews</span>
               </a>
               <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'chef-specials')}>
                 <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                <span>Chef's Signature Banquets</span>
+                <span>Chef's Banquets</span>
               </a>
               <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
                 <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                <span>Wood-Fired Pizzas &amp; Dim Sums</span>
+                <span>Wood-Fired Pizzas</span>
               </a>
               <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
                 <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                <span>Lounge Mocktails &amp; Cold Drips</span>
+                <span>Lounge Mocktails</span>
               </a>
               <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'gallery')}>
                 <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                <span>Atmosphere &amp; Private Booths</span>
+                <span>Private Booths</span>
               </a>
             </div>
           </div>
 
-          {/* Col 3: Hours & Atmosphere */}
-          <div className="flex flex-col gap-4">
+          {/* Col 3: Hours & Atmosphere (Right column on mobile, 1 col on desktop) */}
+          <div className="col-span-1 flex flex-col gap-3.5">
             <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold">
               Hours &amp; Atmosphere
             </h4>
             <div className="flex flex-col gap-3 text-xs font-sans">
-              <div className="flex items-start gap-2.5">
+              <div className="flex items-start gap-2">
                 <span className="material-symbols-outlined text-primary text-base mt-0.5 shrink-0 font-light">schedule</span>
                 <div>
                   <div className="flex items-center gap-1.5">
                     <p className="text-on-surface font-medium">Daily Service</p>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   </div>
-                  <p className="text-on-surface/60 font-light mt-0.5">{openingHours}</p>
+                  <p className="text-on-surface/60 font-light mt-0.5 text-[11px] sm:text-xs">{openingHours}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-2.5 pt-1">
+              <div className="flex items-start gap-2 pt-1">
                 <span className="material-symbols-outlined text-primary text-base mt-0.5 shrink-0 font-light">music_note</span>
                 <div>
-                  <p className="text-on-surface font-medium">Acoustic Weekends</p>
-                  <p className="text-on-surface/60 font-light mt-0.5">Fri &amp; Sat from 7:00 PM</p>
+                  <p className="text-on-surface font-medium">Acoustics</p>
+                  <p className="text-on-surface/60 font-light mt-0.5 text-[11px] sm:text-xs">Fri &amp; Sat from 7 PM</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Col 4: Location & Contact */}
-          <div className="flex flex-col gap-4">
-            <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold">
-              Visit &amp; Contact
+          {/* Col 4: Location & Contact (Full-width luxury card on mobile, 1 col on desktop) */}
+          <div className="col-span-2 sm:col-span-2 lg:col-span-1 flex flex-col gap-3.5 p-4 sm:p-5 lg:p-0 rounded-2xl lg:rounded-none bg-[#130C08]/90 lg:bg-transparent border border-[#D4AF37]/20 lg:border-none shadow-md lg:shadow-none">
+            <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-primary text-base font-light">location_on</span>
+              <span>Visit &amp; Contact</span>
             </h4>
             <div className="flex flex-col gap-3 text-xs font-sans">
-              <div className="flex items-start gap-2.5">
-                <span className="material-symbols-outlined text-primary text-base mt-0.5 shrink-0 font-light">location_on</span>
-                <div className="flex flex-col gap-1.5">
-                  <span className="font-light leading-relaxed">{addressLine}</span>
-                  <a 
-                    href={clientDetails.googleMapsLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-semibold uppercase tracking-wider"
-                  >
-                    <span>Get Directions</span>
-                    <span className="material-symbols-outlined text-xs">open_in_new</span>
-                  </a>
-                </div>
-              </div>
-              <div className="flex items-center gap-2.5 pt-1">
-                <span className="material-symbols-outlined text-primary text-base shrink-0 font-light">phone_in_talk</span>
-                <a className="text-on-surface/85 hover:text-primary transition-colors font-medium" href={`tel:${phone}`}>
-                  {displayPhone}
+              <div className="flex flex-col gap-1">
+                <span className="font-light leading-relaxed text-on-surface/75">{addressLine}</span>
+                <a 
+                  href={clientDetails.googleMapsLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-semibold uppercase tracking-wider mt-0.5"
+                >
+                  <span>Get Directions</span>
+                  <span className="material-symbols-outlined text-xs">open_in_new</span>
                 </a>
               </div>
-              {whatsapp ? (
-                <div className="flex items-center gap-2.5">
-                  <span className="material-symbols-outlined text-primary text-base shrink-0 font-light">forum</span>
-                  <a className="hover:text-primary transition-colors font-medium text-primary/90" href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
-                    WhatsApp Concierge
+
+              {/* Mobile Quick Action Buttons: Call & WhatsApp */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <a 
+                  className="h-9 px-3 rounded-full bg-[#1C120D] border border-white/15 hover:border-primary/50 text-on-surface/90 hover:text-white transition-all font-medium inline-flex items-center justify-center gap-1.5 active:scale-95 text-[11px]" 
+                  href={`tel:${phone}`}
+                >
+                  <span className="material-symbols-outlined text-sm text-primary">phone_in_talk</span>
+                  <span className="truncate">{displayPhone}</span>
+                </a>
+
+                {whatsapp ? (
+                  <a 
+                    className="h-9 px-3 rounded-full bg-emerald-950/40 border border-emerald-500/35 hover:border-emerald-500/60 text-emerald-400 hover:text-emerald-300 transition-all font-medium inline-flex items-center justify-center gap-1.5 active:scale-95 text-[11px]" 
+                    href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    <span className="material-symbols-outlined text-sm">forum</span>
+                    <span>WhatsApp</span>
                   </a>
-                </div>
-              ) : null}
+                ) : null}
+              </div>
             </div>
           </div>
 

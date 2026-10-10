@@ -134,21 +134,21 @@ export const AboutVibe: React.FC = () => {
             {/* Double-Bezel Architectural Telemetry Cards */}
             <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-1">
               <div className="p-1 rounded-2xl bg-white/[0.03] border border-white/10 shadow-sm hover:border-[#D4AF37]/30 transition-colors">
-                <div className="px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-[calc(1rem-0.25rem)] bg-[#140D0A]/90 flex flex-col gap-0.5">
+                <div className="px-2 sm:px-3.5 py-2 sm:py-2.5 rounded-[calc(1rem-0.25rem)] bg-[#140D0A]/90 flex flex-col gap-0.5">
                   <span className="font-sans text-[8px] sm:text-[9px] uppercase tracking-widest text-[#D4AF37] font-semibold">Lighting</span>
-                  <span className="font-serif text-xs sm:text-sm text-[#FAF6F0] font-medium truncate">2200K Amber</span>
+                  <span className="font-serif text-[11px] min-[390px]:text-xs sm:text-sm text-[#FAF6F0] font-medium truncate">2200K Amber</span>
                 </div>
               </div>
               <div className="p-1 rounded-2xl bg-white/[0.03] border border-white/10 shadow-sm hover:border-[#D4AF37]/30 transition-colors">
-                <div className="px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-[calc(1rem-0.25rem)] bg-[#140D0A]/90 flex flex-col gap-0.5">
+                <div className="px-2 sm:px-3.5 py-2 sm:py-2.5 rounded-[calc(1rem-0.25rem)] bg-[#140D0A]/90 flex flex-col gap-0.5">
                   <span className="font-sans text-[8px] sm:text-[9px] uppercase tracking-widest text-[#D4AF37] font-semibold">Seating</span>
-                  <span className="font-serif text-xs sm:text-sm text-[#FAF6F0] font-medium truncate">Sapphire Velvet</span>
+                  <span className="font-serif text-[11px] min-[390px]:text-xs sm:text-sm text-[#FAF6F0] font-medium truncate">Sapphire Velvet</span>
                 </div>
               </div>
               <div className="p-1 rounded-2xl bg-white/[0.03] border border-white/10 shadow-sm hover:border-[#D4AF37]/30 transition-colors">
-                <div className="px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-[calc(1rem-0.25rem)] bg-[#140D0A]/90 flex flex-col gap-0.5">
+                <div className="px-2 sm:px-3.5 py-2 sm:py-2.5 rounded-[calc(1rem-0.25rem)] bg-[#140D0A]/90 flex flex-col gap-0.5">
                   <span className="font-sans text-[8px] sm:text-[9px] uppercase tracking-widest text-[#D4AF37] font-semibold">Soundscape</span>
-                  <span className="font-serif text-xs sm:text-sm text-[#FAF6F0] font-medium truncate">Nocturne Jazz</span>
+                  <span className="font-serif text-[11px] min-[390px]:text-xs sm:text-sm text-[#FAF6F0] font-medium truncate">Nocturne Jazz</span>
                 </div>
               </div>
             </div>

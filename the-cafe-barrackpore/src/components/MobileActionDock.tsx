@@ -50,14 +50,15 @@ export const MobileActionDock: React.FC = () => {
 
   return (
     <aside
-      className={`lg:hidden fixed bottom-4 inset-x-4 z-40 max-w-[420px] mx-auto pointer-events-auto transition-all duration-300 ease-out transform ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'
+      className={`lg:hidden fixed inset-x-3 sm:inset-x-4 z-40 max-w-[420px] mx-auto pointer-events-auto transition-all duration-300 ease-out transform ${
+        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'
       }`}
+      style={{ bottom: 'max(0.875rem, calc(0.5rem + env(safe-area-inset-bottom, 0px)))' }}
       aria-label="Mobile Quick Actions"
     >
           {/* Double-Bezel Floating Glass Island Container */}
           <div className="p-1 rounded-full bg-gradient-to-r from-[#D4AF37]/40 via-white/10 to-[#D4AF37]/40 shadow-[0_12px_40px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
-            <div className="flex items-center justify-between px-2 py-2 rounded-full bg-[#120B08]/92 border border-white/10 backdrop-blur-2xl">
+            <div className="flex items-center justify-between px-1.5 min-[380px]:px-2 py-1.5 min-[380px]:py-2 rounded-full bg-[#120B08]/95 border border-white/10 backdrop-blur-2xl">
               
               {/* Quick Action 1: Explore Menu */}
               <button

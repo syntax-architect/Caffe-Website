@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDevice } from '../hooks/useDevice';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
@@ -40,6 +40,12 @@ export const Menu: React.FC = () => {
 
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const categoryBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
   const { isTouchDevice } = useDevice();
   const { addToCart } = useCart();
   const { showToast } = useUI();
@@ -119,6 +125,44 @@ export const Menu: React.FC = () => {
     };
   }, [hoveredImage, isTouchDevice]);
 
+  // Monitor category scroll position to toggle navigation chevrons and gradient edge masks
+  const checkScroll = () => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 8);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 8);
+  };
+
+  useEffect(() => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll, { passive: true });
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [categories]);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    const scrollAmount = direction === 'left' ? -220 : 220;
+    el.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  };
+
+  const handleSelectCategory = (catId: string) => {
+    setActiveCategoryId(catId);
+    setVisibleCount(6);
+    setIsCategoryPickerOpen(false);
+    const btn = categoryBtnRefs.current[catId];
+    if (btn) {
+      btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  };
+
   const activeCategoryObj =
     categories.find((c) => c.id === activeCategoryId) || categories[0];
   const activeCategoryName = activeCategoryObj?.name || 'Burgers & Pizzas';
@@ -169,72 +213,177 @@ export const Menu: React.FC = () => {
             </h2>
           </div>
 
-          <div className="flex flex-col items-start md:items-end gap-4 mt-2 md:mt-0 w-full md:w-auto">
-            {/* Pure Veg Toggle Switch */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={`material-symbols-outlined text-sm transition-colors ${
-                    isVegOnly ? 'text-emerald-400' : 'text-on-surface/60'
+          <div className="flex flex-col items-start md:items-end gap-3.5 mt-2 md:mt-0 w-full md:w-auto">
+            {/* Top Controls Row: Pure Veg Toggle + Mobile All Categories Quick Picker */}
+            <div className="flex items-center justify-between w-full md:w-auto gap-3">
+              {/* Pure Veg Toggle Switch */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`material-symbols-outlined text-sm transition-colors ${
+                      isVegOnly ? 'text-emerald-400' : 'text-on-surface/60'
+                    }`}
+                  >
+                    eco
+                  </span>
+                  <span
+                    className={`font-sans text-xs uppercase tracking-wider transition-colors ${
+                      isVegOnly ? 'text-emerald-400 font-semibold' : 'text-on-surface/60'
+                    }`}
+                  >
+                    Pure Veg Only
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsVegOnly(!isVegOnly)}
+                  role="switch"
+                  aria-checked={isVegOnly}
+                  aria-label="Filter vegetarian only items"
+                  className={`w-11 h-6 rounded-full p-0.5 transition-all duration-300 ease-in-out flex items-center border cursor-pointer ${
+                    isVegOnly
+                      ? 'bg-emerald-500/20 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
+                      : 'bg-white/5 border-white/10'
                   }`}
                 >
-                  eco
-                </span>
-                <span
-                  className={`font-sans text-xs uppercase tracking-wider transition-colors ${
-                    isVegOnly ? 'text-emerald-400 font-semibold' : 'text-on-surface/60'
-                  }`}
-                >
-                  Pure Veg Only
-                </span>
+                  <div
+                    className={`w-4 h-4 rounded-full shadow-sm transition-transform duration-200 ease-out ${
+                      isVegOnly ? 'bg-emerald-400 translate-x-5' : 'bg-on-surface/50 translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsVegOnly(!isVegOnly)}
-                role="switch"
-                aria-checked={isVegOnly}
-                aria-label="Filter vegetarian only items"
-                className={`w-11 h-6 rounded-full p-0.5 transition-all duration-300 ease-in-out flex items-center border cursor-pointer ${
-                  isVegOnly
-                    ? 'bg-emerald-500/20 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
-                    : 'bg-white/5 border-white/10'
-                }`}
-              >
-                <div
-                  className={`w-4 h-4 rounded-full shadow-sm transition-transform duration-200 ease-out ${
-                    isVegOnly ? 'bg-emerald-400 translate-x-5' : 'bg-on-surface/50 translate-x-0'
-                  }`}
-                />
-              </button>
+
+              {/* Mobile Quick Category Selector Dropdown Button */}
+              <div className="relative md:hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryPickerOpen(!isCategoryPickerOpen)}
+                  className="px-3 py-1.5 rounded-full bg-[#1A110C] border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-sans font-medium flex items-center gap-1.5 active:scale-95 shadow-sm hover:border-[#D4AF37] transition-all cursor-pointer"
+                  aria-label="View all categories"
+                  aria-expanded={isCategoryPickerOpen}
+                >
+                  <span className="material-symbols-outlined text-[15px]">menu_book</span>
+                  <span>Categories ({categories.length})</span>
+                  <span
+                    className="material-symbols-outlined text-sm transition-transform duration-200"
+                    style={{ transform: isCategoryPickerOpen ? 'rotate(180deg)' : 'none' }}
+                  >
+                    expand_more
+                  </span>
+                </button>
+
+                {/* Mobile Quick Category Dropdown Menu */}
+                {isCategoryPickerOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsCategoryPickerOpen(false)}
+                      aria-hidden="true"
+                    />
+                    <div className="absolute right-0 top-full mt-2 z-50 w-64 p-2 rounded-2xl bg-[#140D0A]/98 backdrop-blur-2xl border border-[#D4AF37]/50 shadow-[0_12px_40px_rgba(0,0,0,0.95)] animate-fade-in flex flex-col gap-1">
+                      <div className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-[#D4AF37] font-semibold border-b border-white/10 flex items-center justify-between">
+                        <span>All Categories</span>
+                        <span>{categories.length} Total</span>
+                      </div>
+                      {categories.map((cat) => {
+                        const isActive = activeCategoryId === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => handleSelectCategory(cat.id)}
+                            className={`px-3 py-2 rounded-xl text-xs font-sans text-left flex items-center justify-between transition-colors cursor-pointer ${
+                              isActive
+                                ? 'bg-[#D4AF37]/20 text-[#D4AF37] font-bold border border-[#D4AF37]/40'
+                                : 'text-on-surface/80 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <span className="material-symbols-outlined text-sm">{getCategoryIcon(cat.name)}</span>
+                              <span>{cat.name}</span>
+                            </span>
+                            {isActive && <span className="material-symbols-outlined text-xs text-[#D4AF37]">check</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
-            {/* Horizontally Scrollable Category Pills */}
-            <div className="w-full md:w-auto overflow-x-auto hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-              <div className="flex items-center gap-2 pb-1">
-                {categories.map((category) => {
-                  const isActive = activeCategoryId === category.id;
-                  return (
-                    <button
-                      key={category.id}
-                      type="button"
-                      onClick={() => {
-                        setActiveCategoryId(category.id);
-                        setVisibleCount(6);
-                      }}
-                      className={`px-3.5 sm:px-4 py-2 rounded-full font-sans text-xs uppercase tracking-wider transition-all duration-200 whitespace-nowrap cursor-pointer border flex items-center gap-1.5 active:scale-95 ${
-                        isActive
-                          ? 'bg-gradient-to-r from-primary to-[#F3E5AB] text-[#18110c] border-primary font-bold shadow-[0_2px_12px_rgba(212,175,55,0.35)]'
-                          : 'bg-[#140D09]/80 text-on-surface/75 border-white/10 hover:border-primary/40 hover:text-white'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-[15px]">
-                        {getCategoryIcon(category.name)}
-                      </span>
-                      <span>{category.name}</span>
-                    </button>
-                  );
-                })}
+            {/* Mobile Category Discovery Hint */}
+            <div className="flex md:hidden items-center justify-between w-full px-0.5 text-[11px] font-sans text-on-surface/65">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <span className="font-medium text-on-surface/80">{categories.length} Categories</span>
+              </span>
+              <span className="flex items-center gap-1 text-primary text-[10px] uppercase tracking-wider font-semibold">
+                <span>Swipe or tap arrows</span>
+                <span className="material-symbols-outlined text-xs animate-pulse">arrow_forward</span>
+              </span>
+            </div>
+
+            {/* Horizontally Scrollable Category Pills with Tap Chevrons & Gradient Edge Masks */}
+            <div className="relative w-full md:w-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              {/* Left Scroll Chevron & Gradient Mask */}
+              {canScrollLeft && (
+                <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pl-1 sm:pl-0 pr-5 bg-gradient-to-r from-background via-background/95 to-transparent pointer-events-none">
+                  <button
+                    type="button"
+                    onClick={() => scrollCategories('left')}
+                    aria-label="Scroll to previous categories"
+                    className="w-7 h-7 rounded-full bg-[#18100C]/95 border border-[#D4AF37]/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-sm">chevron_left</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Scroll Container */}
+              <div
+                ref={categoryScrollRef}
+                className="w-full md:w-auto overflow-x-auto hide-scrollbar scroll-smooth"
+              >
+                <div className="flex items-center gap-2 pb-1">
+                  {categories.map((category) => {
+                    const isActive = activeCategoryId === category.id;
+                    return (
+                      <button
+                        key={category.id}
+                        ref={(el) => { categoryBtnRefs.current[category.id] = el; }}
+                        type="button"
+                        onClick={() => handleSelectCategory(category.id)}
+                        className={`px-3.5 sm:px-4 py-2 rounded-full font-sans text-xs uppercase tracking-wider transition-all duration-200 whitespace-nowrap cursor-pointer border flex items-center gap-1.5 active:scale-95 shrink-0 ${
+                          isActive
+                            ? 'bg-gradient-to-r from-primary to-[#F3E5AB] text-[#18110c] border-primary font-bold shadow-[0_2px_12px_rgba(212,175,55,0.35)]'
+                            : 'bg-[#140D09]/80 text-on-surface/75 border-white/10 hover:border-primary/40 hover:text-white'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[15px]">
+                          {getCategoryIcon(category.name)}
+                        </span>
+                        <span>{category.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
+              {/* Right Scroll Chevron & Gradient Mask */}
+              {canScrollRight && (
+                <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pr-1 sm:pr-0 pl-5 bg-gradient-to-l from-background via-background/95 to-transparent pointer-events-none">
+                  <button
+                    type="button"
+                    onClick={() => scrollCategories('right')}
+                    aria-label="Scroll to more categories"
+                    className="w-7 h-7 rounded-full bg-[#18100C]/95 border border-[#D4AF37]/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-sm">chevron_right</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

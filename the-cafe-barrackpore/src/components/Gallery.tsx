@@ -76,16 +76,16 @@ export const Gallery: React.FC = () => {
           </div>
         ) : (
           /* Asymmetrical Double-Bezel Bento Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 auto-rows-[250px] sm:auto-rows-[310px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 auto-rows-[300px] sm:auto-rows-[310px]">
             {images.slice(0, 4).map((img, idx) => {
               const meta = GALLERY_METADATA[idx] || { tag: "The Café Experience", caption: img.alt };
               // Spans: Item 0 = 1 col, 2 rows (portrait hero); Item 1 = 2 cols, 1 row (wide panoramic); Items 2 & 3 = 1 col each
               const spanClass = 
                 idx === 0 
-                  ? "lg:col-span-1 lg:row-span-2 min-h-[300px] sm:min-h-full" 
+                  ? "lg:col-span-1 lg:row-span-2 h-[300px] sm:h-auto lg:h-full" 
                   : idx === 1 
-                  ? "lg:col-span-2 lg:row-span-1" 
-                  : "lg:col-span-1 lg:row-span-1";
+                  ? "lg:col-span-2 lg:row-span-1 h-[300px] sm:h-auto" 
+                  : "lg:col-span-1 lg:row-span-1 h-[300px] sm:h-auto";
 
               return (
                 <div 
@@ -98,18 +98,18 @@ export const Gallery: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-[#100906] via-transparent to-black/30 opacity-75 group-hover:opacity-45 transition-opacity duration-500 z-10 pointer-events-none" />
 
                     {/* Corner Category Tag */}
-                    <div className="absolute top-4 left-4 z-20 px-3.5 py-1 rounded-full bg-[#120B08]/90 backdrop-blur-md border border-[#D4AF37]/35 text-[10px] uppercase tracking-wider text-primary font-semibold shadow-lg">
+                    <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 z-20 px-3 py-1 sm:px-3.5 sm:py-1 rounded-full bg-[#120B08]/90 backdrop-blur-md border border-[#D4AF37]/35 text-[10px] uppercase tracking-wider text-primary font-semibold shadow-lg">
                       {meta.tag}
                     </div>
 
                     {/* Concentric Expand Button */}
-                    <div className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-[#120B08]/85 backdrop-blur-md border border-white/15 flex items-center justify-center text-on-surface opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 group-hover:border-[#D4AF37]/50 shadow-lg">
+                    <div className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#120B08]/85 backdrop-blur-md border border-white/15 flex items-center justify-center text-on-surface opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 group-hover:border-[#D4AF37]/50 shadow-lg">
                       <span className="material-symbols-outlined text-sm font-light text-primary">fullscreen</span>
                     </div>
 
                     {/* Bottom Caption Overlay */}
-                    <div className="absolute bottom-0 inset-x-0 p-5 z-20 flex flex-col justify-end transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
-                      <p className="font-serif text-base sm:text-lg text-on-surface font-normal leading-snug">
+                    <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 z-20 flex flex-col justify-end transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
+                      <p className="font-serif text-base sm:text-lg text-on-surface font-normal leading-snug line-clamp-2">
                         {meta.caption}
                       </p>
                       <span className="font-sans text-[11px] text-primary/90 mt-1 uppercase tracking-wider font-medium flex items-center gap-1">
