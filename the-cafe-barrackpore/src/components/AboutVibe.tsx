@@ -117,7 +117,7 @@ export const AboutVibe: React.FC = () => {
                 COLONIAL CHARM &bull; VINTAGE GLOW
               </span>
               <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-[#FAF6F0] font-normal tracking-tight leading-[1.06]">
-                The <span className="italic font-serif font-light text-transparent bg-clip-text bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#C5A028]">Atmosphere</span>
+                The <span className="italic font-serif font-light text-[#D4AF37]">Atmosphere</span>
                 <span className="text-[#D4AF37]">.</span>
               </h2>
             </div>

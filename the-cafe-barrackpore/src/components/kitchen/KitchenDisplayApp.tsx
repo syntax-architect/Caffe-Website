@@ -109,7 +109,7 @@ export const KitchenDisplayApp: React.FC<KitchenDisplayAppProps> = ({ onExit }) 
       {newOrderAlert && (
         <div
           role="alert"
-          className="bg-[#D4AF37] text-[#120c08] px-4 py-2 flex items-center justify-between text-xs font-bold tracking-wider uppercase shadow-md animate-bounce"
+          className="bg-[#D4AF37] text-[#120c08] px-4 py-2 flex items-center justify-between text-xs font-bold tracking-wider uppercase shadow-[0_0_24px_rgba(212,175,55,0.45)] animate-pulse"
         >
           <div className="flex items-center gap-2">
             <span>⚡ NEW ORDER RECEIVED:</span>

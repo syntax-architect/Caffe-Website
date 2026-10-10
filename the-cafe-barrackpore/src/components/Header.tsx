@@ -134,18 +134,14 @@ export const Header: React.FC = React.memo(() => {
             )}
           </button>
           
-          {/* Island Button-in-Button Book a Table CTA (Desktop) */}
+          {/* Refined Luxury Book a Table CTA (Desktop) */}
           <button 
             type="button"
             onClick={() => setIsReservationOpen(true)}
-            className="hidden sm:flex group/btn h-10 sm:h-11 pl-4 pr-1.5 rounded-full bg-gradient-to-r from-primary to-[#E5C158] hover:from-[#E5C158] hover:to-primary text-[#18110c] text-[11px] font-sans font-bold uppercase tracking-wider transition-all duration-300 items-center justify-between gap-2.5 shadow-[0_4px_14px_rgba(212,175,55,0.2)] hover:shadow-[0_6px_20px_rgba(212,175,55,0.35)] active:scale-[0.98] cursor-pointer shrink-0"
+            className="hidden sm:inline-flex items-center gap-2 h-9 px-5 rounded-full bg-[#D4AF37] hover:bg-[#FAF6F0] text-[#0A0503] font-sans text-[11px] font-semibold tracking-[0.18em] uppercase transition-all duration-300 shadow-[0_2px_12px_rgba(212,175,55,0.25)] hover:shadow-[0_4px_16px_rgba(212,175,55,0.4)] active:scale-95 cursor-pointer shrink-0"
           >
             <span>Book a Table</span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#18110c]/15 group-hover/btn:bg-[#18110c]/25 flex items-center justify-center transition-all duration-300 group-hover/btn:scale-105">
-              <svg className="w-4 h-4 text-[#18110c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M10 14h4M6 18h12M7 6v14M17 6v14" />
-              </svg>
-            </div>
+            <span className="material-symbols-outlined text-[15px] font-light">table_restaurant</span>
           </button>
 
           {/* Mobile Menu Fluid Hamburger Morph */}

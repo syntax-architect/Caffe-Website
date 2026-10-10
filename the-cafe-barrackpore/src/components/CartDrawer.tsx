@@ -30,7 +30,9 @@ export const CartDrawer: React.FC = () => {
   const { items, isDrawerOpen, setIsDrawerOpen, updateQuantity, removeFromCart, clearCart } = useCart();
   const { tableNumber: qrTable, isQrOrder, isValidTable: isQrValid } = useTableContext();
   const { restaurantConfig, formatPrice } = useSiteConfig();
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
   const [step, setStep] = useState<DrawerStep>('cart');
 
   // Checkout Form State
@@ -61,6 +63,7 @@ export const CartDrawer: React.FC = () => {
   const [confirmedTotal, setConfirmedTotal] = useState<number | null>(null);
   const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const [paymentToken, setPaymentToken] = useState<string | null>(null);
+  const [isDemoSubmission, setIsDemoSubmission] = useState(false);
 
   const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false);
@@ -69,6 +72,7 @@ export const CartDrawer: React.FC = () => {
     setPaymentFailureReason(null);
     setConfirmedTotal(null);
     setPaymentToken(null);
+    setIsDemoSubmission(false);
   }, [setIsDrawerOpen]);
 
   const drawerRef = useFocusTrap(isDrawerOpen, handleCloseDrawer);
@@ -317,6 +321,7 @@ export const CartDrawer: React.FC = () => {
           setIsSubmitting(false);
           return;
         }
+        setIsDemoSubmission(orderResult.isDemoMode === true);
 
         if (orderResult.paymentToken) {
           setPaymentToken(orderResult.paymentToken);
@@ -385,7 +390,14 @@ export const CartDrawer: React.FC = () => {
         });
 
         if (result.success) {
-          if (restaurantConfig.contact.primaryMethod === 'whatsapp') {
+          setIsDemoSubmission(result.isDemoMode === true);
+          if (result.isDemoMode) {
+            setOrderRef(result.orderRef);
+            setPaidAmount(null);
+            setConfirmedTotal(finalPayableTotal);
+            setStep('confirmed');
+            clearCart();
+          } else if (restaurantConfig.contact.primaryMethod === 'whatsapp') {
             dispatchWhatsApp(result.orderRef);
           } else {
             setOrderRef(result.orderRef);
@@ -678,22 +690,22 @@ export const CartDrawer: React.FC = () => {
             aria-modal="true"
             aria-labelledby="cart-drawer-heading"
             tabIndex={-1}
-            initial={isMobile ? { y: '100%' } : { x: '100%' }}
-            animate={isMobile ? { y: 0 } : { x: 0 }}
-            exit={isMobile ? { y: '100%' } : { x: '100%' }}
+            initial={isMobile ? { y: '100%', x: 0 } : { x: '100%', y: 0 }}
+            animate={{ y: 0, x: 0 }}
+            exit={isMobile ? { y: '100%', x: 0 } : { x: '100%', y: 0 }}
             transition={{ type: 'spring', damping: 30, stiffness: 280 }}
             drag={isMobile ? 'y' : false}
-            dragConstraints={isMobile ? { top: 0 } : undefined}
-            dragElastic={isMobile ? 0.2 : undefined}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.3 }}
             onDragEnd={(_e, info) => {
-              if (isMobile && info.offset.y > 100) {
+              if (isMobile && (info.offset.y > 80 || info.velocity.y > 300)) {
                 setIsDrawerOpen(false);
                 setStep('cart');
               }
             }}
-            className={`fixed bg-[#130C08]/95 backdrop-blur-2xl z-[101] flex flex-col focus:outline-none shadow-[-25px_0_60px_rgba(0,0,0,0.85)] ${
+            className={`fixed bg-[#130C08]/98 backdrop-blur-2xl z-[101] flex flex-col focus:outline-none shadow-[-25px_0_60px_rgba(0,0,0,0.85)] ${
               isMobile
-                ? 'bottom-0 left-0 w-full h-[90vh] rounded-t-[2rem] border-t border-[#D4AF37]/25'
+                ? 'inset-x-0 bottom-0 w-full max-h-[92dvh] h-[92dvh] rounded-t-[2rem] border-t border-[#D4AF37]/35 shadow-[0_-12px_40px_rgba(0,0,0,0.9)]'
                 : 'top-0 right-0 h-full w-full max-w-[460px] border-l border-[#D4AF37]/25'
             }`}
             data-lenis-prevent
@@ -1571,7 +1583,7 @@ export const CartDrawer: React.FC = () => {
 
                 <div>
                   <span className="font-sans text-[10px] uppercase tracking-widest text-primary font-bold">
-                    Order Confirmed
+                    {isDemoSubmission ? 'Demo Order Only' : 'Order Confirmed'}
                   </span>
                   <h3 className="font-serif text-2xl text-on-surface font-normal mt-1">
                     Thank You, {customerName}!
@@ -1583,7 +1595,9 @@ export const CartDrawer: React.FC = () => {
                     {restaurantConfig.businessName}
                   </p>
                   <p className="font-sans text-xs text-on-surface/60 mt-2 max-w-xs mx-auto leading-relaxed">
-                    Your order has been recorded and transmitted to the kitchen team.
+                    {isDemoSubmission
+                      ? 'This demonstration order stays in this browser. It was not sent to a restaurant, kitchen, or payment provider.'
+                      : 'Your order has been recorded and transmitted to the kitchen team.'}
                   </p>
                 </div>
 
@@ -1600,7 +1614,11 @@ export const CartDrawer: React.FC = () => {
 
                   <div className="flex justify-between items-center pt-2 border-t border-white/5">
                     <span className="text-on-surface/60">Payment Status:</span>
-                    {paidAmount !== null ? (
+                    {isDemoSubmission ? (
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-500/40 text-[11px] font-bold font-mono">
+                        {paidAmount !== null ? 'SIMULATED PAYMENT' : 'SIMULATED • PAY AT COUNTER'} ({formatPrice(paidAmount ?? confirmedTotal ?? totals.total)})
+                      </span>
+                    ) : paidAmount !== null ? (
                       <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold font-mono">
                         PAID ({formatPrice(paidAmount)})
                       </span>
@@ -1613,7 +1631,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
 
                 {/* Contact Actions: Call, WhatsApp, Maps */}
-                <div className="w-full max-w-sm grid grid-cols-3 gap-2">
+                {!isDemoSubmission && <div className="w-full max-w-sm grid grid-cols-3 gap-2">
                   <a
                     href={`tel:${restaurantConfig.contact.phone}`}
                     className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-[#160E0A] border border-white/10 hover:border-primary/30 transition-colors"
@@ -1639,7 +1657,7 @@ export const CartDrawer: React.FC = () => {
                     <span className="material-symbols-outlined text-lg text-sky-400">location_on</span>
                     <span className="text-[9px] uppercase tracking-wider font-semibold text-on-surface/70">Directions</span>
                   </a>
-                </div>
+                </div>}
 
                 {/* Order Again Button */}
                 <button

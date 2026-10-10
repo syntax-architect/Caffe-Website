@@ -67,50 +67,46 @@ export const SpecialsBanner: React.FC = () => {
         aria-hidden="true" 
       />
 
-      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10 flex flex-col gap-10 lg:gap-12">
         
-        {/* Double-Bezel Master Enclosure */}
-        <div className="rounded-[2.5rem] p-1.5 sm:p-2 bg-gradient-to-br from-[#221610] via-[#180F0B] to-[#0F0805] ring-1 ring-[#D4AF37]/25 shadow-[0_30px_70px_rgba(0,0,0,0.7)]">
-          <div className="rounded-[calc(2.5rem-0.5rem)] bg-[#120B08]/95 p-6 sm:p-10 lg:p-12 border border-white/5 flex flex-col gap-10 lg:gap-12 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-            
-            {/* Top Row: Narrative and Philosophy */}
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-white/10 pb-8">
-              <div className="flex flex-col gap-3 max-w-2xl">
-                <div className="inline-flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="editorial-eyebrow">Chef's Signature Banquets</span>
-                </div>
-                
-                <h3 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-on-surface font-normal tracking-tight leading-[1.15] text-balance">
-                  {specials.title || 'Special Banquet & Hangout Platters'}
-                </h3>
-                
-                <p className="font-sans text-sm sm:text-base text-on-surface/75 leading-relaxed font-light mt-1">
-                  {specials.description || 'Generous sharing platters featuring sizzling pan-Asian favorites and smoky clay-oven delicacies, freshly prepped for group table conversations.'}
-                </p>
-              </div>
-
-              {/* Platter Trust Badges */}
-              <div className="flex flex-wrap items-center gap-3 shrink-0">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#18100C] border border-[#D4AF37]/25 text-xs text-primary font-medium tracking-wide">
-                  <span className="material-symbols-outlined text-sm font-light">groups</span>
-                  <span>Ideal for 2–3 Guests</span>
-                </div>
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#18100C] border border-white/10 text-xs text-on-surface/75 font-medium tracking-wide">
-                  <span className="material-symbols-outlined text-sm font-light text-primary">skillet</span>
-                  <span>Made Fresh to Order</span>
-                </div>
-              </div>
+        {/* Top Row: Narrative and Philosophy */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-white/10 pb-8">
+          <div className="flex flex-col gap-3 max-w-2xl">
+            <div className="inline-flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              <span className="editorial-eyebrow">Chef's Signature Banquets</span>
             </div>
+            
+            <h3 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-on-surface font-normal tracking-tight leading-[1.15] text-balance">
+              {specials.title || 'Special Banquet & Hangout Platters'}
+            </h3>
+            
+            <p className="font-sans text-sm sm:text-base text-on-surface/75 leading-relaxed font-light mt-1">
+              {specials.description || 'Generous sharing platters featuring sizzling pan-Asian favorites and smoky clay-oven delicacies, freshly prepped for group table conversations.'}
+            </p>
+          </div>
 
-            {/* 3-Platter Double-Bezel Card Carousel (Horizontal Snap on Mobile, 3-Col Grid on Desktop) */}
-            <div className="flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 pb-2 md:pb-0">
-              {combos.map((combo) => (
-                <div
-                  key={combo.id}
-                  className="min-w-[86vw] max-w-[340px] sm:min-w-[320px] md:min-w-0 md:max-w-none snap-center flex-shrink-0 group rounded-[2rem] p-1.5 bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/10 hover:border-[#D4AF37]/50 shadow-xl transition-all duration-500 flex flex-col hover:-translate-y-1.5"
-                >
-                  <div className="rounded-[calc(2rem-0.375rem)] bg-[#160E0A] overflow-hidden flex flex-col h-full border border-white/5">
+          {/* Platter Trust Badges */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs text-on-surface/80 font-normal tracking-wide">
+              <span className="material-symbols-outlined text-sm font-light text-primary">groups</span>
+              <span>Ideal for 2–3 Guests</span>
+            </div>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs text-on-surface/80 font-normal tracking-wide">
+              <span className="material-symbols-outlined text-sm font-light text-primary">skillet</span>
+              <span>Made Fresh to Order</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3-Platter Card Carousel (Horizontal Snap on Mobile, 3-Col Grid on Desktop) */}
+        <div className="flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 md:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 pb-2 md:pb-0">
+          {combos.map((combo) => (
+            <div
+              key={combo.id}
+              className="min-w-[86vw] max-w-[340px] sm:min-w-[320px] md:min-w-0 md:max-w-none snap-center flex-shrink-0 group rounded-2xl bg-[#140D0A] border border-white/10 hover:border-[#D4AF37]/50 shadow-xl transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1"
+            >
+              <div className="flex flex-col h-full">
                     
                     {/* High-Resolution Gourmet Photo Container */}
                     <div className="relative aspect-[16/11] w-full overflow-hidden bg-[#0D0705]">
@@ -207,15 +203,11 @@ export const SpecialsBanner: React.FC = () => {
                             type: 'success',
                           });
                         }}
-                        className="group/btn w-full h-11 pl-4 pr-1.5 rounded-full bg-gradient-to-r from-primary to-[#E5C158] hover:from-[#E5C158] hover:to-primary text-[#18110c] text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 flex items-center justify-between shadow-[0_4px_16px_rgba(212,175,55,0.25)] hover:shadow-[0_6px_22px_rgba(212,175,55,0.4)] active:scale-[0.98] cursor-pointer"
+                        className="w-full h-10 px-5 rounded-full bg-[#D4AF37] hover:bg-[#FAF6F0] text-[#0A0503] text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_2px_12px_rgba(212,175,55,0.25)] hover:shadow-[0_4px_16px_rgba(212,175,55,0.4)] active:scale-95 cursor-pointer"
                         title={`Add ${combo.name} to order`}
                       >
                         <span>Add Platter to Bag</span>
-                        <div className="w-8 h-8 rounded-full bg-[#18110c]/15 group-hover/btn:bg-[#18110c]/25 flex items-center justify-center transition-all duration-300 group-hover/btn:translate-x-0.5">
-                          <span className="material-symbols-outlined text-[17px] text-[#18110c]">
-                            add_shopping_cart
-                          </span>
-                        </div>
+                        <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
                       </button>
 
                     </div>
@@ -230,9 +222,6 @@ export const SpecialsBanner: React.FC = () => {
               <span className="material-symbols-outlined text-sm">swipe</span>
               <span>Swipe horizontally to view banquet platters</span>
             </div>
-
-          </div>
-        </div>
 
       </div>
     </section>

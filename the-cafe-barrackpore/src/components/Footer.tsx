@@ -47,43 +47,37 @@ export const Footer: React.FC = () => {
 
       <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 pt-16 md:pt-28 pb-36 sm:pb-36 md:pb-12 pb-[max(9.5rem,calc(8rem+env(safe-area-inset-bottom)))] relative z-10">
         
-        {/* Top Hospitality Callout Banner with Double-Bezel Enclosure */}
-        <div className="rounded-[2.5rem] p-1.5 sm:p-2 bg-gradient-to-r from-[#221610] via-[#180F0B] to-[#120B08] ring-1 ring-[#D4AF37]/25 shadow-2xl mb-14 md:mb-20">
-          <div className="rounded-[calc(2.5rem-0.5rem)] bg-gradient-to-r from-[#170E0A] via-[#130C08] to-[#0E0805] p-6 sm:p-8 lg:p-12 flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-10 border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-            <div className="flex flex-col gap-2 text-center lg:text-left max-w-xl">
-              <span className="editorial-eyebrow text-xs">{clientDetails.tagline1 || "Bespoke Hospitality"}</span>
-              <h3 className="font-serif text-2xl sm:text-3xl md:text-4xl text-on-surface font-normal tracking-tight text-balance">
-                {clientDetails.tagline2 || "An Unrivaled Dining Atmosphere"}
-              </h3>
-              <p className="font-sans text-xs sm:text-sm text-on-surface/75 leading-relaxed font-light mt-0.5">
-                Reserve your private booth or enjoy gourmet artisanal favorites in {displayCity}.
-              </p>
-            </div>
+        {/* Top Hospitality Callout Banner */}
+        <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 bg-gradient-to-r from-[#160E0A] via-[#120B08] to-[#0D0705] border border-white/10 flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-10 mb-14 md:mb-18 shadow-xl">
+          <div className="flex flex-col gap-2 text-center lg:text-left max-w-xl">
+            <span className="editorial-eyebrow text-xs">{clientDetails.tagline1 || "Bespoke Hospitality"}</span>
+            <h3 className="font-serif text-2xl sm:text-3xl md:text-4xl text-on-surface font-normal tracking-tight text-balance">
+              {clientDetails.tagline2 || "An Unrivaled Dining Atmosphere"}
+            </h3>
+            <p className="font-sans text-xs sm:text-sm text-on-surface/75 leading-relaxed font-light mt-0.5">
+              Reserve your private booth or enjoy gourmet artisanal favorites in {displayCity}.
+            </p>
+          </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full lg:w-auto shrink-0">
-              {/* Island Button-in-Button Reserve CTA */}
-              <button 
-                type="button"
-                onClick={() => setIsReservationOpen(true)}
-                className="group/btn w-full sm:w-auto h-12 pl-6 pr-2 rounded-full bg-gradient-to-r from-primary to-[#E5C158] hover:from-[#E5C158] hover:to-primary text-[#18110c] text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 flex items-center justify-between gap-3 shadow-[0_4px_16px_rgba(212,175,55,0.25)] hover:shadow-[0_6px_22px_rgba(212,175,55,0.4)] active:scale-[0.98] cursor-pointer"
-              >
-                <span>Reserve a Table</span>
-                <div className="w-8 h-8 rounded-full bg-[#18110c]/15 group-hover/btn:bg-[#18110c]/25 flex items-center justify-center transition-all duration-300 group-hover/btn:scale-105">
-                  <span className="material-symbols-outlined text-[17px] text-[#18110c]">
-                    table_restaurant
-                  </span>
-                </div>
-              </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full lg:w-auto shrink-0">
+            {/* Sleek Reserve CTA */}
+            <button 
+              type="button"
+              onClick={() => setIsReservationOpen(true)}
+              className="w-full sm:w-auto h-10 px-6 rounded-full bg-[#D4AF37] hover:bg-[#FAF6F0] text-[#0A0503] text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_2px_12px_rgba(212,175,55,0.25)] hover:shadow-[0_4px_16px_rgba(212,175,55,0.4)] active:scale-95 cursor-pointer"
+            >
+              <span>Reserve a Table</span>
+              <span className="material-symbols-outlined text-[16px]">table_restaurant</span>
+            </button>
 
-              <a 
-                className="w-full sm:w-auto h-12 px-7 rounded-full text-xs font-semibold btn-outline-premium flex items-center justify-center gap-2 cursor-pointer" 
-                href="#menu-section" 
-                onClick={(e) => handleNav(e, 'menu-section')}
-              >
-                <span>Explore Menu</span>
-                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-              </a>
-            </div>
+            <a 
+              className="w-full sm:w-auto h-10 px-6 rounded-full text-xs font-semibold btn-outline-premium flex items-center justify-center gap-2 cursor-pointer text-[#E3DACD] hover:text-[#D4AF37]" 
+              href="#menu-section" 
+              onClick={(e) => handleNav(e, 'menu-section')}
+            >
+              <span>Explore Menu</span>
+              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+            </a>
           </div>
         </div>
 

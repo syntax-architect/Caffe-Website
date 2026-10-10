@@ -170,7 +170,7 @@ export const OurStory: React.FC = () => {
                   {/* Chapter Headline */}
                   <h3 className="font-sans text-2xl sm:text-3xl lg:text-4xl xl:text-[2.6rem] font-medium tracking-tight text-[#F5F2F0] leading-[1.08]">
                     <span>{currentChapter.title} </span>
-                    <span className="font-serif italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#E3DACD]">
+                    <span className="font-serif italic font-normal text-[#D4AF37]">
                       {currentChapter.titleItalic}
                     </span>
                   </h3>
@@ -195,8 +195,8 @@ export const OurStory: React.FC = () => {
             {/* 5. PINNED SCRUB TELEMETRY PROGRESS BAR */}
             <div className="absolute bottom-3 left-4 right-4 sm:bottom-5 sm:left-8 sm:right-8 flex flex-col gap-1.5 z-20 pointer-events-none">
               <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-white/60">
-                <span className="text-[#D4AF37] flex items-center gap-1.5">
-                  <span className="inline-block animate-bounce">↓</span>
+                <span className="text-[#D4AF37] flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
                   SCROLL TO ADVANCE CHAPTERS
                 </span>
                 <span>CHAPTER 0{activeChapterIndex + 1} / 03</span>

@@ -83,7 +83,7 @@ export const VIPClub: React.FC = () => {
             <div className="relative z-10 flex flex-col gap-2 max-w-xl">
               <span className="editorial-eyebrow text-[#D4AF37] font-semibold tracking-[0.22em] text-xs">Connoisseurs' Privileges</span>
               <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] text-[#FAF6F0] font-normal tracking-tight text-balance leading-tight drop-shadow-[0_3px_14px_rgba(0,0,0,0.95)]">
-                Join the <span className="italic font-light text-transparent bg-clip-text bg-gradient-to-r from-[#FFF2C6] via-[#E8BA45] to-[#D4AF37]">Nocturnal Circle</span>
+                Join the <span className="italic font-light text-[#D4AF37]">Nocturnal Circle</span>
               </h2>
               <p className="font-sans text-xs sm:text-base text-[#FAF6F0]/90 leading-relaxed font-light mt-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
                 Receive discreet invitations to weekend acoustic line-ups, secret seasonal chef previews, and priority booth reservations.

@@ -62,11 +62,17 @@ serve(async (req: Request) => {
 
     const { data: staffProfile, error: profileErr } = await supabase
       .from('staff_profiles')
-      .select('role, is_active')
+      .select('role, active, restaurant_id')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (profileErr || !staffProfile || !staffProfile.is_active || staffProfile.role !== 'owner') {
+    if (
+      profileErr ||
+      !staffProfile ||
+      !staffProfile.active ||
+      staffProfile.role !== 'owner' ||
+      !staffProfile.restaurant_id
+    ) {
       return new Response(
         JSON.stringify({ error: 'Forbidden: Only active restaurant owners can process refunds.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -75,8 +81,10 @@ serve(async (req: Request) => {
 
     const body = await req.json().catch(() => ({}));
     const orderRef = (body.order_ref || body.orderRef || '').trim();
-    const reason = body.reason || 'Staff initiated refund';
-    const refundAmount = body.amount ? Number(body.amount) : undefined;
+    const reason = typeof body.reason === 'string' && body.reason.trim()
+      ? body.reason.trim().slice(0, 500)
+      : 'Staff initiated refund';
+    const refundAmount = body.amount === undefined ? undefined : Number(body.amount);
 
     if (!orderRef) {
       return new Response(
@@ -90,6 +98,7 @@ serve(async (req: Request) => {
       .from('orders')
       .select('*')
       .eq('order_ref', orderRef)
+      .eq('restaurant_id', staffProfile.restaurant_id)
       .maybeSingle();
 
     if (orderErr || !order) {
@@ -106,85 +115,112 @@ serve(async (req: Request) => {
       );
     }
 
-    let refundId = `ref_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const provider = order.payment_provider || 'manual';
+    const originalAmount = Number(order.payment_amount ?? order.total);
+    if (
+      !Number.isFinite(originalAmount) ||
+      originalAmount <= 0 ||
+      (refundAmount !== undefined &&
+        (!Number.isFinite(refundAmount) || refundAmount <= 0 || refundAmount > originalAmount))
+    ) {
+      return new Response(JSON.stringify({ error: 'Refund amount must be greater than zero and cannot exceed the paid amount.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const provider = order.payment_provider;
     const paymentRef = order.payment_reference;
+    let refundId: string;
 
     // 3. Provider Refund Execution
     if (provider === 'stripe' && paymentRef) {
       const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
-      if (stripeSecretKey) {
-        const stripe = new Stripe(stripeSecretKey, {
-          apiVersion: '2023-10-16',
-          httpClient: Stripe.createFetchHttpClient(),
-        });
-
-        let piId = paymentRef;
-        if (paymentRef.startsWith('cs_')) {
-          try {
-            const session = await stripe.checkout.sessions.retrieve(paymentRef);
-            if (session.payment_intent) {
-              piId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent.id;
-            }
-          } catch (e: any) {
-            console.warn('Failed to retrieve Stripe session payment_intent:', e);
-          }
-        }
-
-        if (piId && piId.startsWith('pi_')) {
-          const refundObj = await stripe.refunds.create({
-            payment_intent: piId,
-            amount: refundAmount ? Math.round(refundAmount * 100) : undefined,
-            reason: 'requested_by_customer',
-          });
-          refundId = refundObj.id;
-        }
+      if (!stripeSecretKey) {
+        throw new Error('Stripe refund service is not configured.');
       }
+      const stripe = new Stripe(stripeSecretKey, {
+        apiVersion: '2023-10-16',
+        httpClient: Stripe.createFetchHttpClient(),
+      });
+
+      let piId = paymentRef;
+      if (paymentRef.startsWith('cs_')) {
+        const session = await stripe.checkout.sessions.retrieve(paymentRef);
+        piId = typeof session.payment_intent === 'string'
+          ? session.payment_intent
+          : session.payment_intent?.id || '';
+      }
+
+      if (!piId.startsWith('pi_')) {
+        throw new Error('Stripe payment reference is not refundable.');
+      }
+      const refundObj = await stripe.refunds.create({
+        payment_intent: piId,
+        amount: refundAmount === undefined ? undefined : Math.round(refundAmount * 100),
+        reason: 'requested_by_customer',
+      });
+      refundId = refundObj.id;
     } else if (provider === 'razorpay' && paymentRef) {
       const keyId = Deno.env.get('RAZORPAY_KEY_ID');
       const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
-      if (keyId && keySecret) {
-        const authHeader = `Basic ${btoa(`${keyId}:${keySecret}`)}`;
-        const rzpRefundRes = await fetch(`https://api.razorpay.com/v1/payments/${paymentRef}/refund`, {
-          method: 'POST',
-          headers: {
-            'Authorization': authHeader,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount: refundAmount ? Math.round(refundAmount * 100) : undefined,
-            notes: {
-              order_ref: orderRef,
-              reason: reason,
-            },
-          }),
-        });
-
-        if (rzpRefundRes.ok) {
-          const rzpRefundData = await rzpRefundRes.json();
-          refundId = rzpRefundData.id || refundId;
-        }
+      if (!keyId || !keySecret) {
+        throw new Error('Razorpay refund service is not configured.');
       }
+      const authHeader = `Basic ${btoa(`${keyId}:${keySecret}`)}`;
+      const rzpRefundRes = await fetch(`https://api.razorpay.com/v1/payments/${paymentRef}/refund`, {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: refundAmount === undefined ? undefined : Math.round(refundAmount * 100),
+          notes: { order_ref: orderRef, reason },
+        }),
+      });
+
+      if (!rzpRefundRes.ok) {
+        throw new Error('Razorpay did not accept the refund request.');
+      }
+      const rzpRefundData = await rzpRefundRes.json();
+      if (!rzpRefundData.id) {
+        throw new Error('Razorpay returned no refund reference.');
+      }
+      refundId = rzpRefundData.id;
+    } else {
+      return new Response(JSON.stringify({ error: 'This order has no supported refundable payment reference.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // 4. Update Database
     const now = new Date().toISOString();
-    await supabase
+    const refundStatus = refundAmount !== undefined && refundAmount < originalAmount
+      ? 'partially_refunded'
+      : 'refunded';
+    const { error: orderUpdateError } = await supabase
       .from('orders')
       .update({
-        payment_status: 'refunded',
+        payment_status: refundStatus,
         updated_at: now,
       })
-      .eq('order_ref', orderRef);
+      .eq('order_ref', orderRef)
+      .eq('restaurant_id', staffProfile.restaurant_id);
 
-    await supabase
+    const { error: paymentUpdateError } = await supabase
       .from('payments')
       .update({
-        status: 'refunded',
+        status: refundStatus,
         failure_reason: `Refund processed: ${reason} (ID: ${refundId})`,
         updated_at: now,
       })
-      .eq('order_ref', orderRef);
+      .eq('order_ref', orderRef)
+      .eq('restaurant_id', staffProfile.restaurant_id);
+
+    if (orderUpdateError || paymentUpdateError) {
+      throw new Error('The payment provider accepted the refund, but the local payment record could not be updated. Reconciliation is required.');
+    }
 
     return new Response(
       JSON.stringify({
@@ -195,10 +231,10 @@ serve(async (req: Request) => {
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error: any) {
+  } catch {
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal refund processing error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Refund processing failed. Confirm the provider status before retrying.' }),
+      { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

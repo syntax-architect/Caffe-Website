@@ -91,20 +91,24 @@ export const Hero: React.FC = React.memo(() => {
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
             <span className="font-sans text-[10px] sm:text-[11px] font-semibold tracking-[0.24em] uppercase text-[#D4AF37]">
-              CAFÉ • BAR • BARRACKPORE
+              {`CAFÉ • BAR • ${restaurantConfig?.shortName ? restaurantConfig.shortName.toUpperCase() : 'BARRACKPORE'}`}
             </span>
-            <span className="text-white/20 text-[10px] font-mono hidden sm:inline">|</span>
-            <span className="text-[#E3DACD]/50 text-[10px] font-mono tracking-wider hidden sm:inline">
-              22.76° N, 88.37° E
-            </span>
+            {(!restaurantConfig?.country || restaurantConfig?.country === 'IN') && (
+              <>
+                <span className="text-white/20 text-[10px] font-mono hidden sm:inline">|</span>
+                <span className="text-[#E3DACD]/50 text-[10px] font-mono tracking-wider hidden sm:inline">
+                  22.76° N, 88.37° E
+                </span>
+              </>
+            )}
           </div>
 
           {/* Main Headline: Bold, high-contrast, instantaneous paint */}
-          <h1 className="font-sans font-medium text-[clamp(48px,6.8vw,92px)] leading-[0.92] tracking-[-0.035em] text-[#F5F2F0] mb-6 sm:mb-7">
+          <h1 className="font-sans font-medium text-[clamp(42px,6.8vw,92px)] leading-[0.92] tracking-[-0.035em] text-[#F5F2F0] mb-6 sm:mb-7">
             <span className="block uppercase select-none">
               NOCTURNAL
             </span>
-            <span className="block font-serif italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#E3DACD] tracking-normal mt-1 sm:mt-1.5">
+            <span className="block font-serif italic font-normal text-[#D4AF37] tracking-normal mt-1 sm:mt-1.5 pb-1 sm:pb-1.5">
               Gastronomy.
             </span>
           </h1>

@@ -519,6 +519,27 @@ if (webhookContent.includes("|| 'INR'") || webhookContent.includes('|| "INR"')) 
 }
 console.log('✔ Test 12: Cron secret header required (401 on mismatch) and zero INR/restaurant name fallbacks.');
 
+// -------------------------------------------------------------
+// Test 13: Refund Function Uses Schema Fields and Enforces Tenant Scope
+// -------------------------------------------------------------
+console.log('\nTest 13: Refund Owner and Tenant Scope');
+const refundFunction = fs.readFileSync(path.join(edgeFunctionsDir, 'process-refund', 'index.ts'), 'utf8');
+if (!refundFunction.includes(".select('role, active, restaurant_id')") ||
+    refundFunction.includes(".select('role, is_active')")) {
+  throw new Error('Test 13 failed: process-refund does not use the staff_profiles schema fields.');
+}
+const refundTenantFilters = refundFunction.match(/\.eq\('restaurant_id', staffProfile\.restaurant_id\)/g) || [];
+if (refundTenantFilters.length < 3) {
+  throw new Error('Test 13 failed: process-refund order lookup/update is not scoped to the owner restaurant.');
+}
+if (!refundFunction.includes("const refundStatus = refundAmount !== undefined")) {
+  throw new Error('Test 13 failed: refund status does not distinguish partial and full refunds.');
+}
+if (!refundFunction.includes("This order has no supported refundable payment reference.")) {
+  throw new Error('Test 13 failed: unsupported or unconfigured refunds are not rejected.');
+}
+console.log('✔ Test 13: Refund owner fields, tenant filters, and provider confirmation guards verified.');
+
 console.log('\n================================================================');
-console.log('🎉 ALL 12 DATABASE & EDGE FUNCTION HARDENING CHECKS PASSED!');
+console.log('🎉 ALL 13 DATABASE & EDGE FUNCTION HARDENING CHECKS PASSED!');
 console.log('================================================================');

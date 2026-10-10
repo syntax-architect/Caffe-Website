@@ -7,6 +7,7 @@
     "lint": "npm run lint --prefix the-cafe-barrackpore",
     "test": "npm run test --prefix the-cafe-barrackpore",
     "studio": "npm run dev --prefix studio",
-    "install:all": "npm install --prefix the-cafe-barrackpore"
+    "install:all": "npm ci --prefix the-cafe-barrackpore && npm ci --prefix studio",
+    "studio:build": "npm run build --prefix studio"
   }
 }

@@ -398,13 +398,13 @@ export const ScrollSequence: React.FC = () => {
         {/* Floating text that appears during scroll */}
         <div className="relative z-10 max-w-[1400px] mx-auto px-6 w-full flex flex-col items-center justify-center text-center h-full">
           <h2 ref={text1Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F5F2F0] font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
-            Crafted to <br className="sm:hidden" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] italic font-serif">Perfection.</span>
+            Crafted to <br className="sm:hidden" /><span className="text-[#D4AF37] italic font-serif">Perfection.</span>
           </h2>
           <h2 ref={text2Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F5F2F0] font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
-            Every Drop <br className="sm:hidden" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] italic font-serif">Matters.</span>
+            Every Drop <br className="sm:hidden" /><span className="text-[#D4AF37] italic font-serif">Matters.</span>
           </h2>
           <h2 ref={text3Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F5F2F0] font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
-            The True <br className="sm:hidden" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] italic font-serif">Lounge</span> Experience
+            The True <br className="sm:hidden" /><span className="text-[#D4AF37] italic font-serif">Lounge</span> Experience
           </h2>
         </div>
       </div>

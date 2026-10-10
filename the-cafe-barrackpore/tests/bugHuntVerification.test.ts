@@ -85,12 +85,11 @@ const orderPayload = {
   tax_options: exclusiveTaxOptions,
 };
 
-createOrder(orderPayload).then((result) => {
-  if (!result.success) {
-    throw new Error(`Test 1 Failed: createOrder did not succeed: ${result.error}`);
-  }
-  console.log('✔ Test 1: Exclusive tax recalculation and order payload synchronization verified');
-});
+const orderResult = await createOrder(orderPayload);
+if (!orderResult.success) {
+  throw new Error(`Test 1 Failed: createOrder did not succeed: ${orderResult.error}`);
+}
+console.log('✔ Test 1: Exclusive tax recalculation and order payload synchronization verified');
 
 // -------------------------------------------------------------
 // 2. 86'd Out of Stock Item Rejection in createOrder

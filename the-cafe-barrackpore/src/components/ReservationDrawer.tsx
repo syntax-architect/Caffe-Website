@@ -15,12 +15,26 @@ export const ReservationDrawer: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [confirmedRef, setConfirmedRef] = useState<string | null>(null);
+  const [isDemoSubmission, setIsDemoSubmission] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleClose = useCallback(() => {
     setIsReservationOpen(false);
     setSubmissionError(null);
     setConfirmedRef(null);
+    setIsDemoSubmission(false);
   }, [setIsReservationOpen]);
 
   const drawerRef = useFocusTrap(isReservationOpen, handleClose);
@@ -108,7 +122,10 @@ export const ReservationDrawer: React.FC = () => {
       });
 
       if (result.success) {
-        if (restaurantConfig.contact.primaryMethod === 'whatsapp') {
+        setIsDemoSubmission(result.isDemoMode === true);
+        if (result.isDemoMode) {
+          setConfirmedRef(result.reservationRef);
+        } else if (restaurantConfig.contact.primaryMethod === 'whatsapp') {
           dispatchWhatsApp(result.reservationRef);
         } else {
           setConfirmedRef(result.reservationRef);
@@ -150,15 +167,34 @@ export const ReservationDrawer: React.FC = () => {
             aria-modal="true"
             aria-labelledby="reservation-drawer-title"
             tabIndex={-1}
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            className="fixed top-0 right-0 h-[100dvh] w-full max-w-[460px] bg-[#130C08]/95 backdrop-blur-2xl border-l border-[#D4AF37]/25 z-[210] flex flex-col focus:outline-none shadow-[-25px_0_60px_rgba(0,0,0,0.85)] overscroll-contain"
+            initial={isMobile ? { y: '100%', x: 0 } : { x: '100%', y: 0 }}
+            animate={{ x: 0, y: 0 }}
+            exit={isMobile ? { y: '100%', x: 0 } : { x: '100%', y: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            drag={isMobile ? 'y' : false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.3 }}
+            onDragEnd={(_e, info) => {
+              if (isMobile && (info.offset.y > 80 || info.velocity.y > 300)) {
+                handleClose();
+              }
+            }}
+            className={`fixed bg-[#130C08]/98 backdrop-blur-2xl z-[210] flex flex-col focus:outline-none shadow-[-25px_0_60px_rgba(0,0,0,0.85)] overscroll-contain ${
+              isMobile
+                ? 'inset-x-0 bottom-0 w-full max-h-[92dvh] h-[92dvh] rounded-t-[2rem] border-t border-[#D4AF37]/35 shadow-[0_-12px_40px_rgba(0,0,0,0.9)]'
+                : 'top-0 right-0 h-[100dvh] w-full max-w-[460px] border-l border-[#D4AF37]/25'
+            }`}
             data-lenis-prevent
           >
+            {/* Drag Handle for Mobile */}
+            {isMobile && (
+              <div className="w-full flex justify-center pt-3 pb-1 bg-[#160E0A] rounded-t-[2rem] cursor-grab active:cursor-grabbing shrink-0">
+                <div className="w-12 h-1.5 bg-white/20 rounded-full" />
+              </div>
+            )}
+
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[#D4AF37]/15 bg-[#160E0A]/80 shrink-0">
+            <div className={`flex items-center justify-between p-6 border-b border-[#D4AF37]/15 bg-[#160E0A]/80 shrink-0 ${isMobile ? 'rounded-t-none' : ''}`}>
               <div>
                 <span className="editorial-eyebrow text-[10px] block mb-1">Hospitality Reservations</span>
                 <h2 id="reservation-drawer-title" className="font-serif text-2xl text-on-surface font-normal">Book a Table</h2>
@@ -182,7 +218,7 @@ export const ReservationDrawer: React.FC = () => {
                 </div>
                 <div>
                   <span className="font-sans text-[10px] uppercase tracking-widest text-primary font-bold">
-                    Reservation Request Registered
+                    {isDemoSubmission ? 'Demo Request Only' : 'Reservation Request Registered'}
                   </span>
                   <h3 className="font-serif text-2xl text-on-surface font-normal mt-1">
                     See You Soon, {formData.name}!
@@ -191,11 +227,13 @@ export const ReservationDrawer: React.FC = () => {
                     {confirmedRef}
                   </p>
                   <p className="font-sans text-xs text-on-surface/60 mt-3 max-w-xs mx-auto leading-relaxed">
-                    Table reserved for {formData.guests} {formData.guests === 1 ? 'guest' : 'guests'} on {formData.date} at {formData.time}.
+                    {isDemoSubmission
+                      ? `No reservation was created, sent, or held. This demo request stays in this browser for review.`
+                      : `Table reserved for ${formData.guests} ${formData.guests === 1 ? 'guest' : 'guests'} on ${formData.date} at ${formData.time}.`}
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-[#160E0A] border border-white/10 w-full max-w-sm flex items-center justify-between text-xs font-sans">
+                {!isDemoSubmission && <div className="p-4 rounded-2xl bg-[#160E0A] border border-white/10 w-full max-w-sm flex items-center justify-between text-xs font-sans">
                   <span className="text-on-surface/60">Questions or amendments?</span>
                   <a
                     href={`tel:${restaurantConfig.contact.phone}`}
@@ -204,7 +242,7 @@ export const ReservationDrawer: React.FC = () => {
                     <span className="material-symbols-outlined text-sm">call</span>
                     <span>{restaurantConfig.contact.displayPhone}</span>
                   </a>
-                </div>
+                </div>}
 
                 <button
                   type="button"
