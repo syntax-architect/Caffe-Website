@@ -1,0 +1,9 @@
+services:
+  - type: static
+    name: caffe-website
+    buildCommand: npm run build
+    staticPublishPath: ./the-cafe-barrackpore/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -180,7 +180,30 @@ async function prerender() {
     console.log(`✔ Successfully generated ${route.file} (${Math.round(stats.size / 1024)} kB of real HTML)`);
   }
 
-  // 9. Clean up temporary dist-server directory
+  // 10. Generate static SPA entrypoints for direct-link routes on static hosts (e.g. Render, GitHub Pages, S3)
+  const spaDirectRoutes = [
+    'qr/index.html',
+    'staff/login/index.html',
+    'staff/kitchen/index.html',
+    'staff/owner/index.html',
+    'qr-generator/index.html',
+    'reset-password/index.html',
+  ];
+
+  console.log('\n📄 Generating static SPA entrypoints for static hosting direct navigation...');
+  const indexHtmlContent = fs.readFileSync(path.resolve(distDir, 'index.html'), 'utf-8');
+
+  for (const spaRoute of spaDirectRoutes) {
+    const targetPath = path.resolve(distDir, spaRoute);
+    const targetDir = path.dirname(targetPath);
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    fs.writeFileSync(targetPath, indexHtmlContent, 'utf-8');
+    console.log(`✔ Generated static SPA entrypoint: ${spaRoute}`);
+  }
+
+  // 11. Clean up temporary dist-server directory
   try {
     fs.rmSync(distServerDir, { recursive: true, force: true });
     console.log('🧹 Cleaned up temporary SSR compile artifacts.');
