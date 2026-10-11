@@ -300,3 +300,39 @@ html, body { overflow-x: clip; width: 100%; position: relative; }
   user-select: none;
   vertical-align: middle;
 }
+
+/* Atmospheric Ambient Lighting Breathing */
+@keyframes ambientMeshBreathe {
+  0%, 100% {
+    transform: scale(1) translate3d(0, 0, 0);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.15) translate3d(16px, -12px, 0);
+    opacity: 1;
+  }
+}
+
+.ambient-mesh-orb-1 {
+  animation: ambientMeshBreathe 14s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.ambient-mesh-orb-2 {
+  animation: ambientMeshBreathe 18s ease-in-out 4s infinite reverse;
+  will-change: transform, opacity;
+}
+
+.ambient-mesh-orb-3 {
+  animation: ambientMeshBreathe 22s ease-in-out 8s infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-mesh-orb-1,
+  .ambient-mesh-orb-2,
+  .ambient-mesh-orb-3 {
+    animation: none !important;
+  }
+}
+

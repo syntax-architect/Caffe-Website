@@ -89,7 +89,7 @@ export const SpecialsBanner: React.FC = () => {
   const companionPlatters = combos.slice(1);
 
   return (
-    <section id="chef-specials" className="w-full py-20 lg:py-28 bg-background relative border-t border-outline/15 scroll-mt-28 overflow-hidden">
+    <section id="chef-specials" className="w-full pt-12 sm:pt-14 lg:pt-16 pb-16 sm:pb-20 lg:pb-22 bg-background relative border-t border-outline/15 scroll-mt-28 overflow-hidden">
       {/* Ambient Radial Backdrop Glow */}
       {engineConfig?.theme?.ambience?.meshGlow !== false && (
         <div 

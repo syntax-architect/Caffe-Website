@@ -17,6 +17,7 @@ import { VIPClub } from './components/VIPClub';
 import { SpecialsBanner } from './components/SpecialsBanner';
 import { Menu } from './components/Menu';
 import { Footer } from './components/Footer';
+import { smoothScrollTo } from './utils/scroll';
 
 // Code-split heavy interactive modal overlays (only fetched when user opens them or on idle)
 const CartDrawer = lazy(() => import('./components/CartDrawer').then(module => ({ default: module.CartDrawer })));
@@ -50,9 +51,9 @@ export const AppLayout: React.FC = () => {
       <main id="main-content" className="w-full pt-20">
         {/* Ambient Golden Mesh Lighting - Isolated layer, zero repaint on scroll */}
         <div className="fixed inset-0 pointer-events-none -z-10 layer-isolated hidden sm:block" aria-hidden="true">
-          <div className="absolute top-1/4 left-[-10%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-primary/5 blur-[80px] sm:blur-[140px]" />
-          <div className="absolute top-2/4 right-[-10%] w-64 h-64 sm:w-[400px] sm:h-[400px] rounded-full bg-primary/4 blur-[80px] sm:blur-[130px]" />
-          <div className="absolute top-3/4 left-[15%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-primary/5 blur-[80px] sm:blur-[140px]" />
+          <div className="absolute top-1/4 left-[-10%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-primary/5 blur-[80px] sm:blur-[140px] ambient-mesh-orb-1" />
+          <div className="absolute top-2/4 right-[-10%] w-64 h-64 sm:w-[400px] sm:h-[400px] rounded-full bg-primary/4 blur-[80px] sm:blur-[130px] ambient-mesh-orb-2" />
+          <div className="absolute top-3/4 left-[15%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-primary/5 blur-[80px] sm:blur-[140px] ambient-mesh-orb-3" />
         </div>
         {sections?.hero !== false && <Hero />}
         {sections?.scrollSequence !== false && <ScrollSequence />}
@@ -95,11 +96,20 @@ export const AppLayout: React.FC = () => {
 
 function App() {
   useEffect(() => {
-    // Scroll to top on fresh load
+    // Preserve manual restoration to avoid abrupt native jumping
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
-    if (typeof window !== 'undefined' && window.scrollY > 0) {
+
+    // Handle deep-link anchor hashes on load/refresh with dynamic header offset
+    const hash = window.location.hash;
+    if (hash && hash.length > 1) {
+      const targetId = hash.slice(1);
+      const timer = setTimeout(() => {
+        smoothScrollTo(targetId);
+      }, 150);
+      return () => clearTimeout(timer);
+    } else if (typeof window !== 'undefined' && window.scrollY > 0) {
       window.scrollTo(0, 0);
     }
   }, []);
@@ -124,10 +134,14 @@ function App() {
         touchMultiplier: 2,
         autoRaf: true,
       });
+      (window as any).__lenis = lenisInstance;
     });
 
     return () => {
-      if (lenisInstance) lenisInstance.destroy();
+      if (lenisInstance) {
+        lenisInstance.destroy();
+        (window as any).__lenis = null;
+      }
     };
   }, []);
 

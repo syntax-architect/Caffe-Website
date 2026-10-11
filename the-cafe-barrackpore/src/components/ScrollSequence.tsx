@@ -275,15 +275,15 @@ export const ScrollSequence: React.FC = () => {
             }
           };
 
-          updateText(text1Ref, currentProgress >= 0.04 && currentProgress < 0.32);
-          updateText(text2Ref, currentProgress >= 0.36 && currentProgress < 0.64);
-          updateText(text3Ref, currentProgress >= 0.68 && currentProgress < 0.94);
+          updateText(text1Ref, currentProgress >= 0.03 && currentProgress < 0.34);
+          updateText(text2Ref, currentProgress >= 0.34 && currentProgress < 0.67);
+          updateText(text3Ref, currentProgress >= 0.67 && currentProgress < 0.97);
         }
       }
 
       if (exitOverlayRef.current) {
         // Smoothly dissolve canvas into semantic background as scroll approaches AboutVibe
-        const exitProgress = Math.max(0, Math.min(1, (currentProgress - 0.88) / 0.12));
+        const exitProgress = Math.max(0, Math.min(1, (currentProgress - 0.90) / 0.10));
         exitOverlayRef.current.style.opacity = String(exitProgress);
       }
 
@@ -439,7 +439,7 @@ export const ScrollSequence: React.FC = () => {
   return (
     <section 
       id="scroll-sequence-section" 
-      className="relative w-full bg-background h-[calc(100dvh+450px)] lg:h-[calc(100vh+1500px)]"
+      className="relative w-full bg-background h-[calc(100dvh+450px)] lg:h-[calc(100vh+850px)]"
     >
       <div className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-background layer-isolated">
         {/* Canvas Frame Sequence with calibrated Golden Espresso tone */}

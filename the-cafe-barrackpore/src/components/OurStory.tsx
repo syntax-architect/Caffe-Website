@@ -162,7 +162,7 @@ export const OurStory: React.FC = () => {
     <section
       ref={containerRef}
       id="our-story"
-      className="relative w-full bg-background border-t border-outline/15 scroll-mt-24 transition-colors duration-500"
+      className="relative w-full bg-background border-t border-outline/15 scroll-mt-28 transition-colors duration-500"
       style={{ minHeight: `${sectionMinHeight}vh` }}
     >
       {/* Sticky Viewport Stage */}

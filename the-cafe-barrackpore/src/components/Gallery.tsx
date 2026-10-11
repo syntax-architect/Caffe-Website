@@ -158,7 +158,7 @@ export const Gallery: React.FC = () => {
   };
 
   return (
-    <section className="w-full py-20 lg:py-28 bg-background relative border-t border-outline/15 scroll-mt-28 overflow-hidden" id="gallery">
+    <section className="w-full pt-16 sm:pt-18 lg:pt-20 pb-12 sm:pb-14 lg:pb-16 bg-background relative border-t border-outline/15 scroll-mt-28 overflow-hidden" id="gallery">
       {/* Ambient Glow */}
       {engineConfig?.theme?.ambience?.meshGlow !== false && (
         <div 

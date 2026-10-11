@@ -8,6 +8,7 @@ import {
   DEFAULT_HEADER_CONFIG,
 } from '../config/defaultEngineConfig';
 import type { NavigationItem } from '../types/restaurantEngine';
+import { smoothScrollTo } from '../utils/scroll';
 
 export const Header: React.FC = React.memo(() => {
   const { cartCount, setIsDrawerOpen } = useCart();
@@ -150,21 +151,12 @@ export const Header: React.FC = React.memo(() => {
 
     if (id === 'root' || !id) {
       setActiveSection('');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      smoothScrollTo('root');
       return;
     }
 
     setActiveSection(id);
-    const element = document.getElementById(id);
-    if (element) {
-      const headerOffset = 75;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.scrollY - headerOffset;
-      window.scrollTo({
-        top: Math.max(0, offsetPosition),
-        behavior: 'smooth'
-      });
-    }
+    smoothScrollTo(id);
   };
 
   const handlePrimaryCtaClick = () => {

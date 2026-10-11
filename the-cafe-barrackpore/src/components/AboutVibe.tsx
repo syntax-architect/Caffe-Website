@@ -144,7 +144,7 @@ export const AboutVibe: React.FC = () => {
   const meshGlowActive = engineConfig?.theme?.ambience?.meshGlow !== false;
 
   return (
-    <section ref={sectionRef} id="about-and-vibe" className="w-full py-16 sm:py-20 lg:py-28 bg-background relative overflow-hidden border-t border-outline/15 scroll-mt-24">
+    <section ref={sectionRef} id="about-and-vibe" className="w-full pt-10 sm:pt-14 lg:pt-16 pb-16 sm:pb-20 lg:pb-24 bg-background relative overflow-hidden border-t border-outline/15 scroll-mt-28">
       {/* 1. Ambient Warm Filament Lighting Flares */}
       {meshGlowActive && (
         <>

@@ -57,7 +57,7 @@ export const VIPClub: React.FC = () => {
 
   return (
     <section 
-      className="w-full py-20 lg:py-28 bg-background border-t border-outline/15 relative scroll-mt-28 overflow-hidden" 
+      className="w-full pt-14 sm:pt-16 lg:pt-18 pb-10 sm:pb-12 lg:pb-14 bg-background border-t border-outline/15 relative scroll-mt-28 overflow-hidden" 
       id="vip-club"
     >
       {/* 1. Cinematic Ambient Backlighting */}

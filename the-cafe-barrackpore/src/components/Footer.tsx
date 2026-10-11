@@ -33,7 +33,7 @@ export const Footer: React.FC = () => {
   const whatsapp = restaurantConfig?.contact?.whatsapp || clientDetails.whatsapp;
   const openingHours = restaurantConfig?.openingTime && restaurantConfig?.closingTime
     ? `${restaurantConfig.openingTime} – ${restaurantConfig.closingTime}`
-    : '11:00 AM – 11:30 PM';
+    : '11:00 AM – 11:00 PM';
 
   const hygieneMsg = footerConfig.hygieneMessage || (
     restaurantConfig?.dietary?.system === 'india'
@@ -89,7 +89,7 @@ export const Footer: React.FC = () => {
         aria-hidden="true" 
       />
 
-      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 pt-16 md:pt-28 pb-36 sm:pb-36 md:pb-12 pb-[max(9.5rem,calc(8rem+env(safe-area-inset-bottom)))] relative z-10">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 pt-12 md:pt-16 lg:pt-20 pb-36 sm:pb-36 md:pb-12 pb-[max(9.5rem,calc(8rem+env(safe-area-inset-bottom)))] relative z-10">
         
         {/* Top Hospitality Callout Banner */}
         {showHospitalityBanner && (

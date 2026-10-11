@@ -213,7 +213,7 @@ export const DEFAULT_STORY_CHAPTERS: StoryChapter[] = [
     titleItalic: 'obsessive intent.',
     description:
       'From hand-pulled espresso crema and slow cold-drip extractions to wood-fired artisanal sourdough pizzas and sizzling tandoori banquets, every creation is an intentional celebration.',
-    highlight: 'Locally sourced botanicals & master culinary craft.',
+    highlight: 'Curated botanicals & master culinary craft.',
     image: '/images/story/story-chapter-3.webp',
     imageAlt: 'Artisanal Wood-Fired Sourdough Pizza and Hand-Pulled Espresso Crema',
   },

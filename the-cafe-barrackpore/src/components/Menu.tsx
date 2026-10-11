@@ -425,7 +425,7 @@ export const Menu: React.FC = () => {
   };
 
   return (
-    <section className="w-full py-16 md:py-24 bg-background scroll-mt-28" id="menu-section">
+    <section className="w-full pt-14 md:pt-20 pb-10 md:pb-12 bg-background scroll-mt-28" id="menu-section">
       <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12 flex flex-col gap-8 md:gap-12 relative">
         {/* Floating Image (Desktop Only - Isolated RAF GPU Transform) */}
         {!isTouchDevice && <FloatingMenuPreview imageSrc={hoveredImage} />}
