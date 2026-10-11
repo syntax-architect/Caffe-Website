@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useDevice } from '../hooks/useDevice';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
 import { useMenuAvailability } from '../hooks/useMenuAvailability';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { SectionReveal } from './SectionReveal';
 import {
   MENU_CATEGORIES_FALLBACK,
   MENU_ITEMS_FALLBACK,
 } from '../data/menuFallbacks';
 import type { MenuItem, MenuCategory } from '../types/menu';
+import type { MenuVariant } from '../types/restaurantEngine';
 
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Burgers & Pizzas': 'Hand-stretched sourdough crusts flame-baked to crisp perfection & artisanal toasted brioche burgers.',
@@ -28,6 +30,59 @@ const getCategoryIcon = (categoryName: string): string => {
   return 'restaurant_menu';
 };
 
+interface FloatingMenuPreviewProps {
+  imageSrc: string | null;
+}
+
+const FloatingMenuPreview: React.FC<FloatingMenuPreviewProps> = React.memo(({ imageSrc }) => {
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (!imageSrc) return;
+
+    let rafId: number | null = null;
+    let targetX = 0;
+    let targetY = 0;
+
+    const onMouseMove = (e: MouseEvent) => {
+      targetX = e.clientX + 20;
+      targetY = e.clientY + 20;
+      if (rafId === null) {
+        rafId = requestAnimationFrame(() => {
+          if (imgRef.current) {
+            imgRef.current.style.transform = `translate3d(${targetX}px, ${targetY}px, 0)`;
+          }
+          rafId = null;
+        });
+      }
+    };
+
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, [imageSrc]);
+
+  if (!imageSrc) return null;
+
+  return (
+    <img
+      ref={imgRef}
+      src={imageSrc}
+      loading="lazy"
+      decoding="async"
+      width="256"
+      height="256"
+      alt="Menu Preview"
+      className="hidden lg:block fixed top-0 left-0 z-[100] w-64 h-64 object-cover rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 pointer-events-none will-change-transform animate-fade-in"
+      style={{
+        transform: 'translate3d(-9999px, -9999px, 0)',
+      }}
+    />
+  );
+});
+
 export const Menu: React.FC = () => {
   const [categories, setCategories] = useState<MenuCategory[]>(MENU_CATEGORIES_FALLBACK);
   const [activeCategoryId, setActiveCategoryId] = useState<string>(
@@ -37,9 +92,9 @@ export const Menu: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [visibleCount, setVisibleCount] = useState(6);
   const [isVegOnly, setIsVegOnly] = useState(false);
+  const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null);
 
   const [hoveredImage, setHoveredImage] = useState<string | null>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
@@ -50,7 +105,9 @@ export const Menu: React.FC = () => {
   const { addToCart } = useCart();
   const { showToast } = useUI();
   const { isAvailable } = useMenuAvailability();
-  const { formatPrice, restaurantConfig } = useSiteConfig();
+  const { formatPrice, restaurantConfig, engineConfig } = useSiteConfig();
+  const menuVariant: MenuVariant = engineConfig?.variants?.menu || 'sensory-ledger';
+  const menuSectionConfig = engineConfig?.menu;
 
   // Load categories and items from Supabase tables & subscribe to Realtime updates
   useEffect(() => {
@@ -112,19 +169,6 @@ export const Menu: React.FC = () => {
     };
   }, []);
 
-  // Handle global mouse move when an image is hovered (desktop only)
-  useEffect(() => {
-    if (!hoveredImage || isTouchDevice) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [hoveredImage, isTouchDevice]);
-
   // Monitor category scroll position to toggle navigation chevrons and gradient edge masks
   const checkScroll = () => {
     const el = categoryScrollRef.current;
@@ -177,30 +221,206 @@ export const Menu: React.FC = () => {
     return categoryMatch && vegMatch;
   });
 
-  const displayedMenu = filteredMenu.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredMenu.length;
+  const featuredConfigId = menuSectionConfig?.featuredItemId;
+  const featuredConfigImage = menuSectionConfig?.featuredImage;
+
+  const featuredItem = useMemo(() => {
+    if (filteredMenu.length === 0) return null;
+
+    const hasRealImage = (item: MenuItem) =>
+      Boolean(
+        (item.id === featuredConfigId && featuredConfigImage) ||
+        item.image_url ||
+        item.image
+      );
+
+    // 1. Configured featured item IF it is available in filteredMenu AND has a usable real image
+    if (featuredConfigId) {
+      const configuredWithImage = filteredMenu.find(
+        (item) => item.id === featuredConfigId && item.available && isAvailable(item.id) && hasRealImage(item)
+      );
+      if (configuredWithImage) return configuredWithImage;
+    }
+
+    // 2. First available popular item in the category with an authentic image
+    const popularWithImage = filteredMenu.find(
+      (item) => item.popular && item.available && isAvailable(item.id) && hasRealImage(item)
+    );
+    if (popularWithImage) return popularWithImage;
+
+    // 3. First available item in the category with an authentic image
+    const availableWithImage = filteredMenu.find(
+      (item) => item.available && isAvailable(item.id) && hasRealImage(item)
+    );
+    if (availableWithImage) return availableWithImage;
+
+    // 4. If no item in this category has an authentic image:
+    // 4a. Check if the configured item is present and available (even without image)
+    if (featuredConfigId) {
+      const configuredNoImage = filteredMenu.find(
+        (item) => item.id === featuredConfigId && item.available && isAvailable(item.id)
+      );
+      if (configuredNoImage) return configuredNoImage;
+    }
+
+    // 4b. First available popular item
+    const firstPopular = filteredMenu.find(
+      (item) => item.popular && item.available && isAvailable(item.id)
+    );
+    if (firstPopular) return firstPopular;
+
+    // 4c. First available item
+    const firstAvailable = filteredMenu.find(
+      (item) => item.available && isAvailable(item.id)
+    );
+    if (firstAvailable) return firstAvailable;
+
+    // 5. Ultimate fallback to first item in filtered list
+    return filteredMenu[0] || null;
+  }, [filteredMenu, featuredConfigId, featuredConfigImage, isAvailable]);
+
+  // Resolve sensory tasting notes, beverage pairing, and eyebrow for the selected item
+  // Ensures metadata STRICTLY corresponds to the resolved featuredItem (no carryover on fallbacks)
+  const activeSensoryMetadata = useMemo(() => {
+    if (!featuredItem) return null;
+
+    // 1. Direct item property (e.g. from menu item data model)
+    const itemNotes = featuredItem.tasting_notes;
+    const itemPairing = featuredItem.pairing;
+
+    // 2. Stable item ID dictionary in menuSectionConfig
+    const mappedMeta = menuSectionConfig?.itemsMetadata?.[featuredItem.id];
+    const mappedNotes = mappedMeta?.tastingNotes;
+    const mappedPairing = mappedMeta?.pairing;
+
+    // 3. Section config top-level metadata — ONLY if the selected item is the configured item!
+    const isConfiguredItem = Boolean(featuredConfigId && featuredItem.id === featuredConfigId);
+    const configNotes = isConfiguredItem ? menuSectionConfig?.featuredTastingNotes : undefined;
+    const configPairing = isConfiguredItem ? menuSectionConfig?.featuredPairing : undefined;
+
+    const tastingNotes = itemNotes || mappedNotes || configNotes || null;
+    const pairing = itemPairing || mappedPairing || configPairing || null;
+    const eyebrow =
+      mappedMeta?.eyebrow ||
+      (isConfiguredItem ? menuSectionConfig?.featuredEyebrow : null) ||
+      "Chef's Signature Selection";
+
+    return {
+      tastingNotes,
+      pairing,
+      eyebrow,
+    };
+  }, [featuredItem, featuredConfigId, menuSectionConfig]);
+
+  const ledgerItems = useMemo(() => {
+    if (!featuredItem) return filteredMenu;
+    return filteredMenu.filter((i) => i.id !== featuredItem.id);
+  }, [filteredMenu, featuredItem]);
+
+  const displayedCatalogMenu = filteredMenu.slice(0, visibleCount);
+  const displayedLedgerItems = ledgerItems.slice(0, visibleCount);
+
+  const hasMore =
+    menuVariant === 'sensory-ledger'
+      ? visibleCount < ledgerItems.length
+      : visibleCount < filteredMenu.length;
+
+  const handleAddToCart = (e: React.MouseEvent, item: MenuItem) => {
+    e.stopPropagation();
+    const isOrderingActive = restaurantConfig.isOrderingEnabled !== false;
+    const itemAvailable = item.available && isAvailable(item.id);
+    if (!itemAvailable || !isOrderingActive) return;
+
+    setRecentlyAddedId(item.id);
+    setTimeout(() => {
+      setRecentlyAddedId((curr) => (curr === item.id ? null : curr));
+    }, 850);
+
+    const displayImage = item.image_url || item.image;
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image: displayImage,
+      category_id: item.category_id,
+      category: item.category_id,
+      diet: item.diet,
+      description: item.description,
+      popular: item.popular,
+      available: item.available,
+      sort_order: item.sort_order,
+    });
+    showToast({
+      title: 'Added to Order',
+      message: item.name,
+      subtext: `${formatPrice(item.price)}`,
+      type: 'success',
+    });
+  };
+
+  const renderDietaryBadge = (item: MenuItem) => {
+    if (!item.diet || item.diet === 'all') return null;
+
+    if (restaurantConfig.dietary.system === 'india') {
+      return (
+        <div
+          className={`w-3.5 h-3.5 rounded-sm border shrink-0 flex items-center justify-center ${
+            item.diet === 'veg' || item.diet === 'vegan'
+              ? 'border-emerald-500/80'
+              : 'border-red-500/80'
+          }`}
+          title={
+            item.diet === 'veg'
+              ? 'Vegetarian'
+              : item.diet === 'vegan'
+              ? 'Vegan'
+              : 'Non-Vegetarian'
+          }
+        >
+          <div
+            className={`w-1.5 h-1.5 rounded-full ${
+              item.diet === 'veg' || item.diet === 'vegan'
+                ? 'bg-emerald-500'
+                : 'bg-red-500'
+            }`}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <span
+        className={`px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase shrink-0 border ${
+          item.diet === 'veg'
+            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+            : item.diet === 'vegan'
+            ? 'bg-teal-500/10 text-teal-400 border-teal-500/30'
+            : 'bg-stone-500/10 text-stone-300 border-stone-500/30'
+        }`}
+        title={
+          item.diet === 'veg'
+            ? 'Vegetarian'
+            : item.diet === 'vegan'
+            ? 'Vegan'
+            : 'Non-Vegetarian'
+        }
+      >
+        {item.diet === 'veg'
+          ? 'Veg'
+          : item.diet === 'vegan'
+          ? 'Vegan'
+          : 'Non-Veg'}
+      </span>
+    );
+  };
 
   return (
     <section className="w-full py-16 md:py-24 bg-background scroll-mt-28" id="menu-section">
       <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12 flex flex-col gap-8 md:gap-12 relative">
-        {/* Floating Image (Desktop Only) */}
-        {hoveredImage && (
-          <img
-            src={hoveredImage}
-            loading="lazy"
-            decoding="async"
-            width="256"
-            height="256"
-            alt="Menu Preview"
-            className="hidden lg:block fixed z-[100] w-64 h-64 object-cover rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 pointer-events-none transition-transform duration-75 animate-fade-in"
-            style={{
-              left: `${mousePos.x + 20}px`,
-              top: `${mousePos.y + 20}px`,
-            }}
-          />
-        )}
+        {/* Floating Image (Desktop Only - Isolated RAF GPU Transform) */}
+        {!isTouchDevice && <FloatingMenuPreview imageSrc={hoveredImage} />}
 
-        <div
+        <SectionReveal
           className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8"
         >
           <div>
@@ -243,7 +463,7 @@ export const Menu: React.FC = () => {
                   className={`w-11 h-6 rounded-full p-0.5 transition-all duration-300 ease-in-out flex items-center border cursor-pointer ${
                     isVegOnly
                       ? 'bg-emerald-500/20 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
-                      : 'bg-white/5 border-white/10'
+                      : 'bg-surface-elevated/40 border-outline/25'
                   }`}
                 >
                   <div
@@ -259,7 +479,7 @@ export const Menu: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCategoryPickerOpen(!isCategoryPickerOpen)}
-                  className="px-3 py-1.5 rounded-full bg-[#1A110C] border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-sans font-medium flex items-center gap-1.5 active:scale-95 shadow-sm hover:border-[#D4AF37] transition-all cursor-pointer"
+                  className="px-3 py-1.5 rounded-full bg-surface-container border border-primary/40 text-primary text-xs font-sans font-medium flex items-center gap-1.5 active:scale-95 shadow-sm hover:border-primary transition-all cursor-pointer"
                   aria-label="View all categories"
                   aria-expanded={isCategoryPickerOpen}
                 >
@@ -281,8 +501,8 @@ export const Menu: React.FC = () => {
                       onClick={() => setIsCategoryPickerOpen(false)}
                       aria-hidden="true"
                     />
-                    <div className="absolute right-0 top-full mt-2 z-50 w-64 p-2 rounded-2xl bg-[#140D0A]/98 backdrop-blur-2xl border border-[#D4AF37]/50 shadow-[0_12px_40px_rgba(0,0,0,0.95)] animate-fade-in flex flex-col gap-1">
-                      <div className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-[#D4AF37] font-semibold border-b border-white/10 flex items-center justify-between">
+                    <div className="absolute right-0 top-full mt-2 z-50 w-64 p-2 rounded-2xl bg-surface-obsidian/98 backdrop-blur-2xl border border-primary/50 shadow-[0_12px_40px_rgba(0,0,0,0.85)] animate-fade-in flex flex-col gap-1">
+                      <div className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-primary font-semibold border-b border-outline/15 flex items-center justify-between">
                         <span>All Categories</span>
                         <span>{categories.length} Total</span>
                       </div>
@@ -295,15 +515,15 @@ export const Menu: React.FC = () => {
                             onClick={() => handleSelectCategory(cat.id)}
                             className={`px-3 py-2 rounded-xl text-xs font-sans text-left flex items-center justify-between transition-colors cursor-pointer ${
                               isActive
-                                ? 'bg-[#D4AF37]/20 text-[#D4AF37] font-bold border border-[#D4AF37]/40'
-                                : 'text-on-surface/80 hover:bg-white/5 hover:text-white'
+                                ? 'bg-primary/20 text-primary font-bold border border-primary/40'
+                                : 'text-on-surface/80 hover:bg-surface-elevated/50 hover:text-on-surface'
                             }`}
                           >
                             <span className="flex items-center gap-2">
                               <span className="material-symbols-outlined text-sm">{getCategoryIcon(cat.name)}</span>
                               <span>{cat.name}</span>
                             </span>
-                            {isActive && <span className="material-symbols-outlined text-xs text-[#D4AF37]">check</span>}
+                            {isActive && <span className="material-symbols-outlined text-xs text-primary">check</span>}
                           </button>
                         );
                       })}
@@ -334,7 +554,7 @@ export const Menu: React.FC = () => {
                     type="button"
                     onClick={() => scrollCategories('left')}
                     aria-label="Scroll to previous categories"
-                    className="w-7 h-7 rounded-full bg-[#18100C]/95 border border-[#D4AF37]/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+                    className="w-7 h-7 rounded-full bg-surface-container/95 border border-primary/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-sm">chevron_left</span>
                   </button>
@@ -357,8 +577,8 @@ export const Menu: React.FC = () => {
                         onClick={() => handleSelectCategory(category.id)}
                         className={`px-3.5 sm:px-4 py-2 rounded-full font-sans text-xs uppercase tracking-wider transition-all duration-200 whitespace-nowrap cursor-pointer border flex items-center gap-1.5 active:scale-95 shrink-0 ${
                           isActive
-                            ? 'bg-gradient-to-r from-primary to-[#F3E5AB] text-[#18110c] border-primary font-bold shadow-[0_2px_12px_rgba(212,175,55,0.35)]'
-                            : 'bg-[#140D09]/80 text-on-surface/75 border-white/10 hover:border-primary/40 hover:text-white'
+                            ? 'bg-primary text-on-primary border-primary font-bold shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.35)]'
+                            : 'bg-surface-container-low/80 text-on-surface-variant border-outline/20 hover:border-primary/40 hover:text-on-surface'
                         }`}
                       >
                         <span className="material-symbols-outlined text-[15px]">
@@ -378,7 +598,7 @@ export const Menu: React.FC = () => {
                     type="button"
                     onClick={() => scrollCategories('right')}
                     aria-label="Scroll to more categories"
-                    className="w-7 h-7 rounded-full bg-[#18100C]/95 border border-[#D4AF37]/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+                    className="w-7 h-7 rounded-full bg-surface-container/95 border border-primary/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-sm">chevron_right</span>
                   </button>
@@ -386,7 +606,7 @@ export const Menu: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
+        </SectionReveal>
 
         {/* Category Narrative Lead */}
         {CATEGORY_DESCRIPTIONS[activeCategoryName] && (
@@ -401,129 +621,158 @@ export const Menu: React.FC = () => {
           </div>
         )}
 
+        {restaurantConfig.isOrderingEnabled === false && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+              <div>
+                <p className="text-sm font-semibold text-white">Online Ordering is Temporarily Paused</p>
+                <p className="text-xs text-on-surface/70 mt-0.5">
+                  Browse our artisanal menu below. In-person dining and counter service remain active.
+                </p>
+              </div>
+            </div>
+            <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-semibold bg-primary/15 text-primary border border-primary/30">
+              Browsing Mode
+            </span>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="animate-pulse bg-[#170E0A] border border-white/5 rounded-2xl h-52"
+                className="animate-pulse bg-surface-container/60 border border-outline/15 rounded-2xl h-52"
               />
             ))}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-            {displayedMenu.map((item) => {
-              const itemAvailable = item.available && isAvailable(item.id);
-              const displayImage = item.image_url || item.image;
+        ) : menuVariant === 'sensory-ledger' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+            {/* Left Column: Signature Showcase (lg:col-span-5) */}
+            {featuredItem && (
+              <div className="lg:col-span-5 w-full lg:sticky lg:top-28">
+                {(() => {
+                  const itemAvailable = featuredItem.available && isAvailable(featuredItem.id);
+                  const isOrderingActive = restaurantConfig.isOrderingEnabled !== false;
+                  const canAdd = itemAvailable && isOrderingActive;
+                  const isJustAdded = recentlyAddedId === featuredItem.id;
+                  const displayImage =
+                    (featuredItem.id === featuredConfigId && featuredConfigImage) ||
+                    featuredItem.image_url ||
+                    featuredItem.image;
 
-              return (
-                <div
-                  key={item.id}
-                  onMouseEnter={() => {
-                    if (isTouchDevice || !displayImage) return;
-                    setHoveredImage(displayImage);
-                  }}
-                  onMouseLeave={() => setHoveredImage(null)}
-                  className={`relative p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-[#1C120D] via-[#160E0A] to-[#120B08] border border-[#8B6B23]/35 hover:border-[#D4AF37] shadow-lg hover:shadow-[0_12px_32px_rgba(212,175,55,0.18)] transition-all duration-300 group flex flex-col justify-between gap-3.5 sm:gap-4 overflow-hidden active:scale-[0.99] hover:-translate-y-1 ${
-                    itemAvailable
-                      ? 'cursor-pointer'
-                      : 'opacity-65 grayscale-[30%] bg-[#130B07] border-stone-800/60'
-                  }`}
-                >
-                    {/* Top Subtle Amber Glow Line on Hover */}
-                    <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37]/0 group-hover:via-[#D4AF37]/80 to-transparent transition-all duration-500 pointer-events-none" />
+                  return (
+                    <div
+                      onMouseEnter={() => {
+                        if (isTouchDevice || !displayImage) return;
+                        setHoveredImage(displayImage);
+                      }}
+                      onMouseLeave={() => setHoveredImage(null)}
+                      className={`relative p-6 sm:p-8 rounded-3xl bg-surface-container border border-outline/30 hover:border-primary/60 shadow-xl transition-all duration-300 ease-out group flex flex-col justify-between overflow-hidden ${
+                        itemAvailable
+                          ? 'cursor-pointer'
+                          : 'opacity-75 grayscale-[25%] bg-surface-container-lowest/80 border-outline/20'
+                      }`}
+                    >
+                      {/* Top Subtle Amber Glow Line on Hover */}
+                      <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/80 to-transparent transition-all duration-500 pointer-events-none" />
 
-                    {/* Top Row: Name, Diet Icon, Sold Out & Mobile Thumbnail / Gastronomic Crest */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {/* Dietary Badge */}
-                          {item.diet && item.diet !== 'all' && (
-                            restaurantConfig.dietary.system === 'india' ? (
-                              <div
-                                className={`w-3.5 h-3.5 rounded-sm border shrink-0 flex items-center justify-center ${
-                                  item.diet === 'veg' || item.diet === 'vegan'
-                                    ? 'border-emerald-500/80'
-                                    : 'border-red-500/80'
-                                }`}
-                                title={
-                                  item.diet === 'veg'
-                                    ? 'Vegetarian'
-                                    : item.diet === 'vegan'
-                                    ? 'Vegan'
-                                    : 'Non-Vegetarian'
-                                }
-                              >
-                                <div
-                                  className={`w-1.5 h-1.5 rounded-full ${
-                                    item.diet === 'veg' || item.diet === 'vegan'
-                                      ? 'bg-emerald-500'
-                                      : 'bg-red-500'
-                                  }`}
-                                />
-                              </div>
-                            ) : (
-                              <span
-                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase shrink-0 border ${
-                                  item.diet === 'veg'
-                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                                    : item.diet === 'vegan'
-                                    ? 'bg-teal-500/10 text-teal-400 border-teal-500/30'
-                                    : 'bg-stone-500/10 text-stone-300 border-stone-500/30'
-                                }`}
-                                title={
-                                  item.diet === 'veg'
-                                    ? 'Vegetarian'
-                                    : item.diet === 'vegan'
-                                    ? 'Vegan'
-                                    : 'Non-Vegetarian'
-                                }
-                              >
-                                {item.diet === 'veg'
-                                  ? 'Veg'
-                                  : item.diet === 'vegan'
-                                  ? 'Vegan'
-                                  : 'Non-Veg'}
+                      <div>
+                        {/* Signature Food Photography Frame OR Compact Editorial Fallback */}
+                        {displayImage ? (
+                          <div className="w-full aspect-[16/10] sm:aspect-[4/3] rounded-2xl overflow-hidden relative bg-surface-container-lowest shadow-md mb-6 group/img">
+                            <img
+                              src={displayImage}
+                              alt={featuredItem.name}
+                              width="600"
+                              height="450"
+                              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out will-change-transform"
+                              loading="eager"
+                              decoding="async"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+
+                            {/* Spotlight Crest Badge */}
+                            <div className="absolute top-3 left-3 flex items-center gap-2">
+                              <span className="px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-semibold bg-primary text-on-primary shadow-lg flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-xs">auto_awesome</span>
+                                <span>{activeSensoryMetadata?.eyebrow || "Chef's Signature Selection"}</span>
                               </span>
-                            )
-                          )}
+                            </div>
 
-                          <h3
-                            className={`font-serif text-base sm:text-lg font-medium leading-snug transition-colors ${
-                              itemAvailable
-                                ? 'text-on-surface group-hover:text-primary'
-                                : 'text-on-surface/50 line-through'
-                            }`}
-                          >
-                            {item.name}
-                          </h3>
-
-                          {item.popular && (
-                            <span className="px-2 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-semibold bg-[#D4AF37]/15 text-primary border border-[#D4AF37]/30 shadow-xs">
-                              Chef's Pick
+                            {!itemAvailable && (
+                              <div className="absolute top-3 right-3">
+                                <span className="badge-soldout shadow-lg">86'd · Sold Out</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          /* Compact Editorial Fallback: Elegant Crest without large empty placeholder */
+                          <div className="mb-4">
+                            <span className="px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-semibold bg-primary/10 text-primary border border-primary/25 inline-flex items-center gap-1.5 shadow-xs">
+                              <span className="material-symbols-outlined text-xs">auto_awesome</span>
+                              <span>{activeSensoryMetadata?.eyebrow || "Chef's Signature Selection"}</span>
                             </span>
-                          )}
+                          </div>
+                        )}
 
-                          {!itemAvailable && (
-                            <span className="badge-soldout">86'd · Sold Out</span>
+                        {/* Dish Identity Header */}
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {renderDietaryBadge(featuredItem)}
+                            <h3
+                              className={`font-serif text-2xl sm:text-3xl font-normal leading-tight transition-colors ${
+                                itemAvailable
+                                  ? 'text-on-surface group-hover:text-primary'
+                                  : 'text-on-surface/50 line-through'
+                              }`}
+                            >
+                              {featuredItem.name}
+                            </h3>
+                          </div>
+
+                          {featuredItem.popular && (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-widest font-semibold bg-primary/15 text-primary border border-primary/30 shrink-0">
+                              Signature Pick
+                            </span>
                           )}
                         </div>
 
                         {/* Description */}
-                        {item.description && (
-                          <p className="font-sans text-xs sm:text-sm text-on-surface/65 leading-relaxed font-light line-clamp-2 mt-1">
-                            {item.description}
+                        {featuredItem.description && (
+                          <p className="font-sans text-xs sm:text-sm text-on-surface/70 leading-relaxed font-light mb-4">
+                            {featuredItem.description}
                           </p>
                         )}
 
+                        {/* Curated Tasting Notes - De-nested editorial presentation */}
+                        {activeSensoryMetadata?.tastingNotes && (
+                          <div className="mb-3 text-xs font-sans text-on-surface/85 flex items-baseline gap-2">
+                            <span className="text-[10px] uppercase tracking-wider text-primary font-semibold shrink-0 inline-flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[13px]">award_star</span>
+                              <span>Notes:</span>
+                            </span>
+                            <span className="font-serif italic">{activeSensoryMetadata.tastingNotes}</span>
+                          </div>
+                        )}
+
+                        {/* Curated Beverage Pairing - De-nested editorial presentation */}
+                        {activeSensoryMetadata?.pairing && (
+                          <div className="mb-4 flex items-center gap-2 text-xs text-on-surface/75">
+                            <span className="material-symbols-outlined text-sm text-primary">local_bar</span>
+                            <span className="font-sans italic">{activeSensoryMetadata.pairing}</span>
+                          </div>
+                        )}
+
                         {/* Allergen Tags */}
-                        {item.allergens && item.allergens.length > 0 && (
-                          <div className="flex items-center gap-1.5 flex-wrap mt-2" aria-label="Allergen warnings">
+                        {featuredItem.allergens && featuredItem.allergens.length > 0 && (
+                          <div className="flex items-center gap-1.5 flex-wrap mb-4" aria-label="Allergen warnings">
                             <span className="text-[10px] text-amber-400/90 font-medium tracking-wider uppercase inline-flex items-center gap-0.5">
                               <span className="material-symbols-outlined text-[13px] text-amber-400">warning</span>
                               <span>Allergens:</span>
                             </span>
-                            {item.allergens.map((allergen) => (
+                            {featuredItem.allergens.map((allergen) => (
                               <span
                                 key={allergen}
                                 className="px-1.5 py-0.5 rounded text-[9px] font-sans font-medium tracking-wide bg-amber-500/10 text-amber-300 border border-amber-500/25"
@@ -535,80 +784,326 @@ export const Menu: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Photography image OR Gastronomic Category Crest */}
-                      {displayImage ? (
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 border border-[#D4AF37]/30 bg-[#120B08] shadow-md">
-                          <img
-                            src={displayImage}
-                            alt={item.name}
-                            width="64"
-                            height="64"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            loading="lazy"
-                            decoding="async"
-                          />
+                      {/* Bottom Row: Price & Primary Cart Action */}
+                      <div className="flex items-center justify-between gap-4 pt-4 border-t border-outline/20 mt-2">
+                        <div className="font-serif text-2xl sm:text-3xl text-primary font-normal tabular-nums">
+                          {formatPrice(featuredItem.price)}
                         </div>
-                      ) : (
-                        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-[#D4AF37]/15 via-[#1A110C] to-[#120B08] border border-[#D4AF37]/30 flex items-center justify-center text-primary group-hover:scale-105 group-hover:bg-[#D4AF37]/25 transition-all duration-300 shrink-0 shadow-md">
-                          <span className="material-symbols-outlined text-lg sm:text-xl font-light">
-                            {getCategoryIcon(activeCategoryName)}
+
+                        <button
+                          disabled={!canAdd}
+                          type="button"
+                          className={`h-10 px-5 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 ${
+                            !canAdd
+                              ? 'bg-surface-elevated/40 border border-outline/20 text-on-surface-variant/40 cursor-not-allowed'
+                              : isJustAdded
+                              ? 'bg-primary text-on-primary border border-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.6)] scale-105'
+                              : 'bg-primary text-on-primary hover:bg-primary/90 border border-primary shadow-lg hover:shadow-[0_4px_20px_rgba(var(--color-primary-rgb),0.4)] cursor-pointer hover:scale-[1.02]'
+                          }`}
+                          title={
+                            !itemAvailable
+                              ? "Item is temporarily unavailable (86'd)"
+                              : !isOrderingActive
+                              ? "Online ordering is temporarily paused by the restaurant"
+                              : `Add ${featuredItem.name} to order`
+                          }
+                          onClick={(e) => handleAddToCart(e, featuredItem)}
+                        >
+                          <span className={`material-symbols-outlined text-base transition-transform ${isJustAdded ? 'scale-110' : ''}`}>
+                            {!itemAvailable ? 'block' : !isOrderingActive ? 'pause_circle' : isJustAdded ? 'check' : 'shopping_bag'}
                           </span>
+                          <span>
+                            {!itemAvailable ? 'Sold Out' : !isOrderingActive ? 'Paused' : isJustAdded ? 'Added' : 'Add to Order'}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Right Column: Editorial Menu Ledger (lg:col-span-7) */}
+            <div className={featuredItem ? "lg:col-span-7 w-full flex flex-col gap-4" : "lg:col-span-12 w-full flex flex-col gap-4"}>
+              {displayedLedgerItems.length === 0 ? (
+                <div className="rounded-3xl bg-surface-container/30 border border-outline/25 p-8 sm:p-12 text-center flex flex-col items-center justify-center min-h-[260px] text-on-surface/70">
+                  <span className="material-symbols-outlined text-4xl mb-3 text-primary/70 font-light">restaurant</span>
+                  <p className="font-serif text-xl text-on-surface">Artisanal Solo Spotlight</p>
+                  <p className="font-sans text-xs sm:text-sm text-on-surface/60 mt-1.5 max-w-sm">
+                    This creation headlines the category. Additional pairings and seasonal recipes will be introduced soon.
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-3xl bg-surface-container/30 border border-outline/25 p-5 sm:p-7 shadow-lg flex flex-col divide-y divide-outline/10">
+                  {displayedLedgerItems.map((item) => {
+                    const itemAvailable = item.available && isAvailable(item.id);
+                    const isOrderingActive = restaurantConfig.isOrderingEnabled !== false;
+                    const canAdd = itemAvailable && isOrderingActive;
+                    const isJustAdded = recentlyAddedId === item.id;
+                    const displayImage = item.image_url || item.image;
+
+                    return (
+                      <div
+                        key={item.id}
+                        onMouseEnter={() => {
+                          if (isTouchDevice || !displayImage) return;
+                          setHoveredImage(displayImage);
+                        }}
+                        onMouseLeave={() => setHoveredImage(null)}
+                        className={`py-4 sm:py-5 first:pt-0 last:pb-0 flex flex-col gap-2 group transition-colors duration-200 rounded-xl px-2 sm:px-3 -mx-2 sm:-mx-3 hover:bg-surface-elevated/25 ${
+                          itemAvailable ? '' : 'opacity-65 grayscale-[30%]'
+                        }`}
+                      >
+                        {/* Ledger Primary Line: Name, Diet, Dotted Leader, Price, Add Button */}
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
+                          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                            <div className="pt-1 shrink-0">
+                              {renderDietaryBadge(item)}
+                            </div>
+
+                            <div className="flex items-baseline gap-2 flex-wrap min-w-0">
+                              <h4
+                                className={`font-serif text-base sm:text-lg font-medium leading-snug transition-colors ${
+                                  itemAvailable
+                                    ? 'text-on-surface group-hover:text-primary'
+                                    : 'text-on-surface/50 line-through'
+                                }`}
+                              >
+                                {item.name}
+                              </h4>
+
+                              {item.popular && (
+                                <span className="inline-flex px-2 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-semibold bg-primary/15 text-primary border border-primary/30 shrink-0 self-center">
+                                  Chef's Pick
+                                </span>
+                              )}
+
+                              {!itemAvailable && (
+                                <span className="badge-soldout shrink-0 text-[10px] self-center">86'd</span>
+                              )}
+                            </div>
+
+                            {/* Editorial Dotted Hairline Leader Line (lg screen space permitting) */}
+                            <div className="hidden lg:block flex-1 border-b border-dotted border-outline/30 mx-3 min-w-[28px] self-center" />
+                          </div>
+
+                          {/* Price & Tactile Add Button */}
+                          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-0.5 self-end sm:self-auto w-full sm:w-auto">
+                            <span className="font-serif text-base sm:text-lg text-primary font-normal tabular-nums">
+                              {formatPrice(item.price)}
+                            </span>
+
+                            <button
+                              disabled={!canAdd}
+                              type="button"
+                              className={`h-7 px-3 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1 transition-all duration-200 active:scale-95 shrink-0 ${
+                                !canAdd
+                                  ? 'bg-surface-elevated/40 border border-outline/20 text-on-surface-variant/40 cursor-not-allowed'
+                                  : isJustAdded
+                                  ? 'bg-primary text-on-primary border border-primary shadow-[0_0_14px_rgba(var(--color-primary-rgb),0.6)] scale-105'
+                                  : 'bg-primary/10 hover:bg-primary text-primary hover:text-on-primary border border-primary/30 hover:border-primary shadow-xs hover:shadow-[0_2px_10px_rgba(var(--color-primary-rgb),0.35)] cursor-pointer hover:scale-105'
+                              }`}
+                              title={
+                                !itemAvailable
+                                  ? "Item is temporarily unavailable (86'd)"
+                                  : !isOrderingActive
+                                  ? "Online ordering is temporarily paused by the restaurant"
+                                  : `Add ${item.name} to order`
+                              }
+                              onClick={(e) => handleAddToCart(e, item)}
+                            >
+                              <span className={`material-symbols-outlined text-[14px] transition-transform ${isJustAdded ? 'scale-110' : ''}`}>
+                                {!itemAvailable ? 'block' : !isOrderingActive ? 'pause_circle' : isJustAdded ? 'check' : 'add'}
+                              </span>
+                              <span>{!itemAvailable ? 'Sold Out' : !isOrderingActive ? 'Paused' : isJustAdded ? 'Added' : 'Add'}</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Ledger Secondary Details: Description & Allergens */}
+                        <div className="flex items-start justify-between gap-3 pl-6">
+                          <div className="flex-1 min-w-0">
+                            {item.description && (
+                              <p className="font-sans text-xs sm:text-sm text-on-surface/65 leading-relaxed font-light">
+                                {item.description}
+                              </p>
+                            )}
+
+                            {item.allergens && item.allergens.length > 0 && (
+                              <div className="flex items-center gap-1.5 flex-wrap mt-1.5" aria-label="Allergen warnings">
+                                <span className="text-[10px] text-amber-400/90 font-medium tracking-wider uppercase inline-flex items-center gap-0.5">
+                                  <span className="material-symbols-outlined text-[12px] text-amber-400">warning</span>
+                                  <span>Allergens:</span>
+                                </span>
+                                {item.allergens.map((allergen) => (
+                                  <span
+                                    key={allergen}
+                                    className="px-1.5 py-0.5 rounded text-[9px] font-sans font-medium tracking-wide bg-amber-500/10 text-amber-300 border border-amber-500/25"
+                                  >
+                                    {allergen}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Inline Mobile Thumbnail Preview */}
+                          {displayImage && (
+                            <div className="w-10 h-10 sm:hidden rounded-lg overflow-hidden shrink-0 border border-outline/25 bg-surface-container-lowest">
+                              <img
+                                src={displayImage}
+                                alt={item.name}
+                                width="40"
+                                height="40"
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {displayedCatalogMenu.map((item) => {
+              const itemAvailable = item.available && isAvailable(item.id);
+              const displayImage = item.image_url || item.image;
+              const isOrderingActive = restaurantConfig.isOrderingEnabled !== false;
+              const canAdd = itemAvailable && isOrderingActive;
+              const isJustAdded = recentlyAddedId === item.id;
+
+              return (
+                <div
+                  key={item.id}
+                  onMouseEnter={() => {
+                    if (isTouchDevice || !displayImage) return;
+                    setHoveredImage(displayImage);
+                  }}
+                  onMouseLeave={() => setHoveredImage(null)}
+                  className={`relative p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-surface-container via-surface-obsidian to-surface-container-lowest border border-outline/30 hover:border-primary/80 shadow-lg hover:shadow-[0_16px_36px_rgba(0,0,0,0.4),0_0_20px_rgba(var(--color-primary-rgb),0.18)] transition-all duration-300 ease-out group flex flex-col justify-between gap-3.5 sm:gap-4 overflow-hidden active:scale-[0.98] hover:-translate-y-1.5 ${
+                    itemAvailable
+                      ? 'cursor-pointer'
+                      : 'opacity-65 grayscale-[30%] bg-surface-container-lowest/80 border-outline/20'
+                  }`}
+                >
+                  {/* Top Subtle Amber Glow Line on Hover */}
+                  <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary/0 group-hover:via-primary/90 to-transparent transition-all duration-500 pointer-events-none" />
+
+                  {/* Top Row: Name, Diet Icon, Sold Out & Mobile Thumbnail / Gastronomic Crest */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {renderDietaryBadge(item)}
+
+                        <h3
+                          className={`font-serif text-base sm:text-lg font-medium leading-snug transition-colors ${
+                            itemAvailable
+                              ? 'text-on-surface group-hover:text-primary'
+                              : 'text-on-surface/50 line-through'
+                          }`}
+                        >
+                          {item.name}
+                        </h3>
+
+                        {item.popular && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-semibold bg-primary/15 text-primary border border-primary/30 shadow-xs">
+                            Chef's Pick
+                          </span>
+                        )}
+
+                        {!itemAvailable && (
+                          <span className="badge-soldout">86'd · Sold Out</span>
+                        )}
+                      </div>
+
+                      {/* Description */}
+                      {item.description && (
+                        <p className="font-sans text-xs sm:text-sm text-on-surface/65 leading-relaxed font-light line-clamp-2 mt-1">
+                          {item.description}
+                        </p>
+                      )}
+
+                      {/* Allergen Tags */}
+                      {item.allergens && item.allergens.length > 0 && (
+                        <div className="flex items-center gap-1.5 flex-wrap mt-2" aria-label="Allergen warnings">
+                          <span className="text-[10px] text-amber-400/90 font-medium tracking-wider uppercase inline-flex items-center gap-0.5">
+                            <span className="material-symbols-outlined text-[13px] text-amber-400">warning</span>
+                            <span>Allergens:</span>
+                          </span>
+                          {item.allergens.map((allergen) => (
+                            <span
+                              key={allergen}
+                              className="px-1.5 py-0.5 rounded text-[9px] font-sans font-medium tracking-wide bg-amber-500/10 text-amber-300 border border-amber-500/25"
+                            >
+                              {allergen}
+                            </span>
+                          ))}
                         </div>
                       )}
                     </div>
 
-                    {/* Bottom Row: Price & Tactile Action Button */}
-                    <div className="flex items-center justify-between gap-4 pt-3 border-t border-white/5">
-                      <div className="font-serif text-xl sm:text-2xl text-primary font-normal tabular-nums">
-                        {formatPrice(item.price)}
+                    {/* Photography image OR Gastronomic Category Crest */}
+                    {displayImage ? (
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 border border-primary/30 bg-surface-container-lowest shadow-md">
+                        <img
+                          src={displayImage}
+                          alt={item.name}
+                          width="64"
+                          height="64"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
+                          loading="lazy"
+                          decoding="async"
+                        />
                       </div>
-
-                      <button
-                        disabled={!itemAvailable}
-                        type="button"
-                        className={`h-8 px-4 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 ${
-                          itemAvailable
-                            ? 'bg-primary/10 hover:bg-primary text-primary hover:text-[#18110c] border border-primary/30 hover:border-primary shadow-sm hover:shadow-[0_2px_12px_rgba(212,175,55,0.35)] cursor-pointer hover:scale-105'
-                            : 'bg-stone-900 border border-stone-800 text-stone-500 cursor-not-allowed'
-                        }`}
-                        title={
-                          itemAvailable
-                            ? `Add ${item.name} to order`
-                            : "Item is temporarily unavailable (86'd)"
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!itemAvailable) return;
-                          addToCart({
-                            id: item.id,
-                            name: item.name,
-                            price: item.price,
-                            image: displayImage,
-                            category_id: item.category_id,
-                            category: item.category_id,
-                            diet: item.diet,
-                            description: item.description,
-                            popular: item.popular,
-                            available: item.available,
-                            sort_order: item.sort_order,
-                          });
-                          showToast({
-                            title: 'Added to Order',
-                            message: item.name,
-                            subtext: `${formatPrice(item.price)}`,
-                            type: 'success',
-                          });
-                        }}
-                      >
-                        <span className="material-symbols-outlined text-[15px]">
-                          {itemAvailable ? 'add' : 'block'}
+                    ) : (
+                      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary/15 via-surface-container to-surface-obsidian border border-primary/30 flex items-center justify-center text-primary group-hover:scale-105 group-hover:bg-primary/25 transition-all duration-300 shrink-0 shadow-md">
+                        <span className="material-symbols-outlined text-lg sm:text-xl font-light">
+                          {getCategoryIcon(activeCategoryName)}
                         </span>
-                        <span>{itemAvailable ? 'Add' : 'Sold Out'}</span>
-                      </button>
-                    </div>
+                      </div>
+                    )}
                   </div>
-                );
-              })}
+
+                  {/* Bottom Row: Price & Tactile Action Button */}
+                  <div className="flex items-center justify-between gap-4 pt-3 border-t border-outline/15">
+                    <div className="font-serif text-xl sm:text-2xl text-primary font-normal tabular-nums">
+                      {formatPrice(item.price)}
+                    </div>
+
+                    <button
+                      disabled={!canAdd}
+                      type="button"
+                      className={`h-8 px-4 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 ${
+                        !canAdd
+                          ? 'bg-surface-elevated/40 border border-outline/20 text-on-surface-variant/40 cursor-not-allowed'
+                          : isJustAdded
+                          ? 'bg-primary text-on-primary border border-primary shadow-[0_0_18px_rgba(var(--color-primary-rgb),0.6)] scale-105'
+                          : 'bg-primary/10 hover:bg-primary text-primary hover:text-on-primary border border-primary/30 hover:border-primary shadow-sm hover:shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.35)] cursor-pointer hover:scale-105'
+                      }`}
+                      title={
+                        !itemAvailable
+                          ? "Item is temporarily unavailable (86'd)"
+                          : !isOrderingActive
+                          ? "Online ordering is temporarily paused by the restaurant"
+                          : `Add ${item.name} to order`
+                      }
+                      onClick={(e) => handleAddToCart(e, item)}
+                    >
+                      <span className={`material-symbols-outlined text-[15px] transition-transform ${isJustAdded ? 'scale-110' : ''}`}>
+                        {!itemAvailable ? 'block' : !isOrderingActive ? 'pause_circle' : isJustAdded ? 'check' : 'add'}
+                      </span>
+                      <span>{!itemAvailable ? 'Sold Out' : !isOrderingActive ? 'Paused' : isJustAdded ? 'Added' : 'Add'}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -627,7 +1122,7 @@ export const Menu: React.FC = () => {
                     window.scrollTo({ top: y, behavior: 'smooth' });
                   }
                 }}
-                className="h-11 px-7 rounded-full border border-white/20 text-on-surface/80 hover:bg-white/5 hover:text-white transition-all text-xs font-sans font-semibold tracking-wider uppercase cursor-pointer active:scale-95"
+                className="h-11 px-7 rounded-full border border-outline/30 text-on-surface/80 hover:bg-surface-elevated/40 hover:text-on-surface transition-all text-xs font-sans font-semibold tracking-wider uppercase cursor-pointer active:scale-95"
               >
                 Show Less
               </button>

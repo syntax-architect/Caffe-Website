@@ -82,7 +82,7 @@ export class RazorpayAdapter implements PaymentProviderAdapter {
             keyId: data.keyId,
             checkoutUrl: data.checkoutUrl,
             orderRef: data.orderRef || params.orderRef,
-            amount: data.amount ? (data.amount > 1000 && params.amount < 1000 ? data.amount / 100 : data.amount) : params.amount,
+            amount: typeof data.amount === 'number' ? data.amount : params.amount,
             currency: (data.currency || params.currency).toUpperCase(),
             customer: data.customer,
           };

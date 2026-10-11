@@ -3,6 +3,7 @@ import { TableProvider } from './context/TableContext';
 import { AuthProvider } from './context/AuthContext';
 import { SiteConfigProvider } from './context/SiteConfigContext';
 import { I18nProvider } from './i18n';
+import { ThemeRuntime } from './services/themeRuntime';
 
 import App from './App';
 const QROrderingPage = lazy(() => import('./components/QROrderingPage').then(m => ({ default: m.QROrderingPage })));
@@ -13,8 +14,11 @@ import { ProtectedRoute } from './components/staff/ProtectedRoute';
 const StaffApp = lazy(() => import('./components/staff/StaffApp').then(m => ({ default: m.StaffApp })));
 const PrivacyPolicyPage = lazy(() => import('./components/legal/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
 const TermsPage = lazy(() => import('./components/legal/TermsPage').then(m => ({ default: m.TermsPage })));
+const OrderSuccessPage = lazy(() => import('./components/OrderSuccessPage').then(m => ({ default: m.OrderSuccessPage })));
 
 import { MetaTags } from './components/MetaTags';
+import { isSupabaseConfigured } from './lib/supabase';
+import { ConfigurationErrorScreen } from './components/ConfigurationErrorScreen';
 
 const BrandedLoadingFallback: React.FC = () => (
   <div className="min-h-screen bg-[#0F0B08] flex flex-col items-center justify-center p-6 text-stone-200">
@@ -25,12 +29,20 @@ const BrandedLoadingFallback: React.FC = () => (
       </div>
     </div>
     <p className="font-serif text-[#D4AF37] tracking-[0.25em] text-xs uppercase font-medium">
-      The Café Barrackpore
+      Artisanal Hospitality
     </p>
   </div>
 );
 
 export const Root: React.FC = () => {
+  const isDev = typeof import.meta !== 'undefined' && import.meta.env
+    ? Boolean(import.meta.env.DEV)
+    : ((globalThis as any).process ? (globalThis as any).process.env?.NODE_ENV !== 'production' : false);
+
+  if (!isDev && !isSupabaseConfigured) {
+    return <ConfigurationErrorScreen />;
+  }
+
   const pathname = typeof window !== 'undefined' ? window.location.pathname.replace(/\/$/, '') : '';
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
 
@@ -42,6 +54,7 @@ export const Root: React.FC = () => {
 
   const isPrivacyRoute = pathname === '/privacy' || pathname === '/privacy-policy';
   const isTermsRoute = pathname === '/terms' || pathname === '/terms-of-service';
+  const isOrderSuccessRoute = pathname === '/order-success' || (pathname === '/checkout' && searchParams.get('cancelled') === 'true');
   const isResetPassword = pathname === '/reset-password';
   const isStaffLogin = pathname === '/staff/login';
   const isStaffRoute = pathname.startsWith('/staff');
@@ -51,6 +64,7 @@ export const Root: React.FC = () => {
   return (
     <I18nProvider>
       <SiteConfigProvider>
+        <ThemeRuntime />
         <MetaTags pathname={pathname} />
         {isStaffRoute || isStaffLogin || isResetPassword ? (
           <AuthProvider>
@@ -73,6 +87,10 @@ export const Root: React.FC = () => {
         ) : isTermsRoute ? (
           <Suspense fallback={<BrandedLoadingFallback />}>
             <TermsPage />
+          </Suspense>
+        ) : isOrderSuccessRoute ? (
+          <Suspense fallback={<BrandedLoadingFallback />}>
+            <OrderSuccessPage />
           </Suspense>
         ) : isGeneratorRoute ? (
           <Suspense fallback={<BrandedLoadingFallback />}>

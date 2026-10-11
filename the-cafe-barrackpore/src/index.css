@@ -2,6 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 @layer base {
+  :root {
+    /* -------------------------------------------------------------
+     * RESTAURANT ENGINE: VISUAL DESIGN TOKENS
+     * Flagship Preset: 'nocturnal-gold' (The Café Barrackpore)
+     * Values format: Space-separated RGB triplets for Tailwind / <alpha-value>
+     * ------------------------------------------------------------- */
+
+    /* Primary & Accent Tones */
+    --color-primary: 212 175 55;          /* #D4AF37 Warm Metallic Gold */
+    --color-primary-rgb: 212, 175, 55;
+    --color-primary-hex: #D4AF37;
+    --color-primary-fixed: 245 208 88;    /* #F5D058 Bright Gold */
+    --color-primary-fixed-dim: 195 159 43; /* #C39F2B */
+    --color-surface-tint: 212 175 55;     /* #D4AF37 */
+
+    /* Backgrounds & Surface Tones (Preserving distinct dark shades) */
+    --color-background: 10 8 7;           /* #0a0807 Deep Espresso */
+    --color-background-rgb: 10, 8, 7;
+    --color-background-hex: #0a0807;
+
+    --color-surface: 10 8 7;              /* #0a0807 Baseline dark canvas */
+    --color-surface-obsidian: 22 14 10;   /* #160E0A Deep Obsidian well */
+    --color-surface-elevated: 46 33 26;   /* #2E211A Elevated card/dialog surface */
+    --color-surface-container: 35 25 20;  /* #231914 Warm rich espresso surface */
+    --color-surface-container-low: 26 18 14; /* #1A120E */
+    --color-surface-container-lowest: 17 12 9; /* #110C09 */
+    --color-surface-container-high: 46 33 26; /* #2E211A */
+    --color-surface-container-highest: 56 41 33; /* #382921 */
+
+    /* Typography & Text Contrast Tones */
+    --color-on-surface: 227 218 205;      /* #E3DACD Warm Cream text */
+    --color-on-surface-variant: 209 199 187; /* #D1C7BB Muted body text */
+    --color-on-background: 227 218 205;   /* #E3DACD */
+    --color-on-primary: 35 25 20;         /* #231914 Dark on gold */
+
+    /* Hairlines & Borders */
+    --color-outline: 107 90 78;           /* #6B5A4E Muted outline */
+    --color-outline-variant: 74 59 50;    /* #4A3B32 Subtle hairline */
+
+    /* Typography Font Stacks */
+    --font-heading: 'Playfair Display', serif;
+    --font-body: Outfit, 'Outfit-Fallback', sans-serif;
+
+    /* Radii Tokens */
+    --radius-badge: 9999px;
+    --radius-card: 1.5rem;
+    --radius-button: 9999px;
+    --radius-container: 2.5rem;
+
+    /* Motion & Timing */
+    --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-fast: 200ms;
+    --duration-normal: 400ms;
+    --duration-slow: 700ms;
+  }
+
   html, body { 
     margin: 0; 
     padding: 0; 
@@ -35,33 +91,124 @@
   animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Cinematic Hero Choreography */
+@keyframes heroMaskReveal {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 0 3% 0 round 12px);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0 0 0% 0 round 0px);
+  }
+}
+
+@keyframes heroScaleSettle {
+  0% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1.00);
+  }
+}
+
+@keyframes heroItemEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-mask-reveal {
+  animation: heroMaskReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-bg-settle {
+  animation: heroScaleSettle 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-enter-eyebrow {
+  animation: heroItemEntrance 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+.hero-enter-headline-1 {
+  animation: heroItemEntrance 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both;
+}
+
+.hero-enter-headline-2 {
+  animation: heroItemEntrance 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both;
+}
+
+.hero-enter-copy {
+  animation: heroItemEntrance 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+}
+
+.hero-enter-actions {
+  animation: heroItemEntrance 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.85s both;
+}
+
+.hero-enter-footer {
+  animation: heroItemEntrance 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.05s both;
+}
+
+@media (max-width: 768px) {
+  .hero-enter-eyebrow { animation-delay: 0.08s; }
+  .hero-enter-headline-1 { animation-delay: 0.16s; }
+  .hero-enter-headline-2 { animation-delay: 0.26s; }
+  .hero-enter-copy { animation-delay: 0.40s; }
+  .hero-enter-actions { animation-delay: 0.55s; }
+  .hero-enter-footer { animation-delay: 0.70s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-mask-reveal,
+  .hero-bg-settle,
+  .hero-enter-eyebrow,
+  .hero-enter-headline-1,
+  .hero-enter-headline-2,
+  .hero-enter-copy,
+  .hero-enter-actions,
+  .hero-enter-footer,
+  .animate-slide-up {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transform: none !important;
+    clip-path: none !important;
+    opacity: 1 !important;
+  }
+}
+
 @keyframes eq { 0% { height: 2px; } 50% { height: 12px; } 100% { height: 6px; } }
 
 html, body { overflow-x: clip; width: 100%; position: relative; }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-background/80 backdrop-blur-md sm:backdrop-blur-xl border border-white/10 shadow-xl sm:shadow-2xl shadow-black/80;
+    @apply bg-background/80 backdrop-blur-md sm:backdrop-blur-xl border border-outline/20 shadow-xl sm:shadow-2xl shadow-black/80;
   }
   
   .glass-nav {
-    @apply bg-[#130C08] border-b border-[#D4AF37]/20 shadow-xl shadow-black/70;
+    @apply bg-surface/90 border-b border-primary/20 shadow-xl shadow-black/70;
   }
 
   .btn-premium {
-    @apply inline-flex items-center justify-center bg-[#D4AF37] hover:bg-[#dfba41] active:bg-[#c49f2c] text-[#18110c] font-sans font-semibold tracking-wider uppercase shadow-[0_4px_16px_rgba(212,175,55,0.22)] hover:shadow-[0_6px_22px_rgba(212,175,55,0.35)] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#231914];
+    @apply inline-flex items-center justify-center bg-primary hover:opacity-90 active:opacity-95 text-on-primary font-sans font-semibold tracking-wider uppercase shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.22)] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
   }
 
   .btn-outline-premium {
-    @apply inline-flex items-center justify-center bg-transparent border border-[#D4AF37]/40 text-[#E3DACD] hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 hover:text-white active:bg-[#D4AF37]/20 font-sans font-semibold tracking-wider uppercase transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#231914];
+    @apply inline-flex items-center justify-center bg-transparent border border-primary/40 text-on-surface hover:border-primary hover:bg-primary/10 hover:text-primary active:bg-primary/20 font-sans font-semibold tracking-wider uppercase transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
   }
 
   .editorial-eyebrow {
-    @apply font-sans text-[11px] sm:text-[12px] uppercase tracking-[0.25em] text-[#D4AF37] font-semibold;
+    @apply font-sans text-[11px] sm:text-[12px] uppercase tracking-[0.25em] text-primary font-semibold;
   }
 
   .badge-gold {
-    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30;
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-primary/15 text-primary border border-primary/30;
   }
 
   .badge-soldout {
@@ -100,6 +247,18 @@ html, body { overflow-x: clip; width: 100%; position: relative; }
     background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #C5A028 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+
+  /* Hardware-accelerated compositor isolation */
+  .layer-isolated {
+    contain: strict;
+    transform: translateZ(0);
+  }
+
+  /* Below-the-fold content visibility layout skipping */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 1200px;
   }
 }
 

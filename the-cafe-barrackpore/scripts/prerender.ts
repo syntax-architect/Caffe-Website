@@ -188,6 +188,8 @@ async function prerender() {
     'staff/owner/index.html',
     'qr-generator/index.html',
     'reset-password/index.html',
+    'order-success/index.html',
+    'checkout/index.html',
   ];
 
   console.log('\n📄 Generating static SPA entrypoints for static hosting direct navigation...');

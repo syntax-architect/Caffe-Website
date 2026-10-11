@@ -1,13 +1,24 @@
 import React, { useEffect } from 'react';
 import { useSiteConfig } from '../../context/SiteConfigContext';
+import { clientDetails } from '../../config/client';
 
 export const TermsPage: React.FC = () => {
-  const { logoUrl } = useSiteConfig();
+  const { restaurantConfig, logoUrl } = useSiteConfig();
+
+  const businessName = restaurantConfig?.businessName || clientDetails.businessName;
+  const shortName = restaurantConfig?.shortName || clientDetails.shortName;
+  const address = restaurantConfig?.address;
+  const country = address?.country || restaurantConfig?.country || 'Local Jurisdiction';
+  const region = address?.region || '';
+  const city = address?.city || '';
+  const governingLaw = restaurantConfig?.governingLaw || [city, region, country].filter(Boolean).join(', ') || country;
+  const currency = restaurantConfig?.currency || 'local currency';
+  const taxLabel = restaurantConfig?.tax?.label || 'Taxes';
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = 'Terms of Service | The Café Barrackpore';
-  }, []);
+    document.title = `Terms of Service | ${businessName}`;
+  }, [businessName]);
 
   return (
     <div className="min-h-screen bg-[#0E0906] text-on-surface font-sans selection:bg-[#D4AF37]/30 selection:text-[#D4AF37]">
@@ -16,11 +27,13 @@ export const TermsPage: React.FC = () => {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <a href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-full border border-[#D4AF37]/40 bg-[#1C120D] flex items-center justify-center overflow-hidden shadow-sm group-hover:border-[#D4AF37] transition-colors">
-              <img src={logoUrl || "/logo.webp"} alt="The Café Crest" className="w-full h-full object-contain" />
+              <img src={logoUrl || "/logo.webp"} alt={`${businessName} Crest`} className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
-              <span className="font-serif text-base text-white font-semibold tracking-tight">The Café</span>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-[#D4AF37]">Barrackpore</span>
+              <span className="font-serif text-base text-white font-semibold tracking-tight">{businessName}</span>
+              {shortName && shortName !== businessName && (
+                <span className="font-mono text-[10px] uppercase tracking-widest text-[#D4AF37]">{shortName}</span>
+              )}
             </div>
           </a>
 
@@ -44,7 +57,7 @@ export const TermsPage: React.FC = () => {
             Terms of Service
           </h1>
           <p className="text-zinc-400 text-sm font-light">
-            Effective Date: October 2, 2026 · Governing Jurisdiction: Barrackpore / West Bengal, India
+            Effective Date: October 2, 2026 · Governing Jurisdiction: {governingLaw}
           </p>
         </div>
 
@@ -52,7 +65,7 @@ export const TermsPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">1. Agreement to Terms</h2>
             <p>
-              By accessing our website, placing an order via our digital Smart QR system, or booking a table reservation at The Café Barrackpore, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, please consult our staff directly for in-person hospitality.
+              By accessing our website, placing an order via our digital Smart QR system, or booking a table reservation at {businessName}, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, please consult our staff directly for in-person hospitality.
             </p>
           </section>
 
@@ -84,14 +97,14 @@ export const TermsPage: React.FC = () => {
             </p>
             <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200/90 text-xs">
               <strong className="block mb-1 text-amber-300 font-semibold uppercase tracking-wider">Crucial Allergen Disclaimer:</strong>
-              Cross-contact between ingredients may occur during peak kitchen hours. Guests with severe or life-threatening food allergies MUST inform the floor manager prior to placing an order. The Café Barrackpore cannot guarantee an environment 100% free of trace allergens.
+              Cross-contact between ingredients may occur during peak kitchen hours. Guests with severe or life-threatening food allergies MUST inform the floor manager prior to placing an order. {businessName} cannot guarantee an environment 100% free of trace allergens.
             </div>
           </section>
 
           <section className="space-y-3">
             <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">5. Pricing, Taxes &amp; Payment Settlement</h2>
             <p>
-              All prices displayed on the digital menu are listed in Indian Rupees (INR) or designated local currency and are subject to applicable Goods and Services Tax (GST) as mandated by law.
+              All prices displayed on the digital menu are listed in {currency} or designated local currency and are subject to applicable {taxLabel} as mandated by law.
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
               <li><strong className="text-white">Authoritative Pricing:</strong> All final bill amounts are computed authoritatively on our secure servers. Tampering with client-side totals is detected and rejected automatically.</li>
@@ -103,14 +116,14 @@ export const TermsPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">6. Guest Conduct &amp; Safety</h2>
             <p>
-              The Café Barrackpore strives to provide a warm, peaceful, and refined ambiance. We reserve the right to decline service or request any guest to leave if they exhibit abusive behavior towards staff or fellow guests, or fail to adhere to basic safety and hygiene protocols.
+              {businessName} strives to provide a warm, peaceful, and refined ambiance. We reserve the right to decline service or request any guest to leave if they exhibit abusive behavior towards staff or fellow guests, or fail to adhere to basic safety and hygiene protocols.
             </p>
           </section>
 
           <section className="space-y-3">
             <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">7. Governing Law</h2>
             <p>
-              These terms are governed by and construed in accordance with the laws of India. Any disputes arising in connection with these terms shall be subject to the exclusive jurisdiction of the competent courts in Barrackpore / North 24 Parganas, West Bengal.
+              These terms are governed by and construed in accordance with the laws of {country}. Any disputes arising in connection with these terms shall be subject to the exclusive jurisdiction of the competent courts in {governingLaw}.
             </p>
           </section>
         </div>
@@ -118,7 +131,7 @@ export const TermsPage: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-white/10 py-8 px-4 text-center text-xs text-zinc-500">
-        <p>© {new Date().getFullYear()} The Café Barrackpore. All culinary and brand rights reserved.</p>
+        <p>© {new Date().getFullYear()} {businessName}. All culinary and brand rights reserved.</p>
       </footer>
     </div>
   );

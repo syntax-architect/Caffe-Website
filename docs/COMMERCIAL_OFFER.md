@@ -1,13 +1,13 @@
-# Commercial Offer & Services Specification: Fury Studios Hospitality Platform
+# Commercial Offer & Services Specification: [AGENCY NAME] Hospitality Platform
 
-**Entity:** Fury Studios  
+**Entity:** [AGENCY NAME]  
 **Offering:** Bespoke Hospitality Digital Experience & Real-Time Restaurant Operations Architecture  
 **Target Market:** Independent luxury restaurants, boutique hotel dining rooms, artisanal bistros, and multi-location culinary lounges.
 
 ---
 
 ## 1. Executive Summary
-Fury Studios delivers an end-to-end digital operations system that replaces generic third-party marketplace dependencies with an owned, high-conversion guest experience. The platform combines a cinematic, brand-first customer website with real-time table QR ordering, an integrated reservation engine, kitchen display systems, and multi-currency international commerce.
+[AGENCY NAME] delivers an end-to-end digital operations system that replaces generic third-party marketplace dependencies with an owned, high-conversion guest experience. The platform combines a cinematic, brand-first customer website with real-time table QR ordering, an integrated reservation engine, kitchen display systems, and multi-currency international commerce.
 
 ---
 
@@ -72,7 +72,7 @@ Pricing is structured transparently based on implementation scope, integration r
 │    • Payment Gateway Transaction Fees (Direct merchant rate)                │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 3. Managed Hospitality Care & SLA Support (Monthly Recurring)               │
-│    • 99.9% Uptime Guarantee & 24/7 Monitoring                               │
+│    • High Availability Infrastructure & Proactive Health Monitoring         │
 │    • Daily Automated Database Backups                                       │
 │    • Priority Technical Support & Menu Price Updates                        │
 │    • Security Patching & Dependency Updates                                 │
@@ -84,6 +84,6 @@ Pricing is structured transparently based on implementation scope, integration r
 ---
 
 ## 5. Commercial Guardrails & Ethical Transparency
-- **No Fabricated Performance Claims:** Fury Studios does not guarantee arbitrary search rankings or specific revenue multiples; financial projections are calculated collaboratively using the client's historical dining volumes.
-- **Zero Merchant Intermediation:** Payments flow directly from the guest into the restaurant’s own merchant bank account. Fury Studios never touches customer transaction funds.
+- **No Fabricated Performance Claims:** [AGENCY NAME] does not guarantee arbitrary search rankings or specific revenue multiples; financial projections are calculated collaboratively using the client's historical dining volumes.
+- **Zero Merchant Intermediation:** Payments flow directly from the guest into the restaurant’s own merchant bank account. [AGENCY NAME] never touches customer transaction funds.
 - **Client Data Sovereignty:** The restaurant maintains complete ownership of all customer data, order histories, guest contact lists, and brand assets.

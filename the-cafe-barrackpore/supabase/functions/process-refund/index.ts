@@ -9,7 +9,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
 import Stripe from 'https://esm.sh/stripe@14.25.0?target=deno';
 
-const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || 'https://thecafebarrackpore.com';
+const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || Deno.env.get('PUBLIC_SITE_URL') || '*';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': allowedOrigin,
@@ -167,7 +167,37 @@ serve(async (req: Request) => {
         throw new Error('Razorpay refund service is not configured.');
       }
       const authHeader = `Basic ${btoa(`${keyId}:${keySecret}`)}`;
-      const rzpRefundRes = await fetch(`https://api.razorpay.com/v1/payments/${paymentRef}/refund`, {
+
+      // Resolve payment ID (pay_...) if paymentRef is an order ID (order_...)
+      let rzpPaymentId = paymentRef;
+      if (!rzpPaymentId.startsWith('pay_')) {
+        const { data: pRecord } = await supabase
+          .from('payments')
+          .select('provider_payment_id')
+          .eq('order_ref', orderRef)
+          .maybeSingle();
+
+        if (pRecord?.provider_payment_id && pRecord.provider_payment_id.startsWith('pay_')) {
+          rzpPaymentId = pRecord.provider_payment_id;
+        } else if (paymentRef.startsWith('order_')) {
+          const orderPaymentsRes = await fetch(`https://api.razorpay.com/v1/orders/${paymentRef}/payments`, {
+            headers: { 'Authorization': authHeader },
+          });
+          if (orderPaymentsRes.ok) {
+            const opData = await orderPaymentsRes.json();
+            const successfulPayment = (opData.items || []).find((p: any) => p.status === 'captured') || opData.items?.[0];
+            if (successfulPayment?.id) {
+              rzpPaymentId = successfulPayment.id;
+            }
+          }
+        }
+      }
+
+      if (!rzpPaymentId.startsWith('pay_')) {
+        throw new Error('Could not resolve a captured Razorpay payment ID to process refund.');
+      }
+
+      const rzpRefundRes = await fetch(`https://api.razorpay.com/v1/payments/${rzpPaymentId}/refund`, {
         method: 'POST',
         headers: {
           'Authorization': authHeader,
@@ -180,7 +210,8 @@ serve(async (req: Request) => {
       });
 
       if (!rzpRefundRes.ok) {
-        throw new Error('Razorpay did not accept the refund request.');
+        const errData = await rzpRefundRes.json().catch(() => ({}));
+        throw new Error(errData.error?.description || 'Razorpay did not accept the refund request.');
       }
       const rzpRefundData = await rzpRefundRes.json();
       if (!rzpRefundData.id) {

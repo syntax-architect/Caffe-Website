@@ -61,15 +61,38 @@ serve(async (req: Request) => {
     }
 
     // 3. Cloudflare Turnstile Verification
-    const secretKey = Deno.env.get('TURNSTILE_SECRET_KEY') || CLOUDFLARE_TEST_SECRET_KEY;
+    const isDev = Deno.env.get('ENVIRONMENT') === 'development';
+    const turnstileSecret = Deno.env.get('TURNSTILE_SECRET_KEY');
+
+    // Outside ENVIRONMENT=development, TURNSTILE_SECRET_KEY is strictly required (no test key fallback)
+    if (!turnstileSecret && !isDev) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'TURNSTILE_SECRET_KEY is missing. Turnstile is not configured on the server.',
+          code: 'TURNSTILE_CONFIGURATION_ERROR',
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const secretKey = turnstileSecret || (isDev ? CLOUDFLARE_TEST_SECRET_KEY : '');
+    if (!secretKey) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'TURNSTILE_SECRET_KEY is missing. Turnstile is not configured.',
+          code: 'TURNSTILE_CONFIGURATION_ERROR',
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     let isBypass = false;
 
-    // Handle offline/bypass tokens in testing environments
-    if (token === 'cf_offline_bypass_token' || token === 'cf_test_pass_token' || token === 'cf_dev_pass_token') {
-      const isDev = Deno.env.get('ENVIRONMENT') === 'development' || !Deno.env.get('TURNSTILE_SECRET_KEY');
-      if (isDev) {
-        isBypass = true;
-      }
+    // Handle offline/bypass tokens strictly in development environment
+    if (isDev && (token === 'cf_offline_bypass_token' || token === 'cf_test_pass_token' || token === 'cf_dev_pass_token')) {
+      isBypass = true;
     }
 
     if (!isBypass) {

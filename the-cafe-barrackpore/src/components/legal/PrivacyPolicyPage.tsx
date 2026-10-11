@@ -1,13 +1,24 @@
 import React, { useEffect } from 'react';
 import { useSiteConfig } from '../../context/SiteConfigContext';
+import { clientDetails } from '../../config/client';
 
 export const PrivacyPolicyPage: React.FC = () => {
-  const { logoUrl } = useSiteConfig();
+  const { restaurantConfig, logoUrl } = useSiteConfig();
+
+  const businessName = restaurantConfig?.businessName || clientDetails.businessName;
+  const shortName = restaurantConfig?.shortName || clientDetails.shortName;
+  const address = restaurantConfig?.address;
+  const country = address?.country || restaurantConfig?.country || 'Local Jurisdiction';
+  const region = address?.region || '';
+  const city = address?.city || '';
+  const fullAddress = [address?.line1, address?.line2, city, region, address?.postalCode, country].filter(Boolean).join(', ') || clientDetails.address;
+  const contactEmail = restaurantConfig?.contact?.email || clientDetails.email || 'privacy@restaurant.com';
+  const contactPhone = restaurantConfig?.contact?.displayPhone || restaurantConfig?.contact?.phone || clientDetails.phone;
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = 'Privacy Policy | The Café Barrackpore';
-  }, []);
+    document.title = `Privacy Policy | ${businessName}`;
+  }, [businessName]);
 
   return (
     <div className="min-h-screen bg-[#0E0906] text-on-surface font-sans selection:bg-[#D4AF37]/30 selection:text-[#D4AF37]">
@@ -16,11 +27,13 @@ export const PrivacyPolicyPage: React.FC = () => {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <a href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-full border border-[#D4AF37]/40 bg-[#1C120D] flex items-center justify-center overflow-hidden shadow-sm group-hover:border-[#D4AF37] transition-colors">
-              <img src={logoUrl || "/logo.webp"} alt="The Café Crest" className="w-full h-full object-contain" />
+              <img src={logoUrl || "/logo.webp"} alt={`${businessName} Crest`} className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
-              <span className="font-serif text-base text-white font-semibold tracking-tight">The Café</span>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-[#D4AF37]">Barrackpore</span>
+              <span className="font-serif text-base text-white font-semibold tracking-tight">{businessName}</span>
+              {shortName && shortName !== businessName && (
+                <span className="font-mono text-[10px] uppercase tracking-widest text-[#D4AF37]">{shortName}</span>
+              )}
             </div>
           </a>
 
@@ -52,7 +65,7 @@ export const PrivacyPolicyPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">1. Introduction</h2>
             <p>
-              The Café Barrackpore (“we”, “our”, or “us”) respects your privacy and is committed to protecting the personal data you share with us. This Privacy Policy explains how we collect, store, utilize, and protect your information when you visit our website, use our Smart QR table-ordering service, reserve a dining table, or engage with our guest concierge.
+              {businessName} (“we”, “our”, or “us”) respects your privacy and is committed to protecting the personal data you share with us. This Privacy Policy explains how we collect, store, utilize, and protect your information when you visit our website, use our Smart QR table-ordering service, reserve a dining table, or engage with our guest concierge.
             </p>
           </section>
 
@@ -84,7 +97,7 @@ export const PrivacyPolicyPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">4. Payment Security &amp; Financial Data</h2>
             <p>
-              All online payments are processed through PCI-DSS Level 1 certified gateways (Stripe and Razorpay). The Café Barrackpore does not store, process, or have access to your raw credit card numbers, CVVs, or bank credentials. Payment authorization occurs over encrypted TLS connections directly with the certified provider.
+              All online payments are processed through PCI-DSS Level 1 certified gateways. {businessName} does not store, process, or have access to your raw credit card numbers, CVVs, or bank credentials. Payment authorization occurs over encrypted TLS connections directly with the certified provider.
             </p>
           </section>
 
@@ -103,7 +116,7 @@ export const PrivacyPolicyPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">6. Data Retention &amp; Your Rights</h2>
             <p>
-              Order and reservation records are retained in compliance with applicable commercial hospitality regulations in India. You possess the right to:
+              Order and reservation records are retained in compliance with applicable commercial hospitality regulations in {country}. You possess the right to:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
               <li>Request a copy of your personal data stored in our database.</li>
@@ -118,9 +131,9 @@ export const PrivacyPolicyPage: React.FC = () => {
               If you have any questions, concerns, or requests regarding this Privacy Policy or your data, please contact our management team:
             </p>
             <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-1 font-mono text-xs">
-              <p><span className="text-[#D4AF37]">Location:</span> 14/A Riverside Road, Cantonment, Barrackpore, Kolkata, WB 700120</p>
-              <p><span className="text-[#D4AF37]">Email:</span> privacy@thecafebarrackpore.com</p>
-              <p><span className="text-[#D4AF37]">Phone:</span> +91 98300 00000</p>
+              <p><span className="text-[#D4AF37]">Location:</span> {fullAddress}</p>
+              <p><span className="text-[#D4AF37]">Email:</span> {contactEmail}</p>
+              {contactPhone && <p><span className="text-[#D4AF37]">Phone:</span> {contactPhone}</p>}
             </div>
           </section>
         </div>
@@ -128,7 +141,7 @@ export const PrivacyPolicyPage: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-white/10 py-8 px-4 text-center text-xs text-zinc-500">
-        <p>© {new Date().getFullYear()} The Café Barrackpore. All culinary and brand rights reserved.</p>
+        <p>© {new Date().getFullYear()} {businessName}. All culinary and brand rights reserved.</p>
       </footer>
     </div>
   );

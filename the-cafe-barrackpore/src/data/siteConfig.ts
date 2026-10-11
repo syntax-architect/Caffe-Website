@@ -4,8 +4,8 @@ export const siteConfig = {
     alt: "The Café Barrackpore — Nocturnal Cocktail & Espresso Lounge"
   },
   ourStory: {
-    image: "/images/story-pour.webp",
-    alt: "Artisanal Espresso Pour"
+    image: "/images/story/story-chapter-1.webp",
+    alt: "The Café Barrackpore Heritage Nocturnal Salon"
   },
   aboutVibe: {
     images: [

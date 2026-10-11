@@ -8,7 +8,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
 
-const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || 'https://thecafebarrackpore.com';
+const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || Deno.env.get('PUBLIC_SITE_URL') || '*';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': allowedOrigin,
@@ -134,7 +134,7 @@ serve(async (req: Request) => {
 🏆 *Top 5 Selling Items*
 ${topItemsSummary}
 
-Automated Dispatch by The Café Executive Terminal.`;
+Automated Dispatch by ${businessName} Executive Terminal.`;
 
     let whatsappSent = false;
     let emailSent = false;
@@ -225,7 +225,7 @@ Automated Dispatch by The Café Executive Terminal.`;
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              from: 'The Café Reports <reports@thecafebarrackpore.com>',
+              from: `${businessName} Reports <${settings?.email || 'reports@' + (Deno.env.get('PUBLIC_SITE_URL') ? new URL(Deno.env.get('PUBLIC_SITE_URL')!).hostname : 'orders.local')}>`,
               to: targetEmail,
               subject: `${businessName} — Daily Sales Report (${currencySymbol}${grossRevenue.toLocaleString()})`,
               html: emailHtml,

@@ -71,6 +71,7 @@ export interface RestaurantLocalizationConfig {
   isOrderingEnabled: boolean;
   isTableBookingEnabled: boolean;
   announcementBanner?: string | null;
+  governingLaw?: string;
 
   tax: TaxConfiguration;
   dietary: DietaryConfiguration;

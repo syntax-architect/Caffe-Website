@@ -1,6 +1,6 @@
 # The Café Barrackpore — Hospitality Operations Digital System
 
-A full-stack, enterprise-grade digital dining and hospitality platform built for **The Café Barrackpore**.
+A full-stack digital dining and hospitality platform built for **The Café Barrackpore**.
 
 The platform provides:
 - **Interactive Customer Dining Experience**: Storytelling hero with interactive scroll sequence, culinary menu, specials showcase, and reservation booking.

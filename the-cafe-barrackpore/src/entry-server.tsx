@@ -1,6 +1,7 @@
 import { renderToString } from 'react-dom/server';
 import { I18nProvider } from './i18n';
 import { SiteConfigProvider } from './context/SiteConfigContext';
+import { ThemeRuntime } from './services/themeRuntime';
 
 import { TableProvider } from './context/TableContext';
 import App from './App';
@@ -36,6 +37,7 @@ export function render(url: string): RenderResult {
   const wrapped = (
     <I18nProvider>
       <SiteConfigProvider>
+        <ThemeRuntime />
         <MetaTags pathname={cleanUrl} />
         {appComponent}
       </SiteConfigProvider>

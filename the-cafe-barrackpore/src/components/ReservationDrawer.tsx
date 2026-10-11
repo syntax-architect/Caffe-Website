@@ -95,7 +95,7 @@ export const ReservationDrawer: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || restaurantConfig.isTableBookingEnabled === false) return;
 
     const phoneVal = validatePhoneNumber(formData.phone, restaurantConfig.phoneCountryCode);
     if (!phoneVal.valid) {
@@ -122,8 +122,17 @@ export const ReservationDrawer: React.FC = () => {
       });
 
       if (result.success) {
-        setIsDemoSubmission(result.isDemoMode === true);
-        if (result.isDemoMode) {
+        const isDev = typeof import.meta !== 'undefined' && import.meta.env
+          ? Boolean(import.meta.env.DEV)
+          : ((globalThis as any).process ? (globalThis as any).process.env?.NODE_ENV !== 'production' : false);
+
+        if (result.isDemoMode && !isDev) {
+          setSubmissionError('Demo reservations are disabled in production builds. A live database connection is required.');
+          return;
+        }
+
+        setIsDemoSubmission(isDev && result.isDemoMode === true);
+        if (result.isDemoMode && isDev) {
           setConfirmedRef(result.reservationRef);
         } else if (restaurantConfig.contact.primaryMethod === 'whatsapp') {
           dispatchWhatsApp(result.reservationRef);
@@ -179,22 +188,22 @@ export const ReservationDrawer: React.FC = () => {
                 handleClose();
               }
             }}
-            className={`fixed bg-[#130C08]/98 backdrop-blur-2xl z-[210] flex flex-col focus:outline-none shadow-[-25px_0_60px_rgba(0,0,0,0.85)] overscroll-contain ${
+            className={`fixed bg-surface-obsidian/98 backdrop-blur-2xl z-[210] flex flex-col focus:outline-none shadow-[-25px_0_60px_rgba(0,0,0,0.85)] overscroll-contain ${
               isMobile
-                ? 'inset-x-0 bottom-0 w-full max-h-[92dvh] h-[92dvh] rounded-t-[2rem] border-t border-[#D4AF37]/35 shadow-[0_-12px_40px_rgba(0,0,0,0.9)]'
-                : 'top-0 right-0 h-[100dvh] w-full max-w-[460px] border-l border-[#D4AF37]/25'
+                ? 'inset-x-0 bottom-0 w-full max-h-[92dvh] h-[92dvh] rounded-t-[2rem] border-t border-primary/35 shadow-[0_-12px_40px_rgba(0,0,0,0.9)]'
+                : 'top-0 right-0 h-[100dvh] w-full max-w-[460px] border-l border-primary/25'
             }`}
             data-lenis-prevent
           >
             {/* Drag Handle for Mobile */}
             {isMobile && (
-              <div className="w-full flex justify-center pt-3 pb-1 bg-[#160E0A] rounded-t-[2rem] cursor-grab active:cursor-grabbing shrink-0">
-                <div className="w-12 h-1.5 bg-white/20 rounded-full" />
+              <div className="w-full flex justify-center pt-3 pb-1 bg-surface-container rounded-t-[2rem] cursor-grab active:cursor-grabbing shrink-0">
+                <div className="w-12 h-1.5 bg-outline/40 rounded-full" />
               </div>
             )}
 
             {/* Header */}
-            <div className={`flex items-center justify-between p-6 border-b border-[#D4AF37]/15 bg-[#160E0A]/80 shrink-0 ${isMobile ? 'rounded-t-none' : ''}`}>
+            <div className={`flex items-center justify-between p-6 border-b border-outline/20 bg-surface-container/90 shrink-0 ${isMobile ? 'rounded-t-none' : ''}`}>
               <div>
                 <span className="editorial-eyebrow text-[10px] block mb-1">Hospitality Reservations</span>
                 <h2 id="reservation-drawer-title" className="font-serif text-2xl text-on-surface font-normal">Book a Table</h2>
@@ -260,6 +269,20 @@ export const ReservationDrawer: React.FC = () => {
                 <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar bg-[#130C08] overscroll-contain"
                   data-lenis-prevent>
                   <form id="reservation-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
+                    {restaurantConfig.isTableBookingEnabled === false && (
+                      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3">
+                        <span className="material-symbols-outlined text-amber-400 text-xl shrink-0 mt-0.5">event_busy</span>
+                        <div>
+                          <p className="text-sm font-semibold text-white">Table Reservations Temporarily Paused</p>
+                          <p className="text-xs text-on-surface/75 mt-1 leading-relaxed font-sans">
+                            Online bookings are currently paused. Walk-in guests are warmly welcomed on a first-come, first-served basis. For urgent queries, contact us at{' '}
+                            <a href={`tel:${restaurantConfig.contact.phone}`} className="text-primary underline font-medium">
+                              {restaurantConfig.contact.displayPhone}
+                            </a>.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     
                     {/* Name */}
                     <div className="flex flex-col gap-1.5">
@@ -427,11 +450,17 @@ export const ReservationDrawer: React.FC = () => {
                   <button
                     type="submit"
                     form="reservation-form"
-                    disabled={isSubmitting}
-                    className="group relative w-full h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-semibold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.28)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all duration-300 flex items-center justify-between pl-7 pr-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting || restaurantConfig.isTableBookingEnabled === false}
+                    className={`group relative w-full h-12 rounded-full font-semibold text-xs tracking-wider uppercase transition-all duration-300 flex items-center justify-between pl-7 pr-2 ${
+                      restaurantConfig.isTableBookingEnabled === false
+                        ? 'bg-stone-900 border border-stone-800 text-stone-500 cursor-not-allowed opacity-60'
+                        : 'bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] shadow-[0_4px_24px_rgba(212,175,55,0.28)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                    }`}
                   >
                     <span>
-                      {isSubmitting
+                      {restaurantConfig.isTableBookingEnabled === false
+                        ? 'Reservations Paused'
+                        : isSubmitting
                         ? 'Reserving Table...'
                         : restaurantConfig.contact.primaryMethod === 'whatsapp'
                         ? 'Confirm via WhatsApp'
@@ -439,7 +468,7 @@ export const ReservationDrawer: React.FC = () => {
                     </span>
                     <span className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
                       <span className="material-symbols-outlined text-[15px] text-[#120B08]">
-                        {restaurantConfig.contact.primaryMethod === 'whatsapp' ? 'send' : 'event'}
+                        {restaurantConfig.isTableBookingEnabled === false ? 'pause' : restaurantConfig.contact.primaryMethod === 'whatsapp' ? 'send' : 'event'}
                       </span>
                     </span>
                   </button>

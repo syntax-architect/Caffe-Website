@@ -196,7 +196,9 @@ export const MENU_ITEMS_FALLBACK: MenuItem[] = [
     "popular": true,
     "available": true,
     "sort_order": 13,
-    "tag": "Crowd Favorite"
+    "tag": "Crowd Favorite",
+    "tasting_notes": "Flame-Charred Brioche • Melted Cheddar • House Smoked Relish",
+    "pairing": "Pairs with Single-Origin Cold Brew or Botanical Tonic"
   },
   {
     "id": "margherita-pizza",
@@ -208,6 +210,7 @@ export const MENU_ITEMS_FALLBACK: MenuItem[] = [
     "diet": "veg",
     "popular": true,
     "available": true,
+    "image_url": "/images/gallery-pizza.webp",
     "sort_order": 14,
     "tag": "Classic"
   },
@@ -676,6 +679,7 @@ export const MENU_ITEMS_FALLBACK: MenuItem[] = [
     "diet": "nv",
     "popular": true,
     "available": true,
+    "image_url": "/images/platters/platter-chinese.webp",
     "sort_order": 50,
     "tag": "Platter"
   },
@@ -689,6 +693,7 @@ export const MENU_ITEMS_FALLBACK: MenuItem[] = [
     "diet": "nv",
     "popular": true,
     "available": true,
+    "image_url": "/images/platters/platter-tandoori.webp",
     "sort_order": 51,
     "tag": "Platter"
   },

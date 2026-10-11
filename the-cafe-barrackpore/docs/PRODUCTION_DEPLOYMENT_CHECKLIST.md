@@ -1,22 +1,20 @@
-# Production Deployment Checklist: Fury Studios Hospitality Platform
+# Production Deployment Checklist: [AGENCY NAME] Hospitality Platform
 
 **Scope:** Production infrastructure provisioning, build verification, migration deployment, Edge Function configuration, domain cutover, and post-launch smoke testing.
 
 ---
 
 ## 1. Build & Release Validation
-- [ ] Confirm execution directory: web application is under `the-cafe-barrackpore/` and CMS is under `studio/`.
+- [ ] Confirm execution directory: web application is under `the-cafe-barrackpore/`.
 - [ ] Install dependencies cleanly using lockfiles:
   ```powershell
   npm ci --prefix the-cafe-barrackpore
-  npm ci --prefix studio
   ```
 - [ ] Execute validation pipeline:
   ```powershell
   npm run lint --prefix the-cafe-barrackpore
   npm test --prefix the-cafe-barrackpore
   npm run build --prefix the-cafe-barrackpore
-  npm run build --prefix studio
   ```
 - [ ] Audit dependencies:
   ```powershell

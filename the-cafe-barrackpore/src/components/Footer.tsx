@@ -3,6 +3,10 @@ import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { smoothScrollTo } from '../utils/scroll';
 import { clientDetails } from '../config/client';
+import {
+  DEFAULT_FOOTER_CONFIG,
+  DEFAULT_FOOTER_CURATIONS,
+} from '../config/defaultEngineConfig';
 
 const IconInstagram = () => <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>;
 const IconFacebook = () => <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>;
@@ -11,11 +15,18 @@ const IconZomato = () => <svg className="w-4 h-4" fill="none" stroke="currentCol
 
 export const Footer: React.FC = () => {
   const { showModal, setIsReservationOpen } = useUI();
-  const { restaurantConfig, logoUrl } = useSiteConfig();
+  const { restaurantConfig, engineConfig, logoUrl } = useSiteConfig();
+
+  // Section visibility check
+  if (engineConfig?.sections?.footer === false) {
+    return null;
+  }
+
+  const footerConfig = engineConfig?.footer || DEFAULT_FOOTER_CONFIG;
 
   const businessName = restaurantConfig?.businessName || clientDetails.businessName;
   const shortName = restaurantConfig?.shortName || clientDetails.shortName;
-  const displayCity = restaurantConfig?.address?.city || clientDetails.displayLocation;
+  const displayCity = restaurantConfig?.address?.city || engineConfig?.brand?.displayLocation || clientDetails.displayLocation;
   const addressLine = restaurantConfig?.address?.line1 || clientDetails.address;
   const phone = restaurantConfig?.contact?.phone || clientDetails.phone;
   const displayPhone = restaurantConfig?.contact?.displayPhone || clientDetails.displayPhone;
@@ -23,9 +34,42 @@ export const Footer: React.FC = () => {
   const openingHours = restaurantConfig?.openingTime && restaurantConfig?.closingTime
     ? `${restaurantConfig.openingTime} – ${restaurantConfig.closingTime}`
     : '11:00 AM – 11:30 PM';
-  const hygieneMsg = restaurantConfig?.dietary?.system === 'india'
-    ? '100% FSSAI-compliant commercial kitchen with daily sanitized workstations.'
-    : '100% health-inspection compliant commercial kitchen with daily sanitized workstations.';
+
+  const hygieneMsg = footerConfig.hygieneMessage || (
+    restaurantConfig?.dietary?.system === 'india'
+      ? '100% FSSAI-compliant commercial kitchen with daily sanitized workstations.'
+      : '100% health-inspection compliant commercial kitchen with daily sanitized workstations.'
+  );
+
+  const tagline1 = footerConfig.tagline1 || engineConfig?.brand?.tagline1 || clientDetails.tagline1 || "Bespoke Hospitality";
+  const tagline2 = footerConfig.tagline2 || engineConfig?.brand?.tagline2 || clientDetails.tagline2 || "An Unrivaled Dining Atmosphere";
+  const subtext = footerConfig.subtext || (
+    displayCity
+      ? `Reserve your private booth or enjoy gourmet artisanal favorites in ${displayCity}.`
+      : 'Reserve your private booth or enjoy gourmet artisanal favorites.'
+  );
+  const description = footerConfig.description || engineConfig?.brand?.description || clientDetails.description;
+
+  const instagramLink = engineConfig?.brand?.instagramLink || clientDetails.instagramLink;
+  const facebookLink = engineConfig?.brand?.facebookLink || clientDetails.facebookLink;
+  const googleMapsLink = engineConfig?.brand?.googleMapsLink || clientDetails.googleMapsLink;
+  const zomatoLink = engineConfig?.brand?.zomatoLink || clientDetails.zomatoLink;
+
+  const rawCurationLinks = footerConfig.curationLinks || DEFAULT_FOOTER_CURATIONS;
+  const visibleCurationLinks = rawCurationLinks.filter((link) => {
+    if (link.sectionKey && engineConfig?.sections && engineConfig.sections[link.sectionKey] === false) {
+      return false;
+    }
+    return true;
+  });
+
+  const scheduleTitle = footerConfig.scheduleNoticeTitle || 'Acoustics';
+  const scheduleText = footerConfig.scheduleNoticeText || 'Fri & Sat from 7 PM';
+
+  const showHospitalityBanner = footerConfig.showHospitalityBanner !== false;
+  const showSocialLinks = footerConfig.showSocialLinks !== false;
+  const showStaffPortalLink = footerConfig.showStaffPortalLink !== false &&
+    engineConfig?.features?.staffPortalEnabled !== false;
 
   const handleNav = (e: React.MouseEvent, target: string) => { 
     e.preventDefault(); 
@@ -38,56 +82,62 @@ export const Footer: React.FC = () => {
   };
   
   return (
-    <footer id="reserve-section" className="w-full bg-[#0A0503] text-on-surface/70 border-t border-white/5 scroll-mt-28 relative overflow-hidden">
+    <footer id="reserve-section" className="w-full bg-surface text-on-surface/75 border-t border-outline/15 scroll-mt-28 relative overflow-hidden transition-colors duration-500">
       {/* Subtle Glow */}
       <div 
-        className="absolute bottom-0 right-10 w-[500px] h-[300px] bg-[#D4AF37]/5 blur-[140px] rounded-full pointer-events-none" 
+        className="absolute bottom-0 right-10 w-[500px] h-[300px] bg-primary/5 blur-[140px] rounded-full pointer-events-none" 
         aria-hidden="true" 
       />
 
       <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 pt-16 md:pt-28 pb-36 sm:pb-36 md:pb-12 pb-[max(9.5rem,calc(8rem+env(safe-area-inset-bottom)))] relative z-10">
         
         {/* Top Hospitality Callout Banner */}
-        <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 bg-gradient-to-r from-[#160E0A] via-[#120B08] to-[#0D0705] border border-white/10 flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-10 mb-14 md:mb-18 shadow-xl">
-          <div className="flex flex-col gap-2 text-center lg:text-left max-w-xl">
-            <span className="editorial-eyebrow text-xs">{clientDetails.tagline1 || "Bespoke Hospitality"}</span>
-            <h3 className="font-serif text-2xl sm:text-3xl md:text-4xl text-on-surface font-normal tracking-tight text-balance">
-              {clientDetails.tagline2 || "An Unrivaled Dining Atmosphere"}
-            </h3>
-            <p className="font-sans text-xs sm:text-sm text-on-surface/75 leading-relaxed font-light mt-0.5">
-              Reserve your private booth or enjoy gourmet artisanal favorites in {displayCity}.
-            </p>
+        {showHospitalityBanner && (
+          <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 bg-surface-container border border-outline/20 flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-10 mb-14 md:mb-18 shadow-xl">
+            <div className="flex flex-col gap-2 text-center lg:text-left max-w-xl">
+              <span className="editorial-eyebrow text-xs">{tagline1}</span>
+              <h3 className="font-serif text-2xl sm:text-3xl md:text-4xl text-on-surface font-normal tracking-tight text-balance">
+                {tagline2}
+              </h3>
+              <p className="font-sans text-xs sm:text-sm text-on-surface/75 leading-relaxed font-light mt-0.5">
+                {subtext}
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full lg:w-auto shrink-0">
+              {/* Sleek Reserve CTA */}
+              {engineConfig?.features?.reservationsEnabled !== false && (
+                <button 
+                  type="button"
+                  onClick={() => setIsReservationOpen(true)}
+                  className="w-full sm:w-auto h-10 px-6 rounded-full bg-primary hover:opacity-90 active:opacity-95 text-on-primary text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)] active:scale-95 cursor-pointer"
+                >
+                  <span>{restaurantConfig?.isTableBookingEnabled !== false ? 'Reserve a Table' : 'Walk-Ins Welcome'}</span>
+                  <span className="material-symbols-outlined text-[16px]">table_restaurant</span>
+                </button>
+              )}
+
+              {engineConfig?.sections?.menu !== false && (
+                <a 
+                  className="w-full sm:w-auto h-10 px-6 rounded-full text-xs font-semibold btn-outline-premium flex items-center justify-center gap-2 cursor-pointer text-on-surface hover:text-primary" 
+                  href="#menu-section" 
+                  onClick={(e) => handleNav(e, 'menu-section')}
+                >
+                  <span>Explore Menu</span>
+                  <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+                </a>
+              )}
+            </div>
           </div>
+        )}
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full lg:w-auto shrink-0">
-            {/* Sleek Reserve CTA */}
-            <button 
-              type="button"
-              onClick={() => setIsReservationOpen(true)}
-              className="w-full sm:w-auto h-10 px-6 rounded-full bg-[#D4AF37] hover:bg-[#FAF6F0] text-[#0A0503] text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_2px_12px_rgba(212,175,55,0.25)] hover:shadow-[0_4px_16px_rgba(212,175,55,0.4)] active:scale-95 cursor-pointer"
-            >
-              <span>Reserve a Table</span>
-              <span className="material-symbols-outlined text-[16px]">table_restaurant</span>
-            </button>
-
-            <a 
-              className="w-full sm:w-auto h-10 px-6 rounded-full text-xs font-semibold btn-outline-premium flex items-center justify-center gap-2 cursor-pointer text-[#E3DACD] hover:text-[#D4AF37]" 
-              href="#menu-section" 
-              onClick={(e) => handleNav(e, 'menu-section')}
-            >
-              <span>Explore Menu</span>
-              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
-            </a>
-          </div>
-        </div>
-
-        {/* Directory Layout: 2-Col Grid on Mobile to eliminate empty right space, 4-Col Grid on Desktop */}
+        {/* Directory Layout: 2-Col Grid on Mobile, 4-Col Grid on Desktop */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 mb-14 md:mb-16">
           
-          {/* Col 1: Brand & Heritage (Full width on mobile/tablet, 1 col on desktop) */}
+          {/* Col 1: Brand & Heritage */}
           <div className="col-span-2 sm:col-span-2 lg:col-span-1 flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full border border-[#D4AF37]/35 bg-[#160E0A] flex items-center justify-center overflow-hidden shadow-[0_0_12px_rgba(212,175,55,0.15)] shrink-0">
+              <div className="w-10 h-10 rounded-full border border-primary/35 bg-surface-container-high flex items-center justify-center overflow-hidden shadow-[0_0_12px_rgba(var(--color-primary-rgb),0.15)] shrink-0">
                 <img src={logoUrl || "/logo.webp"} alt={`${businessName} Crest`} width="40" height="40" loading="lazy" decoding="async" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
@@ -96,81 +146,88 @@ export const Footer: React.FC = () => {
               </div>
             </div>
             
-            <p className="font-sans text-xs text-on-surface/65 leading-relaxed font-light max-w-md">
-              {clientDetails.description}
-            </p>
+            {description && (
+              <p className="font-sans text-xs text-on-surface/65 leading-relaxed font-light max-w-md">
+                {description}
+              </p>
+            )}
             
             {/* Social Icons in concentric obsidian wells */}
-            <div className="flex items-center gap-2.5 pt-1">
-              <a 
-                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
-                href={clientDetails.instagramLink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-              >
-                <IconInstagram />
-              </a>
-              <a 
-                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
-                href={clientDetails.facebookLink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-              >
-                <IconFacebook />
-              </a>
-              <a 
-                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
-                href={clientDetails.googleMapsLink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                aria-label="Google Maps Reviews"
-              >
-                <IconGoogle />
-              </a>
-              <a 
-                className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
-                href={clientDetails.zomatoLink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                aria-label="Zomato"
-              >
-                <IconZomato />
-              </a>
-            </div>
+            {showSocialLinks && (instagramLink || facebookLink || googleMapsLink || zomatoLink) && (
+              <div className="flex items-center gap-2.5 pt-1">
+                {instagramLink && (
+                  <a 
+                    className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
+                    href={instagramLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                  >
+                    <IconInstagram />
+                  </a>
+                )}
+                {facebookLink && (
+                  <a 
+                    className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
+                    href={facebookLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    aria-label="Facebook"
+                  >
+                    <IconFacebook />
+                  </a>
+                )}
+                {googleMapsLink && (
+                  <a 
+                    className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
+                    href={googleMapsLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    aria-label="Google Maps Reviews"
+                  >
+                    <IconGoogle />
+                  </a>
+                )}
+                {zomatoLink && (
+                  <a 
+                    className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
+                    href={zomatoLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    aria-label="Zomato"
+                  >
+                    <IconZomato />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Col 2: Curations (Left column on mobile, 1 col on desktop) */}
-          <div className="col-span-1 flex flex-col gap-3.5">
-            <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold">
-              Cuisine &amp; Curations
-            </h4>
-            <div className="flex flex-col gap-2.5 text-xs font-sans">
-              <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
-                <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                <span>Single-Origin Brews</span>
-              </a>
-              <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'chef-specials')}>
-                <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                <span>Chef's Banquets</span>
-              </a>
-              <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
-                <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                <span>Wood-Fired Pizzas</span>
-              </a>
-              <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'menu-section')}>
-                <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                <span>Lounge Mocktails</span>
-              </a>
-              <a className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" href="#" onClick={(e) => handleNav(e, 'gallery')}>
-                <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                <span>Private Booths</span>
-              </a>
+          {/* Col 2: Curations */}
+          {visibleCurationLinks.length > 0 && (
+            <div className="col-span-1 flex flex-col gap-3.5">
+              <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold">
+                Cuisine &amp; Curations
+              </h4>
+              <div className="flex flex-col gap-2.5 text-xs font-sans">
+                {visibleCurationLinks.map((link) => (
+                  <a 
+                    key={link.id}
+                    className="text-on-surface/75 hover:text-primary transition-colors py-0.5 inline-flex items-center gap-1 group" 
+                    href={link.href} 
+                    target={link.isExternal ? '_blank' : undefined}
+                    rel={link.isExternal ? 'noopener noreferrer' : undefined}
+                    onClick={link.href.startsWith('#') ? (e) => handleNav(e, link.href.slice(1)) : undefined}
+                  >
+                    <span className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                    <span>{link.label}</span>
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Col 3: Hours & Atmosphere (Right column on mobile, 1 col on desktop) */}
+          {/* Col 3: Hours & Atmosphere */}
           <div className="col-span-1 flex flex-col gap-3.5">
             <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold">
               Hours &amp; Atmosphere
@@ -186,45 +243,51 @@ export const Footer: React.FC = () => {
                   <p className="text-on-surface/60 font-light mt-0.5 text-[11px] sm:text-xs">{openingHours}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-2 pt-1">
-                <span className="material-symbols-outlined text-primary text-base mt-0.5 shrink-0 font-light">music_note</span>
-                <div>
-                  <p className="text-on-surface font-medium">Acoustics</p>
-                  <p className="text-on-surface/60 font-light mt-0.5 text-[11px] sm:text-xs">Fri &amp; Sat from 7 PM</p>
+              {scheduleText && (
+                <div className="flex items-start gap-2 pt-1">
+                  <span className="material-symbols-outlined text-primary text-base mt-0.5 shrink-0 font-light">music_note</span>
+                  <div>
+                    <p className="text-on-surface font-medium">{scheduleTitle}</p>
+                    <p className="text-on-surface/60 font-light mt-0.5 text-[11px] sm:text-xs">{scheduleText}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Col 4: Location & Contact (Full-width luxury card on mobile, 1 col on desktop) */}
-          <div className="col-span-2 sm:col-span-2 lg:col-span-1 flex flex-col gap-3.5 p-4 sm:p-5 lg:p-0 rounded-2xl lg:rounded-none bg-[#130C08]/90 lg:bg-transparent border border-[#D4AF37]/20 lg:border-none shadow-md lg:shadow-none">
+          {/* Col 4: Location & Contact */}
+          <div className="col-span-2 sm:col-span-2 lg:col-span-1 flex flex-col gap-3.5 p-4 sm:p-5 lg:p-0 rounded-2xl lg:rounded-none bg-surface-container/90 lg:bg-transparent border border-primary/20 lg:border-none shadow-md lg:shadow-none">
             <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold flex items-center gap-1.5">
               <span className="material-symbols-outlined text-primary text-base font-light">location_on</span>
               <span>Visit &amp; Contact</span>
             </h4>
             <div className="flex flex-col gap-3 text-xs font-sans">
               <div className="flex flex-col gap-1">
-                <span className="font-light leading-relaxed text-on-surface/75">{addressLine}</span>
-                <a 
-                  href={clientDetails.googleMapsLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-semibold uppercase tracking-wider mt-0.5"
-                >
-                  <span>Get Directions</span>
-                  <span className="material-symbols-outlined text-xs">open_in_new</span>
-                </a>
+                {addressLine && <span className="font-light leading-relaxed text-on-surface/75">{addressLine}</span>}
+                {googleMapsLink && (
+                  <a 
+                    href={googleMapsLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-semibold uppercase tracking-wider mt-0.5"
+                  >
+                    <span>Get Directions</span>
+                    <span className="material-symbols-outlined text-xs">open_in_new</span>
+                  </a>
+                )}
               </div>
 
-              {/* Mobile Quick Action Buttons: Call & WhatsApp */}
+              {/* Quick Action Buttons: Call & WhatsApp */}
               <div className="grid grid-cols-2 gap-2 pt-1">
-                <a 
-                  className="h-9 px-3 rounded-full bg-[#1C120D] border border-white/15 hover:border-primary/50 text-on-surface/90 hover:text-white transition-all font-medium inline-flex items-center justify-center gap-1.5 active:scale-95 text-[11px]" 
-                  href={`tel:${phone}`}
-                >
-                  <span className="material-symbols-outlined text-sm text-primary">phone_in_talk</span>
-                  <span className="truncate">{displayPhone}</span>
-                </a>
+                {phone && (
+                  <a 
+                    className="h-9 px-3 rounded-full bg-surface-container-high border border-outline/20 hover:border-primary/50 text-on-surface/90 hover:text-on-surface transition-all font-medium inline-flex items-center justify-center gap-1.5 active:scale-95 text-[11px]" 
+                    href={`tel:${phone}`}
+                  >
+                    <span className="material-symbols-outlined text-sm text-primary">phone_in_talk</span>
+                    <span className="truncate">{displayPhone || phone}</span>
+                  </a>
+                )}
 
                 {whatsapp ? (
                   <a 
@@ -256,16 +319,19 @@ export const Footer: React.FC = () => {
             <a className="hover:text-primary transition-colors text-on-surface/80" href="#" onClick={(e) => handleDummy(e, 'Hygiene Standards', hygieneMsg)}>
               Hygiene &amp; Safety
             </a>
-            <span className="text-white/20 hidden sm:inline">•</span>
-            {/* Discrete Staff Access Link */}
-            <a 
-              href="/staff/login" 
-              className="text-on-surface/70 hover:text-primary transition-colors inline-flex items-center gap-1 font-medium"
-              title="Staff & Management Portal"
-            >
-              <span className="material-symbols-outlined text-[13px]">lock</span>
-              <span>Staff Portal</span>
-            </a>
+            {showStaffPortalLink && (
+              <>
+                <span className="text-white/20 hidden sm:inline">•</span>
+                <a 
+                  href="/staff/login" 
+                  className="text-on-surface/70 hover:text-primary transition-colors inline-flex items-center gap-1 font-medium"
+                  title="Staff & Management Portal"
+                >
+                  <span className="material-symbols-outlined text-[13px]">lock</span>
+                  <span>Staff Portal</span>
+                </a>
+              </>
+            )}
           </div>
         </div>
 

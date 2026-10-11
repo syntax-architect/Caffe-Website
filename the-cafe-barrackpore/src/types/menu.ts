@@ -24,6 +24,8 @@ export interface MenuItem {
   stock_count?: number | null;
   created_at?: string;
   updated_at?: string;
+  tasting_notes?: string;
+  pairing?: string;
 }
 
 export interface EditableMenuItemInput {

@@ -1,6 +1,6 @@
-# ROI Calculator Specification: Fury Studios Hospitality Platform
+# ROI Calculator Specification: [AGENCY NAME] Hospitality Platform
 
-**Purpose:** Provide restaurant prospects with a clear, conservative, and mathematically rigorous estimate of the financial impact of adopting the Fury Studios platform.  
+**Purpose:** Provide restaurant prospects with a clear, conservative, and mathematically rigorous estimate of the financial impact of adopting the [AGENCY NAME] platform.  
 **Guiding Principle:** Full disclosure of assumptions. Distinguish gross revenue from net contribution. Never assume 100% of online orders are incremental.
 
 ---

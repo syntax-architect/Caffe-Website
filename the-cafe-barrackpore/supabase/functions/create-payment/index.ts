@@ -29,7 +29,7 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 serve(async (req: Request) => {
-  const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || Deno.env.get('PUBLIC_SITE_URL') || '';
+  const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || Deno.env.get('PUBLIC_SITE_URL') || '*';
   const corsHeaders = {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -223,7 +223,8 @@ serve(async (req: Request) => {
           orderId: rzpData.id,
           razorpayOrderId: rzpData.id,
           keyId: keyId,
-          amount: rzpData.amount,
+          amount: amount,
+          amountInPaise: rzpData.amount,
           currency: rzpData.currency,
           orderRef: order.order_ref,
           paymentToken: paymentToken,

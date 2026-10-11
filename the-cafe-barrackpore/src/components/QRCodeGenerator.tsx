@@ -144,7 +144,7 @@ export const QRCodeGenerator: React.FC = () => {
         <p className="text-stone-500 text-xs mb-4">Point your camera to view menu & place your order</p>
 
         <div className="pt-4 border-t border-stone-100 w-full text-[10px] text-stone-400 uppercase tracking-wider">
-          The Café Barrackpore • Smart Dine-In
+          {businessName} • Smart Dine-In
         </div>
       </div>
 

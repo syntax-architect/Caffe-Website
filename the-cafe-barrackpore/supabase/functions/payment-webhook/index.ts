@@ -275,6 +275,17 @@ serve(async (req: Request) => {
     // PAID EVENT: CHECK AMOUNT AND CURRENCY MATCH
     // -------------------------------------------------------------
     if (eventAction === 'paid') {
+      if (order.payment_status === 'paid') {
+        return new Response(
+          JSON.stringify({
+            message: 'Order already marked as paid (idempotent duplicate)',
+            idempotent: true,
+            orderRef,
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
       if (!order.currency) {
         return new Response(
           JSON.stringify({ error: 'Configuration error: order record is missing currency' }),
@@ -291,6 +302,9 @@ serve(async (req: Request) => {
           { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
       }
+
+      const authoritativeAmount = Number(order.payment_amount ?? order.total);
+      const expectedAmountUnits = Math.round(authoritativeAmount * 100);
 
       if (paidAmountInSmallestUnits !== null && Math.abs(paidAmountInSmallestUnits - expectedAmountUnits) > 5) {
         return new Response(

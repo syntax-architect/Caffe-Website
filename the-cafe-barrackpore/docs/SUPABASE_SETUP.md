@@ -543,7 +543,7 @@ Phase 1J adds the authoritative payment layer to support restaurant customer pay
 
 ## 21. Migration 013: Security Hardening & Principle of Least Privilege (`013_security_hardening.sql`)
 
-Migration 013 enforces bank-grade security standards across database tables, RLS policies, and Edge Functions:
+Migration 013 enforces strict security standards across database tables, RLS policies, and Edge Functions:
 
 1. **Orders & Order Items SELECT Policy Hardening**:
    - Completely removes `anon` condition from `orders` and `order_items` SELECT policies.

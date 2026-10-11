@@ -2,10 +2,69 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSiteConfig, type ImageAsset } from '../../context/SiteConfigContext';
 import { useNotification } from '../../hooks/useNotification';
 import { uploadSiteImage } from '../../services/storageService';
-import type { SpecialCombo } from '../../services/siteContentService';
+import { 
+  DEFAULT_STORY_CHAPTERS, 
+  type StoryChapter, 
+  type SpecialCombo 
+} from '../../services/siteContentService';
 
 type ContentTab = 'hero' | 'about' | 'vibe' | 'specials' | 'gallery' | 'vip' | 'branding';
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
+interface ImageSpecGuideProps {
+  sectionTitle: string;
+  recommendedResolution: string;
+  aspectRatio: string;
+  maxFileSize: string;
+  recommendedFormats: string;
+  framingAdvice: string;
+}
+
+export const ImageSpecGuide: React.FC<ImageSpecGuideProps> = ({
+  sectionTitle,
+  recommendedResolution,
+  aspectRatio,
+  maxFileSize,
+  recommendedFormats,
+  framingAdvice,
+}) => (
+  <div className="p-4 rounded-2xl bg-gradient-to-br from-[#1A1612] via-[#0E0C0A] to-[#070605] border border-[#D4AF37]/25 shadow-lg space-y-2.5">
+    <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex items-center gap-2">
+        <span className="material-symbols-outlined text-[#D4AF37] text-base">photo_size_select_actual</span>
+        <span className="text-[11px] font-mono uppercase font-bold tracking-wider text-[#D4AF37]">
+          {sectionTitle} • Image Specification &amp; Asset Guide
+        </span>
+      </div>
+      <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-[10px] font-mono border border-[#D4AF37]/20">
+        Best Performance
+      </span>
+    </div>
+
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-left pt-1">
+      <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.05]">
+        <p className="text-[9px] uppercase font-mono text-zinc-400">Resolution</p>
+        <p className="text-xs font-bold text-white mt-0.5">{recommendedResolution}</p>
+      </div>
+      <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.05]">
+        <p className="text-[9px] uppercase font-mono text-zinc-400">Aspect Ratio</p>
+        <p className="text-xs font-bold text-[#D4AF37] mt-0.5">{aspectRatio}</p>
+      </div>
+      <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.05]">
+        <p className="text-[9px] uppercase font-mono text-zinc-400">Max File Size</p>
+        <p className="text-xs font-bold text-emerald-400 mt-0.5">{maxFileSize}</p>
+      </div>
+      <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.05]">
+        <p className="text-[9px] uppercase font-mono text-zinc-400">Formats</p>
+        <p className="text-xs font-bold text-sky-400 mt-0.5">{recommendedFormats}</p>
+      </div>
+    </div>
+
+    <p className="text-[11px] text-zinc-400 leading-relaxed font-sans pt-0.5">
+      💡 <strong className="text-zinc-200">Composition Tip:</strong> {framingAdvice}
+    </p>
+  </div>
+);
 
 export const ContentManagement: React.FC = () => {
   const siteConfig = useSiteConfig();
@@ -32,10 +91,15 @@ export const ContentManagement: React.FC = () => {
   );
   const [aboutDescription, setAboutDescription] = useState(
     siteConfig.ourStory.description ||
-      'We believe that true luxury lies in the details. From sourcing the most vibrant, local ingredients from surrounding farms to hand-selecting the perfect acoustic backdrop, every element of our space is intentionally curated.'
+      'Conceived as an antidote to urban rush, The Café Barrackpore reimagines colonial Bengal heritage into an intimate, contemporary nocturnal haven where time gently slows down.'
   );
-  const [aboutImage, setAboutImage] = useState(siteConfig.ourStory.src || '/images/story-pour.webp');
-  const [aboutAlt, setAboutAlt] = useState(siteConfig.ourStory.alt || 'Artisanal Espresso Pour');
+  const [aboutImage, setAboutImage] = useState(siteConfig.ourStory.src || '/images/story/story-chapter-1.webp');
+  const [aboutAlt, setAboutAlt] = useState(siteConfig.ourStory.alt || 'The Café Barrackpore Heritage Nocturnal Salon');
+  const [storyChapters, setStoryChapters] = useState<StoryChapter[]>(
+    siteConfig.ourStory.chapters && siteConfig.ourStory.chapters.length > 0
+      ? siteConfig.ourStory.chapters
+      : DEFAULT_STORY_CHAPTERS
+  );
 
   // TAB 3: ATMOSPHERE & VIBE (4 Photos)
   const defaultVibeImages: ImageAsset[] = useMemo(() => [
@@ -130,6 +194,9 @@ export const ContentManagement: React.FC = () => {
     if (siteConfig.ourStory.title) setAboutTitle(siteConfig.ourStory.title);
     if (siteConfig.ourStory.description) setAboutDescription(siteConfig.ourStory.description);
     if (siteConfig.ourStory.alt) setAboutAlt(siteConfig.ourStory.alt);
+    if (siteConfig.ourStory.chapters && siteConfig.ourStory.chapters.length > 0) {
+      setStoryChapters(siteConfig.ourStory.chapters);
+    }
 
     if (siteConfig.aboutVibe?.images && siteConfig.aboutVibe.images.length > 0) {
       setVibeImages(siteConfig.aboutVibe.images);
@@ -160,13 +227,17 @@ export const ContentManagement: React.FC = () => {
   }, [heroHeading, heroSubtext, heroImage, heroAlt, siteConfig.hero]);
 
   const isAboutDirty = useMemo(() => {
+    const currentChapters = siteConfig.ourStory.chapters && siteConfig.ourStory.chapters.length > 0
+      ? siteConfig.ourStory.chapters
+      : DEFAULT_STORY_CHAPTERS;
     return (
       aboutTitle !== (siteConfig.ourStory.title || 'Crafting Barrackpore’s finest nocturnal escape') ||
-      aboutDescription !== (siteConfig.ourStory.description || 'We believe that true luxury lies in the details. From sourcing the most vibrant, local ingredients from surrounding farms to hand-selecting the perfect acoustic backdrop, every element of our space is intentionally curated.') ||
-      aboutImage !== (siteConfig.ourStory.src || '/images/story-pour.webp') ||
-      aboutAlt !== (siteConfig.ourStory.alt || 'Artisanal Espresso Pour')
+      aboutDescription !== (siteConfig.ourStory.description || 'Conceived as an antidote to urban rush, The Café Barrackpore reimagines colonial Bengal heritage into an intimate, contemporary nocturnal haven where time gently slows down.') ||
+      aboutImage !== (siteConfig.ourStory.src || '/images/story/story-chapter-1.webp') ||
+      aboutAlt !== (siteConfig.ourStory.alt || 'The Café Barrackpore Heritage Nocturnal Salon') ||
+      JSON.stringify(storyChapters) !== JSON.stringify(currentChapters)
     );
-  }, [aboutTitle, aboutDescription, aboutImage, aboutAlt, siteConfig.ourStory]);
+  }, [aboutTitle, aboutDescription, aboutImage, aboutAlt, storyChapters, siteConfig.ourStory]);
 
   const isVibeDirty = useMemo(() => {
     const current = siteConfig.aboutVibe?.images && siteConfig.aboutVibe.images.length > 0
@@ -262,6 +333,7 @@ export const ContentManagement: React.FC = () => {
           description: aboutDescription.trim(),
           src: aboutImage.trim(),
           alt: aboutAlt.trim(),
+          chapters: storyChapters,
         });
       } else if (activeTab === 'vibe') {
         success = await siteConfig.updateSection('aboutVibe', {
@@ -392,7 +464,7 @@ export const ContentManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fadeIn max-w-4xl">
+    <div className="w-full space-y-6 sm:space-y-8 animate-fadeIn">
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.06]">
         <div>
@@ -405,7 +477,7 @@ export const ContentManagement: React.FC = () => {
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-1 tracking-tight">
             Website Content Engine
           </h2>
-          <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
+          <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
             All customer-facing visuals and photography are synchronized with Supabase storage and instantly editable without redeploying.
           </p>
         </div>
@@ -414,139 +486,177 @@ export const ContentManagement: React.FC = () => {
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer"
+          className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer shrink-0"
         >
           <span>Preview Live Website</span>
           <span className="material-symbols-outlined text-sm">open_in_new</span>
         </a>
       </div>
 
-      {/* TABS */}
-      <div className="flex items-center gap-2 border-b border-white/[0.06] pb-2 overflow-x-auto scrollbar-none text-xs">
-        {[
-          { id: 'hero' as ContentTab, label: 'Hero Visuals', icon: 'wallpaper', dirty: isHeroDirty },
-          { id: 'about' as ContentTab, label: 'Our Story', icon: 'auto_stories', dirty: isAboutDirty },
-          { id: 'vibe' as ContentTab, label: 'Atmosphere & Vibe', icon: 'local_fire_department', dirty: isVibeDirty },
-          { id: 'specials' as ContentTab, label: 'Banquets & Platters', icon: 'dinner_dining', dirty: isSpecialsDirty },
-          { id: 'gallery' as ContentTab, label: 'Ambiance Gallery', icon: 'photo_library', dirty: isGalleryDirty },
-          { id: 'vip' as ContentTab, label: 'VIP Speakeasy Salon', icon: 'hotel_class', dirty: isVipDirty },
-          { id: 'branding' as ContentTab, label: 'Brand & Logo', icon: 'badge', dirty: isBrandingDirty },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => handleTabSwitch(tab.id)}
-            className={`px-4 py-2.5 rounded-xl font-mono text-[11px] uppercase tracking-wider font-bold inline-flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'bg-[#D4AF37] text-[#070605] shadow-[0_4px_15px_rgba(212,175,55,0.25)]'
-                : 'bg-[#120F0D] text-zinc-400 hover:text-white border border-white/[0.06]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-base">{tab.icon}</span>
-            <span>{tab.label}</span>
-            {tab.dirty && (
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" title="Unsaved changes" />
-            )}
-          </button>
-        ))}
+      {/* TABS NAVIGATION BAR */}
+      <div className="w-full p-1.5 rounded-2xl bg-[#090807] border border-white/[0.08] shadow-xl">
+        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-1.5">
+          {[
+            { id: 'hero' as ContentTab, label: 'Hero Visuals', icon: 'wallpaper', dirty: isHeroDirty },
+            { id: 'about' as ContentTab, label: 'Our Story', icon: 'auto_stories', dirty: isAboutDirty },
+            { id: 'vibe' as ContentTab, label: 'Atmosphere & Vibe', icon: 'local_fire_department', dirty: isVibeDirty },
+            { id: 'specials' as ContentTab, label: 'Banquets & Platters', icon: 'dinner_dining', dirty: isSpecialsDirty },
+            { id: 'gallery' as ContentTab, label: 'Ambiance Gallery', icon: 'photo_library', dirty: isGalleryDirty },
+            { id: 'vip' as ContentTab, label: 'VIP Speakeasy', icon: 'hotel_class', dirty: isVipDirty },
+            { id: 'branding' as ContentTab, label: 'Brand & Logo', icon: 'badge', dirty: isBrandingDirty },
+          ].map((tab, idx) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabSwitch(tab.id)}
+              className={`relative flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl font-mono text-[10px] sm:text-[11px] uppercase tracking-wider font-bold transition-all cursor-pointer text-center select-none ${
+                activeTab === tab.id
+                  ? 'bg-[#D4AF37] text-[#070605] shadow-[0_4px_15px_rgba(212,175,55,0.25)] font-black'
+                  : 'bg-[#120F0D] text-zinc-400 hover:text-white hover:bg-white/[0.04] border border-white/[0.06]'
+              } ${idx === 6 ? 'col-span-2 sm:col-span-2 xl:col-span-1' : ''}`}
+            >
+              <span className="material-symbols-outlined text-sm sm:text-base shrink-0">{tab.icon}</span>
+              <span className="truncate">{tab.label}</span>
+              {tab.dirty && (
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 animate-pulse ${
+                    activeTab === tab.id ? 'bg-[#070605]' : 'bg-amber-400'
+                  }`}
+                  title="Unsaved changes"
+                />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* TAB 1: HERO SECTION */}
       {activeTab === 'hero' && (
         <form onSubmit={handleSaveSection} className="space-y-6">
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
-            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Above the Fold</span>
                 <h3 className="font-serif text-lg font-bold text-white mt-0.5">Hero Cinematic Photography &amp; Typography</h3>
               </div>
 
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Hero Headline
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={heroHeading}
-                  onChange={(e) => {
-                    setHeroHeading(e.target.value);
-                    setSaveStatus('idle');
-                  }}
-                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-[#D4AF37]"
-                />
-              </div>
+              {/* ASSET SPECIFICATION GUIDE */}
+              <ImageSpecGuide
+                sectionTitle="Hero Showcase Banner"
+                recommendedResolution="1920 × 1080 px (Desktop) • 1080 × 1920 px (Mobile)"
+                aspectRatio="16:9 Landscape"
+                maxFileSize="Under 500 KB"
+                recommendedFormats="WebP (recommended) or JPG"
+                framingAdvice="Atmospheric cinematic establishing photograph of the dining retreat or cocktail lounge. Keep the center-left clear of intense visual distractions so the main brand headline remains razor-sharp."
+              />
 
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Sub-Headline Narrative
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  value={heroSubtext}
-                  onChange={(e) => {
-                    setHeroSubtext(e.target.value);
-                    setSaveStatus('idle');
-                  }}
-                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white leading-relaxed focus:outline-none focus:border-[#D4AF37] resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-2">
-                  Hero Cinematic Background Visual (Supabase Sync)
-                </label>
-                <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-[#070605] border border-white/[0.08]">
-                  <img
-                    src={heroImage}
-                    alt="Hero Preview"
-                    className="w-full sm:w-56 h-32 object-cover rounded-xl border border-white/[0.1] shadow-lg"
-                  />
-                  <div className="flex-1 space-y-2 text-left w-full">
-                    <p className="text-xs font-bold text-white">Replace Hero Photograph</p>
-                    <p className="text-[11px] text-zinc-400 leading-tight">
-                      Recommended: High-resolution landscape (16:9 or 3:2) 35mm hospitality photo.
-                    </p>
-                    <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
-                      <label className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0">
-                        <span>Choose File...</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleImageUpload(e, 'content', (url) => setHeroImage(url))}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+                {/* Left Column: Background Photo & WCAG Alt (7 cols) */}
+                <div className="lg:col-span-7 space-y-4">
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-2">
+                      Hero Cinematic Background Visual (Supabase Sync)
+                    </label>
+                    <div className="p-4 rounded-2xl bg-[#070605] border border-white/[0.08] space-y-3">
+                      <div className="relative aspect-video rounded-xl overflow-hidden border border-white/[0.1] shadow-lg group">
+                        <img
+                          src={heroImage}
+                          alt={heroAlt}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
+                          <span className="px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#D4AF37] border border-[#D4AF37]/30">
+                            Live Hero Photography
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
+                        <label className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-sm">cloud_upload</span>
+                          <span>Upload File...</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageUpload(e, 'content', (url) => setHeroImage(url))}
+                          />
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="Or enter public image URL..."
+                          value={heroImage}
+                          onChange={(e) => {
+                            setHeroImage(e.target.value);
+                            setSaveStatus('idle');
+                          }}
+                          className="flex-1 bg-[#120F0D] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                      Hero Image Accessible Alt Text (WCAG Compliance)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={heroAlt}
+                      onChange={(e) => {
+                        setHeroAlt(e.target.value);
+                        setSaveStatus('idle');
+                      }}
+                      className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                </div>
+
+                {/* Right Column: Main Headline & Narrative Copy (5 cols) */}
+                <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                        Hero Headline
                       </label>
                       <input
-                        type="url"
-                        placeholder="Or enter public image URL..."
-                        value={heroImage}
+                        type="text"
+                        required
+                        value={heroHeading}
                         onChange={(e) => {
-                          setHeroImage(e.target.value);
+                          setHeroHeading(e.target.value);
                           setSaveStatus('idle');
                         }}
-                        className="flex-1 bg-[#120F0D] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                        className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                        Sub-Headline Narrative
+                      </label>
+                      <textarea
+                        rows={5}
+                        required
+                        value={heroSubtext}
+                        onChange={(e) => {
+                          setHeroSubtext(e.target.value);
+                          setSaveStatus('idle');
+                        }}
+                        className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white leading-relaxed focus:outline-none focus:border-[#D4AF37] resize-none"
                       />
                     </div>
                   </div>
-                </div>
-              </div>
 
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Hero Image Accessible Alt Text (WCAG Compliance)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={heroAlt}
-                  onChange={(e) => {
-                    setHeroAlt(e.target.value);
-                    setSaveStatus('idle');
-                  }}
-                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
-                />
+                  <div className="p-3.5 rounded-xl bg-black/40 border border-[#D4AF37]/20 flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[#D4AF37] text-xl">visibility</span>
+                    <div className="text-[11px] leading-tight">
+                      <p className="font-bold text-white">Above-The-Fold Showcase</p>
+                      <p className="text-zinc-400 text-[10px] mt-0.5">Greets all arriving diners on desktop, tablet, and mobile displays</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {renderSaveButton('Hero Section')}
@@ -559,34 +669,64 @@ export const ContentManagement: React.FC = () => {
       {activeTab === 'about' && (
         <form onSubmit={handleSaveSection} className="space-y-6">
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
-            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Hospitality Philosophy</span>
                 <h3 className="font-serif text-lg font-bold text-white mt-0.5">Our Story &amp; Heritage Sanctuary</h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Manage the flagship narrative and each of the 3 interactive sticky story chapters.
+                </p>
+              </div>
+
+              {/* ASSET SPECIFICATION GUIDE */}
+              <ImageSpecGuide
+                sectionTitle="Our Story Chapters (Flagship Carousel)"
+                recommendedResolution="1920 × 1080 px"
+                aspectRatio="16:9 Landscape"
+                maxFileSize="Under 350 KB"
+                recommendedFormats="WebP (recommended) or JPG"
+                framingAdvice="Keep primary visual subjects towards the center-left (30%–55%) as the frosted dark glass editorial chapter card floats on the right on desktop screens. Ensure warm lighting and rich contrast."
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Section Headline
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={aboutTitle}
+                    onChange={(e) => {
+                      setAboutTitle(e.target.value);
+                      setSaveStatus('idle');
+                    }}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Fallback Heritage Photo URL (Overview)
+                  </label>
+                  <input
+                    type="url"
+                    value={aboutImage}
+                    onChange={(e) => {
+                      setAboutImage(e.target.value);
+                      setSaveStatus('idle');
+                    }}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Section Title
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={aboutTitle}
-                  onChange={(e) => {
-                    setAboutTitle(e.target.value);
-                    setSaveStatus('idle');
-                  }}
-                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-[#D4AF37]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Narrative Description
+                  Overview Narrative Description
                 </label>
                 <textarea
-                  rows={4}
+                  rows={3}
                   required
                   value={aboutDescription}
                   onChange={(e) => {
@@ -597,63 +737,205 @@ export const ContentManagement: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-2">
-                  Our Story Heritage Photo (Supabase Sync)
-                </label>
-                <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-[#070605] border border-white/[0.08]">
-                  <img
-                    src={aboutImage}
-                    alt="Story Preview"
-                    className="w-full sm:w-44 h-44 object-cover rounded-xl border border-white/[0.1] shadow-lg shrink-0"
-                  />
-                  <div className="flex-1 space-y-2 text-left w-full">
-                    <p className="text-xs font-bold text-white">Replace Heritage Photo</p>
-                    <p className="text-[11px] text-zinc-400 leading-tight">
-                      Recommended: Portrait or square ratio (4:5 or 1:1), displaying artisanal coffee extraction or interior craftsmanship.
+              {/* DEDICATED 3 STORY CHAPTERS EDITOR */}
+              <div className="pt-2 space-y-4">
+                <div className="border-t border-white/[0.08] pt-4 flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#D4AF37] text-lg">auto_stories</span>
+                      <span>The 3 Interactive Story Chapters</span>
+                    </h4>
+                    <p className="text-[11px] text-zinc-400 mt-0.5">
+                      Each chapter has its own dedicated high-resolution photo, badge, headline, and narrative.
                     </p>
-                    <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
-                      <label className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0">
-                        <span>Choose File...</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleImageUpload(e, 'content', (url) => setAboutImage(url))}
-                        />
-                      </label>
-                      <input
-                        type="url"
-                        placeholder="Or enter public image URL..."
-                        value={aboutImage}
-                        onChange={(e) => {
-                          setAboutImage(e.target.value);
-                          setSaveStatus('idle');
-                        }}
-                        className="flex-1 bg-[#120F0D] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
-                      />
-                    </div>
                   </div>
+                  <span className="px-2.5 py-1 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-[10px] font-mono font-bold border border-[#D4AF37]/30">
+                    3 Chapters Configured
+                  </span>
+                </div>
+
+                <div className="space-y-5">
+                  {storyChapters.map((chapter, idx) => (
+                    <div
+                      key={chapter.id || idx}
+                      className="p-4 sm:p-5 rounded-2xl bg-[#070605] border border-white/[0.08] space-y-4"
+                    >
+                      <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-md bg-[#D4AF37] text-black font-mono text-xs font-bold">
+                            Chapter {chapter.step || `0${idx + 1}`}
+                          </span>
+                          <span className="text-xs font-mono tracking-wider uppercase text-[#D4AF37]">
+                            {chapter.badge || `Chapter ${idx + 1}`}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono text-zinc-500">ID: {chapter.id}</span>
+                      </div>
+
+                      {/* Photo Preview & Upload */}
+                      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                        <div className="relative aspect-video w-full md:w-56 rounded-xl overflow-hidden border border-white/[0.1] bg-black/40 shrink-0 shadow-lg group">
+                          <img
+                            src={chapter.image}
+                            alt={chapter.imageAlt || chapter.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2.5">
+                            <span className="text-[9px] font-mono text-[#D4AF37] bg-black/70 px-2 py-0.5 rounded backdrop-blur-sm">
+                              Chapter {idx + 1} Visual
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex-1 w-full space-y-2">
+                          <p className="text-xs font-bold text-white">Chapter {idx + 1} Photograph</p>
+                          <p className="text-[11px] text-zinc-400">
+                            Recommended: 1920 × 1080 px WebP. High aesthetic contrast with amber and dark tones.
+                          </p>
+                          <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
+                            <label className="px-3.5 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-sm">cloud_upload</span>
+                              <span>Upload Photo</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) =>
+                                  handleImageUpload(e, 'content', (url) => {
+                                    const next = [...storyChapters];
+                                    next[idx] = { ...next[idx], image: url };
+                                    setStoryChapters(next);
+                                  })
+                                }
+                              />
+                            </label>
+                            <input
+                              type="url"
+                              placeholder="Or enter image URL..."
+                              value={chapter.image}
+                              onChange={(e) => {
+                                const next = [...storyChapters];
+                                next[idx] = { ...next[idx], image: e.target.value };
+                                setStoryChapters(next);
+                                setSaveStatus('idle');
+                              }}
+                              className="flex-1 bg-[#120F0D] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Chapter Copy Fields */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">
+                            Chapter Badge
+                          </label>
+                          <input
+                            type="text"
+                            value={chapter.badge}
+                            onChange={(e) => {
+                              const next = [...storyChapters];
+                              next[idx] = { ...next[idx], badge: e.target.value };
+                              setStoryChapters(next);
+                              setSaveStatus('idle');
+                            }}
+                            className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">
+                            Headline Prefix
+                          </label>
+                          <input
+                            type="text"
+                            value={chapter.title}
+                            onChange={(e) => {
+                              const next = [...storyChapters];
+                              next[idx] = { ...next[idx], title: e.target.value };
+                              setStoryChapters(next);
+                              setSaveStatus('idle');
+                            }}
+                            className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">
+                            Italic Highlight Word(s)
+                          </label>
+                          <input
+                            type="text"
+                            value={chapter.titleItalic}
+                            onChange={(e) => {
+                              const next = [...storyChapters];
+                              next[idx] = { ...next[idx], titleItalic: e.target.value };
+                              setStoryChapters(next);
+                              setSaveStatus('idle');
+                            }}
+                            className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-[#D4AF37] font-serif italic"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">
+                            Narrative Copy
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={chapter.description}
+                            onChange={(e) => {
+                              const next = [...storyChapters];
+                              next[idx] = { ...next[idx], description: e.target.value };
+                              setStoryChapters(next);
+                              setSaveStatus('idle');
+                            }}
+                            className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white leading-relaxed resize-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">
+                            Key Highlight / Footnote
+                          </label>
+                          <input
+                            type="text"
+                            value={chapter.highlight}
+                            onChange={(e) => {
+                              const next = [...storyChapters];
+                              next[idx] = { ...next[idx], highlight: e.target.value };
+                              setStoryChapters(next);
+                              setSaveStatus('idle');
+                            }}
+                            className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">
+                          Accessible Alt Text (WCAG Compliance)
+                        </label>
+                        <input
+                          type="text"
+                          value={chapter.imageAlt || ''}
+                          onChange={(e) => {
+                            const next = [...storyChapters];
+                            next[idx] = { ...next[idx], imageAlt: e.target.value };
+                            setStoryChapters(next);
+                            setSaveStatus('idle');
+                          }}
+                          placeholder={`Descriptive alt text for Chapter ${idx + 1}`}
+                          className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Story Image Accessible Alt Text
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={aboutAlt}
-                  onChange={(e) => {
-                    setAboutAlt(e.target.value);
-                    setSaveStatus('idle');
-                  }}
-                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
-                />
-              </div>
-
-              {renderSaveButton('Our Story')}
+              {renderSaveButton('Our Story & Chapters')}
             </div>
           </div>
         </form>
@@ -663,7 +945,7 @@ export const ContentManagement: React.FC = () => {
       {activeTab === 'vibe' && (
         <form onSubmit={handleSaveSection} className="space-y-6">
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
-            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Experiential Spaces</span>
                 <h3 className="font-serif text-lg font-bold text-white mt-0.5">Atmosphere &amp; Vibe Photo Cards</h3>
@@ -672,11 +954,21 @@ export const ContentManagement: React.FC = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              {/* ASSET SPECIFICATION GUIDE */}
+              <ImageSpecGuide
+                sectionTitle="Atmosphere & Vibe Feature Cards"
+                recommendedResolution="1200 × 900 px (or 1200 × 1200 px)"
+                aspectRatio="4:3 Standard or 1:1 Square"
+                maxFileSize="Under 250 KB"
+                recommendedFormats="WebP (recommended) or JPG"
+                framingAdvice="Focus on intimate textural vignettes—sapphire velvet booth stitching, warm tungsten filament bulbs, barista extractions, or hand-painted colonial decor. Avoid ultra-wide distant shots."
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 pt-2">
                 {vibeImages.map((img, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-2xl bg-[#070605] border border-white/[0.08] flex flex-col justify-between gap-3"
+                    className="p-3.5 rounded-2xl bg-[#070605] border border-white/[0.08] flex flex-col justify-between gap-3 shadow-lg"
                   >
                     <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-white/[0.08]">
                       <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
@@ -748,138 +1040,158 @@ export const ContentManagement: React.FC = () => {
       {activeTab === 'specials' && (
         <form onSubmit={handleSaveSection} className="space-y-6">
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
-            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Curated Group Feasts</span>
                 <h3 className="font-serif text-lg font-bold text-white mt-0.5">Special Banquet &amp; Hangout Platters</h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Shareable signature group platters displayed on the homepage specials banner.
+                </p>
               </div>
 
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Section Headline
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={specialsTitle}
-                  onChange={(e) => {
-                    setSpecialsTitle(e.target.value);
-                    setSaveStatus('idle');
-                  }}
-                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-[#D4AF37]"
-                />
-              </div>
+              {/* ASSET SPECIFICATION GUIDE */}
+              <ImageSpecGuide
+                sectionTitle="Chef's Specials & Banquet Platters"
+                recommendedResolution="1200 × 800 px"
+                aspectRatio="3:2 Landscape"
+                maxFileSize="Under 250 KB"
+                recommendedFormats="WebP (recommended) or JPG"
+                framingAdvice="Mouthwatering 45° angle or top-down food photography. Capture generous group-sharing portions on dark stone or rustic wooden tableware with vibrant fresh herbs and steam."
+              />
 
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Platters Description
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  value={specialsDescription}
-                  onChange={(e) => {
-                    setSpecialsDescription(e.target.value);
-                    setSaveStatus('idle');
-                  }}
-                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white leading-relaxed focus:outline-none focus:border-[#D4AF37] resize-none"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Section Headline
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={specialsTitle}
+                    onChange={(e) => {
+                      setSpecialsTitle(e.target.value);
+                      setSaveStatus('idle');
+                    }}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                    Platters Description
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={specialsDescription}
+                    onChange={(e) => {
+                      setSpecialsDescription(e.target.value);
+                      setSaveStatus('idle');
+                    }}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white leading-relaxed focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
               </div>
 
               {/* Platter Combos List */}
               <div className="space-y-4 pt-3">
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400">
-                  Featured Banquet Platters (3 Combos)
+                  Featured Banquet Platters (3 Sharing Feasts)
                 </label>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   {specialCombos.map((combo, idx) => (
                     <div
                       key={combo.id || idx}
-                      className="p-4 rounded-2xl bg-[#070605] border border-white/[0.08] flex flex-col md:flex-row items-start md:items-center gap-4"
+                      className="p-4 rounded-2xl bg-[#070605] border border-white/[0.08] flex flex-col justify-between gap-4 shadow-lg"
                     >
-                      <div className="w-full md:w-36 h-24 rounded-xl overflow-hidden bg-black/40 border border-white/[0.1] shrink-0 relative">
-                        <img src={combo.image} alt={combo.name} className="w-full h-full object-cover" />
-                        <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono font-bold text-[#D4AF37]">
-                          #{idx + 1}
-                        </span>
+                      <div className="space-y-3">
+                        <div className="w-full aspect-[16/10] rounded-xl overflow-hidden bg-black/40 border border-white/[0.1] relative group">
+                          <img src={combo.image} alt={combo.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm text-[10px] font-mono font-bold text-[#D4AF37]">
+                            Platter #{idx + 1}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2.5">
+                          <div>
+                            <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">Dish Name</label>
+                            <input
+                              type="text"
+                              value={combo.name}
+                              onChange={(e) => {
+                                const next = [...specialCombos];
+                                next[idx] = { ...next[idx], name: e.target.value };
+                                setSpecialCombos(next);
+                                setSaveStatus('idle');
+                              }}
+                              className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">Badge Text</label>
+                              <input
+                                type="text"
+                                value={combo.badge}
+                                onChange={(e) => {
+                                  const next = [...specialCombos];
+                                  next[idx] = { ...next[idx], badge: e.target.value };
+                                  setSpecialCombos(next);
+                                  setSaveStatus('idle');
+                                }}
+                                className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">Price (₹)</label>
+                              <input
+                                type="number"
+                                value={combo.price}
+                                onChange={(e) => {
+                                  const next = [...specialCombos];
+                                  next[idx] = { ...next[idx], price: Number(e.target.value) };
+                                  setSpecialCombos(next);
+                                  setSaveStatus('idle');
+                                }}
+                                className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-[#D4AF37] font-bold focus:outline-none focus:border-[#D4AF37]"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">Dish Name</label>
+                      <div className="pt-2 border-t border-white/[0.06] space-y-2">
+                        <label className="w-full py-2 px-3 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5">
+                          <span className="material-symbols-outlined text-sm">cloud_upload</span>
+                          <span>Replace Platter Photo</span>
                           <input
-                            type="text"
-                            value={combo.name}
-                            onChange={(e) => {
-                              const next = [...specialCombos];
-                              next[idx] = { ...next[idx], name: e.target.value };
-                              setSpecialCombos(next);
-                              setSaveStatus('idle');
-                            }}
-                            className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) =>
+                              handleImageUpload(e, 'content', (url) => {
+                                const next = [...specialCombos];
+                                next[idx] = { ...next[idx], image: url };
+                                setSpecialCombos(next);
+                              })
+                            }
                           />
-                        </div>
-
-                        <div>
-                          <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">Badge Text</label>
-                          <input
-                            type="text"
-                            value={combo.badge}
-                            onChange={(e) => {
-                              const next = [...specialCombos];
-                              next[idx] = { ...next[idx], badge: e.target.value };
-                              setSpecialCombos(next);
-                              setSaveStatus('idle');
-                            }}
-                            className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">Price (₹)</label>
-                          <input
-                            type="number"
-                            value={combo.price}
-                            onChange={(e) => {
-                              const next = [...specialCombos];
-                              next[idx] = { ...next[idx], price: Number(e.target.value) };
-                              setSpecialCombos(next);
-                              setSaveStatus('idle');
-                            }}
-                            className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white"
-                          />
-                        </div>
-
-                        <div className="sm:col-span-2 md:col-span-3 flex items-center gap-2">
-                          <label className="px-3 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0">
-                            <span>Replace Platter Photo</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) =>
-                                handleImageUpload(e, 'content', (url) => {
-                                  const next = [...specialCombos];
-                                  next[idx] = { ...next[idx], image: url };
-                                  setSpecialCombos(next);
-                                })
-                              }
-                            />
-                          </label>
-                          <input
-                            type="url"
-                            placeholder="Or enter image URL..."
-                            value={combo.image}
-                            onChange={(e) => {
-                              const next = [...specialCombos];
-                              next[idx] = { ...next[idx], image: e.target.value };
-                              setSpecialCombos(next);
-                              setSaveStatus('idle');
-                            }}
-                            className="flex-1 bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-[10px] text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
-                          />
-                        </div>
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="Or enter image URL..."
+                          value={combo.image}
+                          onChange={(e) => {
+                            const next = [...specialCombos];
+                            next[idx] = { ...next[idx], image: e.target.value };
+                            setSpecialCombos(next);
+                            setSaveStatus('idle');
+                          }}
+                          className="w-full bg-[#120F0D] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-[10px] text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                        />
                       </div>
                     </div>
                   ))}
@@ -896,7 +1208,7 @@ export const ContentManagement: React.FC = () => {
       {activeTab === 'gallery' && (
         <form onSubmit={handleSaveSection} className="space-y-6">
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
-            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Visual World</span>
                 <h3 className="font-serif text-lg font-bold text-white mt-0.5">Ambiance &amp; Interior Gallery</h3>
@@ -905,7 +1217,17 @@ export const ContentManagement: React.FC = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              {/* ASSET SPECIFICATION GUIDE */}
+              <ImageSpecGuide
+                sectionTitle="Visual Chronicles Gallery (4 Carousel Slots)"
+                recommendedResolution="1920 × 1080 px"
+                aspectRatio="16:9 Widescreen"
+                maxFileSize="Under 300 KB"
+                recommendedFormats="WebP (recommended) or JPG"
+                framingAdvice="High-emotion nocturnal moments—couples dining in velvet booths, artisan pizzas emerging from wood flames, golden coffee crema, or acoustic jazz guitarists under warm tungsten lighting."
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 pt-2">
                 {galleryImages.map((img, idx) => (
                   <div
                     key={idx}
@@ -979,7 +1301,7 @@ export const ContentManagement: React.FC = () => {
       {activeTab === 'vip' && (
         <form onSubmit={handleSaveSection} className="space-y-6">
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
-            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Private Salon</span>
                 <h3 className="font-serif text-lg font-bold text-white mt-0.5">VIP Club &amp; Speakeasy Sanctuary</h3>
@@ -988,95 +1310,124 @@ export const ContentManagement: React.FC = () => {
                 </p>
               </div>
 
-              {/* VIP PHOTO PREVIEW & REPLACEMENT */}
-              <div className="space-y-3">
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400">
-                  Speakeasy Salon Background Image
-                </label>
+              {/* ASSET SPECIFICATION GUIDE */}
+              <ImageSpecGuide
+                sectionTitle="VIP Speakeasy Salon Background"
+                recommendedResolution="1920 × 1080 px"
+                aspectRatio="16:9 Landscape"
+                maxFileSize="Under 350 KB"
+                recommendedFormats="WebP (recommended) or JPG"
+                framingAdvice="An exclusive, dimly lit private speakeasy lounge with 2200K amber lighting, dark walnut surfaces, and subtle gold accents to evoke elite membership prestige."
+              />
 
-                <div className="relative aspect-[16/9] max-h-72 rounded-2xl overflow-hidden border border-white/[0.1] bg-black/40 group">
-                  <img
-                    src={vipImage}
-                    alt={vipAlt}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
-                    <span className="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#D4AF37] border border-[#D4AF37]/30">
-                      Live VIP Background Image
-                    </span>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+                {/* Left Column: VIP Photo Preview & Upload (7 cols) */}
+                <div className="lg:col-span-7 space-y-4">
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-2">
+                      Speakeasy Salon Background Visual (Supabase Sync)
+                    </label>
+
+                    <div className="p-4 rounded-2xl bg-[#070605] border border-white/[0.08] space-y-3">
+                      <div className="relative aspect-video rounded-xl overflow-hidden border border-white/[0.1] bg-black/40 group shadow-xl">
+                        <img
+                          src={vipImage}
+                          alt={vipAlt}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                          <span className="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#D4AF37] border border-[#D4AF37]/30">
+                            Live VIP Background Image
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
+                        <label className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0 inline-flex items-center gap-2">
+                          <span className="material-symbols-outlined text-base">cloud_upload</span>
+                          <span>Upload New Photo...</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageUpload(e, 'content', (url) => setVipImage(url))}
+                          />
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="Or enter public image URL..."
+                          value={vipImage}
+                          onChange={(e) => {
+                            setVipImage(e.target.value);
+                            setSaveStatus('idle');
+                          }}
+                          className="flex-1 bg-[#120F0D] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                      Photo Accessible Alt Text (WCAG Compliance)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={vipAlt}
+                      onChange={(e) => {
+                        setVipAlt(e.target.value);
+                        setSaveStatus('idle');
+                      }}
+                      className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                    />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
-                  <label className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0 inline-flex items-center gap-2">
-                    <span className="material-symbols-outlined text-base">cloud_upload</span>
-                    <span>Upload New Photo...</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleImageUpload(e, 'content', (url) => setVipImage(url))}
-                    />
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="Or enter public image URL..."
-                    value={vipImage}
-                    onChange={(e) => {
-                      setVipImage(e.target.value);
-                      setSaveStatus('idle');
-                    }}
-                    className="flex-1 bg-[#070605] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
-                  />
+                {/* Right Column: Salon Typography & Previews (5 cols) */}
+                <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                        Salon Title
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={vipTitle}
+                        onChange={(e) => {
+                          setVipTitle(e.target.value);
+                          setSaveStatus('idle');
+                        }}
+                        className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                        Salon Subtitle
+                      </label>
+                      <textarea
+                        rows={4}
+                        required
+                        value={vipSubtitle}
+                        onChange={(e) => {
+                          setVipSubtitle(e.target.value);
+                          setSaveStatus('idle');
+                        }}
+                        className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white leading-relaxed focus:outline-none focus:border-[#D4AF37] resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-black/40 border border-[#D4AF37]/20 flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[#D4AF37] text-2xl">hotel_class</span>
+                    <div className="text-[11px] leading-tight">
+                      <p className="font-bold text-white">Homepage Speakeasy Showcase</p>
+                      <p className="text-zinc-400 text-[10px] mt-1">Renders in the VIP Private Salon section with direct reservation inquiry hooks</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Photo Alt Text
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={vipAlt}
-                  onChange={(e) => {
-                    setVipAlt(e.target.value);
-                    setSaveStatus('idle');
-                  }}
-                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Salon Title
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={vipTitle}
-                  onChange={(e) => {
-                    setVipTitle(e.target.value);
-                    setSaveStatus('idle');
-                  }}
-                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Salon Subtitle
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={vipSubtitle}
-                  onChange={(e) => {
-                    setVipSubtitle(e.target.value);
-                    setSaveStatus('idle');
-                  }}
-                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
-                />
               </div>
 
               {renderSaveButton('VIP Speakeasy Salon')}
@@ -1089,7 +1440,7 @@ export const ContentManagement: React.FC = () => {
       {activeTab === 'branding' && (
         <form onSubmit={handleSaveSection} className="space-y-6">
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
-            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Identity &amp; Crest</span>
                 <h3 className="font-serif text-lg font-bold text-white mt-0.5">Brand Logo &amp; Official Insignia</h3>
@@ -1098,58 +1449,111 @@ export const ContentManagement: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-6 p-6 rounded-2xl bg-[#070605] border border-white/[0.08]">
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#1F1914] to-[#0A0807] border border-[#D4AF37]/40 flex items-center justify-center p-3 shadow-[0_0_25px_rgba(212,175,55,0.18)] shrink-0">
-                  <img
-                    src={brandLogo}
-                    alt={brandLogoAlt}
-                    className="w-full h-full object-contain filter invert contrast-125"
-                  />
-                </div>
+              {/* ASSET SPECIFICATION GUIDE */}
+              <ImageSpecGuide
+                sectionTitle="Brand Logo &amp; Official Insignia"
+                recommendedResolution="512 × 512 px (or SVG vector)"
+                aspectRatio="1:1 Square"
+                maxFileSize="Under 150 KB"
+                recommendedFormats="Transparent PNG, WebP, or SVG"
+                framingAdvice="Export with a 100% transparent background. Use gold, cream, or monochrome white line work so the crest renders cleanly across the dark nocturnal header bar, receipts, and table QR codes."
+              />
 
-                <div className="flex-1 space-y-2 w-full">
-                  <p className="text-xs font-bold text-white">Upload Brand Logo</p>
-                  <p className="text-[11px] text-zinc-400 leading-tight">
-                    Recommended: Transparent PNG, WebP or SVG format. High contrast crest design.
-                  </p>
-                  <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
-                    <label className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0">
-                      <span>Choose Logo File...</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleImageUpload(e, 'general', (url) => setBrandLogo(url))}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+                {/* Left Column: Logo Visual Preview Box (5 cols) */}
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="p-6 rounded-2xl bg-[#070605] border border-white/[0.08] flex flex-col items-center text-center space-y-4 shadow-xl">
+                    <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-[#1F1914] to-[#0A0807] border border-[#D4AF37]/40 flex items-center justify-center p-4 shadow-[0_0_30px_rgba(212,175,55,0.22)]">
+                      <img
+                        src={brandLogo}
+                        alt={brandLogoAlt}
+                        className="w-full h-full object-contain filter invert contrast-125"
                       />
-                    </label>
-                    <input
-                      type="url"
-                      placeholder="Or enter public logo URL..."
-                      value={brandLogo}
-                      onChange={(e) => {
-                        setBrandLogo(e.target.value);
-                        setSaveStatus('idle');
-                      }}
-                      className="flex-1 bg-[#120F0D] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
-                    />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white">Active Brand Insignia</p>
+                      <p className="text-[10px] text-zinc-400 mt-0.5">High-contrast vector crest</p>
+                    </div>
+
+                    <div className="w-full space-y-2 pt-2 border-t border-white/[0.06]">
+                      <label className="w-full py-2.5 px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer inline-flex items-center justify-center gap-2">
+                        <span className="material-symbols-outlined text-sm">cloud_upload</span>
+                        <span>Choose Logo File...</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleImageUpload(e, 'general', (url) => setBrandLogo(url))}
+                        />
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="Or enter public logo URL..."
+                        value={brandLogo}
+                        onChange={(e) => {
+                          setBrandLogo(e.target.value);
+                          setSaveStatus('idle');
+                        }}
+                        className="w-full bg-[#120F0D] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Logo Accessible Description (Alt Text)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={brandLogoAlt}
-                  onChange={(e) => {
-                    setBrandLogoAlt(e.target.value);
-                    setSaveStatus('idle');
-                  }}
-                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
-                />
+                {/* Right Column: Alt Text & Multi-Surface Sync Directory (7 cols) */}
+                <div className="lg:col-span-7 space-y-4 flex flex-col justify-between">
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                      Logo Accessible Description (Alt Text)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={brandLogoAlt}
+                      onChange={(e) => {
+                        setBrandLogoAlt(e.target.value);
+                        setSaveStatus('idle');
+                      }}
+                      className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-black/40 border border-[#D4AF37]/20 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-white">
+                      <span className="material-symbols-outlined text-[#D4AF37] text-base">sync</span>
+                      <span>Real-time Multi-Surface Synchronization</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400 leading-relaxed">
+                      Updating this insignia dynamically synchronizes across all operations touchpoints without requiring redeployment:
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-[10px] font-mono">
+                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span>Public Header</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span>Footer Crest</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span>Staff Terminal</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span>Table QR Cards</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span>Guest Invoices</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span>Kitchen Display</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {renderSaveButton('Brand Logo')}
@@ -1162,3 +1566,4 @@ export const ContentManagement: React.FC = () => {
 };
 
 export default ContentManagement;
+

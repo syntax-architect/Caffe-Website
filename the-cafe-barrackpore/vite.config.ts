@@ -13,6 +13,9 @@ export default defineConfig({
             const normalized = id.replace(/\\/g, '/');
             if (normalized.includes('@supabase')) return 'vendor-supabase';
             if (normalized.includes('lenis')) return 'vendor-lenis';
+            if (normalized.includes('react-dom') || normalized.includes('react/') || normalized.includes('scheduler')) {
+              return 'vendor-react';
+            }
           }
         }
       }

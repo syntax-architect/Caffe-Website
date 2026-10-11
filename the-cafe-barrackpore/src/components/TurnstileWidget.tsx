@@ -42,12 +42,21 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const siteKey =
-    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TURNSTILE_SITE_KEY) ||
-    CLOUDFLARE_TEST_SITE_KEY;
+  const isDev = Boolean(typeof import.meta !== 'undefined' && import.meta.env?.DEV);
+  const configuredSiteKey =
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TURNSTILE_SITE_KEY) || '';
+  const siteKey = configuredSiteKey || (isDev ? CLOUDFLARE_TEST_SITE_KEY : '');
 
   useEffect(() => {
     let isMounted = true;
+
+    // Do not attempt loading script if siteKey is missing in non-DEV
+    if (!siteKey) {
+      if (onError) {
+        onError(new Error('VITE_TURNSTILE_SITE_KEY is missing. Security verification is not configured.'));
+      }
+      return;
+    }
 
     // Check if Cloudflare Turnstile script is already present
     const existingScript = document.getElementById('cf-turnstile-script');
@@ -61,10 +70,15 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
         if (isMounted) setIsReady(true);
       };
       script.onerror = () => {
-        // Fallback for offline/adblockers: auto-verify with client bypass token
+        // Fallback for offline/adblockers: auto-verify with client bypass token (DEV only)
         if (isMounted) {
-          console.warn('[Turnstile] Cloudflare script blocked or offline. Falling back to local token.');
-          onVerify('cf_offline_bypass_token');
+          if (isDev) {
+            console.warn('[Turnstile] Cloudflare script blocked or offline. Falling back to dev bypass token.');
+            onVerify('cf_offline_bypass_token');
+          } else {
+            console.error('[Turnstile] Cloudflare Turnstile script failed to load.');
+            if (onError) onError(new Error('Cloudflare Turnstile failed to load.'));
+          }
         }
       };
       document.head.appendChild(script);
@@ -81,10 +95,10 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [onVerify]);
+  }, [siteKey, isDev, onVerify, onError]);
 
   useEffect(() => {
-    if (!isReady || !containerRef.current || !window.turnstile) {
+    if (!siteKey || !isReady || !containerRef.current || !window.turnstile) {
       return;
     }
 
@@ -103,8 +117,8 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
         'error-callback': (err: any) => {
           console.warn('[Turnstile] Verification notice:', err);
           if (onError) onError(err);
-          // In testing or test key, grant fallback token
-          if (siteKey === CLOUDFLARE_TEST_SITE_KEY) {
+          // In DEV testing with test key, grant fallback token
+          if (isDev && siteKey === CLOUDFLARE_TEST_SITE_KEY) {
             onVerify('cf_test_pass_token');
           }
         },
@@ -113,8 +127,12 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
         },
       });
     } catch (renderErr) {
-      console.warn('[Turnstile] Render exception, using dev token:', renderErr);
-      onVerify('cf_dev_pass_token');
+      console.warn('[Turnstile] Render exception:', renderErr);
+      if (isDev) {
+        onVerify('cf_dev_pass_token');
+      } else if (onError) {
+        onError(renderErr);
+      }
     }
 
     return () => {
@@ -126,7 +144,16 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
         }
       }
     };
-  }, [isReady, siteKey, onVerify, onError, onExpire]);
+  }, [isReady, siteKey, isDev, action, onVerify, onError, onExpire]);
+
+  if (!siteKey) {
+    return (
+      <div className={`my-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs text-center flex flex-col items-center justify-center gap-1 min-h-[65px] ${className}`}>
+        <span className="material-symbols-outlined text-base">error</span>
+        <span>Security verification is not configured. VITE_TURNSTILE_SITE_KEY is missing.</span>
+      </div>
+    );
+  }
 
   return (
     <div className={`my-2 flex flex-col items-center justify-center min-h-[65px] ${className}`}>

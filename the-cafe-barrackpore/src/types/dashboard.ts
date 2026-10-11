@@ -75,6 +75,7 @@ export interface RestaurantSettings {
   owner_notification_email?: string | null;
   owner_notification_method?: 'email' | 'whatsapp' | 'both' | 'none';
   low_stock_alert_threshold?: number;
+  governing_law?: string | null;
 }
 
 export interface DashboardNotification {

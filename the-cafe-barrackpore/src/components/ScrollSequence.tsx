@@ -1,19 +1,21 @@
 import React, { useEffect, useRef } from 'react';
+import { useReducedMotion } from 'framer-motion';
 
 export const ScrollSequence: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const text1Ref = useRef<HTMLHeadingElement>(null);
   const text2Ref = useRef<HTMLHeadingElement>(null);
   const text3Ref = useRef<HTMLHeadingElement>(null);
+  const prefersReducedMotion = useReducedMotion();
   const checkIsMobile = () => {
     if (typeof window === 'undefined') return false;
-    const hasTouch = window.matchMedia('(pointer: coarse)').matches;
-    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const isNarrow = window.innerWidth < 768;
-    return hasTouch || isMobileUA || isNarrow;
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return isNarrow || (isMobileUA && window.innerWidth < 1024);
   };
   
   useEffect(() => {
+    if (prefersReducedMotion) return;
     const isMobileRef = checkIsMobile();
     const frameCount = isMobileRef ? 60 : 120;
     let lastFrameIndex = -1;
@@ -46,16 +48,29 @@ export const ScrollSequence: React.FC = () => {
       const pad = index.toString().padStart(3, '0');
       return isMobileRef
         ? `/frames-mobile/ezgif-frame-${pad}.webp`
-        : `/frames/ezgif-frame-${pad}.jpg`;
+        : `/frames/ezgif-frame-${pad}.webp`;
     };
 
     let cachedWinWidth = -1;
     let cachedWinHeight = -1;
+    let cachedSectionTop = 0;
+    let cachedSectionHeight = 0;
+
+    const section = document.getElementById('scroll-sequence-section');
+
+    const updateGeometry = () => {
+      if (!section) return;
+      const rect = section.getBoundingClientRect();
+      cachedSectionTop = rect.top + window.scrollY;
+      cachedSectionHeight = rect.height;
+    };
 
     const handleResize = () => {
       const newWidth = window.innerWidth;
       const newHeight = window.innerHeight;
       
+      updateGeometry();
+
       // On mobile, scrolling causes the address bar to hide/show, triggering resize events.
       // We only want to resize the canvas if the width changes (orientation change) 
       // to avoid massive stuttering from canvas reallocation during scroll.
@@ -151,7 +166,10 @@ export const ScrollSequence: React.FC = () => {
           if (loadedInChunk === totalInChunk) {
             nextPreloadIndex = chunkLimit;
             if (nextPreloadIndex <= endIndex && nextPreloadIndex <= frameCount) {
-              setTimeout(() => loadChunk(endIndex, onComplete), 25);
+              const scheduleNext = typeof window !== 'undefined' && 'requestIdleCallback' in window
+                ? (cb: () => void) => (window as any).requestIdleCallback(cb, { timeout: 120 })
+                : (cb: () => void) => setTimeout(cb, 30);
+              scheduleNext(() => loadChunk(endIndex, onComplete));
             } else {
               onComplete?.();
             }
@@ -285,10 +303,10 @@ export const ScrollSequence: React.FC = () => {
     window.addEventListener('scroll', onFirstUserScroll, { passive: true, once: true });
 
     // Phase A trigger: Approach observer (only when user scrolls near within 150px)
-    const section = document.getElementById('scroll-sequence-section');
     const approachObserver = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && userHasScrolled) {
+          updateGeometry();
           startPhaseA();
         }
       },
@@ -300,10 +318,13 @@ export const ScrollSequence: React.FC = () => {
       (entries) => {
         entries.forEach((entry) => {
           isVisible = entry.isIntersecting;
-          if (entry.isIntersecting && userHasScrolled) {
-            startPhaseA();
-            startPhaseB();
-            triggerRender();
+          if (entry.isIntersecting) {
+            updateGeometry();
+            if (userHasScrolled) {
+              startPhaseA();
+              startPhaseB();
+              triggerRender();
+            }
           }
         });
       },
@@ -313,15 +334,16 @@ export const ScrollSequence: React.FC = () => {
     if (section) {
       approachObserver.observe(section);
       visibilityObserver.observe(section);
+      updateGeometry();
     }
 
     const handleScroll = () => {
       if (!isVisible || !section) return;
-      const rect = section.getBoundingClientRect();
-      const scrollableDistance = rect.height - window.innerHeight;
+      const scrollableDistance = cachedSectionHeight - window.innerHeight;
       
       if (scrollableDistance > 0) {
-        targetProgress = Math.max(0, Math.min(1, -rect.top / scrollableDistance));
+        const currentDistance = window.scrollY - cachedSectionTop;
+        targetProgress = Math.max(0, Math.min(1, currentDistance / scrollableDistance));
 
         // Start progressive Phase C when user has scrolled 10% through the sequence
         if (targetProgress > 0.1) {
@@ -370,41 +392,78 @@ export const ScrollSequence: React.FC = () => {
       });
       images = [];
     };
-  }, []);
+  }, [prefersReducedMotion]);
+
+  if (prefersReducedMotion) {
+    return (
+      <section 
+        id="scroll-sequence-section" 
+        className="relative w-full bg-background py-20 sm:py-28 px-6 lg:px-12 flex flex-col items-center justify-center text-center overflow-hidden border-t border-outline/15"
+      >
+        <div className="relative max-w-4xl mx-auto w-full rounded-[2.5rem] p-2 bg-gradient-to-b from-surface-container/60 via-surface-container/20 to-transparent border border-outline/20 shadow-2xl overflow-hidden">
+          <div className="relative aspect-[16/9] w-full rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-surface-obsidian">
+            <img 
+              src="/frames/ezgif-frame-001.webp" 
+              alt="The Café Artisanal Extraction" 
+              className="w-full h-full object-cover filter brightness-[0.88] contrast-[1.08]"
+              loading="lazy"
+              decoding="async"
+            />
+            {/* Dark photographic scrim */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/30 pointer-events-none" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10">
+              <span className="px-3 py-1 rounded-full bg-surface-obsidian/90 border border-primary/30 text-[10px] font-sans font-semibold uppercase tracking-widest text-primary mb-3">
+                ARTISANAL EXTRACTION
+              </span>
+              <h2 className="font-sans text-3xl sm:text-5xl text-white font-medium tracking-tight mb-2 drop-shadow-md">
+                Crafted to <span className="text-primary italic font-serif">Perfection.</span>
+              </h2>
+              <p className="font-serif italic text-base sm:text-lg text-primary/90 font-light drop-shadow-md">
+                Every Drop Matters.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section 
       id="scroll-sequence-section" 
       className="relative w-full bg-background h-[calc(100dvh+500px)] lg:h-[calc(100vh+2000px)]"
     >
-      <div className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-[#0a0807]">
+      <div className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-background layer-isolated">
         {/* Canvas Frame Sequence with calibrated Golden Espresso tone */}
         <canvas 
           ref={canvasRef}
           id="scroll-video-canvas" 
-          className="absolute inset-0 w-full h-full opacity-100 transform-gpu will-change-transform contrast-[1.10] brightness-[0.98] saturate-[1.08] sepia-[0.14]"
+          className="absolute inset-0 w-full h-full opacity-100 transform-gpu will-change-transform contrast-[1.03] brightness-[0.99] saturate-[1.04]"
         />
         
-        {/* Brand Palette Gold Tone Harmonizer */}
-        <div className="absolute inset-0 bg-[#D4AF37]/[0.04] pointer-events-none mix-blend-color" />
+        {/* Brand Palette Primary Tone Harmonizer */}
+        <div className="absolute inset-0 bg-primary/[0.04] pointer-events-none mix-blend-color" />
+
+        {/* High-contrast dark photographic scrim protecting text across both Nocturnal Gold & Editorial Cream */}
+        <div className="absolute inset-0 bg-black/40 pointer-events-none" />
         
         {/* Subtle cinematic 35mm grain overlay */}
         <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-15 hidden md:block" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
         
-        {/* Seamless edge blending into deep espresso (#0a0807) */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#0a0807] from-0% via-[#0a0807]/30 via-15% to-transparent to-35%" />
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#0a0807] from-0% via-[#0a0807]/30 via-15% to-transparent to-35%" />
+        {/* Seamless edge blending into semantic theme background */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background from-0% via-background/30 via-15% to-transparent to-35%" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-background from-0% via-background/30 via-15% to-transparent to-35%" />
         
         {/* Floating text that appears during scroll */}
         <div className="relative z-10 max-w-[1400px] mx-auto px-6 w-full flex flex-col items-center justify-center text-center h-full">
-          <h2 ref={text1Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F5F2F0] font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
-            Crafted to <br className="sm:hidden" /><span className="text-[#D4AF37] italic font-serif">Perfection.</span>
+          <h2 ref={text1Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform drop-shadow-md">
+            Crafted to <br className="sm:hidden" /><span className="text-primary italic font-serif">Perfection.</span>
           </h2>
-          <h2 ref={text2Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F5F2F0] font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
-            Every Drop <br className="sm:hidden" /><span className="text-[#D4AF37] italic font-serif">Matters.</span>
+          <h2 ref={text2Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform drop-shadow-md">
+            Every Drop <br className="sm:hidden" /><span className="text-primary italic font-serif">Matters.</span>
           </h2>
-          <h2 ref={text3Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F5F2F0] font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform">
-            The True <br className="sm:hidden" /><span className="text-[#D4AF37] italic font-serif">Lounge</span> Experience
+          <h2 ref={text3Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform drop-shadow-md">
+            The True <br className="sm:hidden" /><span className="text-primary italic font-serif">Lounge</span> Experience
           </h2>
         </div>
       </div>

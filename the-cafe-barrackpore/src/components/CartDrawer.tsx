@@ -241,6 +241,12 @@ export const CartDrawer: React.FC = () => {
   const handleConfirmOrder = async () => {
     if (items.length === 0 || isSubmitting) return;
 
+    if (restaurantConfig.isOrderingEnabled === false) {
+      setSubmissionError('Online ordering is currently paused by the restaurant. Please visit us in person or try again later.');
+      setIsSubmitting(false);
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmissionError(null);
     setPaymentFailureReason(null);
@@ -253,6 +259,18 @@ export const CartDrawer: React.FC = () => {
     const resolvedOrderType = isTableLocked ? 'dine_in' : (orderType === 'dine-in' ? 'dine_in' : 'takeaway');
     const phoneVal = validatePhoneNumber(phone, restaurantConfig.phoneCountryCode);
     const normalizedPhone = phoneVal.normalized || phone.trim();
+
+    const isDev = typeof import.meta !== 'undefined' && import.meta.env
+      ? Boolean(import.meta.env.DEV)
+      : ((globalThis as any).process ? (globalThis as any).process.env?.NODE_ENV !== 'production' : false);
+    const turnstileSiteKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TURNSTILE_SITE_KEY) || '';
+
+    // Outside DEV, block checkout if Turnstile site key is missing
+    if (!isDev && !turnstileSiteKey) {
+      setSubmissionError('Security verification (Cloudflare Turnstile) is not configured. VITE_TURNSTILE_SITE_KEY is missing. Checkout is disabled.');
+      setIsSubmitting(false);
+      return;
+    }
 
     // Pre-check: Ensure no items in cart are 86'd (sold out)
     const unavailableItem = items.find((i) => !isItemAvailable(i.id));
@@ -321,7 +339,14 @@ export const CartDrawer: React.FC = () => {
           setIsSubmitting(false);
           return;
         }
-        setIsDemoSubmission(orderResult.isDemoMode === true);
+
+        if (orderResult.isDemoMode && !isDev) {
+          setSubmissionError('Demo orders are disabled in production builds. A live database connection is required.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        setIsDemoSubmission(isDev && orderResult.isDemoMode === true);
 
         if (orderResult.paymentToken) {
           setPaymentToken(orderResult.paymentToken);
@@ -390,8 +415,13 @@ export const CartDrawer: React.FC = () => {
         });
 
         if (result.success) {
-          setIsDemoSubmission(result.isDemoMode === true);
-          if (result.isDemoMode) {
+          if (result.isDemoMode && !isDev) {
+            setSubmissionError('Demo orders are disabled in production builds. A live database connection is required.');
+            setIsSubmitting(false);
+            return;
+          }
+          setIsDemoSubmission(isDev && result.isDemoMode === true);
+          if (result.isDemoMode && isDev) {
             setOrderRef(result.orderRef);
             setPaidAmount(null);
             setConfirmedTotal(finalPayableTotal);
@@ -544,9 +574,9 @@ export const CartDrawer: React.FC = () => {
 
       const rzpOptions = {
         key: sessionResult.keyId || (import.meta.env.VITE_RAZORPAY_KEY_ID as string),
-        amount: sessionResult.amount, // in paise
+        amount: Math.round(sessionResult.amount * 100), // in paise
         currency: sessionResult.currency || 'INR',
-        name: restaurantConfig.businessName || 'The Café Barrackpore',
+        name: restaurantConfig.businessName || 'Order Payment',
         description: `Order ${activeRef}`,
         order_id: sessionResult.razorpayOrderId || sessionResult.orderId,
         prefill: {
@@ -676,6 +706,7 @@ export const CartDrawer: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             onClick={() => {
               setIsDrawerOpen(false);
               setStep('cart');
@@ -693,7 +724,7 @@ export const CartDrawer: React.FC = () => {
             initial={isMobile ? { y: '100%', x: 0 } : { x: '100%', y: 0 }}
             animate={{ y: 0, x: 0 }}
             exit={isMobile ? { y: '100%', x: 0 } : { x: '100%', y: 0 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 280 }}
+            transition={{ type: 'spring', damping: 34, stiffness: 320, mass: 0.8 }}
             drag={isMobile ? 'y' : false}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.3 }}
@@ -703,23 +734,23 @@ export const CartDrawer: React.FC = () => {
                 setStep('cart');
               }
             }}
-            className={`fixed bg-[#130C08]/98 backdrop-blur-2xl z-[101] flex flex-col focus:outline-none shadow-[-25px_0_60px_rgba(0,0,0,0.85)] ${
+            className={`fixed bg-surface-obsidian/98 backdrop-blur-2xl z-[101] flex flex-col focus:outline-none shadow-[-25px_0_60px_rgba(0,0,0,0.85)] ${
               isMobile
-                ? 'inset-x-0 bottom-0 w-full max-h-[92dvh] h-[92dvh] rounded-t-[2rem] border-t border-[#D4AF37]/35 shadow-[0_-12px_40px_rgba(0,0,0,0.9)]'
-                : 'top-0 right-0 h-full w-full max-w-[460px] border-l border-[#D4AF37]/25'
+                ? 'inset-x-0 bottom-0 w-full max-h-[92dvh] h-[92dvh] rounded-t-[2rem] border-t border-primary/35 shadow-[0_-12px_40px_rgba(0,0,0,0.9)]'
+                : 'top-0 right-0 h-full w-full max-w-[460px] border-l border-primary/25'
             }`}
             data-lenis-prevent
           >
             {/* Drag Handle for Mobile */}
             {isMobile && (
-              <div className="w-full flex justify-center pt-3 pb-1 bg-[#160E0A] rounded-t-[2rem] cursor-grab active:cursor-grabbing">
-                <div className="w-12 h-1.5 bg-white/20 rounded-full" />
+              <div className="w-full flex justify-center pt-3 pb-1 bg-surface-container rounded-t-[2rem] cursor-grab active:cursor-grabbing">
+                <div className="w-12 h-1.5 bg-outline/40 rounded-full" />
               </div>
             )}
 
             {/* Header */}
             <div
-              className={`flex items-center justify-between px-6 py-4 border-b border-[#D4AF37]/15 bg-[#160E0A]/90 ${
+              className={`flex items-center justify-between px-6 py-4 border-b border-outline/20 bg-surface-container/90 ${
                 isMobile ? 'pt-2' : ''
               }`}
             >
@@ -915,6 +946,12 @@ export const CartDrawer: React.FC = () => {
                       <span className="font-sans text-xs font-semibold uppercase tracking-wider text-on-surface/90">Total Payable</span>
                       <span className="font-serif text-2xl font-normal text-primary tabular-nums">{formatPrice(totals.total)}</span>
                     </div>
+                    {restaurantConfig.isOrderingEnabled === false && (
+                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base shrink-0">pause_circle</span>
+                        <span>Online ordering is currently paused by the restaurant. Checkout is temporarily disabled.</span>
+                      </div>
+                    )}
                     <div className="flex gap-2.5 pt-1.5">
                       <button
                         type="button"
@@ -925,12 +962,17 @@ export const CartDrawer: React.FC = () => {
                       </button>
                       <button
                         type="button"
+                        disabled={restaurantConfig.isOrderingEnabled === false}
                         onClick={handleProceedToDetails}
-                        className="group relative flex-1 h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-semibold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.28)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all duration-300 flex items-center justify-between pl-6 pr-2 cursor-pointer"
+                        className={`group relative flex-1 h-12 rounded-full font-semibold text-xs tracking-wider uppercase transition-all duration-300 flex items-center justify-between pl-6 pr-2 ${
+                          restaurantConfig.isOrderingEnabled === false
+                            ? 'bg-stone-900 border border-stone-800 text-stone-500 cursor-not-allowed opacity-60'
+                            : 'bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] shadow-[0_4px_24px_rgba(212,175,55,0.28)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] cursor-pointer'
+                        }`}
                       >
-                        <span>Proceed to Details</span>
+                        <span>{restaurantConfig.isOrderingEnabled === false ? 'Ordering Paused' : 'Proceed to Details'}</span>
                         <span className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
-                          <span className="material-symbols-outlined text-[16px] text-[#120B08]">arrow_forward</span>
+                          <span className="material-symbols-outlined text-[16px] text-[#120B08]">{restaurantConfig.isOrderingEnabled === false ? 'pause' : 'arrow_forward'}</span>
                         </span>
                       </button>
                     </div>
@@ -1129,7 +1171,7 @@ export const CartDrawer: React.FC = () => {
                       className="mt-0.5 w-4 h-4 rounded border-white/20 text-[#D4AF37] focus:ring-[#D4AF37]/40 bg-black/40 accent-[#D4AF37] cursor-pointer"
                     />
                     <div className="flex-1 text-xs font-sans text-on-surface/80 group-hover:text-on-surface">
-                      <span className="font-semibold text-white">Join The Café Inner Circle</span>
+                      <span className="font-semibold text-white">Join {restaurantConfig.businessName || 'VIP'} Inner Circle</span>
                       <p className="text-[11px] text-on-surface/60 mt-0.5 leading-relaxed">
                         Keep me updated with chef specials, happy hours, and exclusive offers via WhatsApp / SMS.
                       </p>
@@ -1575,7 +1617,7 @@ export const CartDrawer: React.FC = () => {
             )}
 
             {/* STEP: ORDER CONFIRMED (Section 16) */}
-            {activeStep === 'confirmed' && (
+            {activeStep === 'confirmed' && (!isDemoSubmission || (typeof import.meta !== 'undefined' && import.meta.env?.DEV)) && (
               <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-5 bg-[#130C08] overflow-y-auto">
                 <div className="w-20 h-20 rounded-full bg-[#1C120D] border border-primary/40 flex items-center justify-center text-primary shadow-[0_0_30px_rgba(212,175,55,0.25)]">
                   <span className="material-symbols-outlined text-4xl">check_circle</span>
