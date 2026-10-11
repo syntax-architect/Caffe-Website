@@ -183,13 +183,26 @@ async function prerender() {
   // 10. Generate static SPA entrypoints for direct-link routes on static hosts (e.g. Render, GitHub Pages, S3)
   const spaDirectRoutes = [
     'qr/index.html',
+    'staff/index.html',
     'staff/login/index.html',
+    'staff/dashboard/index.html',
+    'staff/orders/index.html',
+    'staff/reservations/index.html',
+    'staff/tables/index.html',
+    'staff/menu/index.html',
+    'staff/content/index.html',
+    'staff/customers/index.html',
+    'staff/staff/index.html',
+    'staff/settings/index.html',
+    'staff/discounts/index.html',
+    'staff/audit-logs/index.html',
     'staff/kitchen/index.html',
     'staff/owner/index.html',
     'qr-generator/index.html',
     'reset-password/index.html',
     'order-success/index.html',
     'checkout/index.html',
+    '404.html',
   ];
 
   console.log('\n📄 Generating static SPA entrypoints for static hosting direct navigation...');
