@@ -264,6 +264,85 @@ for (const act of actSequence) {
 
 console.log('  ✅ 7-Act homepage narrative order strictly preserved in App.tsx.\n');
 
+// ============================================================================
+// 6. VISUAL POLISH BATCH 2.1: CONTINUITY, ACCURACY & USABILITY
+// ============================================================================
+console.log('6. Verifying Visual Polish Batch 2.1 Improvements...');
+
+// 6.1 ScrollSequence Transition & Pre-decode
+const scrollSeqPath = path.join(componentsDir, 'ScrollSequence.tsx');
+const scrollSeqContent = fs.readFileSync(scrollSeqPath, 'utf-8');
+assert(
+  scrollSeqContent.includes('exitOverlayRef') && scrollSeqContent.includes('exitProgress'),
+  'ScrollSequence must include exit overlay dissolve into background'
+);
+assert(
+  scrollSeqContent.includes('pre-decode') || scrollSeqContent.includes('firstImg.decode()'),
+  'ScrollSequence must pre-decode frame 1 immediately on mount'
+);
+
+// 6.2 Sensory Tasting Ledger Explicit Signature & Fallback Badge Logic
+const menuPath = path.join(componentsDir, 'Menu.tsx');
+const menuContent = fs.readFileSync(menuPath, 'utf-8');
+assert(
+  menuContent.includes('isExplicitSignature'),
+  'Menu.tsx must define isExplicitSignature check'
+);
+assert(
+  menuContent.includes('Featured in this category'),
+  'Menu.tsx must use "Featured in this category" for generic photographic fallbacks'
+);
+assert(
+  menuContent.includes('activeSensoryMetadata?.isExplicitSignature && featuredItem.popular'),
+  'Menu.tsx must only render "Signature Pick" pill for explicit signatures'
+);
+
+// 6.3 Gallery & OurStory Selective Framing De-nesting
+const galleryPath = path.join(componentsDir, 'Gallery.tsx');
+const galleryContent = fs.readFileSync(galleryPath, 'utf-8');
+assert(
+  !galleryContent.includes('rounded-[2rem] p-1.5 bg-gradient-to-b from-surface-container/70'),
+  'Gallery carousel cards must not use nested double-bezel p-1.5 enclosure'
+);
+assert(
+  !galleryContent.includes('rounded-[2rem] p-1.5 bg-gradient-to-b from-surface-container/60'),
+  'Gallery bento cards must not use nested double-bezel p-1.5 enclosure'
+);
+assert(
+  !ourStoryContent.includes('Double-Bezel Outer Enclosure'),
+  'OurStory stage must not use redundant outer double-bezel enclosure'
+);
+
+// 6.4 AboutVibe Soundscape Status
+assert(
+  aboutVibeContent.includes('soundscapeStatus'),
+  'AboutVibe must calculate soundscapeStatus based on true playback state'
+);
+assert(
+  aboutVibeContent.includes("'PLAYING'") &&
+    aboutVibeContent.includes("'AVAILABLE'") &&
+    aboutVibeContent.includes("'UNAVAILABLE'"),
+  'AboutVibe must support PLAYING, AVAILABLE, and UNAVAILABLE states'
+);
+assert(
+  !aboutVibeContent.includes('autoplay') && !aboutVibeContent.includes('autoPlay'),
+  'AboutVibe must not autoplay audio on mount'
+);
+
+// 6.5 Footer Mobile Usability & Untruncated Phone
+const footerPath = path.join(componentsDir, 'Footer.tsx');
+const footerContent = fs.readFileSync(footerPath, 'utf-8');
+assert(
+  footerContent.includes('grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2'),
+  'Footer contact quick action grid must use responsive column scaling to prevent small-screen squeeze'
+);
+assert(
+  footerContent.includes('whitespace-nowrap font-mono'),
+  'Footer phone link must keep phone number untruncated with whitespace-nowrap and font-mono'
+);
+
+console.log('  ✅ Visual Polish Batch 2.1 continuity, accuracy & mobile usability verified.\n');
+
 console.log('======================================================================');
-console.log('🎉 ALL VISUAL ELEVATION BATCH 2 TESTS PASSED SUCCESSFULLY!');
+console.log('🎉 ALL VISUAL ELEVATION BATCH 2 & 2.1 TESTS PASSED SUCCESSFULLY!');
 console.log('======================================================================\n');

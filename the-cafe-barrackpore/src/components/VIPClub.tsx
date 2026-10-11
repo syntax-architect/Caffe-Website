@@ -85,13 +85,20 @@ export const VIPClub: React.FC = () => {
             
             {/* 2. PHOTOGRAPHIC CINEMATIC BACKGROUND IMAGE */}
             <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-              <img
-                src={vipImageSrc}
-                alt={vipImageAlt}
-                className="w-full h-full object-cover object-[center_35%] filter brightness-[0.88] contrast-[1.08] saturate-[1.12] scale-[1.02] transition-transform duration-1000 ease-out group-hover:scale-105"
-                loading="lazy"
-                decoding="async"
-              />
+              <picture>
+                {vipImageSrc.endsWith('.jpg') && (
+                  <source srcSet={vipImageSrc.replace(/\.jpg$/, '.webp')} type="image/webp" />
+                )}
+                <img
+                  src={vipImageSrc}
+                  alt={vipImageAlt}
+                  width="1366"
+                  height="768"
+                  className="w-full h-full object-cover object-[center_35%] filter brightness-[0.88] contrast-[1.08] saturate-[1.12] scale-[1.02] transition-transform duration-1000 ease-out group-hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
 
               {/* Seamless Scrim Overlays: Calibrated for rich visible photography while guaranteeing 100% typography contrast */}
               <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black/90" />

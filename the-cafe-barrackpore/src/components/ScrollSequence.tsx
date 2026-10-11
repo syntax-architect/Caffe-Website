@@ -3,9 +3,10 @@ import { useReducedMotion } from 'framer-motion';
 
 export const ScrollSequence: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const text1Ref = useRef<HTMLHeadingElement>(null);
-  const text2Ref = useRef<HTMLHeadingElement>(null);
-  const text3Ref = useRef<HTMLHeadingElement>(null);
+  const exitOverlayRef = useRef<HTMLDivElement>(null);
+  const text1Ref = useRef<HTMLDivElement>(null);
+  const text2Ref = useRef<HTMLDivElement>(null);
+  const text3Ref = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
   const checkIsMobile = () => {
     if (typeof window === 'undefined') return false;
@@ -261,7 +262,7 @@ export const ScrollSequence: React.FC = () => {
           
           // Only update text opacity when the visual frame actually changes
           // to prevent unnecessary layout/style calculations 60 times a second
-          const updateText = (ref: React.RefObject<HTMLHeadingElement | null>, show: boolean) => {
+          const updateText = (ref: React.RefObject<HTMLDivElement | null>, show: boolean) => {
             if (ref.current) {
               const isShowing = ref.current.style.opacity === '1';
               if (show && !isShowing) {
@@ -274,10 +275,16 @@ export const ScrollSequence: React.FC = () => {
             }
           };
 
-          updateText(text1Ref, currentProgress > 0.1 && currentProgress < 0.3);
-          updateText(text2Ref, currentProgress > 0.4 && currentProgress < 0.6);
-          updateText(text3Ref, currentProgress > 0.7 && currentProgress < 0.9);
+          updateText(text1Ref, currentProgress >= 0.04 && currentProgress < 0.32);
+          updateText(text2Ref, currentProgress >= 0.36 && currentProgress < 0.64);
+          updateText(text3Ref, currentProgress >= 0.68 && currentProgress < 0.94);
         }
+      }
+
+      if (exitOverlayRef.current) {
+        // Smoothly dissolve canvas into semantic background as scroll approaches AboutVibe
+        const exitProgress = Math.max(0, Math.min(1, (currentProgress - 0.88) / 0.12));
+        exitOverlayRef.current.style.opacity = String(exitProgress);
       }
 
       // Continue animating until target reached
@@ -364,9 +371,10 @@ export const ScrollSequence: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Initial setup without forced synchronous layout calculation
+    // Initial setup with immediate frame 1 pre-decode
     targetProgress = 0;
     currentProgress = 0;
+    startPhaseA();
     triggerRender();
 
     return () => {
@@ -400,8 +408,8 @@ export const ScrollSequence: React.FC = () => {
         id="scroll-sequence-section" 
         className="relative w-full bg-background py-20 sm:py-28 px-6 lg:px-12 flex flex-col items-center justify-center text-center overflow-hidden border-t border-outline/15"
       >
-        <div className="relative max-w-4xl mx-auto w-full rounded-[2.5rem] p-2 bg-gradient-to-b from-surface-container/60 via-surface-container/20 to-transparent border border-outline/20 shadow-2xl overflow-hidden">
-          <div className="relative aspect-[16/9] w-full rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-surface-obsidian">
+        <div className="relative max-w-4xl mx-auto w-full rounded-3xl overflow-hidden border border-outline/25 shadow-2xl bg-surface-obsidian">
+          <div className="relative aspect-[16/9] w-full overflow-hidden">
             <img 
               src="/frames/ezgif-frame-001.webp" 
               alt="The Café Artisanal Extraction" 
@@ -431,7 +439,7 @@ export const ScrollSequence: React.FC = () => {
   return (
     <section 
       id="scroll-sequence-section" 
-      className="relative w-full bg-background h-[calc(100dvh+500px)] lg:h-[calc(100vh+2000px)]"
+      className="relative w-full bg-background h-[calc(100dvh+450px)] lg:h-[calc(100vh+1500px)]"
     >
       <div className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-background layer-isolated">
         {/* Canvas Frame Sequence with calibrated Golden Espresso tone */}
@@ -451,20 +459,54 @@ export const ScrollSequence: React.FC = () => {
         <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-15 hidden md:block" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
         
         {/* Seamless edge blending into semantic theme background */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background from-0% via-background/30 via-15% to-transparent to-35%" />
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-background from-0% via-background/30 via-15% to-transparent to-35%" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background from-0% via-background/40 via-15% to-transparent to-35%" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-background from-0% via-background/40 via-15% to-transparent to-35%" />
+        
+        {/* Smooth dissolve into AboutVibe ambient background as sequence finishes */}
+        <div 
+          ref={exitOverlayRef}
+          className="absolute inset-0 bg-background pointer-events-none transition-opacity duration-200" 
+          style={{ opacity: 0 }}
+          aria-hidden="true"
+        />
         
         {/* Floating text that appears during scroll */}
-        <div className="relative z-10 max-w-[1400px] mx-auto px-6 w-full flex flex-col items-center justify-center text-center h-full">
-          <h2 ref={text1Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform drop-shadow-md">
-            Crafted to <br className="sm:hidden" /><span className="text-primary italic font-serif">Perfection.</span>
-          </h2>
-          <h2 ref={text2Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform drop-shadow-md">
-            Every Drop <br className="sm:hidden" /><span className="text-primary italic font-serif">Matters.</span>
-          </h2>
-          <h2 ref={text3Ref} className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tighter opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform drop-shadow-md">
-            The True <br className="sm:hidden" /><span className="text-primary italic font-serif">Lounge</span> Experience
-          </h2>
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 w-full flex flex-col items-center justify-center text-center h-full pointer-events-none">
+          <div ref={text1Ref} className="opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform flex flex-col items-center">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-obsidian/85 border border-primary/30 backdrop-blur-md mb-3.5 shadow-lg">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-primary font-semibold">
+                01 / 03 • EXTRACTION
+              </span>
+            </div>
+            <h2 className="font-sans text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tight drop-shadow-md">
+              Crafted to <br className="sm:hidden" /><span className="text-primary italic font-serif">Perfection.</span>
+            </h2>
+          </div>
+
+          <div ref={text2Ref} className="opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform flex flex-col items-center">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-obsidian/85 border border-primary/30 backdrop-blur-md mb-3.5 shadow-lg">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-primary font-semibold">
+                02 / 03 • PRECISION
+              </span>
+            </div>
+            <h2 className="font-sans text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tight drop-shadow-md">
+              Every Drop <br className="sm:hidden" /><span className="text-primary italic font-serif">Matters.</span>
+            </h2>
+          </div>
+
+          <div ref={text3Ref} className="opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform flex flex-col items-center">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-obsidian/85 border border-primary/30 backdrop-blur-md mb-3.5 shadow-lg">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-primary font-semibold">
+                03 / 03 • ATMOSPHERE
+              </span>
+            </div>
+            <h2 className="font-sans text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tight drop-shadow-md">
+              The True <br className="sm:hidden" /><span className="text-primary italic font-serif">Lounge</span> Experience
+            </h2>
+          </div>
         </div>
       </div>
     </section>

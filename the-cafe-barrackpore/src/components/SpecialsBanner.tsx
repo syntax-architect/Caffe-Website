@@ -223,14 +223,14 @@ export const SpecialsBanner: React.FC = () => {
               </div>
             )}
 
-            {/* 2. Companion Platters Grid (Side-by-Side Horizontal Cards) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+            {/* 2. Companion Platters Track (Mobile Snap Carousel with Card Peek + Desktop Grid) */}
+            <div className="flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 lg:gap-8 pb-2 md:pb-0">
               {companionPlatters.map((combo) => {
                 const isJustAdded = recentlyAddedComboId === combo.id;
                 return (
                   <div
                     key={combo.id}
-                    className="rounded-3xl bg-surface-container border border-outline/25 hover:border-primary/50 shadow-xl transition-all duration-300 overflow-hidden group flex flex-col sm:flex-row items-stretch"
+                    className="min-w-[82vw] sm:min-w-[340px] md:min-w-0 snap-center shrink-0 md:shrink rounded-3xl bg-surface-container border border-outline/25 hover:border-primary/50 shadow-xl transition-all duration-300 overflow-hidden group flex flex-col sm:flex-row items-stretch"
                   >
                     {/* Image Column */}
                     <div className="sm:w-5/12 relative min-h-[200px] sm:min-h-[220px] bg-surface-container-lowest overflow-hidden">
@@ -276,7 +276,7 @@ export const SpecialsBanner: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleAddCombo(combo)}
-                          className={`h-9 px-4 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer ${
+                          className={`h-10 sm:h-9 min-h-[44px] sm:min-h-0 px-4 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer ${
                             isJustAdded
                               ? 'bg-primary text-on-primary shadow-sm scale-105'
                               : 'bg-primary hover:bg-primary-fixed text-on-primary shadow-xs'
@@ -291,6 +291,14 @@ export const SpecialsBanner: React.FC = () => {
                 );
               })}
             </div>
+
+            {/* Mobile Companion Platters Discovery Hint */}
+            {companionPlatters.length > 1 && (
+              <div className="flex md:hidden items-center justify-center gap-2 -mt-1 text-[11px] font-sans text-on-surface/65">
+                <span className="material-symbols-outlined text-xs text-primary animate-pulse">swipe</span>
+                <span>Swipe to view all {companionPlatters.length} companion platters</span>
+              </div>
+            )}
           </div>
         ) : (
           /* ------------------------------------------------------------------ */

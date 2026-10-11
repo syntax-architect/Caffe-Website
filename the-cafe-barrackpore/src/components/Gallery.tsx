@@ -248,10 +248,9 @@ export const Gallery: React.FC = () => {
                   <div
                     key={item.id || idx}
                     onClick={() => setSelectedPhoto({ index: idx, data: { src: item.src, alt: item.alt, tag, caption } })}
-                    className="min-w-[85vw] sm:min-w-[340px] md:min-w-[380px] lg:min-w-[420px] aspect-[4/3] snap-center shrink-0 rounded-[2rem] p-1.5 bg-gradient-to-b from-surface-container/70 via-surface-container/30 to-transparent border border-outline/20 hover:border-primary/60 shadow-xl hover:shadow-[0_16px_36px_rgba(0,0,0,0.4),0_0_24px_rgba(var(--color-primary-rgb),0.15)] transition-all duration-300 ease-out cursor-pointer group flex flex-col hover:-translate-y-1 active:scale-[0.98]"
+                    className="min-w-[85vw] sm:min-w-[340px] md:min-w-[380px] lg:min-w-[420px] aspect-[4/3] snap-center shrink-0 rounded-[2rem] overflow-hidden relative bg-surface-obsidian border border-outline/15 hover:border-primary/60 shadow-xl hover:shadow-[0_16px_36px_rgba(0,0,0,0.4),0_0_24px_rgba(var(--color-primary-rgb),0.15)] transition-all duration-300 ease-out cursor-pointer group flex flex-col hover:-translate-y-1 active:scale-[0.98]"
                   >
-                    <div className="rounded-[calc(2rem-0.375rem)] overflow-hidden relative h-full w-full bg-surface-obsidian border border-outline/15">
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 opacity-75 group-hover:opacity-45 transition-opacity duration-500 z-10 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 opacity-75 group-hover:opacity-45 transition-opacity duration-500 z-10 pointer-events-none" />
 
                       {/* Corner Tag */}
                       <div className="absolute top-3.5 left-3.5 z-20 px-3 py-1 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-primary/35 text-[10px] uppercase tracking-wider text-primary font-semibold shadow-lg">
@@ -284,7 +283,6 @@ export const Gallery: React.FC = () => {
                         alt={item.alt || "The Café Hospitality"}
                         className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.07] will-change-transform"
                       />
-                    </div>
                   </div>
                 );
               })}
@@ -328,10 +326,9 @@ export const Gallery: React.FC = () => {
                   data: { src: activeFilmstripItem.src, alt: activeFilmstripItem.alt, tag, caption },
                 });
               }}
-              className="w-full aspect-[16/10] sm:aspect-[16/9] rounded-[2.5rem] p-2 bg-gradient-to-b from-surface-container/70 via-surface-container/30 to-transparent border border-outline/25 shadow-2xl hover:border-primary/60 transition-all duration-500 cursor-pointer relative overflow-hidden group/showcase mb-6 sm:mb-8"
+              className="w-full aspect-[16/10] sm:aspect-[16/9] rounded-[2.5rem] overflow-hidden relative bg-surface-obsidian border border-outline/25 shadow-2xl hover:border-primary/60 transition-all duration-500 cursor-pointer group/showcase mb-6 sm:mb-8"
             >
-              <div className="rounded-[calc(2.5rem-0.5rem)] overflow-hidden relative w-full h-full bg-surface-obsidian">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30 z-10 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30 z-10 pointer-events-none" />
 
                 {/* Top Badge: Tag & Index */}
                 <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
@@ -375,7 +372,6 @@ export const Gallery: React.FC = () => {
                   loading="eager"
                   decoding="async"
                 />
-              </div>
             </div>
 
             {/* Synchronized Filmstrip Thumbnail Track */}
@@ -424,11 +420,10 @@ export const Gallery: React.FC = () => {
                   <div 
                     key={item.id || idx}
                     onClick={() => setSelectedPhoto({ index: idx, data: { src: item.src, alt: item.alt, tag, caption } })}
-                    className={`${spanClass} min-w-[82vw] sm:min-w-0 snap-center shrink-0 sm:shrink rounded-[2rem] p-1.5 bg-gradient-to-b from-surface-container/60 via-surface-container/30 to-transparent border border-outline/20 hover:border-primary/60 shadow-xl hover:shadow-[0_16px_36px_rgba(0,0,0,0.4),0_0_24px_rgba(var(--color-primary-rgb),0.15)] transition-all duration-500 ease-out cursor-pointer group flex flex-col hover:-translate-y-1 active:scale-[0.98]`}
+                    className={`${spanClass} min-w-[82vw] sm:min-w-0 snap-center shrink-0 sm:shrink rounded-[2rem] overflow-hidden relative h-full w-full bg-surface-obsidian border border-outline/15 hover:border-primary/60 shadow-xl hover:shadow-[0_16px_36px_rgba(0,0,0,0.4),0_0_24px_rgba(var(--color-primary-rgb),0.15)] transition-all duration-500 ease-out cursor-pointer group flex flex-col hover:-translate-y-1 active:scale-[0.98]`}
                   >
-                    <div className="rounded-[calc(2rem-0.375rem)] overflow-hidden relative h-full w-full bg-surface-obsidian border border-outline/15">
-                      {/* Subtle Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 opacity-75 group-hover:opacity-45 transition-opacity duration-500 z-10 pointer-events-none" />
+                    {/* Subtle Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 opacity-75 group-hover:opacity-45 transition-opacity duration-500 z-10 pointer-events-none" />
 
                       {/* Corner Category Tag */}
                       <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 z-20 px-3 py-1 sm:px-3.5 sm:py-1 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-primary/35 text-[10px] uppercase tracking-wider text-primary font-semibold shadow-lg">
@@ -461,7 +456,6 @@ export const Gallery: React.FC = () => {
                         alt={item.alt || "The Café Barrackpore Hospitality"}
                         className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.07] will-change-transform"
                       />
-                    </div>
                   </div>
                 );
               })}

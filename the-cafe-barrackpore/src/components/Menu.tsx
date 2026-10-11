@@ -298,17 +298,27 @@ export const Menu: React.FC = () => {
     const configNotes = isConfiguredItem ? menuSectionConfig?.featuredTastingNotes : undefined;
     const configPairing = isConfiguredItem ? menuSectionConfig?.featuredPairing : undefined;
 
+    // Check if item is explicitly designated as a chef signature
+    const isExplicitSignature = Boolean(
+      isConfiguredItem ||
+      (mappedMeta as unknown as { isSignature?: boolean })?.isSignature ||
+      (mappedMeta?.eyebrow && /signature/i.test(mappedMeta.eyebrow)) ||
+      (featuredItem as unknown as { is_signature?: boolean; isSignature?: boolean }).is_signature ||
+      (featuredItem as unknown as { is_signature?: boolean; isSignature?: boolean }).isSignature
+    );
+
     const tastingNotes = itemNotes || mappedNotes || configNotes || null;
     const pairing = itemPairing || mappedPairing || configPairing || null;
     const eyebrow =
       mappedMeta?.eyebrow ||
       (isConfiguredItem ? menuSectionConfig?.featuredEyebrow : null) ||
-      "Chef's Signature Selection";
+      (isExplicitSignature ? "Chef's Signature Selection" : "Featured in this category");
 
     return {
       tastingNotes,
       pairing,
       eyebrow,
+      isExplicitSignature,
     };
   }, [featuredItem, featuredConfigId, menuSectionConfig]);
 
@@ -697,7 +707,7 @@ export const Menu: React.FC = () => {
                             <div className="absolute top-3 left-3 flex items-center gap-2">
                               <span className="px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-semibold bg-primary text-on-primary shadow-lg flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-xs">auto_awesome</span>
-                                <span>{activeSensoryMetadata?.eyebrow || "Chef's Signature Selection"}</span>
+                                <span>{activeSensoryMetadata?.eyebrow || (activeSensoryMetadata?.isExplicitSignature ? "Chef's Signature Selection" : "Featured in this category")}</span>
                               </span>
                             </div>
 
@@ -712,7 +722,7 @@ export const Menu: React.FC = () => {
                           <div className="mb-4">
                             <span className="px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-semibold bg-primary/10 text-primary border border-primary/25 inline-flex items-center gap-1.5 shadow-xs">
                               <span className="material-symbols-outlined text-xs">auto_awesome</span>
-                              <span>{activeSensoryMetadata?.eyebrow || "Chef's Signature Selection"}</span>
+                              <span>{activeSensoryMetadata?.eyebrow || (activeSensoryMetadata?.isExplicitSignature ? "Chef's Signature Selection" : "Featured in this category")}</span>
                             </span>
                           </div>
                         )}
@@ -732,7 +742,8 @@ export const Menu: React.FC = () => {
                             </h3>
                           </div>
 
-                          {featuredItem.popular && (
+                          {/* Signature Pick badge only rendered when item is an explicit signature */}
+                          {activeSensoryMetadata?.isExplicitSignature && featuredItem.popular && (
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-widest font-semibold bg-primary/15 text-primary border border-primary/30 shrink-0">
                               Signature Pick
                             </span>
@@ -741,14 +752,14 @@ export const Menu: React.FC = () => {
 
                         {/* Description */}
                         {featuredItem.description && (
-                          <p className="font-sans text-xs sm:text-sm text-on-surface/70 leading-relaxed font-light mb-4">
+                          <p className="font-sans text-[13px] sm:text-sm text-on-surface/80 leading-relaxed font-light mb-4">
                             {featuredItem.description}
                           </p>
                         )}
 
                         {/* Curated Tasting Notes - De-nested editorial presentation */}
                         {activeSensoryMetadata?.tastingNotes && (
-                          <div className="mb-3 text-xs font-sans text-on-surface/85 flex items-baseline gap-2">
+                          <div className="mb-3 text-xs sm:text-[13px] font-sans text-on-surface/90 flex items-baseline gap-2">
                             <span className="text-[10px] uppercase tracking-wider text-primary font-semibold shrink-0 inline-flex items-center gap-1">
                               <span className="material-symbols-outlined text-[13px]">award_star</span>
                               <span>Notes:</span>
@@ -759,7 +770,7 @@ export const Menu: React.FC = () => {
 
                         {/* Curated Beverage Pairing - De-nested editorial presentation */}
                         {activeSensoryMetadata?.pairing && (
-                          <div className="mb-4 flex items-center gap-2 text-xs text-on-surface/75">
+                          <div className="mb-4 flex items-center gap-2 text-xs sm:text-[13px] text-on-surface/85">
                             <span className="material-symbols-outlined text-sm text-primary">local_bar</span>
                             <span className="font-sans italic">{activeSensoryMetadata.pairing}</span>
                           </div>
@@ -793,7 +804,7 @@ export const Menu: React.FC = () => {
                         <button
                           disabled={!canAdd}
                           type="button"
-                          className={`h-10 px-5 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 ${
+                          className={`h-11 sm:h-10 min-h-[44px] px-5 sm:px-6 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 ${
                             !canAdd
                               ? 'bg-surface-elevated/40 border border-outline/20 text-on-surface-variant/40 cursor-not-allowed'
                               : isJustAdded
@@ -896,7 +907,7 @@ export const Menu: React.FC = () => {
                             <button
                               disabled={!canAdd}
                               type="button"
-                              className={`h-7 px-3 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1 transition-all duration-200 active:scale-95 shrink-0 ${
+                              className={`h-9 min-w-[64px] px-3.5 sm:h-7 sm:min-w-0 sm:px-3 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1 transition-all duration-200 active:scale-95 shrink-0 ${
                                 !canAdd
                                   ? 'bg-surface-elevated/40 border border-outline/20 text-on-surface-variant/40 cursor-not-allowed'
                                   : isJustAdded
@@ -924,7 +935,7 @@ export const Menu: React.FC = () => {
                         <div className="flex items-start justify-between gap-3 pl-6">
                           <div className="flex-1 min-w-0">
                             {item.description && (
-                              <p className="font-sans text-xs sm:text-sm text-on-surface/65 leading-relaxed font-light">
+                              <p className="font-sans text-[13px] sm:text-sm text-on-surface/75 leading-relaxed font-light">
                                 {item.description}
                               </p>
                             )}

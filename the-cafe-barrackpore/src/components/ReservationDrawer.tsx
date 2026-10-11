@@ -426,7 +426,7 @@ export const ReservationDrawer: React.FC = () => {
                 </div>
 
                 {/* Footer / Submit */}
-                <div className="p-6 border-t border-[#D4AF37]/15 bg-[#160E0A]/90 shrink-0">
+                <div className="p-6 pb-[max(1.5rem,calc(0.75rem+env(safe-area-inset-bottom,0px)))] border-t border-primary/25 bg-surface-obsidian/95 shrink-0">
                   {submissionError && (
                     <div className="p-4 mb-3 rounded-xl bg-error/10 border border-error/30 text-xs flex flex-col gap-2">
                       <div className="flex items-center gap-1.5 font-bold text-red-400">

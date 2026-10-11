@@ -156,12 +156,12 @@
 }
 
 @media (max-width: 768px) {
-  .hero-enter-eyebrow { animation-delay: 0.08s; }
-  .hero-enter-headline-1 { animation-delay: 0.16s; }
-  .hero-enter-headline-2 { animation-delay: 0.26s; }
-  .hero-enter-copy { animation-delay: 0.40s; }
-  .hero-enter-actions { animation-delay: 0.55s; }
-  .hero-enter-footer { animation-delay: 0.70s; }
+  .hero-enter-eyebrow { animation-delay: 0.05s; }
+  .hero-enter-headline-1 { animation-delay: 0.10s; }
+  .hero-enter-headline-2 { animation-delay: 0.18s; }
+  .hero-enter-copy { animation-delay: 0.25s; }
+  .hero-enter-actions { animation-delay: 0.35s; }
+  .hero-enter-footer { animation-delay: 0.45s; }
 }
 
 @media (prefers-reduced-motion: reduce) {

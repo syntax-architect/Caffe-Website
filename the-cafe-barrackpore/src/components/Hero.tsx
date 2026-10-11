@@ -32,7 +32,7 @@ const HeroActions: React.FC<HeroActionsProps> = ({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 hero-enter-actions ${
+      className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-6 hero-enter-actions ${
         alignment === 'center' ? 'justify-center w-full' : ''
       }`}
     >
@@ -41,7 +41,7 @@ const HeroActions: React.FC<HeroActionsProps> = ({
         <a
           href={primaryCtaHref}
           onClick={(e) => handleNav(e, primaryCtaTarget)}
-          className="group relative inline-flex items-center justify-between sm:justify-center gap-4 px-8 py-4 rounded-full bg-primary text-on-primary font-sans text-xs font-semibold tracking-[0.18em] uppercase transition-all duration-300 ease-out hover:bg-on-surface hover:text-background hover:shadow-[0_0_32px_rgba(var(--color-primary-rgb),0.4)] active:scale-[0.98]"
+          className="group relative inline-flex items-center justify-between sm:justify-center gap-4 px-6 sm:px-8 py-3.5 sm:py-4 min-h-[48px] rounded-full bg-primary text-on-primary font-sans text-xs font-semibold tracking-[0.18em] uppercase transition-all duration-300 ease-out hover:bg-on-surface hover:text-background hover:shadow-[0_0_32px_rgba(var(--color-primary-rgb),0.4)] active:scale-[0.98]"
         >
           <span>{primaryCtaText}</span>
           <span className="w-7 h-7 rounded-full bg-on-primary/10 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105 shrink-0">
@@ -63,10 +63,10 @@ const HeroActions: React.FC<HeroActionsProps> = ({
         <button
           type="button"
           onClick={handleReservation}
-          className="group inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-full border border-outline/40 hover:border-primary/80 bg-surface-container/40 hover:bg-primary/15 backdrop-blur-md text-on-surface hover:text-primary font-sans text-xs font-medium tracking-[0.18em] uppercase transition-all duration-300 ease-out active:scale-[0.98] shadow-[0_4px_16px_rgba(0,0,0,0.15)] cursor-pointer"
+          className="group inline-flex items-center justify-center gap-2.5 px-5 sm:px-7 py-3.5 sm:py-4 min-h-[44px] rounded-full border border-outline/30 hover:border-primary/50 bg-surface-obsidian/40 hover:bg-surface-container/60 backdrop-blur-md text-on-surface/90 hover:text-primary font-sans text-xs font-medium tracking-[0.16em] uppercase transition-all duration-300 ease-out active:scale-[0.98] shadow-[0_4px_16px_rgba(0,0,0,0.15)] cursor-pointer"
         >
           <span>{secondaryCtaText}</span>
-          <span className="material-symbols-outlined text-[16px] text-primary opacity-80 group-hover:opacity-100 transition-opacity">
+          <span className="material-symbols-outlined text-[16px] text-primary/80 group-hover:text-primary transition-colors">
             calendar_today
           </span>
         </button>
@@ -209,7 +209,7 @@ export const Hero: React.FC = React.memo(() => {
               </div>
 
               {/* Headline */}
-              <h1 className="font-sans font-medium text-[clamp(36px,5.2vw,74px)] leading-[0.96] tracking-[-0.03em] text-on-surface mb-6">
+              <h1 className="font-sans font-medium text-[clamp(34px,5.2vw,74px)] leading-[0.96] tracking-[-0.03em] text-on-surface mb-6">
                 <span className="block uppercase select-none hero-enter-headline-1">
                   {headline}
                 </span>
@@ -334,7 +334,7 @@ export const Hero: React.FC = React.memo(() => {
           </div>
 
           {/* Centered Headline */}
-          <h1 className="font-serif font-normal text-[clamp(40px,6.2vw,84px)] leading-[1.04] tracking-tight text-on-surface mb-6 max-w-[18ch] mx-auto text-balance">
+          <h1 className="font-serif font-normal text-[clamp(34px,6.2vw,84px)] leading-[1.04] tracking-tight text-on-surface mb-6 max-w-[18ch] mx-auto text-balance">
             <span className="block uppercase select-none hero-enter-headline-1">
               {headline}
             </span>
@@ -436,13 +436,16 @@ export const Hero: React.FC = React.memo(() => {
         >
           <picture>
             {heroMobileSrc && (
-              <source media="(max-width: 768px)" srcSet={heroMobileSrc} type="image/webp" width="640" height="357" />
+              <source media="(max-width: 768px)" srcSet={heroMobileSrc} type="image/webp" width="768" height="1376" />
+            )}
+            {heroImageSrc.endsWith('.jpg') && (
+              <source srcSet={heroImageSrc.replace(/\.jpg$/, '.webp')} type="image/webp" />
             )}
             <img
               src={heroImageSrc}
               alt={heroImageAlt}
-              width="1200"
-              height="800"
+              width="1376"
+              height="768"
               className="w-full h-full object-cover object-[70%_center] lg:object-center filter brightness-[0.94] contrast-[1.08] saturate-[1.08] hero-bg-settle transform-gpu will-change-transform"
               loading="eager"
               decoding="async"
@@ -458,8 +461,8 @@ export const Hero: React.FC = React.memo(() => {
           <div className="absolute top-0 left-0 right-0 h-44 bg-gradient-to-b from-background/90 via-background/30 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background via-background/75 to-transparent" />
 
-          {/* Deep mobile readability veil with smooth upward fade */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 via-45% to-background/60 md:hidden" />
+          {/* Calibrated mobile readability veil: allows warm filament bar ambiance to show while protecting text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 via-50% to-background/35 md:hidden" />
         </div>
       </div>
 
@@ -493,7 +496,7 @@ export const Hero: React.FC = React.memo(() => {
           
           {/* Eyebrow badge with live beacon and coordinates */}
           <div
-            className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-surface-container/60 border border-primary/25 backdrop-blur-md mb-6 hero-enter-eyebrow"
+            className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-surface-container/60 border border-primary/25 backdrop-blur-md mb-4 sm:mb-6 hero-enter-eyebrow"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="font-sans text-[10px] sm:text-[11px] font-semibold tracking-[0.24em] uppercase text-primary">
@@ -510,7 +513,7 @@ export const Hero: React.FC = React.memo(() => {
           </div>
 
           {/* Main Headline: Bold, high-contrast, sequential typographic reveal */}
-          <h1 className="font-sans font-medium text-[clamp(42px,6.8vw,92px)] leading-[0.92] tracking-[-0.035em] text-on-surface mb-6 sm:mb-7">
+          <h1 className="font-sans font-medium text-[clamp(34px,8vw,88px)] leading-[0.92] tracking-[-0.035em] text-on-surface mb-4 sm:mb-7">
             <span className="block uppercase select-none hero-enter-headline-1">
               {headline}
             </span>
@@ -522,7 +525,7 @@ export const Hero: React.FC = React.memo(() => {
           </h1>
 
           {/* Atmospheric description with deliberate entrance delay */}
-          <p className="font-sans text-base sm:text-lg lg:text-[1.125rem] text-on-surface/90 font-normal leading-relaxed max-w-[44ch] mb-8 sm:mb-10 hero-enter-copy">
+          <p className="font-sans text-base sm:text-lg lg:text-[1.125rem] text-on-surface/90 font-normal leading-relaxed max-w-[44ch] mb-6 sm:mb-10 hero-enter-copy">
             {descriptionText}
           </p>
 
@@ -544,7 +547,7 @@ export const Hero: React.FC = React.memo(() => {
 
       {/* 4. EDITORIAL DETAIL & SCROLL INDICATOR FOOTER */}
       <div 
-        className="relative z-10 w-full max-w-[1360px] mx-auto px-6 sm:px-10 lg:px-12 pt-4 pb-24 sm:pb-6 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 border-t border-outline/15 text-[11px] sm:text-xs tracking-[0.22em] uppercase font-sans text-on-surface-variant hero-enter-footer"
+        className="relative z-10 w-full max-w-[1360px] mx-auto px-6 sm:px-10 lg:px-12 pt-4 pb-28 sm:pb-6 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 border-t border-outline/15 text-[11px] sm:text-xs tracking-[0.22em] uppercase font-sans text-on-surface-variant hero-enter-footer"
       >
         <div className="flex items-center gap-2.5">
           <span className="w-1.5 h-1.5 rounded-full bg-primary/75" />

@@ -386,14 +386,22 @@ function resolveSensoryMetadata(
   const configNotes = isConfiguredItem ? config?.featuredTastingNotes : undefined;
   const configPairing = isConfiguredItem ? config?.featuredPairing : undefined;
 
+  const isExplicitSignature = Boolean(
+    isConfiguredItem ||
+    (mappedMeta as unknown as { isSignature?: boolean })?.isSignature ||
+    (mappedMeta?.eyebrow && /signature/i.test(mappedMeta.eyebrow)) ||
+    (item as unknown as { is_signature?: boolean; isSignature?: boolean }).is_signature ||
+    (item as unknown as { is_signature?: boolean; isSignature?: boolean }).isSignature
+  );
+
   const tastingNotes = itemNotes || mappedNotes || configNotes || null;
   const pairing = itemPairing || mappedPairing || configPairing || null;
   const eyebrow =
     mappedMeta?.eyebrow ||
     (isConfiguredItem ? config?.featuredEyebrow : null) ||
-    "Chef's Signature Selection";
+    (isExplicitSignature ? "Chef's Signature Selection" : "Featured in this category");
 
-  return { tastingNotes, pairing, eyebrow };
+  return { tastingNotes, pairing, eyebrow, isExplicitSignature };
 }
 
 // 7.1 Configured Item Case
@@ -401,6 +409,10 @@ const configuredItem = MENU_ITEMS_FALLBACK.find((i) => i.id === 'special-chicken
 assert(Boolean(configuredItem), 'special-chicken-on-a-bun must exist in fallbacks');
 const configuredSensory = resolveSensoryMetadata(configuredItem, defaultEngineConfig.menu);
 
+assert(
+  configuredSensory?.isExplicitSignature === true,
+  'Configured item must be flagged as explicit signature'
+);
 assert(
   configuredSensory?.tastingNotes === 'Flame-Charred Brioche • Melted Cheddar • House Smoked Relish',
   `Configured item must resolve its own tasting notes, got: ${configuredSensory?.tastingNotes}`
@@ -413,10 +425,15 @@ assert(
 // 7.2 Fallback Item Without Tasting Metadata (Margherita Pizza)
 // Margherita Pizza has an authentic photo and becomes the featured dish in Burgers & Pizzas,
 // but MUST NOT inherit the chicken burger's brioche notes or cold brew pairing!
+// Furthermore, as a generic photographic fallback, it must NOT receive 'Chef's Signature' or 'Signature Pick'.
 const fallbackPizza = MENU_ITEMS_FALLBACK.find((i) => i.id === 'margherita-pizza')!;
 assert(Boolean(fallbackPizza), 'margherita-pizza must exist in fallbacks');
 const pizzaSensory = resolveSensoryMetadata(fallbackPizza, defaultEngineConfig.menu);
 
+assert(
+  pizzaSensory?.isExplicitSignature === false,
+  'Generic photographic fallback item must NOT be flagged as explicit signature'
+);
 assert(
   pizzaSensory?.tastingNotes === null,
   `Margherita Pizza MUST NOT inherit chicken burger tasting notes! Got: ${pizzaSensory?.tastingNotes}`
@@ -426,8 +443,8 @@ assert(
   `Margherita Pizza MUST NOT inherit chicken burger beverage pairing! Got: ${pizzaSensory?.pairing}`
 );
 assert(
-  pizzaSensory?.eyebrow === "Chef's Signature Selection",
-  `Margherita Pizza should receive default crest eyebrow, got: ${pizzaSensory?.eyebrow}`
+  pizzaSensory?.eyebrow === "Featured in this category",
+  `Margherita Pizza should receive generic category feature eyebrow, got: ${pizzaSensory?.eyebrow}`
 );
 
 // 7.3 Fallback Item With Its Own Stable Metadata via itemsMetadata

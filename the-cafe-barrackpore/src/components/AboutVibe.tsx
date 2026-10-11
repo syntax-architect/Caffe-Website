@@ -61,10 +61,10 @@ export const AboutVibe: React.FC = () => {
   const images = (aboutVibe?.images && aboutVibe.images.length > 0)
     ? aboutVibe.images
     : [
-        { src: '/images/components/comp_img_0.webp', alt: 'Midnight Velvet Booth Seating' },
-        { src: '/images/components/comp_img_2.webp', alt: 'Live Acoustic & Reading Nook' },
-        { src: '/images/components/comp_img_3.webp', alt: 'Signature Brew Bar & Mixology' },
-        { src: '/images/components/comp_img_1.webp', alt: 'Artisan Platters and Comfort Food' },
+        { src: '/images/components/comp_img_1.webp', alt: 'Midnight Velvet Booth Dining & Warm Filament Lighting' },
+        { src: '/images/components/comp_img_2.webp', alt: 'Live Acoustic Guitar Performance on Speakeasy Stage' },
+        { src: '/images/components/comp_img_3.webp', alt: 'Signature Craft Cocktail with Charred Rosemary on Marble Counter' },
+        { src: '/images/components/comp_img_0.webp', alt: 'Artisan Espresso Crema on Dark Wood' },
       ];
 
   const items: AmbienceItem[] = (aboutVibe?.items && aboutVibe.items.length > 0)
@@ -83,7 +83,13 @@ export const AboutVibe: React.FC = () => {
   const isAudioEnabled = audioConfig?.enabled !== false && engineConfig?.features?.audioAmbianceEnabled !== false;
   const audioSrc = audioConfig?.src || DEFAULT_AMBIENCE_AUDIO.src || 'https://assets.mixkit.co/music/preview/mixkit-chill-bro-494.mp3';
   const audioTitle = audioConfig?.title || 'Lounge Soundscape';
-  const audioBadge = audioConfig?.badge || 'Live';
+
+  // Soundscape status reflecting true audio playback state
+  const soundscapeStatus: 'PLAYING' | 'AVAILABLE' | 'UNAVAILABLE' = (!isAudioEnabled || !audioSrc)
+    ? 'UNAVAILABLE'
+    : isPlaying
+    ? 'PLAYING'
+    : 'AVAILABLE';
 
   const eyebrowBadge = aboutVibe?.eyebrowBadge || 'Cantonment Ambience';
   const eyebrowSub = aboutVibe?.eyebrowSub || 'Nocturne Sanctuary';
@@ -195,7 +201,7 @@ export const AboutVibe: React.FC = () => {
           {/* Right Column: Editorial Lead + Double-Bezel Spec Strip */}
           <div className="w-full lg:max-w-xl flex flex-col gap-5">
             <div className="relative pl-5 sm:pl-6 border-l-2 border-primary/40 py-1">
-              <p className="font-sans text-sm sm:text-base lg:text-[16px] text-on-surface-variant font-light leading-relaxed">
+              <p className="font-sans text-[15px] sm:text-base lg:text-[16px] text-on-surface-variant font-light leading-relaxed">
                 {description}
               </p>
             </div>
@@ -270,12 +276,30 @@ export const AboutVibe: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                {audioBadge && (
-                  <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="font-sans text-xs uppercase tracking-widest text-emerald-400 font-medium">{audioBadge}</span>
-                  </div>
-                )}
+                {/* Audio Status Pill Badge */}
+                <div 
+                  className={`flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-300 ${
+                    soundscapeStatus === 'PLAYING'
+                      ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
+                      : soundscapeStatus === 'AVAILABLE'
+                      ? 'bg-primary/10 border border-primary/25 text-primary'
+                      : 'bg-surface-elevated/40 border border-outline/20 text-on-surface-variant/60'
+                  }`}
+                  aria-label={`Soundscape status: ${soundscapeStatus}`}
+                >
+                  <span 
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      soundscapeStatus === 'PLAYING'
+                        ? 'bg-emerald-400 animate-pulse'
+                        : soundscapeStatus === 'AVAILABLE'
+                        ? 'bg-primary'
+                        : 'bg-on-surface/40'
+                    }`} 
+                  />
+                  <span className="font-sans text-xs uppercase tracking-widest font-semibold">
+                    {soundscapeStatus}
+                  </span>
+                </div>
               </div>
 
               <div className={`grid grid-cols-${Math.min(metrics.length, 2)} gap-8 pt-8 border-t border-outline/15`}>

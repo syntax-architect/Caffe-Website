@@ -921,7 +921,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
 
                 {items.length > 0 && (
-                  <div className="p-5 sm:p-6 border-t border-[#D4AF37]/15 bg-[#140D09]/95 backdrop-blur-xl flex flex-col gap-3 shadow-[0_-10px_35px_rgba(0,0,0,0.7)]">
+                  <div className="p-5 sm:p-6 pb-[max(1.25rem,calc(0.75rem+env(safe-area-inset-bottom,0px)))] border-t border-primary/25 bg-surface-obsidian/95 backdrop-blur-xl flex flex-col gap-3 shadow-[0_-10px_35px_rgba(0,0,0,0.7)]">
                     <div className="flex justify-between items-center text-xs text-on-surface/70 font-sans">
                       <span>Subtotal ({items.reduce((acc, i) => acc + i.quantity, 0)} items)</span>
                       <span className="font-serif text-sm font-medium text-on-surface tabular-nums">{formatPrice(totals.subtotal)}</span>
@@ -1180,7 +1180,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
 
                 {/* Footer Submit */}
-                <div className="p-5 sm:p-6 border-t border-[#D4AF37]/15 bg-[#140D09]/95 backdrop-blur-xl flex gap-2.5">
+                <div className="p-5 sm:p-6 pb-[max(1.25rem,calc(0.75rem+env(safe-area-inset-bottom,0px)))] border-t border-primary/25 bg-surface-obsidian/95 backdrop-blur-xl flex gap-2.5">
                   <button
                     type="button"
                     onClick={() => setStep('cart')}
@@ -1432,7 +1432,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
 
                 {/* Footer Submit */}
-                <div className="p-5 sm:p-6 border-t border-[#D4AF37]/15 bg-[#140D09]/95 backdrop-blur-xl flex gap-2.5">
+                <div className="p-5 sm:p-6 pb-[max(1.25rem,calc(0.75rem+env(safe-area-inset-bottom,0px)))] border-t border-primary/25 bg-surface-obsidian/95 backdrop-blur-xl flex gap-2.5">
                   <button
                     type="button"
                     disabled={isSubmitting}

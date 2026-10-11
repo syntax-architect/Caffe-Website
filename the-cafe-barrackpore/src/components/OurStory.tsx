@@ -168,13 +168,12 @@ export const OurStory: React.FC = () => {
       {/* Sticky Viewport Stage */}
       <div className="sticky top-16 sm:top-20 lg:top-24 w-full h-[80vh] sm:h-[82vh] lg:h-[85vh] max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-2 z-0">
         
-        {/* Double-Bezel Outer Enclosure */}
-        <div className="relative w-full h-full p-1.5 sm:p-2 rounded-[2rem] sm:rounded-[2.5rem] lg:rounded-[3rem] bg-gradient-to-b from-white/15 via-white/[0.04] to-white/10 ring-1 ring-primary/30 shadow-[0_30px_90px_rgba(0,0,0,0.8)]">
-          <div 
-            className="relative w-full h-full rounded-[calc(2rem-0.375rem)] sm:rounded-[calc(2.5rem-0.5rem)] lg:rounded-[calc(3rem-0.5rem)] overflow-hidden bg-surface-container-lowest"
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          >
+        {/* Architectural Story Stage Frame */}
+        <div 
+          className="relative w-full h-full rounded-[2rem] sm:rounded-[2.5rem] lg:rounded-[3rem] overflow-hidden bg-surface-container-lowest border border-outline/25 shadow-[0_30px_90px_rgba(0,0,0,0.8)]"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
             
             {/* 1. CRYSTAL-CLEAR CINEMATIC BACKGROUND IMAGES (Cross-fade between chapters with restrained scale) */}
             {chapters.map((ch, idx) => (
@@ -279,7 +278,7 @@ export const OurStory: React.FC = () => {
                         </h3>
 
                         {/* Chapter Description */}
-                        <p className="font-sans text-xs sm:text-sm lg:text-base text-on-surface-variant font-light leading-relaxed">
+                        <p className="font-sans text-[15px] sm:text-base text-on-surface-variant font-light leading-relaxed">
                           {currentChapter.description}
                         </p>
 
@@ -296,11 +295,37 @@ export const OurStory: React.FC = () => {
                     </AnimatePresence>
                   </div>
 
-                  {/* Mobile Swipe Hint */}
+                  {/* Mobile Chapter Controls & Swipe Hint */}
                   {numChapters > 1 && (
-                    <div className="flex md:hidden items-center justify-between pt-2 border-t border-outline/10 text-[10px] text-on-surface-variant/70 uppercase tracking-widest font-mono">
-                      <span>Swipe to read</span>
-                      <span>{activeChapterIndex + 1} of {numChapters}</span>
+                    <div className="flex md:hidden items-center justify-between pt-3 border-t border-outline/15 text-[11px] font-mono text-on-surface-variant">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={activeChapterIndex === 0}
+                          onClick={() => scrollToChapter(activeChapterIndex - 1)}
+                          className="w-8 h-8 rounded-full border border-outline/30 bg-surface-elevated/40 flex items-center justify-center text-primary disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
+                          aria-label="Previous story chapter"
+                        >
+                          <span className="material-symbols-outlined text-sm">arrow_back</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={activeChapterIndex === numChapters - 1}
+                          onClick={() => scrollToChapter(activeChapterIndex + 1)}
+                          className="w-8 h-8 rounded-full border border-outline/30 bg-surface-elevated/40 flex items-center justify-center text-primary disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
+                          aria-label="Next story chapter"
+                        >
+                          <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-primary font-bold">0{activeChapterIndex + 1}</span>
+                        <span>/</span>
+                        <span>0{numChapters}</span>
+                        <span className="text-outline/40">•</span>
+                        <span className="text-[10px] uppercase tracking-wider text-on-surface-variant/80">Swipe or tap</span>
+                      </div>
                     </div>
                   )}
 
@@ -340,7 +365,6 @@ export const OurStory: React.FC = () => {
 
           </div>
         </div>
-      </div>
-    </section>
+      </section>
   );
 };

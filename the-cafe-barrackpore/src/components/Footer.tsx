@@ -278,26 +278,28 @@ export const Footer: React.FC = () => {
               </div>
 
               {/* Quick Action Buttons: Call & WhatsApp */}
-              <div className="grid grid-cols-2 gap-2 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2 pt-1">
                 {phone && (
                   <a 
-                    className="h-9 px-3 rounded-full bg-surface-container-high border border-outline/20 hover:border-primary/50 text-on-surface/90 hover:text-on-surface transition-all font-medium inline-flex items-center justify-center gap-1.5 active:scale-95 text-[11px]" 
+                    className="h-10 px-3.5 rounded-full bg-surface-container-high border border-outline/20 hover:border-primary/50 text-on-surface/90 hover:text-on-surface transition-all font-medium inline-flex items-center justify-center gap-2 active:scale-95 text-xs min-w-0" 
                     href={`tel:${phone}`}
+                    aria-label={`Call ${displayPhone || phone}`}
                   >
-                    <span className="material-symbols-outlined text-sm text-primary">phone_in_talk</span>
-                    <span className="truncate">{displayPhone || phone}</span>
+                    <span className="material-symbols-outlined text-base text-primary shrink-0">phone_in_talk</span>
+                    <span className="whitespace-nowrap font-mono">{displayPhone || phone}</span>
                   </a>
                 )}
 
                 {whatsapp ? (
                   <a 
-                    className="h-9 px-3 rounded-full bg-emerald-950/40 border border-emerald-500/35 hover:border-emerald-500/60 text-emerald-400 hover:text-emerald-300 transition-all font-medium inline-flex items-center justify-center gap-1.5 active:scale-95 text-[11px]" 
+                    className="h-10 px-3.5 rounded-full bg-emerald-950/40 border border-emerald-500/35 hover:border-emerald-500/60 text-emerald-400 hover:text-emerald-300 transition-all font-medium inline-flex items-center justify-center gap-2 active:scale-95 text-xs min-w-0" 
                     href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
+                    aria-label="Direct WhatsApp Message"
                   >
-                    <span className="material-symbols-outlined text-sm">forum</span>
-                    <span>WhatsApp</span>
+                    <span className="material-symbols-outlined text-base shrink-0">forum</span>
+                    <span className="whitespace-nowrap">WhatsApp</span>
                   </a>
                 ) : null}
               </div>

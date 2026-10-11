@@ -213,11 +213,11 @@ export const Header: React.FC = React.memo(() => {
               decoding="async" 
             />
           </div>
-          <div className="flex flex-col">
-            <span className="font-sans text-base sm:text-lg tracking-tight text-on-surface font-semibold group-hover:text-primary transition-colors">
+          <div className="flex flex-col min-w-0">
+            <span className="font-sans text-base sm:text-lg tracking-tight text-on-surface font-semibold group-hover:text-primary transition-colors truncate max-w-[130px] min-[360px]:max-w-[190px] sm:max-w-none">
               {businessName}
             </span>
-            <span className="font-sans text-[10px] tracking-[0.25em] uppercase text-primary/80 -mt-0.5 font-medium">
+            <span className="font-sans text-[10px] tracking-[0.25em] uppercase text-primary/80 -mt-0.5 font-medium truncate max-w-[130px] min-[360px]:max-w-[190px] sm:max-w-none">
               {shortName}
             </span>
           </div>
@@ -258,7 +258,7 @@ export const Header: React.FC = React.memo(() => {
           {isCartEnabled && (
             <button 
               onClick={() => setIsDrawerOpen(true)}
-              className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-outline/20 bg-surface-container/80 hover:border-primary/50 hover:bg-surface-container-high text-on-surface transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-95 cursor-pointer shadow-md"
+              className="relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:border-primary/50 hover:bg-surface-container-high text-on-surface transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-95 cursor-pointer shadow-md"
               aria-label={`View order bag with ${cartCount} items`}
               title="View Order Bag"
             >
@@ -293,7 +293,7 @@ export const Header: React.FC = React.memo(() => {
 
           {/* Mobile Menu Fluid Hamburger Morph */}
           <button 
-            className="lg:hidden relative flex items-center justify-center w-10 h-10 rounded-full border border-outline/20 bg-surface-container/80 hover:bg-surface-container-high text-on-surface transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer active:scale-95"
+            className="lg:hidden relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:bg-surface-container-high text-on-surface transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer active:scale-95"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={isMobileMenuOpen}
