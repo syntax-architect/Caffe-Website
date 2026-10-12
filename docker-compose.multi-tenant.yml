@@ -1,0 +1,80 @@
+# ==============================================================================
+# Multi-Client Scaling Architecture (Sell to Many Restaurants on 1 VPS)
+# Reverse Proxy with Traefik + Automated Let's Encrypt SSL Certificates
+# ==============================================================================
+
+services:
+  # Edge Reverse Proxy with Automated SSL / TLS
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik-edge
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@yourdomain.com}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "traefik-certificates:/letsencrypt"
+    networks:
+      - caffe-network
+
+  # ----------------------------------------------------------------------------
+  # Client 1: The Café Barrackpore (Flagship)
+  # ----------------------------------------------------------------------------
+  client-barrackpore:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${SUPABASE_URL_BARRACKPORE:-}
+        VITE_SUPABASE_ANON_KEY: ${SUPABASE_KEY_BARRACKPORE:-}
+        VITE_RESTAURANT_ID: "caffe-barrackpore"
+    container_name: caffe-client-barrackpore
+    restart: unless-stopped
+    networks:
+      - caffe-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.barrackpore.rule=Host(`${DOMAIN_BARRACKPORE:-caffe.barrackpore.com}`)"
+      - "traefik.http.routers.barrackpore.entrypoints=websecure"
+      - "traefik.http.routers.barrackpore.tls.certresolver=letsencrypt"
+      - "traefik.http.services.barrackpore.loadbalancer.server.port=80"
+
+  # ----------------------------------------------------------------------------
+  # Client 2: Example Client - Bistro Artisanal
+  # ----------------------------------------------------------------------------
+  client-bistro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${SUPABASE_URL_BISTRO:-}
+        VITE_SUPABASE_ANON_KEY: ${SUPABASE_KEY_BISTRO:-}
+        VITE_RESTAURANT_ID: "bistro-artisanal"
+    container_name: caffe-client-bistro
+    restart: unless-stopped
+    networks:
+      - caffe-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bistro.rule=Host(`${DOMAIN_BISTRO:-bistro.example.com}`)"
+      - "traefik.http.routers.bistro.entrypoints=websecure"
+      - "traefik.http.routers.bistro.tls.certresolver=letsencrypt"
+      - "traefik.http.services.bistro.loadbalancer.server.port=80"
+
+volumes:
+  traefik-certificates:
+
+networks:
+  caffe-network:
+    driver: bridge

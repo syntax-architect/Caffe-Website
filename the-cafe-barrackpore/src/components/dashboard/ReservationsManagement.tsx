@@ -2,9 +2,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchReservations, updateReservationStatus } from '../../services/dashboardService';
 import { useNotification } from '../../hooks/useNotification';
 import type { ReservationRecord, ReservationStatus } from '../../types/reservation';
+import { useSiteConfig } from '../../context/SiteConfigContext';
+import { clientDetails } from '../../config/client';
 
 export const ReservationsManagement: React.FC = () => {
   const { addNotification } = useNotification();
+  const { restaurantConfig } = useSiteConfig();
+  const businessName = restaurantConfig?.businessName || clientDetails.businessName || 'our restaurant';
 
   const [reservations, setReservations] = useState<ReservationRecord[]>([]);
   const [selectedView, setSelectedView] = useState<'today' | 'upcoming' | 'all'>('today');
@@ -124,7 +128,7 @@ export const ReservationsManagement: React.FC = () => {
   const handleWhatsAppGuest = (res: ReservationRecord) => {
     const cleanPhone = (res.customer_phone || '').replace(/[^0-9]/g, '');
     const text = encodeURIComponent(
-      `Hello ${res.customer_name}, this is The Café Barrackpore regarding your table reservation ${res.reservation_ref} for ${res.party_size} guests on ${res.reservation_date} at ${res.reservation_time}. We look forward to welcoming you!`
+      `Hello ${res.customer_name}, this is ${businessName} regarding your table reservation ${res.reservation_ref} for ${res.party_size} guests on ${res.reservation_date} at ${res.reservation_time}. We look forward to welcoming you!`
     );
     window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
   };

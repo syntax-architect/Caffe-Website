@@ -13,6 +13,7 @@ const routes = [
   { url: '/', file: 'index.html' },
   { url: '/privacy', file: 'privacy/index.html' },
   { url: '/terms', file: 'terms/index.html' },
+  { url: '/404', file: '404.html' },
 ];
 
 async function prerender() {
@@ -202,7 +203,6 @@ async function prerender() {
     'reset-password/index.html',
     'order-success/index.html',
     'checkout/index.html',
-    '404.html',
   ];
 
   console.log('\n📄 Generating static SPA entrypoints for static hosting direct navigation...');

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" style="background-color: #110B08; color: #F7EFEA;">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -58,6 +58,104 @@
         font-weight: 100 700;
         font-display: block;
         src: url('/fonts/material-symbols-outlined.woff2') format('woff2');
+      }
+    </style>
+
+    <!-- Critical FOUC & White Flash Elimination on Page Reload -->
+    <style id="critical-fouc-guard">
+      html, body {
+        background-color: #110B08 !important;
+        color: #F7EFEA !important;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Ensure Accessibility Skip Link is NEVER unstyled or visible on page load/reload */
+      .sr-only {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border-width: 0 !important;
+      }
+      .sr-only:focus, .focus\:not-sr-only:focus {
+        position: fixed !important;
+        width: auto !important;
+        height: auto !important;
+        padding: 0.5rem 1rem !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        clip: auto !important;
+        white-space: normal !important;
+        top: 1rem !important;
+        left: 1rem !important;
+        z-index: 99999 !important;
+        background-color: #D4AF37 !important;
+        color: #120B08 !important;
+        font-weight: 700 !important;
+        border-radius: 0.5rem !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+        text-decoration: none !important;
+      }
+      /* Pre-Hydration Luxury Monogram Loader */
+      .initial-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        width: 100%;
+        background-color: #110B08;
+        color: #D4AF37;
+        user-select: none;
+      }
+      .initial-loader-crest {
+        width: 68px;
+        height: 68px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+      .initial-loader-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1.5px solid rgba(212, 175, 55, 0.2);
+        border-top-color: #D4AF37;
+        animation: initialSpin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+      .initial-loader-monogram {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-style: italic;
+        font-size: 24px;
+        color: #D4AF37;
+        letter-spacing: 0.05em;
+      }
+      .initial-loader-title {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 14px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #F7EFEA;
+        margin-bottom: 6px;
+        opacity: 0.9;
+      }
+      .initial-loader-sub {
+        font-family: 'Outfit', sans-serif, -apple-system, sans-serif;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(212, 175, 55, 0.7);
+      }
+      @keyframes initialSpin {
+        to { transform: rotate(360deg); }
       }
     </style>
 
@@ -172,13 +270,26 @@
     }
     </script>
   </head>
-  <body>
-    <!-- Skip to Main Content Link for Keyboard Navigation -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[99999] focus:px-4 focus:py-2 focus:bg-[#D4AF37] focus:text-[#120B08] focus:font-bold focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#120B08]">
+  <body style="background-color: #110B08; color: #F7EFEA; margin: 0; min-height: 100vh;">
+    <!-- Skip to Main Content Link for Keyboard Navigation (Inlined style guarantees zero FOUC) -->
+    <a 
+      href="#main-content" 
+      style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[99999] focus:px-4 focus:py-2 focus:bg-[#D4AF37] focus:text-[#120B08] focus:font-bold focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#120B08]"
+    >
       Skip to main content
     </a>
 
-    <div id="root"></div>
+    <div id="root">
+      <div class="initial-loader" aria-hidden="true">
+        <div class="initial-loader-crest">
+          <div class="initial-loader-ring"></div>
+          <span class="initial-loader-monogram">TCB</span>
+        </div>
+        <div class="initial-loader-title">The Café Barrackpore</div>
+        <div class="initial-loader-sub">Artisanal Gastronomy • Est. 2024</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

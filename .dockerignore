@@ -1,0 +1,35 @@
+# Version control
+.git
+.gitignore
+
+# Package managers & artifacts
+node_modules
+the-cafe-barrackpore/node_modules
+the-cafe-barrackpore/dist
+the-cafe-barrackpore/dist-server
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Internal tooling and large local assets
+.agents
+.codex
+.impeccable
+reference
+docs
+video asset
+*.mp4
+*.mkv
+*.avi
+
+# Secrets and local configurations
+.env
+.env.local
+.env.*.local
+the-cafe-barrackpore/.env
+the-cafe-barrackpore/.env.local
+
+# OS files
+.DS_Store
+Thumbs.db

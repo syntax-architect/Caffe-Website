@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useSiteConfig } from '../context/SiteConfigContext';
 

@@ -5,9 +5,14 @@ import { validateAndNormalizeTableNumber } from '../../utils/tableValidation';
 import { useNotification } from '../../hooks/useNotification';
 import { buildTableQrUrl } from '../../utils/url';
 import type { RestaurantTable } from '../../types/dashboard';
+import { useSiteConfig } from '../../context/SiteConfigContext';
+import { clientDetails } from '../../config/client';
 
 export const TablesManagement: React.FC = () => {
   const { addNotification } = useNotification();
+  const { restaurantConfig } = useSiteConfig();
+  const businessName = restaurantConfig?.businessName || clientDetails.businessName || 'Restaurant Service';
+  const monogram = (businessName.split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2) || 'CB').toUpperCase();
 
   const [tables, setTables] = useState<RestaurantTable[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -355,12 +360,12 @@ export const TablesManagement: React.FC = () => {
               {/* Gold Filigree Accent Header */}
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#997722] p-0.5 mb-3 shadow-md">
                 <div className="w-full h-full rounded-full bg-[#070605] print:bg-white flex items-center justify-center">
-                  <span className="font-serif font-black text-[#D4AF37] print:text-black text-sm">CB</span>
+                  <span className="font-serif font-black text-[#D4AF37] print:text-black text-sm">{monogram}</span>
                 </div>
               </div>
 
               <h4 className="text-base font-serif font-black uppercase tracking-[0.2em] text-[#D4AF37] print:text-black">
-                The Café Barrackpore
+                {businessName}
               </h4>
               <p className="text-[9px] font-mono tracking-[0.25em] text-zinc-400 print:text-zinc-600 uppercase mt-0.5 mb-4">
                 Smart Table Service

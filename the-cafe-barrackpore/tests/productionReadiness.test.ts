@@ -145,8 +145,16 @@ if (!fs.existsSync(envExamplePath)) {
   throw new Error('Test 5 failed: .env.example does not exist.');
 }
 const envExampleContent = fs.readFileSync(envExamplePath, 'utf8');
-const requiredClientVars = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_SANITY_PROJECT_ID'];
-const requiredServerSecrets = ['SUPABASE_SERVICE_ROLE_KEY', 'SANITY_WRITE_TOKEN', 'STRIPE_SECRET_KEY', 'RAZORPAY_KEY_SECRET'];
+const requiredClientVars = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_TURNSTILE_SITE_KEY'];
+const requiredServerSecrets = [
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'TURNSTILE_SECRET_KEY',
+  'ALLOWED_ORIGIN',
+  'PUBLIC_SITE_URL',
+  'CRON_SECRET',
+  'STRIPE_SECRET_KEY',
+  'RAZORPAY_KEY_SECRET',
+];
 
 for (const v of requiredClientVars) {
   if (!envExampleContent.includes(v)) {

@@ -1,5 +1,5 @@
 import React, { useSyncExternalStore } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'motion/react';
 
 const emptySubscribe = () => () => {};
 const useIsMounted = () => useSyncExternalStore(emptySubscribe, () => true, () => false);
@@ -37,16 +37,17 @@ export const SectionReveal: React.FC<SectionRevealProps> = ({
     return <Tag className={className}>{children}</Tag>;
   }
 
-  const MotionTag = motion[as] as typeof motion.div;
+  const normalizedDelay = delay > 5 ? delay / 1000 : delay;
+  const MotionTag = motion[as];
 
   return (
     <MotionTag
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
+      viewport={{ once: true, amount: 0.05 }}
       transition={{
-        duration: 0.65,
-        delay,
+        duration: 0.5,
+        delay: normalizedDelay,
         ease: [0.16, 1, 0.3, 1] as const,
       }}
       className={className}
@@ -105,7 +106,7 @@ export const SectionRevealGroup: React.FC<SectionRevealGroupProps> = ({
       variants={containerVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-40px' }}
+      viewport={{ once: true, amount: 0.05 }}
       className={className}
     >
       {React.Children.map(children, (child) => {

@@ -1,11 +1,19 @@
 {
-  "name": "caffe-bkp-root",
+  "name": "caffe-platform-monorepo",
   "private": true,
+  "workspaces": [
+    "the-cafe-barrackpore"
+  ],
   "scripts": {
-    "dev": "npm run dev --prefix the-cafe-barrackpore",
-    "build": "npm run build --prefix the-cafe-barrackpore",
-    "lint": "npm run lint --prefix the-cafe-barrackpore",
-    "test": "npm run test --prefix the-cafe-barrackpore",
-    "install:all": "npm ci --prefix the-cafe-barrackpore"
+    "install:all": "npm install --workspace=the-cafe-barrackpore",
+    "dev": "npm run dev --workspace=the-cafe-barrackpore",
+    "build": "npm run build --workspace=the-cafe-barrackpore",
+    "lint": "npm run lint --workspace=the-cafe-barrackpore",
+    "test": "npm run test --workspace=the-cafe-barrackpore",
+    "test:load": "npm run test:load --workspace=the-cafe-barrackpore",
+    "preview": "npm run preview --workspace=the-cafe-barrackpore",
+    "docker:build": "docker build -t caffe-platform:latest .",
+    "docker:run": "docker run -p 80:80 caffe-platform:latest",
+    "docker:compose": "docker compose up -d"
   }
 }

@@ -141,14 +141,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <div className="w-10 h-10 rounded-[calc(1rem-0.25rem)] bg-gradient-to-br from-[#1C1713] to-[#0A0807] border border-[#D4AF37]/35 flex items-center justify-center p-2 shadow-inner">
                 <img
                   src={logoUrl || "/logo.webp"}
-                  alt="The Café Barrackpore"
+                  alt={restaurantConfig.businessName || "Restaurant Terminal"}
                   className="w-full h-full object-contain filter invert contrast-125"
                 />
               </div>
             </div>
             <div>
               <p className="font-serif text-sm font-bold tracking-[0.14em] uppercase text-white leading-tight">
-                The Café
+                {restaurantConfig.businessName || "Terminal"}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />

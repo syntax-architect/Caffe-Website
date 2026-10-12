@@ -1,1 +1,12 @@
-/*    /index.html   200
+# 301 Permanent Redirects for Canonical URL Normalization
+/home               /                   301!
+/privacy-policy     /privacy            301!
+/terms-of-service   /terms              301!
+
+# 302 Temporary Deep-Link Redirects
+/menu               /#menu-section      302
+/reservations       /#reserve-section   302
+/contact            /#contact-section   302
+
+# SPA Catch-all Rewrite
+/*                  /index.html         200

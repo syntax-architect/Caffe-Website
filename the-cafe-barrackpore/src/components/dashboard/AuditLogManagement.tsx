@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
+import { clientDetails } from '../../config/client';
 
 interface AuditLogEntry {
   id: string;
@@ -42,7 +43,7 @@ export const AuditLogManagement: React.FC = () => {
             action: 'staff_login',
             target_type: 'auth',
             target_id: 'usr-1',
-            details: { email: 'owner@thecafebarrackpore.com', role: 'owner' },
+            details: { email: `owner@${clientDetails.staffDomain || 'example.com'}`, role: 'owner' },
             ip_address: '103.21.244.0',
             created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
           },

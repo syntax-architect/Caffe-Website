@@ -15,6 +15,7 @@ const StaffApp = lazy(() => import('./components/staff/StaffApp').then(m => ({ d
 const PrivacyPolicyPage = lazy(() => import('./components/legal/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
 const TermsPage = lazy(() => import('./components/legal/TermsPage').then(m => ({ default: m.TermsPage })));
 const OrderSuccessPage = lazy(() => import('./components/OrderSuccessPage').then(m => ({ default: m.OrderSuccessPage })));
+const NotFoundPage = lazy(() => import('./components/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 import { MetaTags } from './components/MetaTags';
 import { isSupabaseConfigured } from './lib/supabase';
@@ -60,6 +61,8 @@ export const Root: React.FC = () => {
   const isStaffRoute = pathname.startsWith('/staff');
   const isGeneratorRoute = pathname === '/qr-generator' || (pathname === '/qr' && searchParams.get('generate') === 'true');
   const isQRRoute = pathname === '/qr';
+  const isHomeRoute = pathname === '' || pathname === '/' || pathname === '/index.html';
+  const is404Route = pathname === '/404' || (!isPrivacyRoute && !isTermsRoute && !isOrderSuccessRoute && !isResetPassword && !isStaffLogin && !isStaffRoute && !isGeneratorRoute && !isQRRoute && !isHomeRoute);
 
   return (
     <I18nProvider>
@@ -101,6 +104,10 @@ export const Root: React.FC = () => {
             <TableProvider>
               <QROrderingPage />
             </TableProvider>
+          </Suspense>
+        ) : is404Route ? (
+          <Suspense fallback={<BrandedLoadingFallback />}>
+            <NotFoundPage />
           </Suspense>
         ) : (
           <TableProvider>

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { DEFAULT_STORY_CHAPTERS, type StoryChapter } from '../services/siteContentService';
 import { chapterTransitionVariants, resolveReducedMotion } from '../utils/motion';

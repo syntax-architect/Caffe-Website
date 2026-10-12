@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
@@ -202,10 +203,12 @@ export const SpecialsBanner: React.FC = () => {
                         {formatPrice(masterPlatter.price)}
                       </div>
 
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.96 }}
                         type="button"
                         onClick={() => handleAddCombo(masterPlatter)}
-                        className={`h-11 px-6 rounded-full text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 cursor-pointer ${
+                        className={`h-11 px-6 rounded-full text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
                           recentlyAddedComboId === masterPlatter.id
                             ? 'bg-primary text-on-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.6)] scale-[1.02]'
                             : 'bg-primary hover:bg-primary-fixed text-on-primary shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)]'
@@ -216,7 +219,7 @@ export const SpecialsBanner: React.FC = () => {
                         <span className={`material-symbols-outlined text-[16px] transition-transform ${recentlyAddedComboId === masterPlatter.id ? 'scale-110' : ''}`}>
                           {recentlyAddedComboId === masterPlatter.id ? 'check' : 'add_shopping_cart'}
                         </span>
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
                 </div>
@@ -273,10 +276,12 @@ export const SpecialsBanner: React.FC = () => {
                           {formatPrice(combo.price)}
                         </div>
 
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.04 }}
+                          whileTap={{ scale: 0.95 }}
                           type="button"
                           onClick={() => handleAddCombo(combo)}
-                          className={`h-10 sm:h-9 min-h-[44px] sm:min-h-0 px-4 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer ${
+                          className={`h-10 sm:h-9 min-h-[44px] sm:min-h-0 px-4 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer ${
                             isJustAdded
                               ? 'bg-primary text-on-primary shadow-sm scale-105'
                               : 'bg-primary hover:bg-primary-fixed text-on-primary shadow-xs'
@@ -284,7 +289,7 @@ export const SpecialsBanner: React.FC = () => {
                           title={`Add ${combo.name} to order`}
                         >
                           <span>{isJustAdded ? 'Added' : 'Add +'}</span>
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
                   </div>

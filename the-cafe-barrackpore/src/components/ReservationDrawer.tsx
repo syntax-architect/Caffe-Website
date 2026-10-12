@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useUI } from '../context/UIContext';
 import { clientDetails } from '../config/client';
 import { useFocusTrap } from '../hooks/useFocusTrap';

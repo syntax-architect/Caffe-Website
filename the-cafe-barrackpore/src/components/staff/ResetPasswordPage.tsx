@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { validateStrongPassword } from '../../utils/security';
+import { useSiteConfig } from '../../context/SiteConfigContext';
+import { clientDetails } from '../../config/client';
 
 export const ResetPasswordPage: React.FC = () => {
+  const { restaurantConfig } = useSiteConfig();
+  const businessName = restaurantConfig?.businessName || clientDetails.businessName || 'Operations Terminal';
+  const address = restaurantConfig?.address?.line1 || clientDetails.location?.address || '';
+
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -247,9 +253,13 @@ export const ResetPasswordPage: React.FC = () => {
       </main>
 
       <footer className="relative z-10 text-center text-stone-500 text-xs py-4 flex flex-col sm:flex-row items-center justify-center gap-2">
-        <span>The Café Barrackpore • Enterprise Hospitality Suite</span>
-        <span className="hidden sm:inline text-stone-600">•</span>
-        <span>Cantonment, Riverside Road, Barrackpore</span>
+        <span>{businessName} • Enterprise Hospitality Suite</span>
+        {address && (
+          <>
+            <span className="hidden sm:inline text-stone-600">•</span>
+            <span>{address}</span>
+          </>
+        )}
       </footer>
     </div>
   );

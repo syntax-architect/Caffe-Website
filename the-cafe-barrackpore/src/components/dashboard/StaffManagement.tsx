@@ -3,10 +3,12 @@ import { useAuth } from '../../hooks/useAuth';
 import { fetchStaffProfiles, toggleStaffActive, updateStaffRole } from '../../services/dashboardService';
 import { useNotification } from '../../hooks/useNotification';
 import type { StaffProfile, StaffRole } from '../../types/auth';
+import { clientDetails } from '../../config/client';
 
 export const StaffManagement: React.FC = () => {
   const { isOwner, isManager, staffProfile: currentProfile } = useAuth();
   const { addNotification } = useNotification();
+  const staffDomain = clientDetails.staffDomain || 'example.com';
 
   const [staffList, setStaffList] = useState<StaffProfile[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -461,7 +463,7 @@ export const StaffManagement: React.FC = () => {
                   <input
                     type="email"
                     required
-                    placeholder="staff@thecafebarrackpore.com"
+                    placeholder={`staff@${staffDomain}`}
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"

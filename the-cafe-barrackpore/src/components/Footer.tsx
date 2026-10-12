@@ -14,7 +14,7 @@ const IconGoogle = () => <svg className="w-4 h-4" fill="currentColor" viewBox="0
 const IconZomato = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></svg>;
 
 export const Footer: React.FC = () => {
-  const { showModal, setIsReservationOpen } = useUI();
+  const { showModal, setIsReservationOpen, setIsContactOpen } = useUI();
   const { restaurantConfig, engineConfig, logoUrl } = useSiteConfig();
 
   // Section visibility check
@@ -303,6 +303,16 @@ export const Footer: React.FC = () => {
                   </a>
                 ) : null}
               </div>
+
+              {/* Guest Concierge & Inquiry Form Trigger */}
+              <button
+                type="button"
+                onClick={() => setIsContactOpen(true)}
+                className="w-full h-10 px-4 rounded-full bg-surface-container-high/60 border border-primary/35 hover:border-primary text-primary hover:text-white transition-all text-xs font-semibold uppercase tracking-wider inline-flex items-center justify-center gap-2 cursor-pointer mt-1 active:scale-95 shadow-sm"
+              >
+                <span className="material-symbols-outlined text-base">mail</span>
+                <span>Send Guest Inquiry</span>
+              </button>
             </div>
           </div>
 
@@ -310,7 +320,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Legal & Discrete Staff Login */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 font-sans text-xs text-on-surface/75 text-center md:text-left">
-          <p>© {new Date().getFullYear()} {businessName} {shortName}. All culinary &amp; brand rights reserved.</p>
+          <p>© {new Date().getFullYear()} {businessName}. All culinary &amp; brand rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <a className="hover:text-primary transition-colors text-on-surface/80" href="/privacy">
               Privacy Policy

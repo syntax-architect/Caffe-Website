@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
 import { clientDetails } from '../config/client';
@@ -105,11 +106,12 @@ export const MobileActionDock: React.FC = () => {
           {activeActions.map((action) => {
             if (action.type === 'menu') {
               return (
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
                   key={action.id}
                   type="button"
                   onClick={handleMenuScroll}
-                  className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] py-1 px-2 rounded-full text-on-surface/80 hover:text-primary transition-colors active:scale-95 cursor-pointer group"
+                  className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] py-1 px-2 rounded-full text-on-surface/80 hover:text-primary transition-colors cursor-pointer group"
                   aria-label="View Menu"
                 >
                   <svg className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -118,16 +120,17 @@ export const MobileActionDock: React.FC = () => {
                   <span className="font-sans text-[8px] uppercase tracking-wider font-semibold text-on-surface/90 mt-0.5">
                     {action.label || 'Menu'}
                   </span>
-                </button>
+                </motion.button>
               );
             }
 
             if (action.type === 'call') {
               return (
-                <a
+                <motion.a
+                  whileTap={{ scale: 0.92 }}
                   key={action.id}
                   href={`tel:${phone}`}
-                  className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] py-1 px-2 rounded-full text-on-surface/80 hover:text-primary transition-colors active:scale-95 cursor-pointer group"
+                  className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] py-1 px-2 rounded-full text-on-surface/80 hover:text-primary transition-colors cursor-pointer group"
                   aria-label={`Call ${businessName}`}
                 >
                   <svg className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -136,17 +139,18 @@ export const MobileActionDock: React.FC = () => {
                   <span className="font-sans text-[8px] uppercase tracking-wider font-semibold text-on-surface/90 mt-0.5">
                     {action.label || 'Call'}
                   </span>
-                </a>
+                </motion.a>
               );
             }
 
             if (action.type === 'reservation') {
               return (
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
                   key={action.id}
                   type="button"
                   onClick={() => setIsReservationOpen(true)}
-                  className="h-11 min-h-[44px] pl-3.5 pr-1.5 rounded-full bg-primary text-on-primary flex items-center justify-between gap-1.5 shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.35)] active:scale-95 transition-transform cursor-pointer font-semibold"
+                  className="h-11 min-h-[44px] pl-3.5 pr-1.5 rounded-full bg-primary text-on-primary flex items-center justify-between gap-1.5 shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.35)] transition-transform cursor-pointer font-semibold"
                   aria-label={restaurantConfig?.isTableBookingEnabled !== false ? "Book a table reservation" : "Visit restaurant"}
                 >
                   <span className="font-sans text-[10px] font-bold uppercase tracking-wider">
@@ -157,18 +161,19 @@ export const MobileActionDock: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M10 14h4M6 18h12M7 6v14M17 6v14" />
                     </svg>
                   </div>
-                </button>
+                </motion.button>
               );
             }
 
             if (action.type === 'whatsapp') {
               return (
-                <a
+                <motion.a
+                  whileTap={{ scale: 0.92 }}
                   key={action.id}
                   href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] py-1 px-2 rounded-full text-on-surface/80 hover:text-emerald-400 transition-colors active:scale-95 cursor-pointer group"
+                  className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] py-1 px-2 rounded-full text-on-surface/80 hover:text-emerald-400 transition-colors cursor-pointer group"
                   aria-label="Chat on WhatsApp"
                 >
                   <svg className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -177,18 +182,19 @@ export const MobileActionDock: React.FC = () => {
                   <span className="font-sans text-[8px] uppercase tracking-wider font-semibold text-on-surface/90 mt-0.5">
                     {action.label || 'Chat'}
                   </span>
-                </a>
+                </motion.a>
               );
             }
 
             if (action.type === 'directions') {
               return (
-                <a
+                <motion.a
+                  whileTap={{ scale: 0.92 }}
                   key={action.id}
                   href={googleMapsLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] py-1 px-2 rounded-full text-on-surface/80 hover:text-sky-400 transition-colors active:scale-95 cursor-pointer group"
+                  className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] py-1 px-2 rounded-full text-on-surface/80 hover:text-sky-400 transition-colors cursor-pointer group"
                   aria-label="Map directions on Google Maps"
                 >
                   <svg className="w-4 h-4 text-sky-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -198,17 +204,18 @@ export const MobileActionDock: React.FC = () => {
                   <span className="font-sans text-[8px] uppercase tracking-wider font-semibold text-on-surface/90 mt-0.5">
                     {action.label || 'Map'}
                   </span>
-                </a>
+                </motion.a>
               );
             }
 
             if (action.type === 'cart') {
               return (
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
                   key={action.id}
                   type="button"
                   onClick={() => setIsDrawerOpen(true)}
-                  className="relative flex flex-col items-center justify-center min-w-[44px] min-h-[44px] py-1 px-2 rounded-full text-on-surface/80 hover:text-primary transition-colors active:scale-95 cursor-pointer group"
+                  className="relative flex flex-col items-center justify-center min-w-[44px] min-h-[44px] py-1 px-2 rounded-full text-on-surface/80 hover:text-primary transition-colors cursor-pointer group"
                   aria-label={`Order bag with ${cartCount} items`}
                 >
                   <svg className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -222,7 +229,7 @@ export const MobileActionDock: React.FC = () => {
                       {cartCount}
                     </span>
                   )}
-                </button>
+                </motion.button>
               );
             }
 

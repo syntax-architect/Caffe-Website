@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'motion/react';
 import { smoothScrollTo } from '../utils/scroll';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
@@ -38,7 +38,9 @@ const HeroActions: React.FC<HeroActionsProps> = ({
     >
       {/* Primary Action: Explore Menu */}
       {showPrimaryCta && (
-        <a
+        <motion.a
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           href={primaryCtaHref}
           onClick={(e) => handleNav(e, primaryCtaTarget)}
           className="group relative inline-flex items-center justify-between sm:justify-center gap-4 px-6 sm:px-8 py-3.5 sm:py-4 min-h-[48px] rounded-full bg-primary text-on-primary font-sans text-xs font-semibold tracking-[0.18em] uppercase transition-all duration-300 ease-out hover:bg-on-surface hover:text-background hover:shadow-[0_0_32px_rgba(var(--color-primary-rgb),0.4)] active:scale-[0.98]"
@@ -55,12 +57,14 @@ const HeroActions: React.FC<HeroActionsProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
             </svg>
           </span>
-        </a>
+        </motion.a>
       )}
 
       {/* Secondary Action: Reserve a Table */}
       {showSecondaryCta && (
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           type="button"
           onClick={handleReservation}
           className="group inline-flex items-center justify-center gap-2.5 px-5 sm:px-7 py-3.5 sm:py-4 min-h-[44px] rounded-full border border-outline/30 hover:border-primary/50 bg-surface-obsidian/40 hover:bg-surface-container/60 backdrop-blur-md text-on-surface/90 hover:text-primary font-sans text-xs font-medium tracking-[0.16em] uppercase transition-all duration-300 ease-out active:scale-[0.98] shadow-[0_4px_16px_rgba(0,0,0,0.15)] cursor-pointer"
@@ -69,7 +73,7 @@ const HeroActions: React.FC<HeroActionsProps> = ({
           <span className="material-symbols-outlined text-[16px] text-primary/80 group-hover:text-primary transition-colors">
             calendar_today
           </span>
-        </button>
+        </motion.button>
       )}
     </div>
   );
@@ -144,7 +148,8 @@ export const Hero: React.FC = React.memo(() => {
   const isCustomHero = Boolean(hero?.src && hero.src !== '/images/hero-bar.webp');
   const heroImageSrc = hero?.src || '/images/hero-bar.webp';
   const heroMobileSrc = hero?.mobileSrc || (!isCustomHero ? '/images/hero-bar-mobile.webp' : undefined);
-  const heroImageAlt = hero?.alt || 'The Café Barrackpore — Nocturnal Cocktail & Espresso Lounge';
+  const heroBusinessName = restaurantConfig?.businessName || 'The Lounge';
+  const heroImageAlt = hero?.alt || `${heroBusinessName} — Nocturnal Cocktail & Espresso Lounge`;
 
   const headline = hero?.headline || 'NOCTURNAL';
   const headlineItalic = hero?.headlineItalic !== undefined ? hero.headlineItalic : 'Gastronomy.';
@@ -153,7 +158,7 @@ export const Hero: React.FC = React.memo(() => {
     "Where artisan coffee meets handcrafted cocktails & gourmet comfort food in a strictly premium, nocturnal setting.";
 
   const eyebrowBadgeText = hero?.eyebrowBadge || 
-    `CAFÉ • BAR • ${restaurantConfig?.shortName ? restaurantConfig.shortName.toUpperCase() : 'BARRACKPORE'}`;
+    `CAFÉ • BAR • ${(restaurantConfig?.shortName || restaurantConfig?.address?.city || 'LOUNGE').toUpperCase()}`;
 
   const coordinatesText = hero?.coordinates || 
     ((!restaurantConfig?.country || restaurantConfig?.country === 'IN') ? '22.76° N, 88.37° E' : '');

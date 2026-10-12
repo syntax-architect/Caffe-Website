@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { clientDetails } from '../config/client';
 import { SectionReveal } from './SectionReveal';
@@ -22,6 +23,7 @@ const GALLERY_METADATA: Record<number, { tag: string; caption: string }> = {
 export const Gallery: React.FC = () => {
   const { gallery, restaurantConfig, engineConfig } = useSiteConfig();
   const [selectedPhoto, setSelectedPhoto] = useState<{ index: number; data: GalleryPhoto } | null>(null);
+  const businessName = restaurantConfig?.businessName || clientDetails.businessName || 'The Café';
 
   // Gallery layout variant from engine configuration
   const rawVariant = engineConfig?.variants?.gallery || 'asymmetric-bento';
@@ -37,7 +39,7 @@ export const Gallery: React.FC = () => {
     ? gallery.items
     : (gallery?.images && gallery.images.length > 0
         ? gallery.images.slice(0, 4).map((img, idx) => {
-            const meta = GALLERY_METADATA[idx] || { tag: 'The Café Experience', caption: img.alt };
+            const meta = GALLERY_METADATA[idx] || { tag: `${businessName} Experience`, caption: img.alt };
             return {
               id: `gallery-${idx + 1}`,
               src: img.src,
@@ -453,7 +455,7 @@ export const Gallery: React.FC = () => {
                         width="600" 
                         height="450" 
                         src={item.src} 
-                        alt={item.alt || "The Café Barrackpore Hospitality"}
+                        alt={item.alt || `${businessName} Hospitality`}
                         className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.07] will-change-transform"
                       />
                   </div>
@@ -472,59 +474,71 @@ export const Gallery: React.FC = () => {
       </div>
 
       {/* Luxury Fullscreen Lightbox Modal (Shared across all variants) */}
-      {selectedPhoto && (
-        <div 
-          className="fixed inset-0 z-[250] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 sm:p-8 animate-fade-in transition-opacity duration-300"
-          onClick={() => setSelectedPhoto(null)}
-        >
-          {/* Top Close Bar */}
-          <div className="absolute top-6 left-6 right-6 flex items-center justify-between text-on-surface z-30 max-w-5xl mx-auto w-full">
-            <div className="flex items-center gap-3">
-              <span className="font-sans text-xs uppercase tracking-widest text-primary font-semibold">
-                {String(selectedPhoto.index + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
-              </span>
-              <span className="text-outline/40">|</span>
-              <span className="font-sans text-xs uppercase tracking-wider text-on-surface/75">
-                {selectedPhoto.data.tag}
-              </span>
-            </div>
-            <button 
-              onClick={() => setSelectedPhoto(null)}
-              className="w-10 h-10 rounded-full bg-surface-container/80 hover:bg-surface-elevated border border-outline/30 flex items-center justify-center text-on-surface transition-colors cursor-pointer"
-              aria-label="Close photograph lightbox"
-            >
-              <span className="material-symbols-outlined text-lg">close</span>
-            </button>
-          </div>
-
-          {/* Modal Image Container with Double Bezel */}
-          <div 
-            className="relative max-w-4xl max-h-[75vh] rounded-[2rem] p-1.5 bg-gradient-to-b from-surface-container to-surface-obsidian border border-primary/35 shadow-2xl bg-surface-container transform transition-transform duration-300"
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence>
+        {selectedPhoto && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[250] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 sm:p-8"
+            onClick={() => setSelectedPhoto(null)}
           >
-            <div className="rounded-[calc(2rem-0.375rem)] overflow-hidden max-h-[calc(75vh-12px)]">
-              <img 
-                src={selectedPhoto.data.src} 
-                alt={selectedPhoto.data.alt} 
-                width="1200" 
-                height="800" 
-                decoding="async" 
-                className="w-full h-full max-h-[75vh] object-contain"
-              />
+            {/* Top Close Bar */}
+            <div className="absolute top-6 left-6 right-6 flex items-center justify-between text-on-surface z-30 max-w-5xl mx-auto w-full">
+              <div className="flex items-center gap-3">
+                <span className="font-sans text-xs uppercase tracking-widest text-primary font-semibold">
+                  {String(selectedPhoto.index + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
+                </span>
+                <span className="text-outline/40">|</span>
+                <span className="font-sans text-xs uppercase tracking-wider text-on-surface/75">
+                  {selectedPhoto.data.tag}
+                </span>
+              </div>
+              <motion.button 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setSelectedPhoto(null)}
+                className="w-10 h-10 rounded-full bg-surface-container/80 hover:bg-surface-elevated border border-outline/30 flex items-center justify-center text-on-surface transition-colors cursor-pointer"
+                aria-label="Close photograph lightbox"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </motion.button>
             </div>
-          </div>
 
-          {/* Modal Caption */}
-          <div className="mt-6 text-center max-w-xl z-30" onClick={(e) => e.stopPropagation()}>
-            <p className="font-serif text-lg sm:text-xl text-on-surface font-light">
-              {selectedPhoto.data.caption}
-            </p>
-            <p className="font-sans text-xs text-primary/80 mt-1 uppercase tracking-widest">
-              {restaurantConfig?.businessName || 'The Café Barrackpore'}
-            </p>
-          </div>
-        </div>
-      )}
+            {/* Modal Image Container with Double Bezel */}
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 360, damping: 26 }}
+              className="relative max-w-4xl max-h-[75vh] rounded-[2rem] p-1.5 bg-gradient-to-b from-surface-container to-surface-obsidian border border-primary/35 shadow-2xl bg-surface-container"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="rounded-[calc(2rem-0.375rem)] overflow-hidden max-h-[calc(75vh-12px)]">
+                <img 
+                  src={selectedPhoto.data.src} 
+                  alt={selectedPhoto.data.alt} 
+                  width="1200" 
+                  height="800" 
+                  decoding="async" 
+                  className="w-full h-full max-h-[75vh] object-contain"
+                />
+              </div>
+            </motion.div>
+
+            {/* Modal Caption */}
+            <div className="mt-6 text-center max-w-xl z-30" onClick={(e) => e.stopPropagation()}>
+              <p className="font-serif text-lg sm:text-xl text-on-surface font-light">
+                {selectedPhoto.data.caption}
+              </p>
+              <p className="font-sans text-xs text-primary/80 mt-1 uppercase tracking-widest">
+                {businessName}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };

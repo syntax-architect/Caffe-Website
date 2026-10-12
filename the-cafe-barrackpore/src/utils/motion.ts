@@ -5,7 +5,7 @@
  * desktop and touch platforms with strict reduced-motion accessibility.
  */
 
-import type { Variants } from 'framer-motion';
+import type { Variants } from 'motion/react';
 
 /**
  * Standard easing curves for editorial and interaction animations.
@@ -19,6 +19,10 @@ export const EASING = {
   springGentle: { type: 'spring', stiffness: 380, damping: 28 } as const,
   /** Snappy spring for quick taps */
   springSnappy: { type: 'spring', stiffness: 500, damping: 30 } as const,
+  /** Luxury magnetic spring for tactile pill buttons and cards */
+  springLuxury: { type: 'spring', stiffness: 340, damping: 24, mass: 0.8 } as const,
+  /** Bouncy celebratory spring for badges and pings */
+  springBouncy: { type: 'spring', stiffness: 450, damping: 16 } as const,
 } as const;
 
 /**
@@ -201,3 +205,42 @@ export const cinematicImageVariants: Variants = {
     },
   },
 };
+
+/**
+ * Luxury card hover elevation with GPU acceleration
+ */
+export const luxuryCardHover: Variants = {
+  initial: { y: 0, scale: 1 },
+  hover: {
+    y: -4,
+    scale: 1.01,
+    transition: {
+      duration: DURATION.fast,
+      ease: EASING.editorial,
+    },
+  },
+};
+
+/**
+ * Smooth modal sheet spring entrance
+ */
+export const modalSheetVariants: Variants = {
+  initial: { opacity: 0, y: '100%' },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: DURATION.normal,
+      ease: EASING.editorial,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: '100%',
+    transition: {
+      duration: DURATION.fast,
+      ease: EASING.exit,
+    },
+  },
+};
+

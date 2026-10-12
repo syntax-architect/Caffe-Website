@@ -54,6 +54,7 @@ export function generatePageSEO(options: {
   const isHome = path === '/' || path === '';
   const isPrivacy = path === '/privacy' || path === '/privacy-policy';
   const isTerms = path === '/terms' || path === '/terms-of-service';
+  const is404 = path === '/404';
   const isQR = path === '/qr' || path === '/qr-generator';
   const isStaff = path.startsWith('/staff') || path === '/reset-password' || path === '/kitchen';
 
@@ -77,6 +78,12 @@ export function generatePageSEO(options: {
     title = `Terms of Service | ${businessName}`;
     description = `Review terms and conditions for dining reservations, takeaways, and contactless QR table ordering at ${businessName}.`;
     canonicalPath = '/terms';
+    ogType = 'website';
+  } else if (is404) {
+    title = `404 — Page Not Found | ${businessName}`;
+    description = `The requested course or page could not be found at ${businessName}.`;
+    canonicalPath = '/404';
+    robots = 'noindex, follow';
     ogType = 'website';
   } else if (isQR) {
     title = `Digital Table Ordering | ${businessName}`;
@@ -217,6 +224,58 @@ export function generatePageSEO(options: {
     };
 
     structuredData.push(restaurantSchema);
+
+    // Organization Schema for Knowledge Graph & Entity Authority
+    const organizationSchema: Record<string, any> = {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      '@id': `${origin}/#organization`,
+      name: businessName,
+      alternateName: config.shortName || 'The Café',
+      url: origin,
+      logo: `${origin}/logo.webp`,
+      image: shareImage,
+      telephone: config.contact.phone,
+      email: config.contact.email || 'concierge@thecafebarrackpore.com',
+      sameAs: [
+        'https://www.instagram.com/thecafebarrackpore',
+        'https://www.facebook.com/thecafebarrackpore',
+        'https://maps.app.goo.gl/6N1csn9kKtCY7By97',
+      ],
+      contactPoint: [
+        {
+          '@type': 'ContactPoint',
+          telephone: config.contact.phone,
+          contactType: 'reservations and guest concierge',
+          areaServed: 'IN',
+          availableLanguage: ['English', 'Hindi', 'Bengali'],
+        },
+      ],
+    };
+    structuredData.push(organizationSchema);
+  }
+
+  // BreadcrumbList Structured Data for Inner Pages
+  if (isPrivacy || isTerms || is404) {
+    const pageName = isPrivacy ? 'Privacy Policy' : isTerms ? 'Terms of Service' : '404 Page Not Found';
+    structuredData.push({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: `${origin}/`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: pageName,
+          item: canonicalUrl,
+        },
+      ],
+    });
   }
 
   return {

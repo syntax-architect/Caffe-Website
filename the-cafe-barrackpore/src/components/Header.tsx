@@ -1,14 +1,110 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useCart } from '../context/CartContext';
 import { clientDetails } from '../config/client';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import {
-  DEFAULT_NAVIGATION_ITEMS,
   DEFAULT_HEADER_CONFIG,
 } from '../config/defaultEngineConfig';
-import type { NavigationItem } from '../types/restaurantEngine';
+import type { SectionVisibilityConfig } from '../types/restaurantEngine';
 import { smoothScrollTo } from '../utils/scroll';
+
+/**
+ * All website sections in their exact, canonical top-to-bottom narrative sequence.
+ * 100% synchronized with the page architecture in App.tsx.
+ */
+export interface OrderedSectionItem {
+  id: string;
+  label: string;
+  shortLabel: string;
+  href: string;
+  sectionKey?: keyof SectionVisibilityConfig;
+  badge?: string;
+  chapterIndex: number;
+  chapterTitle: string;
+  description: string;
+}
+
+export const ORDERED_FLAGSHIP_SECTIONS: OrderedSectionItem[] = [
+  {
+    id: 'sec-vibe',
+    label: 'Atmosphere & Vibe',
+    shortLabel: 'Atmosphere',
+    href: '#about-and-vibe',
+    sectionKey: 'aboutVibe',
+    badge: 'Ambience',
+    chapterIndex: 1,
+    chapterTitle: 'Act I • Atmosphere',
+    description: 'Nocturnal acoustics, warm amber lighting & salon design',
+  },
+  {
+    id: 'sec-menu',
+    label: 'Curated Menu',
+    shortLabel: 'Curated Menu',
+    href: '#menu-section',
+    sectionKey: 'menu',
+    badge: 'Cuisine',
+    chapterIndex: 2,
+    chapterTitle: 'Act II • Cuisine',
+    description: 'Artisanal sourdough, gourmet mains & wood-fired pizza',
+  },
+  {
+    id: 'sec-specials',
+    label: "Chef's Specials",
+    shortLabel: 'Chef Specials',
+    href: '#chef-specials',
+    sectionKey: 'specialsBanner',
+    badge: 'Signature',
+    chapterIndex: 3,
+    chapterTitle: 'Act III • Signatures',
+    description: 'Flame-charred communal feasts & signature platters',
+  },
+  {
+    id: 'sec-story',
+    label: 'Heritage & Roots',
+    shortLabel: 'Our Story',
+    href: '#our-story',
+    sectionKey: 'story',
+    badge: 'Heritage',
+    chapterIndex: 4,
+    chapterTitle: 'Act IV • Heritage',
+    description: 'Decades of artisan roasting & specialty coffee culture',
+  },
+  {
+    id: 'sec-gallery',
+    label: 'Moments Gallery',
+    shortLabel: 'Gallery',
+    href: '#gallery',
+    sectionKey: 'gallery',
+    badge: 'Visuals',
+    chapterIndex: 5,
+    chapterTitle: 'Act V • Visuals',
+    description: 'Candid dining glimpses, latte art & interior angles',
+  },
+  {
+    id: 'sec-vip',
+    label: 'Nocturnal VIP Circle',
+    shortLabel: 'VIP Club',
+    href: '#vip-club',
+    sectionKey: 'vipClub',
+    badge: 'Private',
+    chapterIndex: 6,
+    chapterTitle: 'Act VI • VIP Circle',
+    description: 'Secret pours, priority table access & tasting invitations',
+  },
+  {
+    id: 'sec-hours',
+    label: 'Visit, Hours & Tables',
+    shortLabel: 'Visit & Hours',
+    href: '#reserve-section',
+    sectionKey: 'footer',
+    badge: 'Concierge',
+    chapterIndex: 7,
+    chapterTitle: 'Act VII • Concierge',
+    description: 'Daily service schedule, location map & table reservations',
+  },
+];
 
 export const Header: React.FC = React.memo(() => {
   const { cartCount, setIsDrawerOpen } = useCart();
@@ -18,6 +114,10 @@ export const Header: React.FC = React.memo(() => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('');
 
+  // Intelligent sliding window state for desktop navbar (displays 5 chronological sections)
+  const WINDOW_SIZE = 5;
+  const [windowStart, setWindowStart] = useState(0);
+
   const businessName = restaurantConfig?.businessName || clientDetails.businessName;
   const shortName = restaurantConfig?.shortName || clientDetails.shortName;
   const phone = restaurantConfig?.contact?.phone || clientDetails.phone;
@@ -26,27 +126,79 @@ export const Header: React.FC = React.memo(() => {
   const googleMapsLink = engineConfig?.brand?.googleMapsLink || clientDetails.googleMapsLink;
 
   const headerConfig = engineConfig?.header || DEFAULT_HEADER_CONFIG;
-  const rawNavItems: NavigationItem[] = headerConfig.navigation && headerConfig.navigation.length > 0
-    ? headerConfig.navigation
-    : DEFAULT_NAVIGATION_ITEMS;
-
   const sections = engineConfig?.sections;
 
-  // Filter navigation items by explicit item toggle and section visibility
-  const visibleNavLinks = useMemo(() => {
-    return rawNavItems.filter((link) => {
-      if (link.enabled === false) return false;
-      if (link.sectionKey && sections && sections[link.sectionKey] === false) return false;
+  // Active ordered flagship items respecting dynamic section toggles
+  const enabledOrderedSections = useMemo(() => {
+    return ORDERED_FLAGSHIP_SECTIONS.filter((item) => {
+      if (item.sectionKey && sections && sections[item.sectionKey] === false) return false;
       return true;
     });
-  }, [rawNavItems, sections]);
+  }, [sections]);
 
+  const totalSectionsCount = enabledOrderedSections.length;
+  const maxWindowStart = Math.max(0, totalSectionsCount - WINDOW_SIZE);
+
+  // Active section index in canonical sequence
+  const currentActiveIndex = useMemo(() => {
+    if (!activeSection) return -1;
+    return enabledOrderedSections.findIndex(
+      (item) => item.href.slice(1) === activeSection
+    );
+  }, [activeSection, enabledOrderedSections]);
+
+  // Dynamically slide the window forward and backward based on scroll position
+  useEffect(() => {
+    if (currentActiveIndex === -1) {
+      if (window.scrollY < 200) {
+        setWindowStart(0);
+      }
+      return;
+    }
+
+    setWindowStart((prevStart) => {
+      // If active section is before visible window, slide backward smoothly
+      if (currentActiveIndex < prevStart) {
+        return Math.max(0, currentActiveIndex);
+      }
+      // If active section is at or past the right edge, slide forward smoothly
+      if (currentActiveIndex >= prevStart + WINDOW_SIZE) {
+        return Math.min(maxWindowStart, currentActiveIndex - WINDOW_SIZE + 1);
+      }
+      // Smooth pre-reveal when approaching right boundary
+      if (currentActiveIndex === prevStart + WINDOW_SIZE - 1 && prevStart < maxWindowStart) {
+        return prevStart + 1;
+      }
+      // Smooth pre-reveal when approaching left boundary
+      if (currentActiveIndex === prevStart && prevStart > 0) {
+        return prevStart - 1;
+      }
+      return prevStart;
+    });
+  }, [currentActiveIndex, maxWindowStart, WINDOW_SIZE]);
+
+  // The 5 currently visible links in the sliding window
+  const visibleWindowSections = useMemo(() => {
+    return enabledOrderedSections.slice(windowStart, windowStart + WINDOW_SIZE);
+  }, [enabledOrderedSections, windowStart, WINDOW_SIZE]);
+
+  // Manual sliding navigation handlers (1 step per click)
+  const handleSlidePrev = useCallback(() => {
+    setWindowStart((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const handleSlideNext = useCallback(() => {
+    setWindowStart((prev) => Math.min(maxWindowStart, prev + 1));
+  }, [maxWindowStart]);
+
+  // All anchor IDs to track with scroll-spy
   const activeSpySectionIds = useMemo(() => {
-    return visibleNavLinks
-      .map((link) => (link.href.startsWith('#') ? link.href.slice(1) : ''))
+    return enabledOrderedSections
+      .map((item) => (item.href.startsWith('#') ? item.href.slice(1) : ''))
       .filter(Boolean);
-  }, [visibleNavLinks]);
+  }, [enabledOrderedSections]);
 
+  // Scroll spy effect with smooth focal line detection
   useEffect(() => {
     let ticking = false;
 
@@ -112,7 +264,7 @@ export const Header: React.FC = React.memo(() => {
     };
   }, [activeSpySectionIds]);
 
-  // Lock body scroll when mobile menu is open to prevent background jitter
+  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -124,7 +276,7 @@ export const Header: React.FC = React.memo(() => {
     };
   }, [isMobileMenuOpen]);
 
-  // Close mobile menu on Escape key press
+  // Escape key close handlers
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isMobileMenuOpen) {
@@ -137,7 +289,6 @@ export const Header: React.FC = React.memo(() => {
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href.startsWith('http://') || href.startsWith('https://')) {
-      // External link - allow default navigation
       setIsMobileMenuOpen(false);
       document.body.style.overflow = '';
       return;
@@ -180,16 +331,13 @@ export const Header: React.FC = React.memo(() => {
   const showPrimaryCta = headerConfig.showPrimaryCta !== false &&
     engineConfig?.features?.reservationsEnabled !== false;
 
-  // On desktop navigation, render primary links (excluding reserve-section if handled by button CTA)
-  const desktopNavLinks = visibleNavLinks.filter((l) => l.href !== '#reserve-section').slice(0, 5);
-
   return (
-    <header className={`fixed top-0 w-full z-50 transition-[background-color,backdrop-filter,border-color,box-shadow,padding] duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${isScrolled ? 'bg-surface/92 backdrop-blur-xl border-b border-primary/25 shadow-[0_10px_30px_rgba(0,0,0,0.65)] py-3' : 'bg-transparent py-5'}`}>
-      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between gap-4">
+    <header className={`fixed top-0 w-full z-50 transition-[background-color,backdrop-filter,border-color,box-shadow,padding] duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${isScrolled ? 'bg-surface/94 backdrop-blur-xl border-b border-primary/25 shadow-[0_10px_30px_rgba(0,0,0,0.65)] py-2.5' : 'bg-transparent py-4'}`}>
+      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 sm:gap-4">
         
         {/* Brand Crest & Monogram */}
         <a 
-          className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1" 
+          className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 shrink-0" 
           href="#" 
           onClick={(e) => handleNavClick(e, 'root')}
         >
@@ -215,42 +363,89 @@ export const Header: React.FC = React.memo(() => {
           </div>
         </a>
         
-        {/* Architectural Desktop Navigation with Active Section Indicator */}
-        {desktopNavLinks.length > 0 && (
-          <nav className="hidden lg:flex items-center gap-7 px-6 py-2 rounded-full bg-surface-container/60 backdrop-blur-md border border-outline/20 shadow-lg">
-            {desktopNavLinks.map((link) => {
-              const linkSectionId = link.href.startsWith('#') ? link.href.slice(1) : '';
-              const isActive = activeSection === linkSectionId;
+        {/* Intelligent Dynamic Sliding Navigation Bar */}
+        <nav 
+          className="hidden lg:flex items-center px-2 py-1.5 rounded-full bg-surface-container/75 backdrop-blur-xl border border-outline/25 shadow-[0_8px_24px_rgba(0,0,0,0.55)] relative"
+          aria-label="Chronological Website Navigation"
+        >
+          {/* Previous Window Slide Arrow (‹) */}
+          <button
+            type="button"
+            onClick={handleSlidePrev}
+            disabled={windowStart === 0}
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
+              windowStart > 0
+                ? 'text-primary hover:bg-surface-container-high hover:scale-110'
+                : 'text-on-surface/20 cursor-default pointer-events-none'
+            }`}
+            aria-label="Previous sections"
+            title="Previous sections"
+          >
+            <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+
+          {/* Dynamic 5-Link Window in Exact Canonical Narrative Order */}
+          <div className="flex items-center gap-1 xl:gap-1.5 px-1 overflow-hidden">
+            {visibleWindowSections.map((item) => {
+              const itemSecId = item.href.slice(1);
+              const isActive = activeSection === itemSecId;
               return (
-                <a 
-                  key={link.id}
-                  className={`font-sans text-[12px] uppercase tracking-[0.16em] transition-colors relative py-1 group font-medium ${
-                    isActive ? 'text-primary' : 'text-on-surface/75 hover:text-primary'
-                  }`} 
-                  href={link.href}
-                  target={link.isExternal ? '_blank' : undefined}
-                  rel={link.isExternal ? 'noopener noreferrer' : undefined}
-                  onClick={(e) => handleNavClick(e, link.href)}
+                <a
+                  key={item.id}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className={`font-sans text-[11px] xl:text-[12px] uppercase tracking-[0.14em] font-medium px-3 xl:px-3.5 py-1.5 rounded-full transition-all duration-300 relative whitespace-nowrap group cursor-pointer ${
+                    isActive
+                      ? 'text-primary bg-primary/15 shadow-[inset_0_0_12px_rgba(var(--color-primary-rgb),0.2)] font-semibold border border-primary/35'
+                      : 'text-on-surface/75 hover:text-primary hover:bg-surface-container-high/60 border border-transparent'
+                  }`}
                 >
-                  <span>{link.label}</span>
-                  <span 
-                    className={`absolute bottom-0 left-0 h-[1.5px] bg-primary transition-all duration-300 ease-out ${
-                      isActive ? 'w-full shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.6)]' : 'w-0 group-hover:w-full'
-                    }`} 
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    <span>{item.shortLabel}</span>
+                  </span>
+                  {/* Glowing gold active bottom indicator */}
+                  <span
+                    className={`absolute bottom-0.5 left-3 right-3 h-[1.5px] bg-primary transition-all duration-300 rounded-full ${
+                      isActive ? 'opacity-100 shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.9)]' : 'opacity-0 group-hover:opacity-50'
+                    }`}
                   />
                 </a>
               );
             })}
-          </nav>
-        )}
+          </div>
+
+          {/* Next Window Slide Arrow (›) */}
+          <button
+            type="button"
+            onClick={handleSlideNext}
+            disabled={windowStart >= maxWindowStart}
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
+              windowStart < maxWindowStart
+                ? 'text-primary hover:bg-surface-container-high hover:scale-110'
+                : 'text-on-surface/20 cursor-default pointer-events-none'
+            }`}
+            aria-label="Next sections"
+            title="Next sections"
+          >
+            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+
+          {/* Subtle Act Progress Badge */}
+          <div className="h-4 w-px bg-outline/25 mx-1" />
+          <div className="px-2.5 py-0.5 rounded-full bg-surface-container-high/60 border border-outline/15 text-[10px] font-sans font-semibold tracking-wider text-primary/80 select-none">
+            {windowStart + 1}–{Math.min(totalSectionsCount, windowStart + WINDOW_SIZE)} <span className="text-on-surface/40">/ {totalSectionsCount}</span>
+          </div>
+        </nav>
         
         {/* Right Actions & Tactile Controls */}
-        <div className="flex items-center gap-2.5 sm:gap-3.5">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Order Bag / Cart Button with Glow Badge */}
           {isCartEnabled && (
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setIsDrawerOpen(true)}
-              className="relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:border-primary/50 hover:bg-surface-container-high text-on-surface transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-95 cursor-pointer shadow-md"
+              className="relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:border-primary/50 hover:bg-surface-container-high text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-md"
               aria-label={`View order bag with ${cartCount} items`}
               title="View Order Bag"
             >
@@ -258,19 +453,27 @@ export const Header: React.FC = React.memo(() => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-on-primary font-sans text-[11px] font-extrabold flex items-center justify-center shadow-[0_2px_8px_rgba(var(--color-primary-rgb),0.4)] animate-in zoom-in duration-200">
+                <motion.span 
+                  key={cartCount}
+                  initial={{ scale: 0.4, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-on-primary font-sans text-[11px] font-extrabold flex items-center justify-center shadow-[0_2px_8px_rgba(var(--color-primary-rgb),0.4)]"
+                >
                   {cartCount}
-                </span>
+                </motion.span>
               )}
-            </button>
+            </motion.button>
           )}
           
           {/* Refined Luxury Primary CTA (Desktop) */}
           {showPrimaryCta && (
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               type="button"
               onClick={handlePrimaryCtaClick}
-              className="hidden sm:inline-flex items-center gap-2 h-9 px-5 rounded-full bg-primary hover:opacity-90 active:opacity-95 text-on-primary font-sans text-[11px] font-semibold tracking-[0.18em] uppercase transition-all duration-300 shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)] active:scale-95 cursor-pointer shrink-0"
+              className="hidden sm:inline-flex items-center gap-2 h-9 px-5 rounded-full bg-primary hover:opacity-90 active:opacity-95 text-on-primary font-sans text-[11px] font-semibold tracking-[0.18em] uppercase transition-all duration-300 shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)] cursor-pointer shrink-0"
             >
               <span>
                 {restaurantConfig?.isTableBookingEnabled !== false
@@ -280,12 +483,13 @@ export const Header: React.FC = React.memo(() => {
               <span className="material-symbols-outlined text-[15px] font-light">
                 {restaurantConfig?.isTableBookingEnabled !== false ? 'table_restaurant' : 'storefront'}
               </span>
-            </button>
+            </motion.button>
           )}
 
           {/* Mobile Menu Fluid Hamburger Morph */}
-          <button 
-            className="lg:hidden relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:bg-surface-container-high text-on-surface transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer active:scale-95"
+          <motion.button 
+            whileTap={{ scale: 0.92 }}
+            className="lg:hidden relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:bg-surface-container-high text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={isMobileMenuOpen}
@@ -307,143 +511,173 @@ export const Header: React.FC = React.memo(() => {
                 }`} 
               />
             </div>
-          </button>
+          </motion.button>
         </div>
       </div>
 
       {/* Editorial Luxury Mobile Navigation Modal Overlay */}
-      <div
-        className={`fixed inset-0 top-0 bg-black/85 backdrop-blur-xl z-40 lg:hidden transition-opacity duration-300 ${
-          isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setIsMobileMenuOpen(false)}
-        aria-hidden="true"
-      />
-      <div 
-        className={`lg:hidden fixed top-20 left-0 right-0 max-h-[calc(100dvh-5.5rem)] bg-surface-container/98 border-b border-primary/35 shadow-[0_30px_70px_rgba(0,0,0,0.9)] z-50 overflow-y-auto overscroll-contain rounded-b-[2rem] transition-all duration-300 ease-out transform ${
-          isMobileMenuOpen ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 -translate-y-4 scale-98 pointer-events-none'
-        }`}
-      >
-        <div className="max-w-[1320px] mx-auto px-5 py-6 flex flex-col gap-6">
-          
-          {/* Brand Monogram & Live Service Status Strip */}
-          <div className="flex items-center justify-between pb-4 border-b border-outline/15">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full border border-primary/40 bg-surface-container-low flex items-center justify-center text-primary text-xs font-serif font-bold">
-                {businessName.split(/\s+/).filter(Boolean).map((w: string) => w[0]).join('').slice(0, 3).toUpperCase() || 'TCB'}
-              </div>
-              <div className="flex flex-col">
-                <span className="font-serif text-sm font-semibold text-on-surface">{businessName}</span>
-                <span className="font-sans text-[9px] uppercase tracking-[0.2em] text-primary/80">
-                  {restaurantConfig?.address?.city || shortName || 'Dining'}
-                </span>
-              </div>
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-sans font-semibold uppercase tracking-wider">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Open Now</span>
-            </div>
-          </div>
-
-          {/* Staggered Numerated Editorial Links with Active Section Highlight */}
-          <nav className="flex flex-col gap-1">
-            {visibleNavLinks.map((link, idx) => {
-              const linkSectionId = link.href.startsWith('#') ? link.href.slice(1) : '';
-              const isActive = activeSection === linkSectionId;
-              return (
-                <a 
-                  key={link.id}
-                  className={`group flex items-center justify-between py-3.5 px-3 rounded-xl border-b border-outline/10 active:bg-surface-container transition-all duration-200 ${
-                    isActive ? 'bg-primary/10 text-primary' : 'text-on-surface'
-                  }`} 
-                  href={link.href}
-                  target={link.isExternal ? '_blank' : undefined}
-                  rel={link.isExternal ? 'noopener noreferrer' : undefined}
-                  onClick={(e) => handleNavClick(e, link.href)}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`font-sans text-[11px] uppercase tracking-widest font-bold transition-colors ${
-                      isActive ? 'text-primary' : 'text-primary/60 group-hover:text-primary'
-                    }`}>
-                      0{idx + 1}
-                    </span>
-                    <span className={`font-serif text-xl sm:text-2xl transition-colors font-normal ${
-                      isActive ? 'text-primary' : 'text-on-surface group-hover:text-primary'
-                    }`}>
-                      {link.label}
-                    </span>
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              key="mobile-nav-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed inset-0 top-0 bg-black/85 backdrop-blur-xl z-40 lg:hidden pointer-events-auto"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-hidden="true"
+            />
+            <motion.div 
+              key="mobile-nav-drawer"
+              initial={{ opacity: 0, y: -20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.98 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:hidden fixed top-20 left-0 right-0 max-h-[calc(100dvh-5.5rem)] bg-surface-container/98 border-b border-primary/35 shadow-[0_30px_70px_rgba(0,0,0,0.9)] z-50 overflow-y-auto overscroll-contain rounded-b-[2rem] pointer-events-auto"
+            >
+              <div className="max-w-[1320px] mx-auto px-4 sm:px-6 py-5 flex flex-col gap-5">
+                
+                {/* Brand Monogram & Live Service Status Strip */}
+                <div className="flex items-center justify-between pb-3.5 border-b border-outline/15">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full border border-primary/40 bg-surface-container-low flex items-center justify-center text-primary text-xs font-serif font-bold">
+                      {businessName.split(/\s+/).filter(Boolean).map((w: string) => w[0]).join('').slice(0, 3).toUpperCase() || 'TCB'}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-serif text-sm font-semibold text-on-surface">{businessName}</span>
+                      <span className="font-sans text-[9px] uppercase tracking-[0.2em] text-primary/80">
+                        {restaurantConfig?.address?.city || shortName || 'Hospitality'}
+                      </span>
+                    </div>
                   </div>
-                  <span className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                    isActive ? 'bg-primary/25 text-primary' : 'bg-surface-container text-primary group-hover:bg-primary/20'
-                  }`}>
-                    <span className="material-symbols-outlined text-[15px] transform group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
-                  </span>
-                </a>
-              );
-            })}
-          </nav>
-          
-          {/* Mobile CTAs */}
-          <div className="flex flex-col gap-2.5 pt-1">
-            {showPrimaryCta && (
-              <button 
-                type="button"
-                onClick={handlePrimaryCtaClick}
-                className="group relative w-full h-12 rounded-full bg-primary text-on-primary text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-between pl-6 pr-2 shadow-[0_4px_20px_rgba(var(--color-primary-rgb),0.3)] active:scale-[0.98] transition-transform cursor-pointer"
-              >
-                <span>
-                  {restaurantConfig?.isTableBookingEnabled !== false
-                    ? (headerConfig.primaryCtaText || 'Reserve a Table')
-                    : 'Walk-Ins Welcome'}
-                </span>
-                <div className="w-8 h-8 rounded-full bg-on-primary/15 flex items-center justify-center transition-transform group-hover:scale-105">
-                  <span className="material-symbols-outlined text-[16px] text-on-primary">
-                    {restaurantConfig?.isTableBookingEnabled !== false ? 'table_restaurant' : 'storefront'}
-                  </span>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-sans font-semibold uppercase tracking-wider">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Open Now</span>
+                  </div>
                 </div>
-              </button>
-            )}
 
-            <div className="grid grid-cols-2 gap-2.5">
-              {phone && headerConfig.showCallAction !== false ? (
-                <a
-                  href={`tel:${phone}`}
-                  className="h-11 rounded-full border border-outline/25 bg-surface-container/60 text-on-surface text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 active:bg-surface-container transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[16px] text-primary">call</span>
-                  <span>Call Concierge</span>
-                </a>
-              ) : null}
-              {googleMapsLink && headerConfig.showDirectionsAction !== false ? (
-                <a
-                  href={googleMapsLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-11 rounded-full border border-outline/25 bg-surface-container/60 text-on-surface text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 active:bg-surface-container transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[16px] text-primary">directions</span>
-                  <span>Directions</span>
-                </a>
-              ) : null}
-            </div>
-          </div>
+                {/* 7 Authentic Acts Navigation in Exact Chronological Order */}
+                <nav className="flex flex-col gap-1.5" aria-label="Mobile Navigation">
+                  {enabledOrderedSections.map((item, idx) => {
+                    const itemSectionId = item.href.slice(1);
+                    const isActive = activeSection === itemSectionId;
+                    const displayIndex = enabledOrderedSections.findIndex((s) => s.id === item.id) + 1;
+                    return (
+                      <motion.a 
+                        key={item.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.02 * idx, duration: 0.2 }}
+                        className={`group flex items-center justify-between min-h-[52px] py-2.5 px-3 rounded-xl border transition-all duration-200 cursor-pointer ${
+                          isActive 
+                            ? 'bg-primary/15 border-primary/30 text-primary shadow-sm' 
+                            : 'border-outline/10 hover:bg-surface-container active:bg-surface-container text-on-surface'
+                        }`} 
+                        href={item.href}
+                        onClick={(e) => handleNavClick(e, item.href)}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-sans text-[11px] font-extrabold tracking-wider transition-colors ${
+                            isActive ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container text-primary/90 group-hover:bg-primary/20 group-hover:text-primary'
+                          }`}>
+                            {displayIndex < 10 ? `0${displayIndex}` : displayIndex}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-serif text-base tracking-tight font-medium truncate ${
+                                isActive ? 'text-primary font-semibold' : 'text-on-surface group-hover:text-primary'
+                              }`}>
+                                {item.shortLabel}
+                              </span>
+                              {item.badge && (
+                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary/90 border border-primary/20 shrink-0">
+                                  {item.badge}
+                                </span>
+                              )}
+                            </div>
+                            <span className="font-sans text-[11px] text-on-surface/60 truncate">
+                              {item.description}
+                            </span>
+                          </div>
+                        </div>
+                        <span className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ml-2 transition-all ${
+                          isActive ? 'bg-primary/25 text-primary' : 'bg-surface-container text-primary/70 group-hover:bg-primary/20 group-hover:text-primary'
+                        }`}>
+                          <span className="material-symbols-outlined text-[15px] transform group-hover:translate-x-0.5 transition-transform">
+                            arrow_forward
+                          </span>
+                        </span>
+                      </motion.a>
+                    );
+                  })}
+                </nav>
+                
+                {/* Mobile Direct Action Buttons */}
+                <div className="flex flex-col gap-2 pt-1 border-t border-outline/15">
+                  {showPrimaryCta && (
+                    <button 
+                      type="button"
+                      onClick={handlePrimaryCtaClick}
+                      className="group relative w-full h-12 rounded-full bg-primary text-on-primary text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-between pl-6 pr-2 shadow-[0_4px_20px_rgba(var(--color-primary-rgb),0.3)] active:scale-[0.98] transition-transform cursor-pointer"
+                    >
+                      <span>
+                        {restaurantConfig?.isTableBookingEnabled !== false
+                          ? (headerConfig.primaryCtaText || 'Reserve a Table')
+                          : 'Walk-Ins Welcome'}
+                      </span>
+                      <div className="w-8 h-8 rounded-full bg-on-primary/15 flex items-center justify-center transition-transform group-hover:scale-105">
+                        <span className="material-symbols-outlined text-[16px] text-on-primary">
+                          {restaurantConfig?.isTableBookingEnabled !== false ? 'table_restaurant' : 'storefront'}
+                        </span>
+                      </div>
+                    </button>
+                  )}
 
-          {/* Restaurant Hours & Location Micro-Footer */}
-          <div className="pt-4 border-t border-white/10 flex flex-col gap-1.5 text-[11px] text-on-surface/65 font-sans">
-            <div className="flex items-center gap-2 text-primary font-medium">
-              <span className="material-symbols-outlined text-sm">schedule</span>
-              <span>Daily Service: {openingHours}</span>
-            </div>
-            {address && (
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">location_on</span>
-                <span className="truncate">{address}</span>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {phone && headerConfig.showCallAction !== false ? (
+                      <a
+                        href={`tel:${phone}`}
+                        className="h-11 rounded-full border border-outline/25 bg-surface-container/60 text-on-surface text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 active:bg-surface-container transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-primary">call</span>
+                        <span>Call Concierge</span>
+                      </a>
+                    ) : null}
+                    {googleMapsLink && headerConfig.showDirectionsAction !== false ? (
+                      <a
+                        href={googleMapsLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="h-11 rounded-full border border-outline/25 bg-surface-container/60 text-on-surface text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 active:bg-surface-container transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-primary">directions</span>
+                        <span>Directions</span>
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Restaurant Hours & Location Micro-Footer */}
+                <div className="pt-3 border-t border-outline/10 flex flex-col gap-1.5 text-[11px] text-on-surface/65 font-sans">
+                  <div className="flex items-center gap-2 text-primary font-medium">
+                    <span className="material-symbols-outlined text-sm">schedule</span>
+                    <span>Daily Service: {openingHours}</span>
+                  </div>
+                  {address && (
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">location_on</span>
+                      <span className="truncate">{address}</span>
+                    </div>
+                  )}
+                </div>
+
               </div>
-            )}
-          </div>
-
-        </div>
-      </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 });

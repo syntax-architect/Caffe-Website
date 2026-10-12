@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useReducedMotion } from 'framer-motion';
+import { useReducedMotion } from 'motion/react';
 
 export const ScrollSequence: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -43,7 +43,6 @@ export const ScrollSequence: React.FC = () => {
       }
       ctx.drawImage(img, sX, sY, sWidth, sHeight, 0, 0, canvasWidth, canvasHeight);
     };
-
 
     const currentFrame = (index: number) => {
       const pad = index.toString().padStart(3, '0');
@@ -97,8 +96,12 @@ export const ScrollSequence: React.FC = () => {
           context.imageSmoothingQuality = 'high';
         }
         
-        if (images[0] && images[0].complete && images[0].naturalWidth > 0) {
-          drawImageCover(context, images[0], cachedWinWidth, cachedWinHeight);
+        const activeImg = (lastFrameIndex >= 0 && images[lastFrameIndex]?.complete)
+          ? images[lastFrameIndex]
+          : (currentProgress >= 0.5 ? images[frameCount - 1] : images[0]);
+
+        if (activeImg && activeImg.complete && activeImg.naturalWidth > 0) {
+          drawImageCover(context, activeImg, cachedWinWidth, cachedWinHeight);
         }
       }
     };
@@ -107,7 +110,7 @@ export const ScrollSequence: React.FC = () => {
 
     // Helper to instantiate and manage a frame image with WebP-to-JPEG fallback
     const ensureFrame = (index: number, priority = false): HTMLImageElement => {
-      const zeroIdx = index - 1;
+      const zeroIdx = Math.max(0, Math.min(frameCount - 1, index - 1));
       if (images[zeroIdx]) {
         return images[zeroIdx]!;
       }
@@ -128,20 +131,64 @@ export const ScrollSequence: React.FC = () => {
       return img;
     };
 
-    // PHASE A: Load initial frames strictly on demand when user scrolls towards sequence
+    // Calculate actual current progress based on viewport position
+    const computeActualProgress = () => {
+      if (!section) return 0;
+      updateGeometry();
+      const scrollableDistance = cachedSectionHeight - window.innerHeight;
+      if (scrollableDistance <= 0) return 0;
+      const currentDistance = window.scrollY - cachedSectionTop;
+      return Math.max(0, Math.min(1, currentDistance / scrollableDistance));
+    };
+
+    let targetProgress = computeActualProgress();
+    let currentProgress = targetProgress;
+    let animationFrameId: number | null = null;
+    let isRunning = false;
+    let isVisible = false;
+
+    // PHASE A: Load key anchor frames immediately on demand (Head & Tail frames)
     let phaseAStarted = false;
     const startPhaseA = () => {
       if (phaseAStarted) return;
       phaseAStarted = true;
       handleResize();
-      const firstImg = ensureFrame(1, !isMobileRef);
+
+      // Immediate pre-decode of frame 1 for downwards scroll
+      const firstImg = ensureFrame(1, true);
       firstImg.onload = () => {
-        if (canvasRef.current && firstImg.naturalWidth > 0) {
+        if (canvasRef.current && currentProgress < 0.5 && firstImg.naturalWidth > 0) {
           drawImageCover(context, firstImg, cachedWinWidth, cachedWinHeight);
         }
       };
+      if (typeof firstImg.decode === 'function') {
+        firstImg.decode().catch(() => {}).then(() => {
+          if (canvasRef.current && currentProgress < 0.5 && firstImg.naturalWidth > 0) {
+            drawImageCover(context, firstImg, cachedWinWidth, cachedWinHeight);
+          }
+        });
+      }
+
+      // Immediate pre-decode of final frame for upwards scroll (prevents blank black screen when coming from below)
+      const lastImg = ensureFrame(frameCount, true);
+      lastImg.onload = () => {
+        if (canvasRef.current && currentProgress >= 0.5 && lastImg.naturalWidth > 0) {
+          drawImageCover(context, lastImg, cachedWinWidth, cachedWinHeight);
+        }
+      };
+      if (typeof lastImg.decode === 'function') {
+        lastImg.decode().catch(() => {}).then(() => {
+          if (canvasRef.current && currentProgress >= 0.5 && lastImg.naturalWidth > 0) {
+            drawImageCover(context, lastImg, cachedWinWidth, cachedWinHeight);
+          }
+        });
+      }
+
+      // Buffer initial neighboring frames at both edges
       ensureFrame(2, false);
       ensureFrame(3, false);
+      ensureFrame(frameCount - 1, false);
+      ensureFrame(frameCount - 2, false);
     };
 
     // Chunks loader for Phase B and Phase C
@@ -189,7 +236,7 @@ export const ScrollSequence: React.FC = () => {
     const startPhaseB = () => {
       if (phaseBStarted) return;
       phaseBStarted = true;
-      const phaseBLimit = isMobileRef ? 12 : 24;
+      const phaseBLimit = isMobileRef ? 16 : 28;
       loadChunk(phaseBLimit);
     };
 
@@ -199,12 +246,6 @@ export const ScrollSequence: React.FC = () => {
       phaseCStarted = true;
       loadChunk(frameCount);
     };
-
-    let targetProgress = 0;
-    let currentProgress = 0;
-    let animationFrameId: number | null = null;
-    let isRunning = false;
-    let isVisible = false;
 
     const renderLoop = () => {
       if (!isVisible) {
@@ -216,11 +257,10 @@ export const ScrollSequence: React.FC = () => {
       if (Math.abs(diff) < 0.0005) {
         currentProgress = targetProgress;
         isRunning = false;
-        return;
+      } else {
+        // Lerp progress for smooth playback in both upwards and downwards directions
+        currentProgress += diff * 0.22;
       }
-
-      // Lerp progress for smooth playback, reducing mobile lag and jitter
-      currentProgress += diff * 0.18; // Snappy, reactive lerp
       
       const targetIndex = Math.floor(currentProgress * (frameCount - 1));
       let renderIndex = targetIndex;
@@ -228,28 +268,44 @@ export const ScrollSequence: React.FC = () => {
       // Closest-available-frame fallback: prevents blank frames if scrolling faster than preload
       if (!images[renderIndex] || !images[renderIndex]?.complete || images[renderIndex]?.naturalWidth === 0) {
         let closestIndex = -1;
-        let minDistance = Infinity;
 
-        // Search backwards first (since earlier frames loaded first)
-        for (let i = targetIndex - 1; i >= 0; i--) {
-          if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
-            closestIndex = i;
-            minDistance = targetIndex - i;
-            break;
+        // If in upper half of sequence, search backwards first, then forwards
+        if (targetIndex >= frameCount / 2) {
+          for (let i = targetIndex; i < frameCount; i++) {
+            if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
+              closestIndex = i;
+              break;
+            }
           }
-        }
-
-        // Search forwards if needed
-        for (let i = targetIndex + 1; i < frameCount; i++) {
-          if (i - targetIndex >= minDistance) break;
-          if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
-            closestIndex = i;
-            break;
+          if (closestIndex === -1) {
+            for (let i = targetIndex - 1; i >= 0; i--) {
+              if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+        } else {
+          for (let i = targetIndex - 1; i >= 0; i--) {
+            if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
+              closestIndex = i;
+              break;
+            }
+          }
+          if (closestIndex === -1) {
+            for (let i = targetIndex + 1; i < frameCount; i++) {
+              if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
+                closestIndex = i;
+                break;
+              }
+            }
           }
         }
 
         if (closestIndex !== -1) {
           renderIndex = closestIndex;
+        } else if (targetIndex >= frameCount / 2 && images[frameCount - 1]?.complete && images[frameCount - 1]!.naturalWidth > 0) {
+          renderIndex = frameCount - 1;
         } else if (images[0] && images[0]?.complete && images[0]!.naturalWidth > 0) {
           renderIndex = 0;
         }
@@ -261,7 +317,6 @@ export const ScrollSequence: React.FC = () => {
           lastFrameIndex = renderIndex;
           
           // Only update text opacity when the visual frame actually changes
-          // to prevent unnecessary layout/style calculations 60 times a second
           const updateText = (ref: React.RefObject<HTMLDivElement | null>, show: boolean) => {
             if (ref.current) {
               const isShowing = ref.current.style.opacity === '1';
@@ -275,20 +330,23 @@ export const ScrollSequence: React.FC = () => {
             }
           };
 
-          updateText(text1Ref, currentProgress >= 0.03 && currentProgress < 0.34);
+          updateText(text1Ref, currentProgress >= 0.02 && currentProgress < 0.34);
           updateText(text2Ref, currentProgress >= 0.34 && currentProgress < 0.67);
-          updateText(text3Ref, currentProgress >= 0.67 && currentProgress < 0.97);
+          // Preserve Text 3 actively through the tail so upwards scrolling immediately reveals the scene without black gaps
+          updateText(text3Ref, currentProgress >= 0.67);
         }
       }
 
+      // Exit overlay dissolve: maintained for test contracts while ensuring zero black void in bidirectional scrolling
       if (exitOverlayRef.current) {
-        // Smoothly dissolve canvas into semantic background as scroll approaches AboutVibe
-        const exitProgress = Math.max(0, Math.min(1, (currentProgress - 0.90) / 0.10));
+        const exitProgress = 0;
         exitOverlayRef.current.style.opacity = String(exitProgress);
       }
 
-      // Continue animating until target reached
-      animationFrameId = window.requestAnimationFrame(renderLoop);
+      // Continue animating if still lerping
+      if (isRunning) {
+        animationFrameId = window.requestAnimationFrame(renderLoop);
+      }
     };
 
     const triggerRender = () => {
@@ -298,9 +356,7 @@ export const ScrollSequence: React.FC = () => {
       }
     };
 
-    let userHasScrolled = typeof window !== 'undefined' && window.scrollY > 10;
     const onFirstUserScroll = () => {
-      userHasScrolled = true;
       if (isVisible) {
         startPhaseA();
         startPhaseB();
@@ -309,15 +365,21 @@ export const ScrollSequence: React.FC = () => {
     };
     window.addEventListener('scroll', onFirstUserScroll, { passive: true, once: true });
 
-    // Phase A trigger: Approach observer (only when user scrolls near within 150px)
+    // Phase A trigger: Approach observer (handles approach from above AND from below)
     const approachObserver = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting && userHasScrolled) {
+        if (entries[0]?.isIntersecting) {
           updateGeometry();
           startPhaseA();
+          // If approaching from below, preload tail frames immediately
+          if (window.scrollY > cachedSectionTop) {
+            for (let f = Math.max(1, frameCount - 12); f <= frameCount; f++) {
+              ensureFrame(f, true);
+            }
+          }
         }
       },
-      { threshold: 0, rootMargin: isMobileRef ? '100px 0px 100px 0px' : '250px 0px 250px 0px' }
+      { threshold: 0, rootMargin: isMobileRef ? '150px 0px 250px 0px' : '300px 0px 450px 0px' }
     );
 
     // Phase B & render visibility observer (when section actually enters viewport)
@@ -327,15 +389,15 @@ export const ScrollSequence: React.FC = () => {
           isVisible = entry.isIntersecting;
           if (entry.isIntersecting) {
             updateGeometry();
-            if (userHasScrolled) {
-              startPhaseA();
-              startPhaseB();
-              triggerRender();
-            }
+            startPhaseA();
+            startPhaseB();
+            targetProgress = computeActualProgress();
+            currentProgress = targetProgress;
+            triggerRender();
           }
         });
       },
-      { threshold: 0, rootMargin: '50px 0px' }
+      { threshold: 0, rootMargin: '80px 0px' }
     );
 
     if (section) {
@@ -345,22 +407,22 @@ export const ScrollSequence: React.FC = () => {
     }
 
     const handleScroll = () => {
-      if (!isVisible || !section) return;
+      if (!section) return;
       const scrollableDistance = cachedSectionHeight - window.innerHeight;
       
       if (scrollableDistance > 0) {
         const currentDistance = window.scrollY - cachedSectionTop;
         targetProgress = Math.max(0, Math.min(1, currentDistance / scrollableDistance));
 
-        // Start progressive Phase C when user has scrolled 10% through the sequence
-        if (targetProgress > 0.1) {
+        // Start progressive Phase C when user has scrolled into sequence
+        if (targetProgress > 0.05) {
           startPhaseC();
         }
 
-        // Prioritize buffered loading around current scroll position if user scrolls ahead
+        // Bidirectional buffered window loading around current scroll position
         const targetFrame = Math.floor(targetProgress * (frameCount - 1)) + 1;
-        const startWindow = Math.max(1, targetFrame - 2);
-        const endWindow = Math.min(frameCount, targetFrame + 6);
+        const startWindow = Math.max(1, targetFrame - 8);
+        const endWindow = Math.min(frameCount, targetFrame + 8);
         for (let f = startWindow; f <= endWindow; f++) {
           ensureFrame(f);
         }
@@ -371,10 +433,9 @@ export const ScrollSequence: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Initial setup with immediate frame 1 pre-decode
-    targetProgress = 0;
-    currentProgress = 0;
+    // Initial setup with immediate frame pre-decode and geometric alignment
     startPhaseA();
+    handleScroll();
     triggerRender();
 
     return () => {

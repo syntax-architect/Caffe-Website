@@ -9,6 +9,20 @@
 const STORAGE_PREFIX = 'cafe_ratelimit_';
 const memoryFallback = new Map<string, number[]>();
 
+function pruneMemoryFallback(now: number, windowMs: number) {
+  if (memoryFallback.size > 100) {
+    const threshold = now - windowMs * 2;
+    for (const [key, list] of memoryFallback.entries()) {
+      const active = list.filter((t) => t > threshold);
+      if (active.length === 0) {
+        memoryFallback.delete(key);
+      } else {
+        memoryFallback.set(key, active);
+      }
+    }
+  }
+}
+
 export interface RateLimitResult {
   allowed: boolean;
   remainingAttempts: number;
@@ -89,6 +103,7 @@ export function recordRateLimitAttempt(
     localStorage.setItem(`${STORAGE_PREFIX}${action}`, JSON.stringify(timestamps));
   } catch {
     memoryFallback.set(action, timestamps);
+    pruneMemoryFallback(now, windowMs);
   }
 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion } from 'motion/react';
 import { useDevice } from '../hooks/useDevice';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
@@ -585,16 +586,23 @@ export const Menu: React.FC = () => {
                         ref={(el) => { categoryBtnRefs.current[category.id] = el; }}
                         type="button"
                         onClick={() => handleSelectCategory(category.id)}
-                        className={`px-3.5 sm:px-4 py-2 rounded-full font-sans text-xs uppercase tracking-wider transition-all duration-200 whitespace-nowrap cursor-pointer border flex items-center gap-1.5 active:scale-95 shrink-0 ${
+                        className={`relative px-3.5 sm:px-4 py-2 rounded-full font-sans text-xs uppercase tracking-wider transition-colors duration-200 whitespace-nowrap cursor-pointer border flex items-center gap-1.5 active:scale-95 shrink-0 ${
                           isActive
                             ? 'bg-primary text-on-primary border-primary font-bold shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.35)]'
                             : 'bg-surface-container-low/80 text-on-surface-variant border-outline/20 hover:border-primary/40 hover:text-on-surface'
                         }`}
                       >
-                        <span className="material-symbols-outlined text-[15px]">
+                        {isActive && (
+                          <motion.span
+                            layoutId="activeCategoryPill"
+                            className="absolute inset-0 bg-primary rounded-full -z-10 shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.35)]"
+                            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                          />
+                        )}
+                        <span className="material-symbols-outlined text-[15px] z-10">
                           {getCategoryIcon(category.name)}
                         </span>
-                        <span>{category.name}</span>
+                        <span className="z-10">{category.name}</span>
                       </button>
                     );
                   })}
@@ -801,15 +809,17 @@ export const Menu: React.FC = () => {
                           {formatPrice(featuredItem.price)}
                         </div>
 
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.94 }}
                           disabled={!canAdd}
                           type="button"
-                          className={`h-11 sm:h-10 min-h-[44px] px-5 sm:px-6 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 ${
+                          className={`h-11 sm:h-10 min-h-[44px] px-5 sm:px-6 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 ${
                             !canAdd
                               ? 'bg-surface-elevated/40 border border-outline/20 text-on-surface-variant/40 cursor-not-allowed'
                               : isJustAdded
                               ? 'bg-primary text-on-primary border border-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.6)] scale-105'
-                              : 'bg-primary text-on-primary hover:bg-primary/90 border border-primary shadow-lg hover:shadow-[0_4px_20px_rgba(var(--color-primary-rgb),0.4)] cursor-pointer hover:scale-[1.02]'
+                              : 'bg-primary text-on-primary hover:bg-primary/90 border border-primary shadow-lg hover:shadow-[0_4px_20px_rgba(var(--color-primary-rgb),0.4)] cursor-pointer'
                           }`}
                           title={
                             !itemAvailable
@@ -826,7 +836,7 @@ export const Menu: React.FC = () => {
                           <span>
                             {!itemAvailable ? 'Sold Out' : !isOrderingActive ? 'Paused' : isJustAdded ? 'Added' : 'Add to Order'}
                           </span>
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
                   );
@@ -904,15 +914,17 @@ export const Menu: React.FC = () => {
                               {formatPrice(item.price)}
                             </span>
 
-                            <button
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.94 }}
                               disabled={!canAdd}
                               type="button"
-                              className={`h-9 min-w-[64px] px-3.5 sm:h-7 sm:min-w-0 sm:px-3 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1 transition-all duration-200 active:scale-95 shrink-0 ${
+                              className={`h-9 min-w-[64px] px-3.5 sm:h-7 sm:min-w-0 sm:px-3 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1 transition-all duration-200 shrink-0 ${
                                 !canAdd
                                   ? 'bg-surface-elevated/40 border border-outline/20 text-on-surface-variant/40 cursor-not-allowed'
                                   : isJustAdded
                                   ? 'bg-primary text-on-primary border border-primary shadow-[0_0_14px_rgba(var(--color-primary-rgb),0.6)] scale-105'
-                                  : 'bg-primary/10 hover:bg-primary text-primary hover:text-on-primary border border-primary/30 hover:border-primary shadow-xs hover:shadow-[0_2px_10px_rgba(var(--color-primary-rgb),0.35)] cursor-pointer hover:scale-105'
+                                  : 'bg-primary/10 hover:bg-primary text-primary hover:text-on-primary border border-primary/30 hover:border-primary shadow-xs hover:shadow-[0_2px_10px_rgba(var(--color-primary-rgb),0.35)] cursor-pointer'
                               }`}
                               title={
                                 !itemAvailable
@@ -927,7 +939,7 @@ export const Menu: React.FC = () => {
                                 {!itemAvailable ? 'block' : !isOrderingActive ? 'pause_circle' : isJustAdded ? 'check' : 'add'}
                               </span>
                               <span>{!itemAvailable ? 'Sold Out' : !isOrderingActive ? 'Paused' : isJustAdded ? 'Added' : 'Add'}</span>
-                            </button>
+                            </motion.button>
                           </div>
                         </div>
 

@@ -27,7 +27,14 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 serve(async (req: Request) => {
-  const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || Deno.env.get('PUBLIC_SITE_URL') || '*';
+  const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || Deno.env.get('PUBLIC_SITE_URL');
+  if (!allowedOrigin) {
+    return new Response(
+      JSON.stringify({ error: 'Server configuration error: ALLOWED_ORIGIN or PUBLIC_SITE_URL environment variable is required.' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   const corsHeaders = {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',

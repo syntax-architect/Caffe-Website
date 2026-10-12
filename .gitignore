@@ -70,3 +70,7 @@ lighthouse-report*.json
 *.pem
 *.key
 
+# Workflows (requires elevated OAuth scope)
+.github/
+
+

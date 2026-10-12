@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { clientDetails } from '../../config/client';
+import { Breadcrumbs } from '../Breadcrumbs';
 
 export const TermsPage: React.FC = () => {
   const { restaurantConfig, logoUrl } = useSiteConfig();
@@ -49,6 +50,7 @@ export const TermsPage: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
+        <Breadcrumbs items={[{ label: 'Legal', href: '/privacy' }, { label: 'Terms of Service', current: true }]} />
         <div className="mb-12 border-b border-white/10 pb-8">
           <span className="font-mono text-xs uppercase tracking-widest text-[#D4AF37] mb-2 block">
             Guest Agreement &amp; Dining Guidelines

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, typ
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { StaffProfile, AuthContextType, AuthSignInResult, MfaEnrollResult } from '../types/auth';
+import { clientDetails } from '../config/client';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -408,7 +409,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const res = await client.auth.mfa.enroll({
         factorType: 'totp',
-        issuer: 'The Café Barrackpore',
+        issuer: clientDetails.businessName || 'Operations Terminal',
         friendlyName: `Staff (${user.email})`,
       });
 

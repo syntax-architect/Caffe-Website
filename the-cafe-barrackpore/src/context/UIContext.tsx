@@ -27,6 +27,8 @@ interface UIContextType {
   dismissToast: () => void;
   isReservationOpen: boolean;
   setIsReservationOpen: (value: boolean) => void;
+  isContactOpen: boolean;
+  setIsContactOpen: (value: boolean) => void;
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
@@ -243,6 +245,7 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({
 
 export const UIProvider = ({ children }: { children: ReactNode }) => {
   const [isReservationOpen, setIsReservationOpen] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -280,7 +283,9 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
     dismissToast,
     isReservationOpen,
     setIsReservationOpen,
-  }), [showModal, closeModal, showToast, dismissToast, isReservationOpen]);
+    isContactOpen,
+    setIsContactOpen,
+  }), [showModal, closeModal, showToast, dismissToast, isReservationOpen, isContactOpen]);
 
   return (
     <UIContext.Provider value={contextValue}>

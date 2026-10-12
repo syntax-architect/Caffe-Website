@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import type { VIPPerk } from '../services/siteContentService';
 import { DEFAULT_VIP_PERKS } from '../services/siteContentService';
@@ -165,61 +166,72 @@ export const VIPClub: React.FC = () => {
 
             {/* 6. Subscription Form & Interactive States */}
             <div className="relative z-10 w-full max-w-md mt-1">
-              {isSubscribed ? (
-                <div 
-                  key="subscribed"
-                  className="flex flex-col items-center gap-2.5 p-6 sm:p-8 rounded-2xl bg-gradient-to-b from-surface-container/95 to-surface-obsidian/95 border border-primary/50 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(var(--color-primary-rgb),0.2)] backdrop-blur-xl transition-all duration-300 animate-fade-in"
-                >
-                  <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary flex items-center justify-center text-primary shadow-inner">
-                    <span className="material-symbols-outlined text-2xl font-light">verified</span>
-                  </div>
-                  <h3 className="font-serif text-xl sm:text-2xl text-[#FAF6F0] font-normal">{successTitle}</h3>
-                  <p className="font-sans text-xs text-[#FAF6F0]/80 font-light max-w-xs">
-                    {successMessage}
-                  </p>
-                </div>
-              ) : (
-                <form 
-                  key="form"
-                  className="w-full flex flex-col sm:flex-row gap-3 items-center" 
-                  onSubmit={handleSubmit}
-                >
-                  <div className="flex-1 w-full relative group/input">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#FAF6F0]/50 group-focus-within/input:text-primary transition-colors">
-                      <span className="material-symbols-outlined text-base font-light">mail</span>
-                    </div>
-                    <input 
-                      type="email" 
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder={placeholder} 
-                      required
-                      className="w-full h-12 bg-surface-container-lowest/90 border border-outline/30 focus:border-primary ring-1 ring-transparent focus:ring-primary/50 rounded-full pl-12 pr-5 text-sm text-[#FAF6F0] placeholder:text-[#FAF6F0]/40 focus:outline-none transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] backdrop-blur-md"
-                      aria-label="Email address for VIP Club"
-                    />
-                  </div>
-                  
-                  {/* Island Button-in-Button Submission CTA */}
-                  <button 
-                    type="submit"
-                    disabled={isLoading}
-                    className="group/btn w-full sm:w-auto h-12 pl-7 pr-2.5 rounded-full bg-primary hover:bg-primary-fixed active:scale-[0.98] text-on-primary text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 flex items-center justify-between gap-3 shadow-[0_4px_22px_rgba(var(--color-primary-rgb),0.35)] hover:shadow-[0_8px_32px_rgba(var(--color-primary-rgb),0.55)] disabled:opacity-70 cursor-pointer shrink-0"
+              <AnimatePresence mode="wait">
+                {isSubscribed ? (
+                  <motion.div 
+                    key="subscribed"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex flex-col items-center gap-2.5 p-6 sm:p-8 rounded-2xl bg-gradient-to-b from-surface-container/95 to-surface-obsidian/95 border border-primary/50 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(var(--color-primary-rgb),0.2)] backdrop-blur-xl"
                   >
-                    {isLoading ? (
-                      <span className="w-5 h-5 border-2 border-on-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                    ) : (
-                      <>
-                        <span>{ctaLabel}</span>
-                        <div className="w-8 h-8 rounded-full bg-on-primary/15 group-hover/btn:bg-on-primary/25 flex items-center justify-center transition-all duration-300 group-hover/btn:translate-x-1">
-                          <span className="material-symbols-outlined text-[17px] text-on-primary">
-                            arrow_forward
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
+                    <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary flex items-center justify-center text-primary shadow-inner">
+                      <span className="material-symbols-outlined text-2xl font-light">verified</span>
+                    </div>
+                    <h3 className="font-serif text-xl sm:text-2xl text-[#FAF6F0] font-normal">{successTitle}</h3>
+                    <p className="font-sans text-xs text-[#FAF6F0]/80 font-light max-w-xs">
+                      {successMessage}
+                    </p>
+                  </motion.div>
+                ) : (
+                  <motion.form 
+                    key="form"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="w-full flex flex-col sm:flex-row gap-3 items-center" 
+                    onSubmit={handleSubmit}
+                  >
+                    <div className="flex-1 w-full relative group/input">
+                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#FAF6F0]/50 group-focus-within/input:text-primary transition-colors">
+                        <span className="material-symbols-outlined text-base font-light">mail</span>
+                      </div>
+                      <input 
+                        type="email" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder={placeholder} 
+                        required
+                        className="w-full h-12 bg-surface-container-lowest/90 border border-outline/30 focus:border-primary ring-1 ring-transparent focus:ring-primary/50 rounded-full pl-12 pr-5 text-sm text-[#FAF6F0] placeholder:text-[#FAF6F0]/40 focus:outline-none transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] backdrop-blur-md"
+                        aria-label="Email address for VIP Club"
+                      />
+                    </div>
+                    
+                    {/* Island Button-in-Button Submission CTA */}
+                    <motion.button 
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      type="submit"
+                      disabled={isLoading}
+                      className="group/btn w-full sm:w-auto h-12 pl-7 pr-2.5 rounded-full bg-primary hover:bg-primary-fixed text-on-primary text-xs font-sans font-bold uppercase tracking-wider transition-colors flex items-center justify-between gap-3 shadow-[0_4px_22px_rgba(var(--color-primary-rgb),0.35)] hover:shadow-[0_8px_32px_rgba(var(--color-primary-rgb),0.55)] disabled:opacity-70 cursor-pointer shrink-0"
+                    >
+                      {isLoading ? (
+                        <span className="w-5 h-5 border-2 border-on-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                      ) : (
+                        <>
+                          <span>{ctaLabel}</span>
+                          <div className="w-8 h-8 rounded-full bg-on-primary/15 group-hover/btn:bg-on-primary/25 flex items-center justify-center transition-all duration-300 group-hover/btn:translate-x-1">
+                            <span className="material-symbols-outlined text-[17px] text-on-primary">
+                              arrow_forward
+                            </span>
+                          </div>
+                        </>
+                      )}
+                    </motion.button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* 7. Discreet Trust & Hospitality Badge */}

@@ -22,11 +22,12 @@ import { smoothScrollTo } from './utils/scroll';
 // Code-split heavy interactive modal overlays (only fetched when user opens them or on idle)
 const CartDrawer = lazy(() => import('./components/CartDrawer').then(module => ({ default: module.CartDrawer })));
 const ReservationDrawer = lazy(() => import('./components/ReservationDrawer').then(module => ({ default: module.ReservationDrawer })));
+const ContactDrawer = lazy(() => import('./components/ContactDrawer').then(module => ({ default: module.ContactDrawer })));
 const CookieConsent = lazy(() => import('./components/CookieConsent').then(module => ({ default: module.CookieConsent })));
 
 export const AppLayout: React.FC = () => {
   const { isDrawerOpen } = useCart();
-  const { isReservationOpen } = useUI();
+  const { isReservationOpen, isContactOpen } = useUI();
   const { engineConfig } = useSiteConfig();
   const [showConsent, setShowConsent] = useState(false);
 
@@ -79,6 +80,7 @@ export const AppLayout: React.FC = () => {
         <Suspense fallback={null}>
           {isDrawerOpen && <CartDrawer />}
           {isReservationOpen && <ReservationDrawer />}
+          {isContactOpen && <ContactDrawer />}
           {showConsent && <CookieConsent />}
         </Suspense>
       )}

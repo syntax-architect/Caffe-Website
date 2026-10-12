@@ -9,7 +9,7 @@
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
-import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
+import { getCorsHeaders, handleCorsPreflight, getConfiguredOrigin, getMissingOriginConfigResponse } from '../_shared/cors.ts';
 import { checkRateLimit } from '../_shared/rateLimiter.ts';
 
 const CLOUDFLARE_SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
@@ -17,6 +17,11 @@ const CLOUDFLARE_SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v
 const CLOUDFLARE_TEST_SECRET_KEY = '1x0000000000000000000000000000000AA';
 
 serve(async (req: Request) => {
+  const configuredOrigin = getConfiguredOrigin();
+  if (!configuredOrigin) {
+    return getMissingOriginConfigResponse();
+  }
+
   const preflight = handleCorsPreflight(req);
   if (preflight) return preflight;
 
