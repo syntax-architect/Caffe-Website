@@ -21,7 +21,6 @@ declare module 'https://*' {
   export function createClient(supabaseUrl: string, supabaseKey: string, options?: any): any;
   const content: any;
   export default content;
-  [key: string]: any;
 }
 
 declare module 'https://deno.land/std@*/http/server.ts' {

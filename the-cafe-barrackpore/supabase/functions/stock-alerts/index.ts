@@ -66,7 +66,6 @@ serve(async (req: Request) => {
     const threshold = settings?.low_stock_alert_threshold ?? 5;
     const businessName = settings.business_name;
     const targetPhone = settings?.owner_notification_phone || settings?.phone;
-    const targetEmail = settings?.owner_notification_email || settings?.email;
     const notifyMethod = settings?.owner_notification_method || 'none';
 
     // 2. Query low stock & sold out items

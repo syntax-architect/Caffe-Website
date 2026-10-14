@@ -7,7 +7,6 @@ import {
   roundCurrency,
 } from '../src/utils/taxEngine';
 import {
-  COUNTRY_TAX_PROFILES,
   getCountryTaxProfile,
   listAvailableTaxProfiles,
 } from '../src/config/taxProfiles';

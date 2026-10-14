@@ -65,7 +65,6 @@ serve(async (req: Request) => {
     }
 
     const businessName = settings.business_name;
-    const currency = settings.currency;
     const currencySymbol = settings?.currency_symbol || '₹';
     const notifyMethod = settings?.owner_notification_method || 'none';
     const targetPhone = settings?.owner_notification_phone || settings?.phone;
