@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- COMPLETE DATABASE INITIALIZATION SCRIPT
--- Runs all migrations (001 - 018) in proper dependency order.
+-- Runs all migrations (001 - 020) in proper dependency order.
 -- Copy and paste this ENTIRE script into Supabase Dashboard -> SQL Editor and click Run.
 -- ==============================================================================
 
@@ -1152,8 +1152,16 @@ CREATE TABLE IF NOT EXISTS public.menu (
 CREATE INDEX IF NOT EXISTS idx_menu_category ON public.menu(category);
 CREATE INDEX IF NOT EXISTS idx_menu_is_available ON public.menu(is_available);
 
--- Compatibility view for menu_items
-CREATE OR REPLACE VIEW public.menu_items AS SELECT * FROM public.menu;
+-- Compatibility view for menu_items (only create if it does not already exist as a table)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_tables 
+        WHERE schemaname = 'public' AND tablename = 'menu_items'
+    ) THEN
+        CREATE OR REPLACE VIEW public.menu_items AS SELECT * FROM public.menu;
+    END IF;
+END $$;
 
 -- 2. ENABLE ROW LEVEL SECURITY
 ALTER TABLE public.menu ENABLE ROW LEVEL SECURITY;
@@ -1577,7 +1585,15 @@ CREATE TRIGGER trg_guard_order_payment_status_paid
 -- ==============================================================================
 
 -- 1. DROP OLD COMPATIBILITY VIEW IF PRESENT
-DROP VIEW IF EXISTS public.menu_items CASCADE;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_views 
+        WHERE schemaname = 'public' AND viewname = 'menu_items'
+    ) THEN
+        EXECUTE 'DROP VIEW public.menu_items CASCADE';
+    END IF;
+END $$;
 
 -- 2. CREATE MENU_CATEGORIES TABLE
 CREATE TABLE IF NOT EXISTS public.menu_categories (
@@ -5187,4 +5203,310 @@ BEGIN
     RETURN NEW;
 END;
 $$;
+
+
+-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+-- START OF: 019_contact_inquiries_hardening.sql
+-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+-- ==============================================================================
+-- Migration: 019_contact_inquiries_hardening.sql
+-- Description:
+-- 1. Security hardening: DROP FUNCTION public.create_verified_token_for_test(TEXT, TEXT).
+-- 2. contact_inquiries lockdown: DROP POLICY "guest_insert_contact_inquiries",
+--    REVOKE INSERT, UPDATE, DELETE on contact_inquiries from anon and authenticated.
+--    Only the SECURITY DEFINER submit_contact_inquiry RPC may insert.
+-- 3. submit_contact_inquiry hardening:
+--    - Always require a valid single-use token with action 'contact' (raise exception otherwise).
+--    - Ignore client restaurant_id and read strictly from restaurant_settings.
+--    - Ignore any client-supplied inquiry_ref and generate server-side with 16+ random characters.
+-- 4. Inquiry refs: generate with 16+ random characters.
+-- 5. get_contact_inquiry_status hardening:
+--    - Drop legacy 1-arg signature.
+--    - Require matching customer phone number.
+--    - Return only status, never the customer message.
+-- ==============================================================================
+
+-- ------------------------------------------------------------------------------
+-- 1. DROP TEST TOKEN SEEDER FUNCTION (SECURITY HARDENING)
+-- ------------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS public.create_verified_token_for_test(TEXT, TEXT);
+
+-- ------------------------------------------------------------------------------
+-- 2. LOCK DOWN contact_inquiries TABLE DIRECT MUTATIONS
+-- ------------------------------------------------------------------------------
+-- Drop guest insert policy so no client can directly INSERT
+DROP POLICY IF EXISTS "guest_insert_contact_inquiries" ON public.contact_inquiries;
+
+-- Revoke direct mutations from anon and authenticated (and public)
+REVOKE INSERT, UPDATE, DELETE ON TABLE public.contact_inquiries FROM anon, authenticated, public;
+
+-- Ensure service_role has full table access for internal RPCs and admin
+GRANT ALL ON TABLE public.contact_inquiries TO service_role;
+
+-- ------------------------------------------------------------------------------
+-- 3. HARDENED submit_contact_inquiry RPC
+-- ------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.submit_contact_inquiry(
+    payload JSONB,
+    verified_token TEXT DEFAULT NULL
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_inquiry JSONB;
+    v_inquiry_id UUID;
+    v_inquiry_ref TEXT;
+    v_restaurant_id TEXT;
+    v_verified_token TEXT;
+    v_consumed_token_id UUID;
+    v_name TEXT;
+    v_phone TEXT;
+    v_email TEXT;
+    v_subject TEXT;
+    v_message TEXT;
+BEGIN
+    v_inquiry := payload;
+    IF v_inquiry IS NULL OR jsonb_typeof(v_inquiry) <> 'object' THEN
+        RAISE EXCEPTION 'Inquiry payload must be a valid JSON object';
+    END IF;
+
+    -- 1. Bot Defense: Strictly require valid single-use token with action 'contact'
+    v_verified_token := trim(COALESCE(v_inquiry->>'verified_token', verified_token, ''));
+    IF v_verified_token = '' THEN
+        RAISE EXCEPTION 'Valid single-use verified token is required for contact inquiry';
+    END IF;
+
+    DELETE FROM public.verified_tokens
+    WHERE token = v_verified_token
+      AND action = 'contact'
+      AND expires_at > now()
+    RETURNING id INTO v_consumed_token_id;
+
+    IF v_consumed_token_id IS NULL THEN
+        RAISE EXCEPTION 'Invalid or expired verified token for contact inquiry';
+    END IF;
+
+    -- 2. Tenant Scoping: Strictly read restaurant_id from restaurant_settings (ignore client restaurant_id)
+    SELECT rs.restaurant_id
+    INTO v_restaurant_id
+    FROM public.restaurant_settings rs
+    LIMIT 1;
+
+    IF v_restaurant_id IS NULL OR trim(v_restaurant_id) = '' THEN
+        v_restaurant_id := 'the-cafe-barrackpore';
+    END IF;
+
+    -- 3. Customer Name Validation
+    v_name := trim(COALESCE(v_inquiry->>'name', ''));
+    IF length(v_name) < 2 THEN
+        RAISE EXCEPTION 'Please enter your name (minimum 2 characters)';
+    END IF;
+
+    -- 4. Customer Phone Validation
+    v_phone := trim(COALESCE(v_inquiry->>'phone', ''));
+    IF length(regexp_replace(v_phone, '[^0-9]', '', 'g')) < 7 THEN
+        RAISE EXCEPTION 'Please enter a valid phone number (minimum 7 digits)';
+    END IF;
+
+    -- 5. Email (Optional)
+    v_email := trim(COALESCE(v_inquiry->>'email', ''));
+    IF v_email = '' THEN
+        v_email := NULL;
+    END IF;
+
+    -- 6. Subject Validation
+    v_subject := lower(trim(COALESCE(v_inquiry->>'subject', 'general')));
+    IF v_subject NOT IN ('general', 'event', 'catering', 'feedback') THEN
+        v_subject := 'general';
+    END IF;
+
+    -- 7. Message Validation
+    v_message := trim(COALESCE(v_inquiry->>'message', ''));
+    IF length(v_message) < 10 THEN
+        RAISE EXCEPTION 'Please write a message with at least 10 characters';
+    END IF;
+
+    -- 8. Inquiry Reference Number: Ignore any client-supplied inquiry_ref; generate 16+ random characters
+    v_inquiry_ref := 'INQ-' || to_char(CURRENT_DATE, 'YYYYMMDD') || '-' || upper(substr(replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', ''), 1, 16));
+
+    -- 9. Insert Record
+    INSERT INTO public.contact_inquiries (
+        inquiry_ref,
+        restaurant_id,
+        name,
+        phone,
+        email,
+        subject,
+        message,
+        status,
+        created_at,
+        updated_at
+    ) VALUES (
+        v_inquiry_ref,
+        v_restaurant_id,
+        v_name,
+        v_phone,
+        v_email,
+        v_subject,
+        v_message,
+        'unread',
+        now(),
+        now()
+    )
+    RETURNING id INTO v_inquiry_id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'inquiry_id', v_inquiry_id,
+        'inquiry_ref', v_inquiry_ref
+    );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.submit_contact_inquiry(JSONB, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.submit_contact_inquiry(JSONB, TEXT) TO anon, authenticated, service_role;
+
+-- ------------------------------------------------------------------------------
+-- 4. HARDENED get_contact_inquiry_status RPC
+-- ------------------------------------------------------------------------------
+-- Drop old single-argument signature
+DROP FUNCTION IF EXISTS public.get_contact_inquiry_status(TEXT);
+
+-- Require matching phone number and return ONLY status, never the message
+CREATE OR REPLACE FUNCTION public.get_contact_inquiry_status(
+    p_inquiry_ref TEXT,
+    p_phone TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_status TEXT;
+    v_clean_phone TEXT;
+BEGIN
+    IF p_inquiry_ref IS NULL OR trim(p_inquiry_ref) = '' THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Missing inquiry reference');
+    END IF;
+
+    IF p_phone IS NULL OR trim(p_phone) = '' THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Missing phone number');
+    END IF;
+
+    v_clean_phone := regexp_replace(trim(p_phone), '[^0-9]', '', 'g');
+
+    SELECT status
+    INTO v_status
+    FROM public.contact_inquiries
+    WHERE inquiry_ref = trim(p_inquiry_ref)
+      AND (
+          phone = trim(p_phone)
+          OR regexp_replace(phone, '[^0-9]', '', 'g') = v_clean_phone
+      )
+    LIMIT 1;
+
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Inquiry not found');
+    END IF;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'status', v_status
+    );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_contact_inquiry_status(TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_contact_inquiry_status(TEXT, TEXT) TO anon, authenticated, service_role;
+
+
+-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+-- START OF: 020_payment_ledger_and_order_status.sql
+-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+-- ==============================================================================
+-- Migration: 020_payment_ledger_and_order_status.sql
+-- Description: Ensure unique index on payments(order_ref) and expose guest receipt
+--              metadata in get_order_status_by_token
+-- Target: Supabase (PostgreSQL 15+)
+-- ==============================================================================
+
+-- 1. Ensure unique index on public.payments(order_ref)
+-- Deduplicate any legacy pending records if any exist prior to unique constraint
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE schemaname = 'public' 
+          AND tablename = 'payments' 
+          AND indexname = 'idx_payments_order_ref_unique'
+    ) THEN
+        -- Keep most recently updated payment record if duplicates exist
+        DELETE FROM public.payments p1
+        USING public.payments p2
+        WHERE p1.order_ref = p2.order_ref
+          AND p1.updated_at < p2.updated_at;
+
+        CREATE UNIQUE INDEX idx_payments_order_ref_unique 
+        ON public.payments (order_ref);
+    END IF;
+END $$;
+
+-- 2. Update get_order_status_by_token to expose receipt fields
+-- Allows order-success page to display dining mode (dine_in vs takeaway),
+-- assigned table number, and customer name for verified token holders.
+CREATE OR REPLACE FUNCTION public.get_order_status_by_token(
+    p_order_ref TEXT,
+    p_payment_token TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_order RECORD;
+    v_token_hash TEXT;
+BEGIN
+    IF p_order_ref IS NULL OR p_payment_token IS NULL OR trim(p_payment_token) = '' THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Missing order reference or payment token');
+    END IF;
+
+    v_token_hash := encode(sha256(trim(p_payment_token)::bytea), 'hex');
+
+    SELECT id, order_ref, status, payment_status, total, payment_amount, currency, created_at,
+           order_type, table_number, customer_name
+    INTO v_order
+    FROM public.orders
+    WHERE order_ref = trim(p_order_ref)
+      AND payment_token_hash = v_token_hash
+    LIMIT 1;
+
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Invalid order reference or payment token');
+    END IF;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'order_ref', v_order.order_ref,
+        'status', v_order.status,
+        'payment_status', v_order.payment_status,
+        'total', v_order.total,
+        'payment_amount', v_order.payment_amount,
+        'currency', v_order.currency,
+        'created_at', v_order.created_at,
+        'order_type', v_order.order_type,
+        'table_number', v_order.table_number,
+        'customer_name', v_order.customer_name
+    );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_order_status_by_token(TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_order_status_by_token(TEXT, TEXT) TO anon, authenticated, service_role;
 

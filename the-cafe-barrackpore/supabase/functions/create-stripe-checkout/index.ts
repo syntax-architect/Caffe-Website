@@ -1,3 +1,4 @@
+/// <reference path="../deno.d.ts" />
 // ==============================================================================
 // Supabase Edge Function: create-stripe-checkout
 // Description: Secure server-side Stripe Checkout session creation.

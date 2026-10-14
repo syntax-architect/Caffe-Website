@@ -64,12 +64,14 @@
     -webkit-tap-highlight-color: transparent;
   }
   html { 
+    scroll-behavior: smooth;
     scroll-padding-top: 5.5rem; 
   }
   body { 
     overscroll-behavior-y: none; 
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-overflow-scrolling: touch;
   }
   main > :first-child { margin-top: 0 !important; }
   main > :last-child { margin-bottom: 0 !important; }
@@ -253,6 +255,8 @@ html, body { overflow-x: clip; width: 100%; position: relative; }
   .layer-isolated {
     contain: strict;
     transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform;
   }
 
   /* Below-the-fold content visibility layout skipping */

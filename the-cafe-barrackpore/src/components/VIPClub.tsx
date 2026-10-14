@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { getAvifSource } from '../utils/image';
 import type { VIPPerk } from '../services/siteContentService';
 import { DEFAULT_VIP_PERKS } from '../services/siteContentService';
 
@@ -87,8 +88,10 @@ export const VIPClub: React.FC = () => {
             {/* 2. PHOTOGRAPHIC CINEMATIC BACKGROUND IMAGE */}
             <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
               <picture>
-                <source srcSet={vipImageSrc.replace(/\.(jpg|webp)$/, '.avif')} type="image/avif" />
-                {vipImageSrc.endsWith('.jpg') && (
+                {getAvifSource(vipImageSrc) && (
+                  <source srcSet={getAvifSource(vipImageSrc)!} type="image/avif" />
+                )}
+                {vipImageSrc.endsWith('.jpg') && !vipImageSrc.startsWith('http') && (
                   <source srcSet={vipImageSrc.replace(/\.jpg$/, '.webp')} type="image/webp" />
                 )}
                 <img

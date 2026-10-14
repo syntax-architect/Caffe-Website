@@ -1,3 +1,4 @@
+/// <reference path="../deno.d.ts" />
 // ==============================================================================
 // Supabase Edge Functions: Hardened CORS Utility
 // Removes all wildcard origins ('*'). Enforces authoritative ALLOWED_ORIGIN secret.

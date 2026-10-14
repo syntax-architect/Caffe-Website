@@ -1,3 +1,4 @@
+/// <reference path="../deno.d.ts" />
 // ==============================================================================
 // Supabase Edge Function: create-payment
 // Description: Provider-agnostic payment order/session creator (Razorpay & Stripe).
@@ -80,11 +81,13 @@ serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Authoritative lookup: read order from database (never trust client)
-    const { data: order, error: orderErr } = await supabase
+    const { data: orderData, error: orderErr } = await supabase
       .from('orders')
-      .select('id, order_ref, total, payment_amount, currency, payment_status, payment_provider, customer_name, customer_phone, payment_token_hash')
+      .select('id, order_ref, restaurant_id, total, payment_amount, currency, payment_status, payment_provider, customer_name, customer_phone, payment_token_hash')
       .eq('order_ref', orderRef)
       .maybeSingle();
+
+    const order = orderData as any;
 
     if (orderErr || !order) {
       return new Response(
@@ -118,11 +121,13 @@ serve(async (req: Request) => {
     }
 
     // 2. Query restaurant settings for provider, payment status, currency, and business name
-    const { data: settings } = await supabase
+    const { data: settingsData } = await supabase
       .from('restaurant_settings')
       .select('payment_provider, payments_enabled, payment_enabled, allow_pay_at_counter, currency, business_name')
       .limit(1)
       .maybeSingle();
+
+    const settings = settingsData as any;
 
     const effectiveCurrency = (order.currency || settings?.currency)?.toUpperCase();
     if (!effectiveCurrency) {
@@ -208,20 +213,38 @@ serve(async (req: Request) => {
         })
         .eq('order_ref', order.order_ref);
 
-      // Upsert ledger entry
-      await supabase.from('payments').upsert({
-        order_id: order.id,
-        order_ref: order.order_ref,
-        provider: 'razorpay',
-        provider_payment_id: rzpData.id,
-        amount: amount,
-        currency: effectiveCurrency,
-        status: 'pending',
-        metadata: {
-          razorpay_order_id: rzpData.id,
-        },
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'order_ref' }).catch(() => {});
+      // Safely insert or update ledger entry
+      try {
+        const { data: existingPayment } = await supabase
+          .from('payments')
+          .select('id')
+          .eq('order_ref', order.order_ref)
+          .limit(1)
+          .maybeSingle();
+
+        const paymentPayload = {
+          order_id: order.id,
+          order_ref: order.order_ref,
+          restaurant_id: (order as any).restaurant_id || 'the-cafe-barrackpore',
+          provider: 'razorpay',
+          provider_payment_id: rzpData.id,
+          amount: amount,
+          currency: effectiveCurrency,
+          status: 'pending',
+          metadata: {
+            razorpay_order_id: rzpData.id,
+          },
+          updated_at: new Date().toISOString(),
+        };
+
+        if (existingPayment?.id) {
+          await supabase.from('payments').update(paymentPayload).eq('id', existingPayment.id);
+        } else {
+          await supabase.from('payments').insert(paymentPayload);
+        }
+      } catch (e) {
+        console.warn('[create-payment] Failed to record Razorpay payment ledger entry:', e);
+      }
 
       return new Response(
         JSON.stringify({
@@ -298,20 +321,38 @@ serve(async (req: Request) => {
         })
         .eq('order_ref', order.order_ref);
 
-      // Upsert ledger entry
-      await supabase.from('payments').upsert({
-        order_id: order.id,
-        order_ref: order.order_ref,
-        provider: 'stripe',
-        provider_payment_id: session.id,
-        amount: amount,
-        currency: effectiveCurrency,
-        status: 'pending',
-        metadata: {
-          stripe_session_id: session.id,
-        },
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'order_ref' }).catch(() => {});
+      // Safely insert or update ledger entry
+      try {
+        const { data: existingStripePayment } = await supabase
+          .from('payments')
+          .select('id')
+          .eq('order_ref', order.order_ref)
+          .limit(1)
+          .maybeSingle();
+
+        const stripePayload = {
+          order_id: order.id,
+          order_ref: order.order_ref,
+          restaurant_id: (order as any).restaurant_id || 'the-cafe-barrackpore',
+          provider: 'stripe',
+          provider_payment_id: session.id,
+          amount: amount,
+          currency: effectiveCurrency,
+          status: 'pending',
+          metadata: {
+            stripe_session_id: session.id,
+          },
+          updated_at: new Date().toISOString(),
+        };
+
+        if (existingStripePayment?.id) {
+          await supabase.from('payments').update(stripePayload).eq('id', existingStripePayment.id);
+        } else {
+          await supabase.from('payments').insert(stripePayload);
+        }
+      } catch (e) {
+        console.warn('[create-payment] Failed to record Stripe payment ledger entry:', e);
+      }
 
       return new Response(
         JSON.stringify({

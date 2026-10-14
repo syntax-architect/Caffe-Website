@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { smoothScrollTo } from '../utils/scroll';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { getAvifSource } from '../utils/image';
 import type { HeroVariant } from '../types/restaurantEngine';
 
 interface HeroActionsProps {
@@ -87,9 +88,10 @@ export const Hero: React.FC = React.memo(() => {
   // Active Hero layout variant from engine configuration
   const activeVariant: HeroVariant = engineConfig?.variants?.hero || 'cinematic-fullscreen';
 
-  // Pointer-responsive subtle depth on desktop with fine pointer
-  const [pointerOffset, setPointerOffset] = useState({ x: 0, y: 0 });
+  // Pointer-responsive subtle depth on desktop with fine pointer (Zero React re-render overhead)
   const isPointerFine = useRef(false);
+  const parallaxWrapperRef = useRef<HTMLDivElement>(null);
+  const parallaxContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined' || activeVariant !== 'cinematic-fullscreen') return;
@@ -98,29 +100,39 @@ export const Hero: React.FC = React.memo(() => {
 
     const handleMediaChange = (e: MediaQueryListEvent) => {
       isPointerFine.current = e.matches;
-      if (!e.matches) setPointerOffset({ x: 0, y: 0 });
+      if (!e.matches) {
+        if (parallaxWrapperRef.current) parallaxWrapperRef.current.style.transform = 'translate3d(0, 0, 0)';
+        if (parallaxContentRef.current) parallaxContentRef.current.style.transform = 'translate3d(0, 0, 0)';
+      }
     };
     mediaQuery.addEventListener('change', handleMediaChange);
 
     let rafId: number | null = null;
     const handlePointerMove = (e: MouseEvent) => {
       if (!isPointerFine.current || prefersReducedMotion) return;
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
-        const normX = (e.clientX - centerX) / centerX;
-        const normY = (e.clientY - centerY) / centerY;
-        // Restrained subtle movement: max 8px parallax
-        setPointerOffset({
-          x: Math.max(-1, Math.min(1, normX)) * 8,
-          y: Math.max(-1, Math.min(1, normY)) * 8,
+      if (!prefersReducedMotion) {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+          const centerX = window.innerWidth / 2;
+          const centerY = window.innerHeight / 2;
+          const normX = (e.clientX - centerX) / centerX;
+          const normY = (e.clientY - centerY) / centerY;
+          // Restrained subtle movement: max 6px parallax, GPU accelerated
+          const x = Math.max(-1, Math.min(1, normX)) * 6;
+          const y = Math.max(-1, Math.min(1, normY)) * 6;
+          if (parallaxWrapperRef.current) {
+            parallaxWrapperRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+          }
+          if (parallaxContentRef.current) {
+            parallaxContentRef.current.style.transform = `translate3d(${-x * 0.35}px, ${-y * 0.35}px, 0)`;
+          }
         });
-      });
+      }
     };
 
     const handlePointerLeave = () => {
-      setPointerOffset({ x: 0, y: 0 });
+      if (parallaxWrapperRef.current) parallaxWrapperRef.current.style.transform = 'translate3d(0, 0, 0)';
+      if (parallaxContentRef.current) parallaxContentRef.current.style.transform = 'translate3d(0, 0, 0)';
     };
 
     window.addEventListener('mousemove', handlePointerMove, { passive: true });
@@ -148,6 +160,8 @@ export const Hero: React.FC = React.memo(() => {
   const isCustomHero = Boolean(hero?.src && hero.src !== '/images/hero-bar.webp');
   const heroImageSrc = hero?.src || '/images/hero-bar.webp';
   const heroMobileSrc = hero?.mobileSrc || (!isCustomHero ? '/images/hero-bar-mobile.webp' : undefined);
+  const heroAvifSrc = getAvifSource(heroImageSrc);
+  const heroMobileAvifSrc = getAvifSource(heroMobileSrc);
   const heroBusinessName = restaurantConfig?.businessName || 'The Lounge';
   const heroImageAlt = hero?.alt || `${heroBusinessName} — Nocturnal Cocktail & Espresso Lounge`;
 
@@ -249,13 +263,15 @@ export const Hero: React.FC = React.memo(() => {
               <div className="relative w-full max-w-[500px] lg:max-w-none p-2 rounded-[2.5rem] bg-gradient-to-b from-surface-container/70 via-surface-container/30 to-transparent border border-outline/25 shadow-[0_24px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(var(--color-primary-rgb),0.12)] group">
                 <div className="relative aspect-[4/5] sm:aspect-[16/11] lg:aspect-[4/5] w-full rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-surface-container-lowest">
                   <picture>
-                    {heroMobileSrc && (
-                      <source media="(max-width: 768px)" srcSet={heroMobileSrc.replace(/\.webp$/, '.avif')} type="image/avif" />
+                    {heroMobileAvifSrc && (
+                      <source media="(max-width: 768px)" srcSet={heroMobileAvifSrc} type="image/avif" />
                     )}
                     {heroMobileSrc && (
                       <source media="(max-width: 768px)" srcSet={heroMobileSrc} type="image/webp" />
                     )}
-                    <source srcSet={heroImageSrc.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
+                    {heroAvifSrc && (
+                      <source srcSet={heroAvifSrc} type="image/avif" />
+                    )}
                     <img
                       src={heroImageSrc}
                       alt={heroImageAlt}
@@ -436,22 +452,20 @@ export const Hero: React.FC = React.memo(() => {
         className="absolute top-0 right-0 bottom-0 w-full md:w-[60%] lg:w-[66%] xl:w-[64%] h-full pointer-events-none select-none overflow-hidden z-0 hero-mask-reveal"
       >
         <div 
+          ref={parallaxWrapperRef}
           className="relative w-full h-full transition-transform duration-300 ease-out will-change-transform"
-          style={{
-            transform: !prefersReducedMotion && pointerOffset.x !== 0
-              ? `translate3d(${pointerOffset.x * 0.75}px, ${pointerOffset.y * 0.75}px, 0)`
-              : undefined,
-          }}
         >
           <picture>
-            {heroMobileSrc && (
-              <source media="(max-width: 768px)" srcSet={heroMobileSrc.replace(/\.webp$/, '.avif')} type="image/avif" width="768" height="1376" />
+            {heroMobileAvifSrc && (
+              <source media="(max-width: 768px)" srcSet={heroMobileAvifSrc} type="image/avif" width="768" height="1376" />
             )}
             {heroMobileSrc && (
               <source media="(max-width: 768px)" srcSet={heroMobileSrc} type="image/webp" width="768" height="1376" />
             )}
-            <source srcSet={heroImageSrc.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
-            {heroImageSrc.endsWith('.jpg') && (
+            {heroAvifSrc && (
+              <source srcSet={heroAvifSrc} type="image/avif" />
+            )}
+            {heroImageSrc.endsWith('.jpg') && !heroImageSrc.startsWith('http') && (
               <source srcSet={heroImageSrc.replace(/\.jpg$/, '.webp')} type="image/webp" />
             )}
             <img
@@ -498,12 +512,8 @@ export const Hero: React.FC = React.memo(() => {
 
       {/* 3. MAIN HERO CONTENT CONTAINER (Vertically centered, intentional optical spacing) */}
       <div 
+        ref={parallaxContentRef}
         className="relative z-10 w-full max-w-[1360px] mx-auto px-6 sm:px-10 lg:px-12 pt-28 sm:pt-32 lg:pt-36 pb-8 flex-1 flex flex-col justify-center transition-transform duration-300 ease-out will-change-transform"
-        style={{
-          transform: !prefersReducedMotion && pointerOffset.x !== 0
-            ? `translate3d(${-pointerOffset.x * 0.3}px, ${-pointerOffset.y * 0.3}px, 0)`
-            : undefined,
-        }}
       >
         <div className="max-w-[740px] lg:max-w-[640px] xl:max-w-[680px]">
           

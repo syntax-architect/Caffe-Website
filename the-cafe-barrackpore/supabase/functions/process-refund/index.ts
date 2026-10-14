@@ -1,3 +1,4 @@
+/// <reference path="../deno.d.ts" />
 // ==============================================================================
 // Supabase Edge Function: process-refund
 // Description: Owner-authorized refund processing for Stripe and Razorpay.

@@ -198,24 +198,38 @@ export const Header: React.FC = React.memo(() => {
       .filter(Boolean);
   }, [enabledOrderedSections]);
 
-  // Scroll spy effect with smooth focal line detection
+  // Scroll spy effect with smooth focal line detection and zero-redundancy updates
   useEffect(() => {
     let ticking = false;
+    let lastActive = '';
+    let lastScrolled = typeof window !== 'undefined' ? window.scrollY > 25 : false;
+    setIsScrolled(lastScrolled);
 
     const updateScrollAndActive = () => {
       const scrollY = window.scrollY;
-      setIsScrolled(scrollY > 25);
+      const nextScrolled = scrollY > 25;
+      if (nextScrolled !== lastScrolled) {
+        lastScrolled = nextScrolled;
+        setIsScrolled(nextScrolled);
+      }
 
       // Hero / Top of page — no link highlighted
       if (scrollY < 180) {
-        setActiveSection('');
+        if (lastActive !== '') {
+          lastActive = '';
+          setActiveSection('');
+        }
         return;
       }
 
       // Near bottom of page — highlight last visible section
       const isAtBottom = window.innerHeight + scrollY >= document.documentElement.scrollHeight - 70;
       if (isAtBottom && activeSpySectionIds.length > 0) {
-        setActiveSection(activeSpySectionIds[activeSpySectionIds.length - 1]);
+        const bottomSection = activeSpySectionIds[activeSpySectionIds.length - 1];
+        if (lastActive !== bottomSection) {
+          lastActive = bottomSection;
+          setActiveSection(bottomSection);
+        }
         return;
       }
 
@@ -226,23 +240,29 @@ export const Header: React.FC = React.memo(() => {
         .map((id) => ({ id, el: document.getElementById(id) }))
         .filter((item): item is { id: string; el: HTMLElement } => Boolean(item.el));
 
-      // 1. Check if section bounds contain the focal line
+      let matchedId = '';
       for (const { id, el } of elements) {
         const rect = el.getBoundingClientRect();
         if (rect.top <= focalLine && rect.bottom > focalLine) {
-          setActiveSection(id);
-          return;
+          matchedId = id;
+          break;
         }
       }
 
-      // 2. Fallback: last section whose top has crossed the focal line
-      for (let i = elements.length - 1; i >= 0; i--) {
-        const { id, el } = elements[i];
-        const rect = el.getBoundingClientRect();
-        if (rect.top <= focalLine) {
-          setActiveSection(id);
-          return;
+      if (!matchedId) {
+        for (let i = elements.length - 1; i >= 0; i--) {
+          const { id, el } = elements[i];
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= focalLine) {
+            matchedId = id;
+            break;
+          }
         }
+      }
+
+      if (matchedId && matchedId !== lastActive) {
+        lastActive = matchedId;
+        setActiveSection(matchedId);
       }
     };
 

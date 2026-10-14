@@ -1,3 +1,4 @@
+/// <reference path="../deno.d.ts" />
 // ==============================================================================
 // Supabase Edge Function: invite-staff
 // Description: Owner-only staff invitation and account provisioning.

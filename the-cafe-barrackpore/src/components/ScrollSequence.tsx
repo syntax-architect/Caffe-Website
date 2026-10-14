@@ -80,7 +80,7 @@ export const ScrollSequence: React.FC = () => {
       
       cachedWinWidth = newWidth;
       cachedWinHeight = newHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2); // Allow sharp retina rendering up to 2x DPR
+      const dpr = isMobileRef ? 1 : Math.min(window.devicePixelRatio || 1, 1.5); // Optimal DPI scaling without GPU memory bloat
       
       // Only set canvas dimensions if they actually changed to avoid clearing the context
       if (canvas.width !== cachedWinWidth * dpr || canvas.height !== cachedWinHeight * dpr) {
@@ -406,6 +406,7 @@ export const ScrollSequence: React.FC = () => {
       updateGeometry();
     }
 
+    let lastBufferedFrame = -1;
     const handleScroll = () => {
       if (!section) return;
       const scrollableDistance = cachedSectionHeight - window.innerHeight;
@@ -419,12 +420,16 @@ export const ScrollSequence: React.FC = () => {
           startPhaseC();
         }
 
-        // Bidirectional buffered window loading around current scroll position
+        // Bidirectional buffered window loading around current scroll position (throttled)
         const targetFrame = Math.floor(targetProgress * (frameCount - 1)) + 1;
-        const startWindow = Math.max(1, targetFrame - 8);
-        const endWindow = Math.min(frameCount, targetFrame + 8);
-        for (let f = startWindow; f <= endWindow; f++) {
-          ensureFrame(f);
+        if (targetFrame !== lastBufferedFrame) {
+          lastBufferedFrame = targetFrame;
+          const windowSize = isMobileRef ? 5 : 8;
+          const startWindow = Math.max(1, targetFrame - windowSize);
+          const endWindow = Math.min(frameCount, targetFrame + windowSize);
+          for (let f = startWindow; f <= endWindow; f++) {
+            ensureFrame(f);
+          }
         }
 
         triggerRender();

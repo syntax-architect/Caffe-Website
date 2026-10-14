@@ -1,3 +1,4 @@
+/// <reference path="../deno.d.ts" />
 // ==============================================================================
 // Supabase Edge Function: daily-sales-summary
 // Description: Computes daily sales metrics and dispatches an executive summary

@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { SectionReveal } from './SectionReveal';
+import { getAvifSource } from '../utils/image';
 import type { SpecialCombo, SpecialBadge } from '../services/siteContentService';
 import type { SpecialsVariant } from '../types/restaurantEngine';
 import {
@@ -150,7 +151,9 @@ export const SpecialsBanner: React.FC = () => {
                   {/* Left Column: Panoramic Gourmet Photography */}
                   <div className="lg:col-span-7 relative min-h-[280px] sm:min-h-[340px] lg:min-h-[420px] bg-surface-container-lowest overflow-hidden">
                     <picture>
-                      <source srcSet={masterPlatter.image.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
+                      {getAvifSource(masterPlatter.image) && (
+                        <source srcSet={getAvifSource(masterPlatter.image)!} type="image/avif" />
+                      )}
                       <img
                         src={masterPlatter.image}
                         alt={masterPlatter.name}
@@ -241,7 +244,9 @@ export const SpecialsBanner: React.FC = () => {
                     {/* Image Column */}
                     <div className="sm:w-5/12 relative min-h-[200px] sm:min-h-[220px] bg-surface-container-lowest overflow-hidden">
                       <picture>
-                        <source srcSet={combo.image.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
+                        {getAvifSource(combo.image) && (
+                          <source srcSet={getAvifSource(combo.image)!} type="image/avif" />
+                        )}
                         <img
                           src={combo.image}
                           alt={combo.name}
@@ -327,7 +332,9 @@ export const SpecialsBanner: React.FC = () => {
                     {/* Photo Container */}
                     <div className="relative aspect-[16/11] w-full overflow-hidden bg-surface-container-lowest">
                       <picture>
-                        <source srcSet={combo.image.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
+                        {getAvifSource(combo.image) && (
+                          <source srcSet={getAvifSource(combo.image)!} type="image/avif" />
+                        )}
                         <img
                           src={combo.image}
                           alt={combo.name}

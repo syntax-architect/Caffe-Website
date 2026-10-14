@@ -1,3 +1,4 @@
+/// <reference path="../deno.d.ts" />
 // ==============================================================================
 // Supabase Edge Function: stock-alerts
 // Description: Monitors inventory levels and sends real-time alerts to the owner

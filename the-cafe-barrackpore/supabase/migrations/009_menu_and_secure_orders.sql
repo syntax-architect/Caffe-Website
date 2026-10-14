@@ -23,8 +23,16 @@ CREATE TABLE IF NOT EXISTS public.menu (
 CREATE INDEX IF NOT EXISTS idx_menu_category ON public.menu(category);
 CREATE INDEX IF NOT EXISTS idx_menu_is_available ON public.menu(is_available);
 
--- Compatibility view for menu_items
-CREATE OR REPLACE VIEW public.menu_items AS SELECT * FROM public.menu;
+-- Compatibility view for menu_items (only create if it does not already exist as a table)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_tables 
+        WHERE schemaname = 'public' AND tablename = 'menu_items'
+    ) THEN
+        CREATE OR REPLACE VIEW public.menu_items AS SELECT * FROM public.menu;
+    END IF;
+END $$;
 
 -- 2. ENABLE ROW LEVEL SECURITY
 ALTER TABLE public.menu ENABLE ROW LEVEL SECURITY;

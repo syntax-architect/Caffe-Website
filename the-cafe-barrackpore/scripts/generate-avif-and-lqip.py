@@ -10,7 +10,11 @@ import io
 import sys
 import json
 import base64
-from PIL import Image, ImageFilter
+try:
+    from PIL import Image, ImageFilter
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
 
 if sys.stdout.encoding != 'utf-8':
     try:
@@ -26,7 +30,7 @@ SUPPORTED_EXTS = ('.jpg', '.jpeg', '.png', '.webp')
 AVIF_QUALITY = 65
 LQIP_WIDTH = 24
 
-def generate_lqip_base64(img: Image.Image) -> str:
+def generate_lqip_base64(img) -> str:
     """Generates an ultra-small base64 WebP data URI placeholder."""
     thumb = img.copy()
     thumb.thumbnail((LQIP_WIDTH, LQIP_WIDTH), Image.Resampling.BOX)
@@ -42,6 +46,18 @@ def process_all_images():
     print("=" * 60)
     print("[START] AUTOMATED BUILD-TIME AVIF & LQIP PIPELINE")
     print("=" * 60)
+
+    if not HAS_PIL:
+        print("[INFO] Pillow (PIL) is not installed in this environment.")
+        if os.path.exists(OUTPUT_MANIFEST):
+            print(f"[OK] Pre-generated LQIP manifest exists at {OUTPUT_MANIFEST}.")
+            print("[OK] Using existing pre-built AVIF assets and manifest for deployment.")
+        else:
+            print(f"[WARN] Creating empty fallback manifest at {OUTPUT_MANIFEST}.")
+            with open(OUTPUT_MANIFEST, 'w', encoding='utf-8') as f:
+                f.write('{}\n')
+        print("=" * 60 + "\n")
+        return
 
     manifest = {}
     total_images_processed = 0

@@ -1,3 +1,4 @@
+/// <reference path="../deno.d.ts" />
 // ==============================================================================
 // Supabase Edge Function: payment-health-check
 // Description: Secure status check for payment provider configuration.

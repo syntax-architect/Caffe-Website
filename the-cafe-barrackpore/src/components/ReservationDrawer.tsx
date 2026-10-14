@@ -81,8 +81,22 @@ export const ReservationDrawer: React.FC = () => {
   };
 
   const dispatchWhatsApp = (ref: string, keepDrawerOpen: boolean = false) => {
-    const text = `🌟 *${encodeURIComponent(restaurantConfig.businessName.toUpperCase())}* 🌟%0A*RESERVATION REQUEST: ${ref}*%0A%0A*Name:* ${encodeURIComponent(formData.name.trim())}%0A*Phone:* ${formData.phone.trim()}%0A*Guests:* ${formData.guests}%0A*Date:* ${formData.date}%0A*Time:* ${formData.time}${formData.notes.trim() ? `%0A*Special Requests:* ${encodeURIComponent(formData.notes.trim())}` : ''}%0A%0APlease confirm table availability.`;
-    
+    const lines = [
+      `🌟 *${restaurantConfig.businessName.toUpperCase()}* 🌟`,
+      `*RESERVATION REQUEST: ${ref}*`,
+      '',
+      `*Name:* ${formData.name.trim()}`,
+      `*Phone:* ${formData.phone.trim()}`,
+      `*Guests:* ${formData.guests}`,
+      `*Date:* ${formData.date}`,
+      `*Time:* ${formData.time}`,
+    ];
+    if (formData.notes.trim()) {
+      lines.push(`*Special Requests:* ${formData.notes.trim()}`);
+    }
+    lines.push('', 'Please confirm table availability.');
+
+    const text = encodeURIComponent(lines.join('\n'));
     // Clean phone number (remove non-digits)
     const cleanPhone = (restaurantConfig.contact.whatsapp || clientDetails.whatsapp).replace(/\D/g, '');
     

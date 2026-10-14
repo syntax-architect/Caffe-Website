@@ -1,3 +1,4 @@
+/// <reference path="../deno.d.ts" />
 // ==============================================================================
 // Supabase Edge Function: payment-webhook
 // Description: Secure server-side webhook handler for Razorpay & Stripe
@@ -258,7 +259,7 @@ serve(async (req: Request) => {
     // -------------------------------------------------------------
     const { data: order, error: orderErr } = await supabase
       .from('orders')
-      .select('id, order_ref, total, payment_amount, currency, payment_status')
+      .select('id, order_ref, restaurant_id, total, payment_amount, currency, payment_status, payment_reference')
       .eq('order_ref', orderRef)
       .maybeSingle();
 
@@ -327,12 +328,19 @@ serve(async (req: Request) => {
         })
         .eq('order_ref', orderRef);
 
-      // Upsert / update payment ledger
-      await supabase
-        .from('payments')
-        .upsert({
+      // Safely insert or update payment ledger entry
+      try {
+        const { data: existingLedger } = await supabase
+          .from('payments')
+          .select('id')
+          .eq('order_ref', order.order_ref)
+          .limit(1)
+          .maybeSingle();
+
+        const ledgerPayload = {
           order_id: order.id,
           order_ref: order.order_ref,
+          restaurant_id: (order as any).restaurant_id || 'the-cafe-barrackpore',
           provider: provider,
           provider_payment_id: providerPaymentId || null,
           amount: Number(order.payment_amount ?? order.total),
@@ -344,8 +352,16 @@ serve(async (req: Request) => {
             reconciled_at: now,
           },
           updated_at: now,
-        }, { onConflict: 'order_ref' })
-        .catch(() => {});
+        };
+
+        if (existingLedger?.id) {
+          await supabase.from('payments').update(ledgerPayload).eq('id', existingLedger.id);
+        } else {
+          await supabase.from('payments').insert(ledgerPayload);
+        }
+      } catch (e) {
+        console.warn('[payment-webhook] Failed to record paid ledger entry:', e);
+      }
     }
 
     // -------------------------------------------------------------
@@ -360,15 +376,43 @@ serve(async (req: Request) => {
         })
         .eq('order_ref', orderRef);
 
-      await supabase
-        .from('payments')
-        .update({
-          status: 'failed',
-          failure_reason: failureReason || 'Provider reported payment failure',
-          idempotency_key: eventId || null,
-          updated_at: now,
-        })
-        .eq('order_ref', orderRef);
+      try {
+        const { data: existingFailedLedger } = await supabase
+          .from('payments')
+          .select('id')
+          .eq('order_ref', orderRef)
+          .limit(1)
+          .maybeSingle();
+
+        if (existingFailedLedger?.id) {
+          await supabase
+            .from('payments')
+            .update({
+              status: 'failed',
+              failure_reason: failureReason || 'Provider reported payment failure',
+              idempotency_key: eventId || null,
+              updated_at: now,
+            })
+            .eq('id', existingFailedLedger.id);
+        } else {
+          await supabase
+            .from('payments')
+            .insert({
+              order_id: order.id,
+              order_ref: order.order_ref,
+              restaurant_id: (order as any).restaurant_id || 'the-cafe-barrackpore',
+              provider: provider,
+              amount: Number(order.payment_amount ?? order.total),
+              currency: order.currency,
+              status: 'failed',
+              failure_reason: failureReason || 'Provider reported payment failure',
+              idempotency_key: eventId || null,
+              updated_at: now,
+            });
+        }
+      } catch (e) {
+        console.warn('[payment-webhook] Failed to record failed payment ledger entry:', e);
+      }
     }
 
     // -------------------------------------------------------------

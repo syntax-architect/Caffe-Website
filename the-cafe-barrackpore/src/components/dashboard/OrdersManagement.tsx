@@ -266,15 +266,17 @@ export const OrdersManagement: React.FC = () => {
               </span>
             </div>
 
-            <button
-              type="button"
-              onClick={handleSimulateTableOrder}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 to-[#F3C766]/10 hover:from-[#D4AF37]/30 hover:to-[#F3C766]/20 border border-[#D4AF37]/40 text-[#F3C766] text-xs font-mono font-bold transition-all cursor-pointer shadow-sm active:scale-[0.98]"
-              title="Simulate incoming dinner service order from Table 07"
-            >
-              <span className="material-symbols-outlined text-sm">bolt</span>
-              <span className="hidden sm:inline">+ Table 07 Order</span>
-            </button>
+            {(import.meta.env.DEV || (restaurantConfig as any).isDemoMode) && (
+              <button
+                type="button"
+                onClick={handleSimulateTableOrder}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 to-[#F3C766]/10 hover:from-[#D4AF37]/30 hover:to-[#F3C766]/20 border border-[#D4AF37]/40 text-[#F3C766] text-xs font-mono font-bold transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+                title="Simulate incoming dinner service order from Table 07"
+              >
+                <span className="material-symbols-outlined text-sm">bolt</span>
+                <span className="hidden sm:inline">+ Table 07 Order</span>
+              </button>
+            )}
 
             <button
               type="button"

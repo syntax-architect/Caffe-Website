@@ -1,3 +1,4 @@
+/// <reference path="../deno.d.ts" />
 // ==============================================================================
 // Supabase Edge Function: create-razorpay-order
 // Description: Secure server-side Razorpay order and hosted checkout creation.

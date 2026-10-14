@@ -1,3 +1,4 @@
+/// <reference path="../deno.d.ts" />
 // ==============================================================================
 // Supabase Edge Functions: Rate Limiter per IP and per Phone
 // Enforces rate limiting strictly via Upstash Redis REST API or PostgreSQL rate_limits table.

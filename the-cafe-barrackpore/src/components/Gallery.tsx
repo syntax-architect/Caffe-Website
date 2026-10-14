@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { clientDetails } from '../config/client';
 import { SectionReveal } from './SectionReveal';
+import { getAvifSource } from '../utils/image';
 import { DEFAULT_GALLERY_ITEMS, type GalleryItem } from '../services/siteContentService';
 import type { GalleryVariant } from '../types/restaurantEngine';
 
@@ -277,7 +278,9 @@ export const Gallery: React.FC = () => {
 
                       {/* Photo */}
                       <picture className="absolute inset-0 w-full h-full">
-                        <source srcSet={item.src.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
+                        {getAvifSource(item.src) && (
+                          <source srcSet={getAvifSource(item.src)!} type="image/avif" />
+                        )}
                         <img 
                           loading="lazy" 
                           decoding="async" 
@@ -453,7 +456,9 @@ export const Gallery: React.FC = () => {
 
                       {/* Photography Image with Restrained Zoom */}
                       <picture className="absolute inset-0 w-full h-full">
-                        <source srcSet={item.src.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
+                        {getAvifSource(item.src) && (
+                          <source srcSet={getAvifSource(item.src)!} type="image/avif" />
+                        )}
                         <img 
                           loading="lazy" 
                           decoding="async" 

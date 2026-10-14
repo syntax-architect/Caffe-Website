@@ -15,5 +15,10 @@
     "docker:build": "docker build -t caffe-platform:latest .",
     "docker:run": "docker run -p 80:80 caffe-platform:latest",
     "docker:compose": "docker compose up -d"
+  },
+  "overrides": {
+    "chokidar": "^4.0.3",
+    "braces": "^3.0.3",
+    "micromatch": "^4.0.8"
   }
 }

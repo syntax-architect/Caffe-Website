@@ -20,12 +20,14 @@ const files = [
   '015_complete_image_sync.sql',
   '016_security_hardening.sql',
   '017_indexing_and_audit_log.sql',
-  '018_contact_inquiries.sql'
+  '018_contact_inquiries.sql',
+  '019_contact_inquiries_hardening.sql',
+  '020_payment_ledger_and_order_status.sql'
 ];
 
 let combined = `-- ==============================================================================
 -- COMPLETE DATABASE INITIALIZATION SCRIPT
--- Runs all migrations (001 - 018) in proper dependency order.
+-- Runs all migrations (001 - 020) in proper dependency order.
 -- Copy and paste this ENTIRE script into Supabase Dashboard -> SQL Editor and click Run.
 -- ==============================================================================
 

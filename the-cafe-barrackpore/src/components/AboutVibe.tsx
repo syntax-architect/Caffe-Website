@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { SectionReveal } from './SectionReveal';
+import { getAvifSource } from '../utils/image';
 import type { AmbienceItem } from '../services/siteContentService';
 import {
   DEFAULT_AMBIENCE_ITEMS,
@@ -134,7 +135,7 @@ export const AboutVibe: React.FC = () => {
 
   const getItemAvifImage = (item: AmbienceItem, idx: number) => {
     const src = getItemImage(item, idx);
-    return src.replace(/\.(webp|jpg)$/, '.avif');
+    return getAvifSource(src);
   };
 
   const getItemAlt = (item: AmbienceItem, idx: number) => {
@@ -234,8 +235,8 @@ export const AboutVibe: React.FC = () => {
           {/* Main Visual Cell (Tall Portrait) */}
           <div className={`${isAudioEnabled ? 'md:col-span-5 md:row-span-2' : 'md:col-span-6'} relative rounded-3xl lg:rounded-[2.5rem] overflow-hidden bg-surface-container-lowest border border-outline/20 hover:border-primary/50 shadow-2xl group transition-all duration-500 min-h-[420px] ${isAudioEnabled ? 'lg:min-h-[600px]' : 'lg:min-h-[500px]'}`}>
             <picture>
-              {isNear && (
-                <source srcSet={getItemAvifImage(primaryItem, 0)} type="image/avif" />
+              {isNear && getItemAvifImage(primaryItem, 0) && (
+                <source srcSet={getItemAvifImage(primaryItem, 0)!} type="image/avif" />
               )}
               <img 
                 loading="lazy" 
@@ -329,8 +330,8 @@ export const AboutVibe: React.FC = () => {
           {item1 && (
             <div className={`${isAudioEnabled ? 'md:col-span-3 lg:col-span-4' : 'md:col-span-6'} relative rounded-3xl overflow-hidden bg-surface-container-lowest border border-outline/20 hover:border-primary/50 shadow-xl group transition-all duration-500 min-h-[300px] ${isAudioEnabled ? 'lg:h-[380px]' : 'lg:h-[480px]'}`}>
               <picture>
-                {isNear && (
-                  <source srcSet={getItemAvifImage(item1, 1)} type="image/avif" />
+                {isNear && getItemAvifImage(item1, 1) && (
+                  <source srcSet={getItemAvifImage(item1, 1)!} type="image/avif" />
                 )}
                 <img 
                   loading="lazy" 
@@ -362,8 +363,8 @@ export const AboutVibe: React.FC = () => {
           {item2 && (
             <div className={`${isAudioEnabled ? 'md:col-span-4 lg:col-span-3' : 'md:col-span-6'} relative rounded-3xl overflow-hidden bg-surface-container-lowest border border-outline/20 hover:border-primary/50 shadow-xl group transition-all duration-500 min-h-[300px] ${isAudioEnabled ? 'lg:h-[380px]' : 'lg:h-[480px]'}`}>
               <picture>
-                {isNear && (
-                  <source srcSet={getItemAvifImage(item2, 2)} type="image/avif" />
+                {isNear && getItemAvifImage(item2, 2) && (
+                  <source srcSet={getItemAvifImage(item2, 2)!} type="image/avif" />
                 )}
                 <img 
                   loading="lazy" 

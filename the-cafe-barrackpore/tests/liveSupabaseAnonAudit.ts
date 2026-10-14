@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'https://qypceuzyqupepttibqvi.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5cGNldXp5cXVwZXB0dGlicXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3Njg4NzMsImV4cCI6MjEwNjM0NDg3M30.VezD_dSxFrO1ylzpNr4TNmvrLDC3IRiP_-vSaDtiauU';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.log('Environment variables VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set.');
+  console.log('Skipping live anonymous audit (requires live database environment).');
+  process.exit(0);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -67,6 +73,47 @@ async function runLiveAnonSecurityAudit() {
     console.log(`   [REFUSED AS EXPECTED] Code: ${insertError.code} | Message: "${insertError.message}"`);
   } else {
     console.error('   [SECURITY RISK] Anon key was able to directly insert orders!', insertData);
+  }
+
+  // Test 6: Try to call dropped create_verified_token_for_test RPC with anon key
+  console.log('\n6. Attempting to call "create_verified_token_for_test" RPC with anon key...');
+  const { data: tokenSeedData, error: tokenSeedError } = await supabase.rpc('create_verified_token_for_test', {
+    p_token: 'fake_token',
+    p_action: 'order'
+  });
+  if (tokenSeedError) {
+    console.log(`   [REFUSED AS EXPECTED] Code: ${tokenSeedError.code} | Message: "${tokenSeedError.message}"`);
+  } else {
+    console.error('   [SECURITY RISK] Anon key was able to call create_verified_token_for_test!', tokenSeedData);
+  }
+
+  // Test 7: Try direct browser INSERT into contact_inquiries table with anon key
+  console.log('\n7. Attempting direct INSERT into "contact_inquiries" with anon key...');
+  const { data: inqInsertData, error: inqInsertError } = await supabase.from('contact_inquiries').insert({
+    inquiry_ref: 'INQ-HACK-001',
+    name: 'Attacker',
+    phone: '+919999999999',
+    message: 'Direct unauthorized insert attempt'
+  }).select();
+  if (inqInsertError) {
+    console.log(`   [REFUSED AS EXPECTED] Code: ${inqInsertError.code} | Message: "${inqInsertError.message}"`);
+  } else {
+    console.error('   [SECURITY RISK] Anon key was able to directly insert contact inquiries!', inqInsertData);
+  }
+
+  // Test 8: Try submit_contact_inquiry without verified token
+  console.log('\n8. Attempting "submit_contact_inquiry" RPC WITHOUT verified token...');
+  const { data: inqRpcData, error: inqRpcError } = await supabase.rpc('submit_contact_inquiry', {
+    payload: {
+      name: 'Unverified Visitor',
+      phone: '+919876543210',
+      message: 'Submitting without any captcha token'
+    }
+  });
+  if (inqRpcError) {
+    console.log(`   [REFUSED AS EXPECTED] Code: ${inqRpcError.code} | Message: "${inqRpcError.message}"`);
+  } else {
+    console.error('   [SECURITY RISK] submit_contact_inquiry succeeded without token!', inqRpcData);
   }
 
   console.log('\n================================================================');

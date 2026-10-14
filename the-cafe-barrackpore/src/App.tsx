@@ -63,7 +63,7 @@ export const AppLayout: React.FC = () => {
         {sections?.hero !== false && <Hero />}
         {sections?.scrollSequence !== false && <ScrollSequence />}
         <ErrorBoundary>
-          <div className="cv-auto">
+          <div>
             {sections?.aboutVibe !== false && <AboutVibe />}
             {sections?.menu !== false && <Menu />}
             {sections?.specialsBanner !== false && <SpecialsBanner />}
@@ -121,9 +121,12 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 1024);
+    // Enable buttery smooth scrolling on PC/desktop with mouse or trackpad
+    const isMobileOnly = typeof window !== 'undefined' && 
+      window.innerWidth < 768 && 
+      !window.matchMedia('(pointer: fine)').matches;
     
-    if (isTouchDevice) {
+    if (isMobileOnly) {
       return;
     }
 
@@ -131,13 +134,13 @@ function App() {
 
     import('lenis').then(({ default: LenisClass }) => {
       lenisInstance = new LenisClass({
-        duration: 1.2,
+        duration: 1.1,
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         orientation: 'vertical',
         gestureOrientation: 'vertical',
         smoothWheel: true,
-        wheelMultiplier: 1,
-        touchMultiplier: 2,
+        wheelMultiplier: 1.05,
+        touchMultiplier: 1.5,
         autoRaf: true,
       });
       (window as any).__lenis = lenisInstance;

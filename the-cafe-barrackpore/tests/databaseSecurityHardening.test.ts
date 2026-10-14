@@ -600,6 +600,44 @@ if (fs.existsSync(nginxPath)) {
   console.log('✔ Test 15: nginx.conf headers (CSP, HSTS, Referrer-Policy, Permissions-Policy) verified.');
 }
 
+// -------------------------------------------------------------
+// Test 16: Migration 019 Contact Inquiries Security Hardening & Seeder Removal
+// -------------------------------------------------------------
+console.log('\nTest 16: Migration 019 Contact Inquiries Security Hardening & Seeder Removal');
+const migration019Path = path.join(migrationsDir, '019_contact_inquiries_hardening.sql');
+if (!fs.existsSync(migration019Path)) {
+  throw new Error('Test 16 failed: 019_contact_inquiries_hardening.sql does not exist');
+}
+const sql019 = fs.readFileSync(migration019Path, 'utf8');
+
+// 16a: Function drop
+if (!sql019.includes('DROP FUNCTION IF EXISTS public.create_verified_token_for_test(TEXT, TEXT);')) {
+  throw new Error('Test 16 failed: create_verified_token_for_test not dropped in migration 019');
+}
+
+// 16b: Policy drop & table mutations revoked
+if (!sql019.includes('DROP POLICY IF EXISTS "guest_insert_contact_inquiries" ON public.contact_inquiries;') ||
+    !sql019.includes('REVOKE INSERT, UPDATE, DELETE ON TABLE public.contact_inquiries FROM anon, authenticated, public;')) {
+  throw new Error('Test 16 failed: guest insert policy not dropped or mutations not revoked on contact_inquiries');
+}
+
+// 16c: submit_contact_inquiry token and settings validation
+if (!sql019.includes("action = 'contact'") ||
+    !sql019.includes('FROM public.restaurant_settings rs') ||
+    !sql019.includes('16)')) {
+  throw new Error('Test 16 failed: submit_contact_inquiry missing token action contact check, restaurant_settings lookup, or 16+ random char ref');
+}
+
+// 16d: get_contact_inquiry_status phone requirement & message omission
+const getStatusFn = sql019.slice(sql019.indexOf('FUNCTION public.get_contact_inquiry_status'));
+if (!sql019.includes('DROP FUNCTION IF EXISTS public.get_contact_inquiry_status(TEXT);') ||
+    !sql019.includes('p_phone TEXT') ||
+    getStatusFn.includes('v_inq.message') ||
+    getStatusFn.includes("'message'")) {
+  throw new Error('Test 16 failed: get_contact_inquiry_status does not require phone or leaks message');
+}
+console.log('✔ Test 16: Migration 019 contact_inquiries lockdown, token enforcement, and seeder removal verified.');
+
 console.log('\n================================================================');
-console.log('🎉 ALL 15 DATABASE & SECURITY HARDENING CHECKS PASSED!');
+console.log('🎉 ALL 16 DATABASE & SECURITY HARDENING CHECKS PASSED!');
 console.log('================================================================');

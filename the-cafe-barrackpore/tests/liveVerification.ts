@@ -1,14 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
-import { submitContactInquiry } from '../src/services/contactService';
+import { seedVerifiedToken } from '../scripts/seed-test-token';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://qypceuzyqupepttibqvi.supabase.co';
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5cGNldXp5cXVwZXB0dGlicXZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3Njg4NzMsImV4cCI6MjEwNjM0NDg3M30.VezD_dSxFrO1ylzpNr4TNmvrLDC3IRiP_-vSaDtiauU';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.log('Environment variables VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set.');
+  console.log('Skipping live database verification (requires live database environment).');
+  process.exit(0);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function verifyLiveEnvironment() {
   console.log('================================================================');
-  console.log('POST-MIGRATION 018 LIVE DATABASE VERIFICATION');
+  console.log('POST-MIGRATION 019 LIVE DATABASE VERIFICATION');
   console.log('Target: ' + SUPABASE_URL);
   console.log('================================================================\n');
 
@@ -17,11 +23,13 @@ async function verifyLiveEnvironment() {
   const testRef = 'INQ-LIVE-' + Math.floor(1000 + Math.random() * 9000);
   const testContactToken = 'token_contact_' + Math.floor(100000 + Math.random() * 900000);
 
-  // Seed token for contact action
-  await supabase.rpc('create_verified_token_for_test', {
-    p_token: testContactToken,
-    p_action: 'contact'
-  });
+  // Seed token for contact action using service role key script
+  try {
+    await seedVerifiedToken(testContactToken, 'contact');
+    console.log('   ✔ Test contact token seeded via service role key.');
+  } catch (seedErr: any) {
+    console.log('   [NOTICE] Could not seed contact token (service role key not configured):', seedErr.message);
+  }
 
   const { data: rpcData, error: rpcError } = await supabase.rpc('submit_contact_inquiry', {
     payload: {
@@ -37,36 +45,43 @@ async function verifyLiveEnvironment() {
   });
 
   if (rpcError || !rpcData?.success) {
-    console.log('   Submission error:', rpcError || rpcData);
+    console.log('   Submission result:', rpcError?.message || rpcData);
   } else {
     console.log('   ✔ submit_contact_inquiry RPC succeeded:', JSON.stringify(rpcData));
 
-    // Confirm in Database
-    console.log(`\n2. Verifying Inquiry ${testRef} in Database via get_contact_inquiry_status RPC...`);
+    // Confirm in Database with required phone number
+    const actualInquiryRef = rpcData?.inquiry_ref || testRef;
+    console.log(`\n2. Verifying Inquiry ${actualInquiryRef} in Database via get_contact_inquiry_status RPC...`);
     const { data: statusData, error: statusError } = await supabase.rpc('get_contact_inquiry_status', {
-      p_inquiry_ref: testRef
+      p_inquiry_ref: actualInquiryRef,
+      p_phone: '+919830123456'
     });
 
     if (statusError) {
       console.log('   Inquiry status RPC error:', statusError);
     } else {
       console.log('   ✔ Confirmed in Database! Record:', JSON.stringify(statusData));
+      if (statusData && 'message' in statusData) {
+        console.error('   ❌ SECURITY FLAW: get_contact_inquiry_status leaked message!');
+      } else {
+        console.log('   ✔ Confirmed: Only status returned, message is private.');
+      }
     }
   }
 
   // Step 2: Seed Test Verified Token and Place Real Order
   console.log('\n3. Testing Token Seeder and Order Placement (create_order_atomic)...');
   const testToken = 'token_test_' + Math.floor(100000 + Math.random() * 900000);
-  const { error: seedError } = await supabase.rpc('create_verified_token_for_test', {
-    p_token: testToken,
-    p_action: 'order'
-  });
+  let tokenSeeded = false;
+  try {
+    await seedVerifiedToken(testToken, 'order');
+    console.log('   ✔ Test verified token seeded successfully via service role key.');
+    tokenSeeded = true;
+  } catch (seedErr: any) {
+    console.log('   [NOTICE] Service role key seeder skipped:', seedErr.message);
+  }
 
-  if (seedError) {
-    console.log('   [PENDING] create_verified_token_for_test RPC pending migration 018:', seedError.message);
-  } else {
-    console.log('   ✔ Test verified token seeded successfully.');
-
+  if (tokenSeeded) {
     const orderRef = 'ORD-LIVE-' + Math.floor(10000 + Math.random() * 90000);
     const { data: orderData, error: orderError } = await supabase.rpc('create_order_atomic', {
       p_order: {

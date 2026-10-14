@@ -166,7 +166,7 @@ export const Footer: React.FC = () => {
                     <IconInstagram />
                   </a>
                 )}
-                {facebookLink && (
+                {facebookLink && facebookLink !== '#' && (
                   <a 
                     className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
                     href={facebookLink} 
@@ -188,7 +188,7 @@ export const Footer: React.FC = () => {
                     <IconGoogle />
                   </a>
                 )}
-                {zomatoLink && (
+                {zomatoLink && zomatoLink !== '#' && (
                   <a 
                     className="w-9 h-9 rounded-full border border-white/10 bg-[#140D09] flex items-center justify-center text-on-surface/70 hover:border-primary hover:text-primary hover:bg-[#1E130D] transition-all cursor-pointer shadow-sm hover:scale-105" 
                     href={zomatoLink} 

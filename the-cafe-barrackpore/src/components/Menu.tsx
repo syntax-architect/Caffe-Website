@@ -163,7 +163,19 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
 
     const isPublicPage = typeof window !== 'undefined' && !window.location.pathname.startsWith('/staff');
     if (isPublicPage) {
-      return;
+      // In public and QR modes, render instantly with static catalog, then sync dynamic catalog in idle background
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(() => {
+          if (isMounted) loadData();
+        }, { timeout: 2000 });
+      } else {
+        setTimeout(() => {
+          if (isMounted) loadData();
+        }, 100);
+      }
+      return () => {
+        isMounted = false;
+      };
     }
 
     // On staff management routes, load dynamic menu and subscribe to realtime updates

@@ -34,6 +34,7 @@ export const OrderSuccessPage: React.FC = () => {
     if (typeof window !== 'undefined') {
       try {
         localStorage.removeItem('cafe_cart');
+        localStorage.removeItem('cafe_cart_items');
         window.dispatchEvent(new CustomEvent('cafe:cart-cleared'));
       } catch {
         // ignore

@@ -74,6 +74,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [items]);
 
+  // Synchronize with external cart-cleared events (e.g. from OrderSuccessPage)
+  useEffect(() => {
+    const handleCartCleared = () => {
+      setItems([]);
+    };
+    window.addEventListener('cafe:cart-cleared', handleCartCleared);
+    return () => window.removeEventListener('cafe:cart-cleared', handleCartCleared);
+  }, []);
+
   const addToCart = useCallback((item: MenuItem) => {
     if (!isItemAvailable(item.id)) {
       console.warn(`[CartContext] Blocked adding sold-out item: ${item.name} (${item.id})`);

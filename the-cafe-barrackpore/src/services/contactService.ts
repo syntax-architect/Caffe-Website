@@ -120,8 +120,10 @@ export async function submitContactInquiry(
     verifiedToken = 'cf_dev_pass_token';
   }
 
-  // 5. Generate Reference Number from Client Config
-  const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+  // 5. Generate Reference Number from Client Config (16+ random chars)
+  const randomSuffix = (
+    Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10)
+  ).toUpperCase();
   const inquiryPrefix = clientDetails.inquiryPrefix || 'INQ-2026';
   let inquiryRef = `${inquiryPrefix}-${randomSuffix}`;
 

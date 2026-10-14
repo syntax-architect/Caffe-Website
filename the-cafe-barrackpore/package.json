@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "python scripts/generate-avif-and-lqip.py && tsc -b && vite build && npx tsx scripts/prerender.ts",
+    "build": "node scripts/run-lqip-pipeline.cjs && tsc -b && vite build && npx tsx scripts/prerender.ts",
     "lint": "oxlint",
-    "test": "npx tsx tests/productionReadiness.test.ts && npx tsx tests/paymentFoundation.test.ts && npx tsx tests/adminFeatureToggles.test.ts && npx tsx tests/paymentWebhookContracts.test.ts && npx tsx tests/internationalization.test.ts && npx tsx tests/taxEngine.test.ts && npx tsx tests/kitchenDisplay.test.ts && npx tsx tests/orderFoundation.test.ts && npx tsx tests/authFoundation.test.ts && npx tsx tests/dashboardFoundation.test.ts && npx tsx tests/persistenceAndAvailability.test.ts && npx tsx tests/qrOrderingFoundation.test.ts && npx tsx tests/reservationFoundation.test.ts && npx tsx tests/bugHuntVerification.test.ts && npx tsx tests/translationCompleteness.test.ts && npx tsx tests/databaseSecurityHardening.test.ts && npx tsx tests/contentDrivenComponents.test.ts && npx tsx tests/contentDrivenAmbienceSpecialsVIP.test.ts && npx tsx tests/configurableNavigationAndComposition.test.ts && npx tsx tests/themeRuntimeAndMotionSystem.test.ts && npx tsx tests/phase5bThemeTokenCoverage.test.ts && npx tsx tests/configurableHeroAndGalleryVariants.test.ts && npx tsx tests/visualElevationBatch1.test.ts && npx tsx tests/visualElevationBatch2.test.ts && npx tsx tests/mobileExperiencePhase7a.test.ts && npx tsx tests/masterExecutionVerification.test.ts && npx tsx tests/loadTestingClientStress.test.ts && npx tsx tests/offlineAndLoyalty.test.ts",
+    "test": "npx tsx tests/productionReadiness.test.ts && npx tsx tests/paymentFoundation.test.ts && npx tsx tests/adminFeatureToggles.test.ts && npx tsx tests/paymentWebhookContracts.test.ts && npx tsx tests/internationalization.test.ts && npx tsx tests/taxEngine.test.ts && npx tsx tests/kitchenDisplay.test.ts && npx tsx tests/orderFoundation.test.ts && npx tsx tests/authFoundation.test.ts && npx tsx tests/dashboardFoundation.test.ts && npx tsx tests/persistenceAndAvailability.test.ts && npx tsx tests/qrOrderingFoundation.test.ts && npx tsx tests/reservationFoundation.test.ts && npx tsx tests/bugHuntVerification.test.ts && npx tsx tests/translationCompleteness.test.ts && npx tsx tests/databaseSecurityHardening.test.ts && npx tsx tests/contentDrivenComponents.test.ts && npx tsx tests/contentDrivenAmbienceSpecialsVIP.test.ts && npx tsx tests/configurableNavigationAndComposition.test.ts && npx tsx tests/themeRuntimeAndMotionSystem.test.ts && npx tsx tests/phase5bThemeTokenCoverage.test.ts && npx tsx tests/configurableHeroAndGalleryVariants.test.ts && npx tsx tests/visualElevationBatch1.test.ts && npx tsx tests/visualElevationBatch2.test.ts && npx tsx tests/mobileExperiencePhase7a.test.ts && npx tsx tests/masterExecutionVerification.test.ts && npx tsx tests/loadTestingClientStress.test.ts && npx tsx tests/offlineAndLoyalty.test.ts && npx tsx tests/migration019Security.test.ts",
     "test:load": "node scripts/load-test.mjs",
     "test:e2e": "playwright test",
     "audit": "npm audit --omit=dev",
@@ -40,6 +40,7 @@
   },
   "overrides": {
     "chokidar": "^4.0.3",
-    "braces": "github:micromatch/braces#e53730e6f935498326c72d768889ac194eedc0e0"
+    "braces": "^3.0.3",
+    "micromatch": "^4.0.8"
   }
 }

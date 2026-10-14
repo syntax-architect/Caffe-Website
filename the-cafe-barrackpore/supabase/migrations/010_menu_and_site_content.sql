@@ -5,7 +5,15 @@
 -- ==============================================================================
 
 -- 1. DROP OLD COMPATIBILITY VIEW IF PRESENT
-DROP VIEW IF EXISTS public.menu_items CASCADE;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_views 
+        WHERE schemaname = 'public' AND viewname = 'menu_items'
+    ) THEN
+        EXECUTE 'DROP VIEW public.menu_items CASCADE';
+    END IF;
+END $$;
 
 -- 2. CREATE MENU_CATEGORIES TABLE
 CREATE TABLE IF NOT EXISTS public.menu_categories (
