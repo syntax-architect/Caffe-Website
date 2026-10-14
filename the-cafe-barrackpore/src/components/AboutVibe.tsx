@@ -132,6 +132,11 @@ export const AboutVibe: React.FC = () => {
     return item.image || images[idx]?.src || DEFAULT_AMBIENCE_ITEMS[idx]?.image || '/images/components/comp_img_0.webp';
   };
 
+  const getItemAvifImage = (item: AmbienceItem, idx: number) => {
+    const src = getItemImage(item, idx);
+    return src.replace(/\.(webp|jpg)$/, '.avif');
+  };
+
   const getItemAlt = (item: AmbienceItem, idx: number) => {
     return item.imageAlt || images[idx]?.alt || item.title;
   };
@@ -228,14 +233,19 @@ export const AboutVibe: React.FC = () => {
           
           {/* Main Visual Cell (Tall Portrait) */}
           <div className={`${isAudioEnabled ? 'md:col-span-5 md:row-span-2' : 'md:col-span-6'} relative rounded-3xl lg:rounded-[2.5rem] overflow-hidden bg-surface-container-lowest border border-outline/20 hover:border-primary/50 shadow-2xl group transition-all duration-500 min-h-[420px] ${isAudioEnabled ? 'lg:min-h-[600px]' : 'lg:min-h-[500px]'}`}>
-            <img 
-              loading="lazy" 
-              decoding="async" 
-              fetchPriority="low"
-              alt={getItemAlt(primaryItem, 0)} 
-              src={isNear ? getItemImage(primaryItem, 0) : placeholderSvg} 
-              className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
-            />
+            <picture>
+              {isNear && (
+                <source srcSet={getItemAvifImage(primaryItem, 0)} type="image/avif" />
+              )}
+              <img 
+                loading="lazy" 
+                decoding="async" 
+                fetchPriority="low"
+                alt={getItemAlt(primaryItem, 0)} 
+                src={isNear ? getItemImage(primaryItem, 0) : placeholderSvg} 
+                className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
+              />
+            </picture>
             {/* Cinematic Gradient Vignette */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
             
@@ -318,14 +328,19 @@ export const AboutVibe: React.FC = () => {
           {/* Bottom Right Cell 1 (Image) */}
           {item1 && (
             <div className={`${isAudioEnabled ? 'md:col-span-3 lg:col-span-4' : 'md:col-span-6'} relative rounded-3xl overflow-hidden bg-surface-container-lowest border border-outline/20 hover:border-primary/50 shadow-xl group transition-all duration-500 min-h-[300px] ${isAudioEnabled ? 'lg:h-[380px]' : 'lg:h-[480px]'}`}>
-              <img 
-                loading="lazy" 
-                decoding="async" 
-                fetchPriority="low"
-                alt={getItemAlt(item1, 1)} 
-                src={isNear ? getItemImage(item1, 1) : placeholderSvg} 
-                className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
-              />
+              <picture>
+                {isNear && (
+                  <source srcSet={getItemAvifImage(item1, 1)} type="image/avif" />
+                )}
+                <img 
+                  loading="lazy" 
+                  decoding="async" 
+                  fetchPriority="low"
+                  alt={getItemAlt(item1, 1)} 
+                  src={isNear ? getItemImage(item1, 1) : placeholderSvg} 
+                  className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
+                />
+              </picture>
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
               <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between z-10 pointer-events-none">
                 <div>
@@ -346,14 +361,19 @@ export const AboutVibe: React.FC = () => {
           {/* Bottom Right Cell 2 (Image) */}
           {item2 && (
             <div className={`${isAudioEnabled ? 'md:col-span-4 lg:col-span-3' : 'md:col-span-6'} relative rounded-3xl overflow-hidden bg-surface-container-lowest border border-outline/20 hover:border-primary/50 shadow-xl group transition-all duration-500 min-h-[300px] ${isAudioEnabled ? 'lg:h-[380px]' : 'lg:h-[480px]'}`}>
-              <img 
-                loading="lazy" 
-                decoding="async" 
-                fetchPriority="low"
-                alt={getItemAlt(item2, 2)} 
-                src={isNear ? getItemImage(item2, 2) : placeholderSvg} 
-                className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
-              />
+              <picture>
+                {isNear && (
+                  <source srcSet={getItemAvifImage(item2, 2)} type="image/avif" />
+                )}
+                <img 
+                  loading="lazy" 
+                  decoding="async" 
+                  fetchPriority="low"
+                  alt={getItemAlt(item2, 2)} 
+                  src={isNear ? getItemImage(item2, 2) : placeholderSvg} 
+                  className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
+                />
+              </picture>
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
               <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between z-10 pointer-events-none">
                 <div>

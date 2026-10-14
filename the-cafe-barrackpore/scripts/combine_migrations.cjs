@@ -18,12 +18,14 @@ const files = [
   '013_owner_features.sql',
   '014_order_caps_and_direct_insert_lockdown.sql',
   '015_complete_image_sync.sql',
-  '016_security_hardening.sql'
+  '016_security_hardening.sql',
+  '017_indexing_and_audit_log.sql',
+  '018_contact_inquiries.sql'
 ];
 
 let combined = `-- ==============================================================================
--- COMPLETE DATABASE INITIALIZATION SCRIPT: The Café Barrackpore
--- Runs all migrations (001 - 016) in proper dependency order.
+-- COMPLETE DATABASE INITIALIZATION SCRIPT
+-- Runs all migrations (001 - 018) in proper dependency order.
 -- Copy and paste this ENTIRE script into Supabase Dashboard -> SQL Editor and click Run.
 -- ==============================================================================
 

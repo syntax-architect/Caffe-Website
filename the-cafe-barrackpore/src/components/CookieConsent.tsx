@@ -34,7 +34,7 @@ export const CookieConsent: React.FC = () => {
       role="region"
       aria-label="Cookie Consent Banner"
       aria-labelledby="cookie-consent-title"
-      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom duration-500"
+      className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-6 left-3.5 right-3.5 sm:left-auto sm:right-6 sm:max-w-md z-40 animate-in fade-in slide-in-from-bottom duration-500"
     >
       <div className="p-1 rounded-2xl bg-gradient-to-r from-[#D4AF37]/50 via-amber-600/40 to-[#D4AF37]/50 shadow-[0_12px_40px_rgba(0,0,0,0.85)] border border-[#D4AF37]/30">
         <div className="p-4 sm:p-5 rounded-[calc(1rem-0.125rem)] bg-[#140D09] flex flex-col gap-3">

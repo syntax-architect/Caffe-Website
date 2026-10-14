@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchStaffProfiles, toggleStaffActive, updateStaffRole } from '../../services/dashboardService';
+import { fetchStaffProfiles, toggleStaffActive, updateStaffRole, inviteStaff } from '../../services/dashboardService';
 import { useNotification } from '../../hooks/useNotification';
 import type { StaffProfile, StaffRole } from '../../types/auth';
 import { clientDetails } from '../../config/client';
@@ -18,6 +18,7 @@ export const StaffManagement: React.FC = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteName, setInviteName] = useState('');
   const [inviteRole, setInviteRole] = useState<StaffRole>('staff');
+  const [isInviting, setIsInviting] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -103,37 +104,54 @@ export const StaffManagement: React.FC = () => {
     }
   };
 
-  const handleInviteSubmit = (e: React.FormEvent) => {
+  const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isOwner) {
-      addNotification('warning', 'Permission Denied', 'Only owners can provision new staff.');
+      addNotification('warning', 'Permission Denied', 'Only restaurant owners can provision new staff accounts.');
       return;
     }
 
-    if (!inviteEmail.trim() || !inviteName.trim()) {
-      addNotification('error', 'Validation Error', 'Please provide both staff name and email.');
+    const cleanEmail = inviteEmail.trim().toLowerCase();
+    const cleanName = inviteName.trim();
+
+    if (!cleanEmail || !cleanName) {
+      addNotification('error', 'Validation Error', 'Please provide both staff name and email address.');
       return;
     }
 
-    const newStaff: StaffProfile = {
-      id: `staff-${Date.now()}`,
-      user_id: `user-${Date.now()}`,
-      full_name: inviteName.trim(),
-      role: inviteRole,
-      active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    setStaffList((prev) => [newStaff, ...prev]);
-    setIsInviteModalOpen(false);
-    setInviteEmail('');
-    setInviteName('');
-    addNotification(
-      'success',
-      'Staff Provisioned',
-      `Staff profile for ${inviteName} created with ${inviteRole.toUpperCase()} permissions.`
-    );
+    setIsInviting(true);
+    try {
+      const res = await inviteStaff(cleanEmail, cleanName, inviteRole);
+      if (res.success) {
+        addNotification(
+          'success',
+          'Staff Provisioned',
+          `Invitation sent to ${cleanEmail}. Staff profile created with ${inviteRole.toUpperCase()} permissions.`
+        );
+        setIsInviteModalOpen(false);
+        setInviteEmail('');
+        setInviteName('');
+        // Re-fetch staff roster from backend
+        try {
+          const freshRoster = await fetchStaffProfiles();
+          if (freshRoster && freshRoster.length > 0) {
+            setStaffList(freshRoster);
+          } else if (res.profile) {
+            setStaffList((prev) => [res.profile!, ...prev]);
+          }
+        } catch {
+          if (res.profile) {
+            setStaffList((prev) => [res.profile!, ...prev]);
+          }
+        }
+      } else {
+        addNotification('error', 'Provisioning Failed', res.error || 'Could not provision staff account.');
+      }
+    } catch (err: any) {
+      addNotification('error', 'System Error', err?.message || 'An unexpected error occurred while inviting staff.');
+    } finally {
+      setIsInviting(false);
+    }
   };
 
   const activeStaffCount = useMemo(() => staffList.filter((s) => s.active).length, [staffList]);
@@ -495,9 +513,17 @@ export const StaffManagement: React.FC = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs uppercase tracking-wider hover:shadow-[0_10px_25px_rgba(212,175,55,0.3)] transition-all cursor-pointer"
+                    disabled={isInviting}
+                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs uppercase tracking-wider hover:shadow-[0_10px_25px_rgba(212,175,55,0.3)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Create Account
+                    {isInviting ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-[#070605] border-t-transparent rounded-full animate-spin" />
+                        <span>Provisioning...</span>
+                      </>
+                    ) : (
+                      <span>Create Account</span>
+                    )}
                   </button>
                 </div>
               </form>

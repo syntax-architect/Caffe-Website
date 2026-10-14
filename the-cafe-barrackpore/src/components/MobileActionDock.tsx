@@ -12,8 +12,8 @@ import {
 import type { MobileDockAction } from '../types/restaurantEngine';
 
 export const MobileActionDock: React.FC = () => {
-  const { cartCount, setIsDrawerOpen } = useCart();
-  const { setIsReservationOpen } = useUI();
+  const { cartCount, setIsDrawerOpen, isDrawerOpen } = useCart();
+  const { setIsReservationOpen, isReservationOpen, isContactOpen } = useUI();
   const { restaurantConfig, engineConfig } = useSiteConfig();
   const [isVisible, setIsVisible] = useState(true);
   const dockConfig = engineConfig?.mobileDock || DEFAULT_MOBILE_DOCK_CONFIG;
@@ -50,7 +50,7 @@ export const MobileActionDock: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [dockConfig.enabled]);
 
-  if (dockConfig.enabled === false) {
+  if (dockConfig.enabled === false || isDrawerOpen || isReservationOpen || isContactOpen) {
     return null;
   }
 

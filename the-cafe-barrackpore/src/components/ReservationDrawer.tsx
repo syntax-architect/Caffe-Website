@@ -44,8 +44,16 @@ export const ReservationDrawer: React.FC = () => {
     if (isReservationOpen) {
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+      const lenis = (window as any).__lenis;
+      if (lenis && typeof lenis.stop === 'function') {
+        lenis.stop();
+      }
       return () => {
         document.body.style.overflow = originalOverflow;
+        const l = (window as any).__lenis;
+        if (l && typeof l.start === 'function') {
+          l.start();
+        }
       };
     }
   }, [isReservationOpen]);
@@ -72,7 +80,7 @@ export const ReservationDrawer: React.FC = () => {
     }));
   };
 
-  const dispatchWhatsApp = (ref: string) => {
+  const dispatchWhatsApp = (ref: string, keepDrawerOpen: boolean = false) => {
     const text = `🌟 *${encodeURIComponent(restaurantConfig.businessName.toUpperCase())}* 🌟%0A*RESERVATION REQUEST: ${ref}*%0A%0A*Name:* ${encodeURIComponent(formData.name.trim())}%0A*Phone:* ${formData.phone.trim()}%0A*Guests:* ${formData.guests}%0A*Date:* ${formData.date}%0A*Time:* ${formData.time}${formData.notes.trim() ? `%0A*Special Requests:* ${encodeURIComponent(formData.notes.trim())}` : ''}%0A%0APlease confirm table availability.`;
     
     // Clean phone number (remove non-digits)
@@ -80,17 +88,19 @@ export const ReservationDrawer: React.FC = () => {
     
     window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
     
-    // Reset form and close
-    setFormData({
-      name: '',
-      phone: '',
-      guests: 2,
-      date: '',
-      time: '19:00',
-      notes: ''
-    });
-    setSubmissionError(null);
-    setIsReservationOpen(false);
+    if (!keepDrawerOpen) {
+      // Reset form and close
+      setFormData({
+        name: '',
+        phone: '',
+        guests: 2,
+        date: '',
+        time: '19:00',
+        notes: ''
+      });
+      setSubmissionError(null);
+      setIsReservationOpen(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,13 +142,7 @@ export const ReservationDrawer: React.FC = () => {
         }
 
         setIsDemoSubmission(isDev && result.isDemoMode === true);
-        if (result.isDemoMode && isDev) {
-          setConfirmedRef(result.reservationRef);
-        } else if (restaurantConfig.contact.primaryMethod === 'whatsapp') {
-          dispatchWhatsApp(result.reservationRef);
-        } else {
-          setConfirmedRef(result.reservationRef);
-        }
+        setConfirmedRef(result.reservationRef);
       } else {
         setSubmissionError(
           result.error ||
@@ -242,7 +246,22 @@ export const ReservationDrawer: React.FC = () => {
                   </p>
                 </div>
 
-                {!isDemoSubmission && <div className="p-4 rounded-2xl bg-[#160E0A] border border-white/10 w-full max-w-sm flex items-center justify-between text-xs font-sans">
+                {/* WhatsApp Confirmation Action */}
+                <div className="w-full max-w-sm space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => confirmedRef && dispatchWhatsApp(confirmedRef, true)}
+                    className="w-full h-11 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-[#0A1A0F] font-bold text-xs uppercase tracking-wider shadow-[0_4px_16px_rgba(37,211,102,0.25)] flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <span className="material-symbols-outlined text-base">chat</span>
+                    <span>Send Booking Details to WhatsApp</span>
+                  </button>
+                  <p className="text-[10px] text-on-surface/50 text-center font-sans">
+                    Need instant booking confirmation on your phone? Tap to message our reservation concierge.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#160E0A] border border-white/10 w-full max-w-sm flex items-center justify-between text-xs font-sans">
                   <span className="text-on-surface/60">Questions or amendments?</span>
                   <a
                     href={`tel:${restaurantConfig.contact.phone}`}
@@ -251,7 +270,7 @@ export const ReservationDrawer: React.FC = () => {
                     <span className="material-symbols-outlined text-sm">call</span>
                     <span>{restaurantConfig.contact.displayPhone}</span>
                   </a>
-                </div>}
+                </div>
 
                 <button
                   type="button"
@@ -438,10 +457,10 @@ export const ReservationDrawer: React.FC = () => {
                       </p>
                       <button
                         type="button"
-                        onClick={() => dispatchWhatsApp(generateClientReservationRef())}
+                        onClick={() => dispatchWhatsApp(generateClientReservationRef(), false)}
                         className="text-left font-semibold text-primary underline hover:text-primary/80 transition-colors pt-1 cursor-pointer"
                       >
-                        Continue directly with WhatsApp reservation ➔
+                        Prefer WhatsApp? Continue directly with WhatsApp reservation ➔
                       </button>
                     </div>
                   )}
@@ -462,13 +481,11 @@ export const ReservationDrawer: React.FC = () => {
                         ? 'Reservations Paused'
                         : isSubmitting
                         ? 'Reserving Table...'
-                        : restaurantConfig.contact.primaryMethod === 'whatsapp'
-                        ? 'Confirm via WhatsApp'
-                        : 'Reserve Table'}
+                        : 'Confirm Reservation'}
                     </span>
                     <span className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
                       <span className="material-symbols-outlined text-[15px] text-[#120B08]">
-                        {restaurantConfig.isTableBookingEnabled === false ? 'pause' : restaurantConfig.contact.primaryMethod === 'whatsapp' ? 'send' : 'event'}
+                        {restaurantConfig.isTableBookingEnabled === false ? 'pause' : 'event'}
                       </span>
                     </span>
                   </button>

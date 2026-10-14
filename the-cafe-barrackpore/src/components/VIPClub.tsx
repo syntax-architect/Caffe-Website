@@ -87,6 +87,7 @@ export const VIPClub: React.FC = () => {
             {/* 2. PHOTOGRAPHIC CINEMATIC BACKGROUND IMAGE */}
             <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
               <picture>
+                <source srcSet={vipImageSrc.replace(/\.(jpg|webp)$/, '.avif')} type="image/avif" />
                 {vipImageSrc.endsWith('.jpg') && (
                   <source srcSet={vipImageSrc.replace(/\.jpg$/, '.webp')} type="image/webp" />
                 )}

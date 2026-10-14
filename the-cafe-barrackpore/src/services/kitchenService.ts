@@ -246,6 +246,20 @@ export const fetchKitchenOrders = async (): Promise<{
       }
     }
 
+    // 3. Merge locally created dev/demo orders (e.g. from table QR orders placed in dev mode)
+    const demoList = getDemoOrders();
+    const existingIds = new Set(allOrders.map((o) => o.id));
+    const existingRefs = new Set(allOrders.map((o) => o.order_ref));
+    const unmergedLocal = demoList.filter((d) => !existingIds.has(d.id) && !existingRefs.has(d.order_ref));
+
+    unmergedLocal.forEach((d) => {
+      if (['pending', 'confirmed', 'preparing', 'ready'].includes(d.status) && isKdsEligible(d)) {
+        activeOrders.unshift(d);
+      } else if (d.status === 'completed') {
+        completedOrders.unshift(d);
+      }
+    });
+
     return {
       activeOrders,
       completedOrders,
@@ -278,8 +292,10 @@ export const transitionOrderStatus = async (
     };
   }
 
-  // 2. Live Supabase Mutation
-  if (supabase && isSupabaseConfigured) {
+  const isLocalOrder = orderId.startsWith('dev-order-') || orderId.startsWith('demo-order-');
+
+  // 2. Live Supabase Mutation (for real database orders)
+  if (!isLocalOrder && supabase && isSupabaseConfigured) {
     try {
       // First attempt atomic RPC with expected status concurrency check
       const { data: rpcData, error: rpcErr } = await supabase.rpc('update_order_status_kitchen', {
@@ -307,27 +323,18 @@ export const transitionOrderStatus = async (
         .eq('status', currentStatus)
         .select('id, status');
 
-      if (updateErr) throw updateErr;
-
-      if (!updated || updated.length === 0) {
-        return {
-          success: false,
-          conflict: true,
-          error: 'This order was already updated by another staff member. Screen has refreshed.',
-        };
+      if (!updateErr && updated && updated.length > 0) {
+        return { success: true };
       }
-
-      return { success: true };
     } catch (err) {
-      console.error('[kitchenService] Transition failure on Supabase:', err);
-      return { success: false, error: 'Network failure while updating order status.' };
+      console.warn('[kitchenService] Supabase transition check failed, checking local store:', err);
     }
   }
 
-  // 3. Demo Mode Local Storage Mutation
+  // 3. Local Storage Mutation (demo orders or dev fallback orders)
   try {
     const all = getDemoOrders();
-    const targetIdx = all.findIndex((o) => o.id === orderId);
+    const targetIdx = all.findIndex((o) => o.id === orderId || o.order_ref === orderId);
 
     if (targetIdx === -1) {
       return { success: false, error: 'Order not found.' };
@@ -353,8 +360,8 @@ export const transitionOrderStatus = async (
 
     return { success: true };
   } catch (err) {
-    console.error('[kitchenService] Demo transition error:', err);
-    return { success: false, error: 'Failed to update local order state.' };
+    console.error('[kitchenService] Transition error:', err);
+    return { success: false, error: 'Failed to update order state.' };
   }
 };
 

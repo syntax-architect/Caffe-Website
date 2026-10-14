@@ -162,6 +162,11 @@ Direct table `INSERT` into `orders` and `reservations` is prohibited for both an
 - Client roles (`owner`, `manager`, `staff`) are verified against `public.staff_profiles` linked to `auth.uid()`.
 - RLS enforces table permissions at the database layer on every query, ensuring frontend route guards cannot be bypassed.
 
+### 5.6 Public Signup Prohibition & Owner Invitation Gate
+- Public customer account creation is disabled in Supabase Authentication (`Enable Signups = OFF`).
+- Diners interact via anonymous guest checkout and table reservations; customer credentials are never required.
+- Operational staff accounts are exclusively provisioned by active restaurant owners via the `invite-staff` Edge Function (calling `auth.admin.inviteUserByEmail`), preventing rogue account registration and pool exhaustion.
+
 ---
 
 ## 6. Frontend & Asset Security

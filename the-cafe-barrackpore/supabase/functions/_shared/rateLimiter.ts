@@ -14,10 +14,11 @@ const DEFAULT_CONFIGS: Record<string, RateLimitConfig> = {
   order: { maxRequests: 5, windowSeconds: 60 },
   reservation: { maxRequests: 5, windowSeconds: 60 },
   login: { maxRequests: 5, windowSeconds: 300 },
+  contact: { maxRequests: 5, windowSeconds: 60 },
 };
 
 export async function checkRateLimit(
-  action: 'order' | 'reservation' | 'login',
+  action: 'order' | 'reservation' | 'login' | 'contact' | string,
   identifier: string,
   customConfig?: Partial<RateLimitConfig>
 ): Promise<{ allowed: boolean; remaining: number; resetSeconds: number }> {

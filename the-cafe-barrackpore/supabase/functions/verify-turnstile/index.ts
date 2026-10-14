@@ -35,7 +35,7 @@ serve(async (req: Request) => {
     const body = await req.json().catch(() => ({}));
     const token = (body.token || body.captcha_token || '').trim();
     const phone = (body.phone || body.customer_phone || '').trim();
-    const action = (body.action || 'order') as 'order' | 'reservation' | 'login';
+    const action = (body.action || 'order') as 'order' | 'reservation' | 'login' | 'contact' | 'inquiry';
 
     // 1. Rate Limiting per IP (Upstash Redis or PostgreSQL rate_limits table)
     const ipRateLimit = await checkRateLimit(action, clientIp);

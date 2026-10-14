@@ -1,10 +1,12 @@
 /**
  * Contact & Guest Inquiry Service
- * The Café Barrackpore — Commercial Multi-Client Operating System
+ * Commercial Multi-Client Operating System
  */
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { checkRateLimit } from '../utils/rateLimiter';
+import { verifyTurnstileToken } from '../utils/security';
+import { clientDetails } from '../config/client';
 import DOMPurify from 'dompurify';
 
 export type InquirySubject = 'general' | 'event' | 'catering' | 'feedback';
@@ -16,6 +18,8 @@ export interface ContactInquiryPayload {
   subject: InquirySubject;
   message: string;
   captchaToken?: string;
+  verified_token?: string;
+  restaurant_id?: string;
 }
 
 export interface ContactInquiryResult {
@@ -32,8 +36,28 @@ const SUBJECT_LABELS: Record<InquirySubject, string> = {
   feedback: 'Guest Experience Feedback',
 };
 
+function sanitizeInput(str: string): string {
+  if (!str) return '';
+  if (typeof window !== 'undefined') {
+    try {
+      if (typeof (DOMPurify as any)?.sanitize === 'function') {
+        return (DOMPurify as any).sanitize(str);
+      }
+      if (typeof DOMPurify === 'function') {
+        return (DOMPurify as any)(window).sanitize(str);
+      }
+    } catch {
+      // Fallback to regex sanitizer below
+    }
+  }
+  return str
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/[<>]/g, '');
+}
+
 /**
- * Validates and submits a guest contact inquiry.
+ * Validates and submits a guest contact inquiry via Supabase RPC with Turnstile token consumption.
  */
 export async function submitContactInquiry(
   payload: ContactInquiryPayload
@@ -48,10 +72,10 @@ export async function submitContactInquiry(
   }
 
   // 2. Strict Input Validation & Sanitization
-  const cleanName = DOMPurify.sanitize(payload.name.trim());
+  const cleanName = sanitizeInput(payload.name.trim());
   const cleanPhone = payload.phone.replace(/[^0-9+]/g, '').trim();
-  const cleanEmail = payload.email ? DOMPurify.sanitize(payload.email.trim()) : '';
-  const cleanMessage = DOMPurify.sanitize(payload.message.trim());
+  const cleanEmail = payload.email ? sanitizeInput(payload.email.trim()) : '';
+  const cleanMessage = sanitizeInput(payload.message.trim());
 
   if (cleanName.length < 2) {
     return { success: false, error: 'Please provide your name (minimum 2 characters).' };
@@ -70,30 +94,84 @@ export async function submitContactInquiry(
     return { success: false, error: 'Please write a message with at least 10 characters.' };
   }
 
-  // Generate Reference Number
-  const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-  const inquiryRef = `INQ-2026-${randomSuffix}`;
+  // 3. Require Turnstile Token
+  const rawToken = (payload.captchaToken || payload.verified_token || '').trim();
+  const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
 
-  // 3. Database Persistence if Supabase is configured
+  if (!rawToken && !isDev && isSupabaseConfigured) {
+    return {
+      success: false,
+      error: 'Security verification failed. Please complete the CAPTCHA challenge before submitting.',
+    };
+  }
+
+  // 4. Verify Turnstile Token via Edge Function if configured
+  let verifiedToken = payload.verified_token || '';
+  if (isSupabaseConfigured && rawToken && !verifiedToken) {
+    const verification = await verifyTurnstileToken('contact', rawToken, cleanPhone);
+    if (!verification.success) {
+      return {
+        success: false,
+        error: verification.error || 'Security verification failed. Please try again.',
+      };
+    }
+    verifiedToken = verification.verified_token || rawToken;
+  } else if (!verifiedToken && isDev) {
+    verifiedToken = 'cf_dev_pass_token';
+  }
+
+  // 5. Generate Reference Number from Client Config
+  const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const inquiryPrefix = clientDetails.inquiryPrefix || 'INQ-2026';
+  let inquiryRef = `${inquiryPrefix}-${randomSuffix}`;
+
+  // 6. Database Persistence via RPC
   if (isSupabaseConfigured && supabase) {
     try {
-      const { error: dbError } = await supabase.from('contact_inquiries').insert([
-        {
+      const { data, error: dbError } = await supabase.rpc('submit_contact_inquiry', {
+        payload: {
+          restaurant_id: payload.restaurant_id || clientDetails.shortName || 'the-cafe-barrackpore',
           inquiry_ref: inquiryRef,
           name: cleanName,
           phone: cleanPhone,
           email: cleanEmail || null,
           subject: payload.subject,
           message: cleanMessage,
-          created_at: new Date().toISOString(),
         },
-      ]);
+        verified_token: verifiedToken,
+      });
 
       if (dbError) {
-        console.warn('[contactService] Supabase insert warning (falling back to direct concierge):', dbError.message);
+        console.error('[contactService] Supabase submit_contact_inquiry RPC error:', dbError);
+        return {
+          success: false,
+          error: dbError.message || 'Failed to submit inquiry. Please try again.',
+        };
       }
-    } catch (err) {
-      console.warn('[contactService] Supabase unexpected error:', err);
+
+      if (!data || data.success === false) {
+        return {
+          success: false,
+          error: data?.error || 'Failed to submit inquiry. Please try again.',
+        };
+      }
+
+      if (data.inquiry_ref) {
+        inquiryRef = data.inquiry_ref;
+      }
+    } catch (err: any) {
+      console.error('[contactService] Supabase submit_contact_inquiry exception:', err);
+      return {
+        success: false,
+        error: err?.message || 'A network error occurred while submitting your inquiry.',
+      };
+    }
+  } else {
+    if (!isDev) {
+      return {
+        success: false,
+        error: 'Inquiry service is temporarily unavailable.',
+      };
     }
   }
 
@@ -121,13 +199,18 @@ export async function submitContactInquiry(
 export function buildWhatsAppInquiryUrl(
   payload: ContactInquiryPayload,
   inquiryRef: string,
-  whatsappNumber: string
+  whatsappNumber: string,
+  businessName?: string
 ): string {
   const cleanNumber = whatsappNumber.replace(/[^0-9]/g, '');
   const subjectName = SUBJECT_LABELS[payload.subject] || payload.subject;
+  const restaurantName = businessName || clientDetails.businessName;
+  const greeting = clientDetails.conciergeWhatsAppGreeting
+    ? clientDetails.conciergeWhatsAppGreeting.replace(/\{businessName\}/g, restaurantName)
+    : `Hello ${restaurantName} Concierge! ☕`;
 
   const text =
-    `Hello The Café Barrackpore Concierge! ☕\n\n` +
+    `${greeting}\n\n` +
     `*Inquiry Ref:* ${inquiryRef}\n` +
     `*Guest:* ${payload.name}\n` +
     `*Phone:* ${payload.phone}\n` +

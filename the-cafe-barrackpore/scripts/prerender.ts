@@ -2,6 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execSync } from 'node:child_process';
+import { clientDetails } from '../src/config/client';
+import { getPublicSiteOrigin } from '../src/utils/url';
+import { SUPPORTED_SEO_LANGUAGES } from '../src/utils/seo';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -114,7 +117,7 @@ async function prerender() {
     <meta property="og:image:width" content="${seo.ogImageWidth}" />
     <meta property="og:image:height" content="${seo.ogImageHeight}" />
     <meta property="og:image:alt" content="${seo.ogImageAlt}" />
-    <meta property="og:site_name" content="The Café Barrackpore" />
+    <meta property="og:site_name" content="${clientDetails.businessName || 'The Cafe'}" />
     <meta name="twitter:card" content="${seo.twitterCard}" />
     <meta name="twitter:title" content="${seo.title}" />
     <meta name="twitter:description" content="${seo.description}" />
@@ -217,6 +220,84 @@ async function prerender() {
     fs.writeFileSync(targetPath, indexHtmlContent, 'utf-8');
     console.log(`✔ Generated static SPA entrypoint: ${spaRoute}`);
   }
+
+  // 10b. Generate robots.txt and sitemap.xml dynamically from client config / PUBLIC_SITE_URL
+  console.log('\n🤖 Generating dynamic robots.txt and sitemap.xml...');
+  const siteOrigin = getPublicSiteOrigin();
+  const businessName = clientDetails.businessName || 'The Cafe';
+  const today = new Date().toISOString().split('T')[0];
+
+  const robotsContent = `# Robots.txt for ${businessName}
+# Search Engine Crawlers & Optimization Directives
+User-agent: *
+Allow: /
+Allow: /privacy
+Allow: /terms
+Allow: /images/
+
+# Strictly block internal staff operational portals and table QR order endpoints from search index
+Disallow: /staff
+Disallow: /staff/
+Disallow: /staff/*
+Disallow: /qr
+Disallow: /qr/
+Disallow: /qr/*
+Disallow: /qr-generator
+Disallow: /reset-password
+Disallow: /kitchen
+
+# Canonical XML Sitemap
+Sitemap: ${siteOrigin}/sitemap.xml
+`;
+
+  const langAlternates = SUPPORTED_SEO_LANGUAGES
+    .map((lang) => `    <xhtml:link rel="alternate" hreflang="${lang}" href="${siteOrigin}/?lang=${lang}" />`)
+    .join('\n');
+
+  const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Homepage -->
+  <url>
+    <loc>${siteOrigin}/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${siteOrigin}/" />
+${langAlternates}
+  </url>
+
+  <!-- Privacy Policy -->
+  <url>
+    <loc>${siteOrigin}/privacy</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${siteOrigin}/privacy" />
+    <xhtml:link rel="alternate" hreflang="en" href="${siteOrigin}/privacy" />
+  </url>
+
+  <!-- Terms of Service -->
+  <url>
+    <loc>${siteOrigin}/terms</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${siteOrigin}/terms" />
+    <xhtml:link rel="alternate" hreflang="en" href="${siteOrigin}/terms" />
+  </url>
+</urlset>
+`;
+
+  fs.writeFileSync(path.resolve(distDir, 'robots.txt'), robotsContent, 'utf-8');
+  fs.writeFileSync(path.resolve(distDir, 'sitemap.xml'), sitemapContent, 'utf-8');
+
+  const publicDir = path.resolve(projectRoot, 'public');
+  if (fs.existsSync(publicDir)) {
+    fs.writeFileSync(path.resolve(publicDir, 'robots.txt'), robotsContent, 'utf-8');
+    fs.writeFileSync(path.resolve(publicDir, 'sitemap.xml'), sitemapContent, 'utf-8');
+  }
+  console.log(`✔ Generated robots.txt & sitemap.xml with origin: ${siteOrigin}`);
 
   // 11. Clean up temporary dist-server directory
   try {

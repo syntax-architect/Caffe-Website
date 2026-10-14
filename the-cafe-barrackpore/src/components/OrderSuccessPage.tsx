@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { printCustomerReceipt } from '../utils/printReceipt';
+import { getGoogleReviewUrl } from '../utils/loyalty';
 
 interface OrderStatusData {
   order_ref: string;
@@ -209,9 +211,27 @@ export const OrderSuccessPage: React.FC = () => {
   const isFailed = !isCancelled && orderData && orderData.payment_status === 'failed';
 
   const handlePrint = () => {
-    if (typeof window !== 'undefined') {
-      window.print();
+    if (!orderData) {
+      if (typeof window !== 'undefined') window.print();
+      return;
     }
+    printCustomerReceipt({
+      order_ref: orderData.order_ref,
+      order_type: (orderData.order_type as any) || 'dine_in',
+      table_number: orderData.table_number || null,
+      customer_name: orderData.customer_name || 'Valued Guest',
+      created_at: orderData.created_at,
+      items: (orderData as any).items || [
+        {
+          item_name: 'Dine & Refresh Experience',
+          quantity: 1,
+          line_total: orderData.payment_amount ?? orderData.total ?? 0,
+        },
+      ],
+      total_amount: orderData.payment_amount ?? orderData.total ?? 0,
+      payment_status: orderData.payment_status,
+      payment_method: 'Online Verified',
+    });
   };
 
   return (
@@ -411,6 +431,29 @@ export const OrderSuccessPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* 1-Tap Google Review Prompt (Zero-Cost Customer Retention) */}
+            <a
+              href={getGoogleReviewUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-[#D4AF37]/40 flex items-center justify-between text-left transition-all group cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-amber-400 text-lg">★★★★★</span>
+                <div>
+                  <p className="text-xs font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
+                    Loved your meal? Rate us on Google Maps
+                  </p>
+                  <p className="text-[11px] text-zinc-400">
+                    Takes 5 seconds and helps our local café team immensely.
+                  </p>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-sm text-zinc-400 group-hover:text-white transition-transform group-hover:translate-x-1">
+                open_in_new
+              </span>
+            </a>
 
             {/* Action Buttons */}
             <div className="pt-2 flex flex-col sm:flex-row gap-3">

@@ -3,6 +3,7 @@ import type { SEOConfig } from '../context/SiteConfigContext';
 import { MENU_CATEGORIES_FALLBACK, MENU_ITEMS_FALLBACK } from '../data/menuFallbacks';
 import type { MenuItem, MenuCategory } from '../types/menu';
 import { getPublicSiteOrigin } from './url';
+import { clientDetails } from '../config/client';
 
 export const SUPPORTED_SEO_LANGUAGES = [
   'en',
@@ -46,8 +47,8 @@ export function generatePageSEO(options: {
   const origin = options.origin || getPublicSiteOrigin();
   const config = options.restaurantConfig;
   const path = options.pathname.replace(/\/$/, '') || '/';
-  const businessName = config.businessName || 'The Café Barrackpore';
-  const city = config.address.city || 'Barrackpore';
+  const businessName = config.businessName || clientDetails.businessName || 'The Cafe';
+  const city = config.address.city || clientDetails.location?.city || 'Barrackpore';
   const shareImage = options.seoConfig?.image || `${origin}/images/og-share.jpg`;
 
   // Route categorization
@@ -159,7 +160,7 @@ export function generatePageSEO(options: {
       alternateName: config.shortName || 'The Café',
       url: origin,
       telephone: config.contact.phone,
-      email: config.contact.email || 'concierge@thecafebarrackpore.com',
+      email: config.contact.email || clientDetails.email || `concierge@${clientDetails.staffDomain}`,
       image: [
         shareImage,
         `${origin}/images/hero-bar.webp`,
@@ -236,7 +237,7 @@ export function generatePageSEO(options: {
       logo: `${origin}/logo.webp`,
       image: shareImage,
       telephone: config.contact.phone,
-      email: config.contact.email || 'concierge@thecafebarrackpore.com',
+      email: config.contact.email || clientDetails.email || `concierge@${clientDetails.staffDomain}`,
       sameAs: [
         'https://www.instagram.com/thecafebarrackpore',
         'https://www.facebook.com/thecafebarrackpore',

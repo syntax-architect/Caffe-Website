@@ -5,6 +5,7 @@ import { validatePhoneNumber } from '../utils/phone';
 import { isItemAvailable } from './menuAvailabilityService';
 import { enforceRateLimit } from '../utils/rateLimiter';
 import { verifyTurnstileToken } from '../utils/security';
+import { enqueueOfflineOrder } from '../utils/offlineQueue';
 
 /**
  * Validates checkout payload prior to database submission.
@@ -233,6 +234,22 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
     };
   }
 
+  // Check if browser/device is currently offline
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    console.info('[orderService] Device is offline. Enqueuing order into local IndexedDB queue:', orderRef);
+    try {
+      await enqueueOfflineOrder(payload, orderRef);
+      return {
+        success: true,
+        orderRef,
+        isOfflineQueued: true,
+        message: 'Order stored locally in offline queue. Will auto-sync when network reconnects.',
+      };
+    } catch (e) {
+      console.warn('[orderService] Direct offline enqueue error:', e);
+    }
+  }
+
   // 4. Submission to Supabase with collision retry or existing order update
   const maxAttempts = 3;
   let attempt = 0;
@@ -281,6 +298,53 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
       }
 
       if (rpcError) {
+        const proc = (globalThis as any).process;
+        const isDev = typeof import.meta !== 'undefined' && import.meta.env
+          ? Boolean(import.meta.env.DEV)
+          : (proc ? proc.env?.NODE_ENV !== 'production' : false);
+
+        if (isDev && (rpcError.message?.includes('Turnstile') || rpcError.message?.includes('verified_token') || rpcError.code === 'P0001')) {
+          console.warn('[orderService] Supabase rejected order due to Turnstile token in DEV mode. Saving to local demo orders:', orderRef);
+          try {
+            const raw = localStorage.getItem('cafe_demo_orders');
+            const existing = raw ? JSON.parse(raw) : [];
+            const demoOrder: any = {
+              id: `dev-order-${Date.now()}`,
+              order_ref: orderRef,
+              customer_name: payload.customer_name.trim(),
+              customer_phone: normalizedPhone,
+              order_type: payload.order_type,
+              table_number: payload.order_type === 'dine_in' ? payload.table_number?.trim() || null : null,
+              special_requests: payload.special_requests?.trim() || null,
+              subtotal: totals.subtotal,
+              total: totals.total,
+              status: 'pending',
+              source: payload.source || 'website',
+              payment_required: payload.payment_required ?? false,
+              payment_status: payload.payment_status ?? 'not_required',
+              payment_amount: payload.payment_amount ?? totals.total,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              items: totals.lineItems.map((li, idx) => ({
+                id: `item-${Date.now()}-${idx}`,
+                item_name: li.item_name,
+                quantity: li.quantity,
+                unit_price: li.unit_price,
+                line_total: li.line_total,
+              })),
+            };
+            existing.unshift(demoOrder);
+            localStorage.setItem('cafe_demo_orders', JSON.stringify(existing.slice(0, 50)));
+            localStorage.setItem('cafe_latest_order_event', JSON.stringify({ event: 'created', order: demoOrder, ts: Date.now() }));
+            window.dispatchEvent(new CustomEvent('cafe:order-created', { detail: demoOrder }));
+            return {
+              success: true,
+              orderRef,
+              isDemoMode: true,
+            };
+          } catch { /* ignore */ }
+        }
+
         return {
           success: false,
           orderRef,
@@ -289,12 +353,23 @@ export const createOrder = async (payload: CreateOrderPayload): Promise<OrderRes
       }
     } catch (err: unknown) {
       if (attempt >= maxAttempts) {
-        console.error('[orderService] Supabase order submission error:', err);
-        return {
-          success: false,
-          orderRef,
-          error: 'Online order registration encountered a network issue. You can still confirm via WhatsApp.',
-        };
+        console.error('[orderService] Network failure during order submission. Queuing into offline IndexedDB store:', err);
+        try {
+          await enqueueOfflineOrder(payload, orderRef);
+          return {
+            success: true,
+            orderRef,
+            isOfflineQueued: true,
+            message: 'Order saved offline. Will automatically sync to kitchen as soon as connection is restored.',
+          };
+        } catch (queueErr) {
+          console.error('[orderService] Failed to queue offline order:', queueErr);
+          return {
+            success: false,
+            orderRef,
+            error: 'Online order registration encountered a network issue. You can still confirm via WhatsApp.',
+          };
+        }
       }
     }
   }

@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { isStaffAccountLocked, recordStaffLoginFailure, resetStaffLoginFailures } from '../../utils/security';
 import { useSiteConfig } from '../../context/SiteConfigContext';
+import { clientDetails } from '../../config/client';
 
 export const StaffLoginPage: React.FC = () => {
   const { logoUrl } = useSiteConfig();
@@ -220,7 +221,7 @@ export const StaffLoginPage: React.FC = () => {
                 <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#1F1914] to-[#0A0807] border border-[#D4AF37]/40 flex items-center justify-center p-3.5 shadow-[0_0_30px_rgba(212,175,55,0.18)] transition-transform duration-500 group-hover:scale-105">
                   <img
                     src={logoUrl || "/logo.webp"}
-                    alt="The Café Barrackpore"
+                    alt={clientDetails.businessName || "Restaurant Crest"}
                     className="w-full h-full object-contain filter invert contrast-125"
                   />
                 </div>
@@ -233,7 +234,7 @@ export const StaffLoginPage: React.FC = () => {
                 Hospitality Operations Portal
               </span>
               <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-[0.06em] text-white">
-                The Café Barrackpore
+                {clientDetails.businessName}
               </h1>
               <p className="text-stone-400 text-xs sm:text-sm mt-1 max-w-xs leading-relaxed">
                 {isMfaAwaiting
@@ -405,7 +406,7 @@ export const StaffLoginPage: React.FC = () => {
                       autoComplete="email"
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
-                      placeholder="staff@thecafebarrackpore.com"
+                      placeholder={`staff@${clientDetails.staffDomain || 'thecafe.com'}`}
                       disabled={isResetSubmitting}
                       className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-stone-600 focus:outline-none transition-all disabled:opacity-50"
                     />
@@ -462,7 +463,7 @@ export const StaffLoginPage: React.FC = () => {
                       autoComplete="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@thecafebarrackpore.com"
+                      placeholder={`name@${clientDetails.staffDomain || 'thecafe.com'}`}
                       disabled={isSubmitting || lockoutRemaining > 0}
                       className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-stone-600 focus:outline-none transition-all disabled:opacity-50"
                     />
@@ -551,7 +552,7 @@ export const StaffLoginPage: React.FC = () => {
 
       {/* Terminal Footer */}
       <footer className="relative z-10 max-w-5xl mx-auto w-full text-center py-4 text-xs text-stone-500">
-        <p>© {new Date().getFullYear()} The Café Barrackpore. All rights reserved. Authorized staff personnel only.</p>
+        <p>© {new Date().getFullYear()} {clientDetails.businessName}. All rights reserved. Authorized staff personnel only.</p>
       </footer>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from 'react';
 import type { DashboardNotification } from '../types/dashboard';
+import { clientDetails } from '../config/client';
 
 interface NotificationContextType {
   notifications: DashboardNotification[];
@@ -18,7 +19,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       id: 'initial-welcome',
       type: 'info',
       title: 'Terminal Ready',
-      message: 'Dashboard initialized for The Café Barrackpore.',
+      message: `Dashboard initialized for ${clientDetails.businessName}.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       read: true,
     },

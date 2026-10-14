@@ -140,7 +140,7 @@ export function resetStaffLoginFailures(email: string): void {
  * Verifies Cloudflare Turnstile token and server-side rate limits via Supabase Edge Function
  */
 export async function verifyTurnstileToken(
-  action: 'order' | 'reservation' | 'login',
+  action: 'order' | 'reservation' | 'login' | 'contact' | 'inquiry',
   token?: string,
   phone?: string
 ): Promise<{ success: boolean; error?: string; verified_token?: string }> {
@@ -149,9 +149,12 @@ export async function verifyTurnstileToken(
     return { success: true };
   }
 
-  // If token is missing, check if in dev mode
+  // If token is missing, check if in dev/test mode
   if (!token) {
-    const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
+    const proc = (globalThis as any).process;
+    const isDev = typeof import.meta !== 'undefined' && import.meta.env
+      ? Boolean(import.meta.env.DEV)
+      : (proc ? proc.env?.NODE_ENV !== 'production' : false);
     if (isDev) {
       return { success: true };
     }

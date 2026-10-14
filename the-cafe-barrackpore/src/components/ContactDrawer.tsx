@@ -9,6 +9,7 @@ import {
   type InquirySubject,
   type ContactInquiryPayload,
 } from '../services/contactService';
+import { TurnstileWidget } from './TurnstileWidget';
 
 export const ContactDrawer: React.FC = () => {
   const { isContactOpen, setIsContactOpen, showToast } = useUI();
@@ -35,19 +36,33 @@ export const ContactDrawer: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [confirmedRef, setConfirmedRef] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string>('');
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll while drawer is open
+  // Lock body scroll and pause Lenis while contact drawer is open
   useEffect(() => {
     if (isContactOpen) {
       document.body.style.overflow = 'hidden';
+      const lenis = (window as any).__lenis;
+      if (lenis && typeof lenis.stop === 'function') {
+        lenis.stop();
+      }
     } else {
       document.body.style.overflow = '';
+      const lenis = (window as any).__lenis;
+      if (lenis && typeof lenis.start === 'function') {
+        lenis.start();
+      }
       setErrorMessage(null);
       setConfirmedRef(null);
+      setCaptchaToken('');
     }
     return () => {
       document.body.style.overflow = '';
+      const lenis = (window as any).__lenis;
+      if (lenis && typeof lenis.start === 'function') {
+        lenis.start();
+      }
     };
   }, [isContactOpen]);
 
@@ -74,6 +89,7 @@ export const ContactDrawer: React.FC = () => {
         email: formData.email,
         subject: formData.subject,
         message: formData.message,
+        captchaToken,
       };
 
       const result = await submitContactInquiry(payload);
@@ -97,14 +113,14 @@ export const ContactDrawer: React.FC = () => {
 
   const handleWhatsAppDirect = () => {
     if (!confirmedRef) return;
-    const url = buildWhatsAppInquiryUrl(formData, confirmedRef, whatsappNumber);
+    const url = buildWhatsAppInquiryUrl(formData, confirmedRef, whatsappNumber, businessName);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <AnimatePresence>
       {isContactOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
+        <div className="fixed inset-0 z-[220] overflow-hidden flex justify-end">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -126,7 +142,8 @@ export const ContactDrawer: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="contact-drawer-title"
-            className="relative w-full max-w-lg bg-[#120B08] border-l border-primary/20 text-on-surface shadow-2xl z-10 flex flex-col h-full overflow-hidden"
+            data-lenis-prevent
+            className="relative w-full max-w-lg bg-[#120B08] border-l border-primary/20 text-on-surface shadow-2xl z-10 flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden overscroll-contain"
           >
             {/* Header */}
             <div className="p-6 border-b border-white/10 flex items-center justify-between bg-surface-container/60 shrink-0">
@@ -155,43 +172,49 @@ export const ContactDrawer: React.FC = () => {
             </div>
 
             {/* Content Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {confirmedRef ? (
-                /* Success View */
-                <div className="py-8 flex flex-col items-center text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-3xl">check_circle</span>
-                  </div>
-                  <h3 className="font-serif text-2xl text-white font-normal">Inquiry Received</h3>
-                  <p className="font-mono text-xs uppercase tracking-widest text-primary font-semibold">
-                    Reference: {confirmedRef}
-                  </p>
-                  <p className="font-sans text-sm text-zinc-400 max-w-sm font-light leading-relaxed">
-                    Thank you, <strong className="text-white">{formData.name}</strong>. Your inquiry has been routed to our floor team at {businessName}.
-                  </p>
-
-                  <div className="w-full pt-4 space-y-3">
-                    <button
-                      type="button"
-                      onClick={handleWhatsAppDirect}
-                      className="w-full h-12 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-all"
-                    >
-                      <span className="material-symbols-outlined text-lg">forum</span>
-                      <span>Continue via WhatsApp Concierge</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setIsContactOpen(false)}
-                      className="w-full h-12 rounded-full border border-white/10 hover:border-white/20 text-zinc-300 text-xs font-semibold uppercase tracking-wider flex items-center justify-center cursor-pointer transition-colors"
-                    >
-                      Close Window
-                    </button>
-                  </div>
+            {confirmedRef ? (
+              /* Success View */
+              <div
+                className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4 overscroll-contain custom-scrollbar flex flex-col items-center justify-center text-center"
+                data-lenis-prevent
+              >
+                <div className="w-16 h-16 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-3xl">check_circle</span>
                 </div>
-              ) : (
-                /* Contact Form */
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <h3 className="font-serif text-2xl text-white font-normal">Inquiry Received</h3>
+                <p className="font-mono text-xs uppercase tracking-widest text-primary font-semibold">
+                  Reference: {confirmedRef}
+                </p>
+                <p className="font-sans text-sm text-zinc-400 max-w-sm font-light leading-relaxed">
+                  Thank you, <strong className="text-white">{formData.name}</strong>. Your inquiry has been routed to our floor team at {businessName}.
+                </p>
+
+                <div className="w-full pt-4 space-y-3">
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppDirect}
+                    className="w-full h-12 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-all"
+                  >
+                    <span className="material-symbols-outlined text-lg">forum</span>
+                    <span>Continue via WhatsApp Concierge</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsContactOpen(false)}
+                    className="w-full h-12 rounded-full border border-white/10 hover:border-white/20 text-zinc-300 text-xs font-semibold uppercase tracking-wider flex items-center justify-center cursor-pointer transition-colors"
+                  >
+                    Close Window
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Contact Form with Dedicated Scroll Area and Sticky Bottom Bar */
+              <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                <div
+                  className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5 overscroll-contain custom-scrollbar"
+                  data-lenis-prevent
+                >
                   {errorMessage && (
                     <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
                       <span className="material-symbols-outlined text-base text-red-400 shrink-0">error</span>
@@ -268,7 +291,7 @@ export const ContactDrawer: React.FC = () => {
                     </label>
                     <textarea
                       required
-                      rows={4}
+                      rows={3}
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       placeholder="Tell us about your event, party size, date preference, or inquiry details..."
@@ -285,11 +308,21 @@ export const ContactDrawer: React.FC = () => {
                     <span> · We prioritize immediate hospitality responses within operational hours (11:00 AM – 11:30 PM).</span>
                   </div>
 
-                  {/* Submit Button */}
+                  {/* Security Verification (Cloudflare Turnstile) */}
+                  <div className="flex flex-col gap-1.5 pt-1">
+                    <label className="font-sans text-[11px] uppercase tracking-wider text-zinc-300 font-medium">
+                      Security Verification <span className="text-primary">*</span>
+                    </label>
+                    <TurnstileWidget action="contact" onVerify={(token) => setCaptchaToken(token)} />
+                  </div>
+                </div>
+
+                {/* Sticky Action Footer */}
+                <div className="p-4 sm:p-5 border-t border-primary/20 bg-[#120B08]/98 shrink-0 pb-[max(1.25rem,calc(0.75rem+env(safe-area-inset-bottom,0px)))] shadow-[0_-8px_24px_rgba(0,0,0,0.6)]">
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-12 rounded-full bg-primary hover:opacity-90 active:opacity-95 text-on-primary text-xs font-semibold uppercase tracking-[0.16em] flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.3)] cursor-pointer transition-all disabled:opacity-50 mt-6"
+                    className="w-full h-12 rounded-full bg-primary hover:opacity-90 active:opacity-95 text-on-primary text-xs font-semibold uppercase tracking-[0.16em] flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.3)] cursor-pointer transition-all disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <>
@@ -303,9 +336,9 @@ export const ContactDrawer: React.FC = () => {
                       </>
                     )}
                   </button>
-                </form>
-              )}
-            </div>
+                </div>
+              </form>
+            )}
           </motion.div>
         </div>
       )}

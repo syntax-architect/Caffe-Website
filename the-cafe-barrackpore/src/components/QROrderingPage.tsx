@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSiteConfig } from '../context/SiteConfigContext';
-import { UIProvider } from '../context/UIContext';
+import { UIProvider, useUI } from '../context/UIContext';
 import { CartProvider, useCart } from '../context/CartContext';
 import { useTableContext } from '../hooks/useTableContext';
 import { calculateOrderTotals } from '../utils/orderCalculations';
@@ -9,12 +9,15 @@ import { CartDrawer } from './CartDrawer';
 import { MetaTags } from './MetaTags';
 
 /**
- * Inner component that has access to CartContext, TableContext, UIContext, and SiteConfigContext
+ * High-End Table QR Dining Interface
+ * Engineered with double-bezel enclosures, warm atmospheric lighting,
+ * and high-contrast editorial typography.
  */
 const QRContent: React.FC = () => {
   const { tableNumber, isQrValid, validationError, hasTableParam } = useTableContext();
   const { items, cartCount, setIsDrawerOpen, clearCart } = useCart();
   const { restaurantConfig, formatPrice, logoUrl } = useSiteConfig();
+  const { showToast } = useUI();
 
   const totals = calculateOrderTotals(items, {
     enabled: restaurantConfig.tax.enabled,
@@ -27,6 +30,7 @@ const QRContent: React.FC = () => {
 
   // Context conflict detection
   const [isConflictDismissed, setIsConflictDismissed] = useState(false);
+  const [isStaffCalled, setIsStaffCalled] = useState(false);
 
   const hasContextMismatch =
     typeof window !== 'undefined' &&
@@ -52,18 +56,29 @@ const QRContent: React.FC = () => {
     setIsConflictDismissed(true);
   };
 
+  const handleCallStaff = () => {
+    setIsStaffCalled(true);
+    showToast({
+      title: 'Floor Staff Notified',
+      message: `Table ${tableNumber} assistance request received.`,
+      subtext: 'A concierge will attend to your table shortly.',
+      type: 'success',
+    });
+    setTimeout(() => setIsStaffCalled(false), 8000);
+  };
+
   // State 1: Missing table parameter (/qr)
   if (!hasTableParam) {
     return (
-      <div className="min-h-screen bg-[#070605] text-[#f5efe6] flex flex-col justify-between p-6 sm:p-12 font-sans selection:bg-[#D4AF37]/30 selection:text-white">
+      <div className="min-h-screen bg-[#070504] text-[#F5EFE6] flex flex-col justify-between p-6 sm:p-12 font-sans selection:bg-[#D4AF37]/30 selection:text-white">
         <header className="flex flex-col items-center text-center pt-8">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-transparent border border-[#D4AF37]/40 flex items-center justify-center p-3 mb-4 shadow-[0_0_30px_rgba(212,175,55,0.2)]">
-            <img src={logoUrl || "/logo.webp"} alt={restaurantConfig.businessName} className="w-full h-full object-contain filter invert" />
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-black/60 border border-[#D4AF37]/40 flex items-center justify-center p-3 mb-4 shadow-[0_0_30px_rgba(212,175,55,0.25)]">
+            <img src={logoUrl || "/logo.webp"} alt={restaurantConfig.businessName} className="w-full h-full object-contain" />
           </div>
           <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#D4AF37]">
-            Optical Dining Interface
+            Optical Table Interface
           </span>
-          <h1 className="text-xl sm:text-2xl font-serif font-black uppercase tracking-[0.2em] text-white mt-1">
+          <h1 className="text-xl sm:text-2xl font-serif font-semibold tracking-wider text-white mt-1">
             {restaurantConfig.businessName}
           </h1>
         </header>
@@ -71,11 +86,11 @@ const QRContent: React.FC = () => {
         <main className="max-w-md mx-auto w-full text-center py-12 flex flex-col items-center">
           <div className="p-1 rounded-[2.5rem] bg-gradient-to-b from-white/[0.1] to-white/[0.02] border border-white/[0.08] shadow-2xl w-full">
             <div className="p-8 rounded-[calc(2.5rem-0.25rem)] bg-[#120F0D] flex flex-col items-center">
-              <div className="w-20 h-20 rounded-3xl bg-[#070605] border border-white/[0.1] flex items-center justify-center mb-6 text-[#D4AF37] shadow-inner">
+              <div className="w-20 h-20 rounded-3xl bg-[#0A0705] border border-white/[0.1] flex items-center justify-center mb-6 text-[#D4AF37] shadow-inner">
                 <span className="material-symbols-outlined text-4xl">qr_code_scanner</span>
               </div>
 
-              <h2 className="text-2xl font-serif font-black text-white mb-2">
+              <h2 className="text-2xl font-serif font-semibold text-white mb-2">
                 Scan Your Table Stand
               </h2>
 
@@ -86,14 +101,14 @@ const QRContent: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-3 w-full">
                 <a
                   href="/"
-                  className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white border border-white/[0.08] font-bold text-xs transition-colors"
+                  className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-6 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white border border-white/[0.08] font-semibold text-xs tracking-wider uppercase transition-colors"
                 >
                   <span className="material-symbols-outlined text-base">home</span>
                   <span>Main Website</span>
                 </a>
                 <a
                   href="/qr-generator"
-                  className="inline-flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs uppercase tracking-wider transition-all"
+                  className="inline-flex items-center justify-center gap-2 py-3 px-6 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95"
                 >
                   <span className="material-symbols-outlined text-base">print</span>
                   <span>Staff Setup</span>
@@ -113,12 +128,12 @@ const QRContent: React.FC = () => {
   // State 2: Invalid table parameter (/qr?table=abc)
   if (!isQrValid || !tableNumber) {
     return (
-      <div className="min-h-screen bg-[#070605] text-[#f5efe6] flex flex-col justify-between p-6 sm:p-12 font-sans selection:bg-[#D4AF37]/30 selection:text-white">
+      <div className="min-h-screen bg-[#070504] text-[#F5EFE6] flex flex-col justify-between p-6 sm:p-12 font-sans selection:bg-[#D4AF37]/30 selection:text-white">
         <header className="flex flex-col items-center text-center pt-8">
-          <div className="w-16 h-16 rounded-full bg-red-950/40 border border-red-500/40 flex items-center justify-center p-3 mb-4">
-            <img src={logoUrl || "/logo.webp"} alt={restaurantConfig.businessName} className="w-full h-full object-contain filter invert" />
+          <div className="w-16 h-16 rounded-full bg-red-950/40 border border-red-500/40 flex items-center justify-center p-3 mb-4 shadow-[0_0_25px_rgba(239,68,68,0.2)]">
+            <img src={logoUrl || "/logo.webp"} alt={restaurantConfig.businessName} className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-serif font-black uppercase tracking-[0.2em] text-white">
+          <h1 className="text-xl sm:text-2xl font-serif font-semibold tracking-wider text-white">
             {restaurantConfig.businessName}
           </h1>
           <p className="text-zinc-500 text-xs font-mono tracking-wider uppercase mt-1">
@@ -133,7 +148,7 @@ const QRContent: React.FC = () => {
                 <span className="material-symbols-outlined text-4xl">error_outline</span>
               </div>
 
-              <h2 className="text-2xl font-serif font-black text-white mb-2">
+              <h2 className="text-2xl font-serif font-semibold text-white mb-2">
                 Unrecognized Table QR
               </h2>
 
@@ -143,7 +158,7 @@ const QRContent: React.FC = () => {
 
               <a
                 href="/"
-                className="w-full inline-flex items-center justify-center gap-2 py-3 px-8 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs uppercase tracking-wider transition-all shadow-md active:scale-95"
+                className="w-full inline-flex items-center justify-center gap-2 py-3 px-8 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95"
               >
                 <span className="material-symbols-outlined text-base">arrow_back</span>
                 <span>Return to Website</span>
@@ -159,40 +174,46 @@ const QRContent: React.FC = () => {
     );
   }
 
-  // State 3: Valid Table QR Session (/qr?table=07)
+  // State 3: Valid Table QR Session (/qr?table=05)
   return (
-    <div className="min-h-screen bg-[#070605] text-[#f5efe6] selection:bg-[#D4AF37]/30 selection:text-white pb-32">
+    <div className="min-h-screen bg-[#070504] text-[#F5EFE6] selection:bg-[#D4AF37]/30 selection:text-white pb-36">
       {/* Top Floating / Header Bar */}
-      <header className="sticky top-0 z-40 bg-[#070605]/95 backdrop-blur-md border-b border-white/[0.08] px-4 py-3 sm:px-8 sm:py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[#070504]/90 backdrop-blur-xl border-b border-white/[0.08] px-4 py-3 sm:px-8 sm:py-3.5 transition-all">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          {/* Brand Crest */}
           <div className="flex items-center gap-3">
             <a href="/" title="Go to Home" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-transparent border border-[#D4AF37]/40 flex items-center justify-center p-2 transition-transform group-hover:scale-105 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
-                <img src={logoUrl || "/logo.webp"} alt="Logo" className="w-full h-full object-contain filter invert" />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37]/25 to-black/60 border border-[#D4AF37]/40 flex items-center justify-center p-1.5 transition-transform group-hover:scale-105 shadow-[0_0_16px_rgba(212,175,55,0.25)] shrink-0">
+                <img src={logoUrl || "/logo.webp"} alt="Logo" className="w-full h-full object-contain" />
               </div>
               <div className="hidden xs:block text-left">
-                <p className="text-xs font-serif font-black uppercase tracking-[0.18em] text-white leading-tight group-hover:text-[#D4AF37] transition-colors">
+                <p className="text-xs font-serif font-semibold tracking-wider text-white leading-tight group-hover:text-[#D4AF37] transition-colors">
                   {restaurantConfig.shortName || restaurantConfig.businessName}
                 </p>
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-mono">
-                  {restaurantConfig.address.city}
+                <p className="text-[9px] text-zinc-400 uppercase tracking-widest font-mono">
+                  {restaurantConfig.address.city} • Cantonment
                 </p>
               </div>
             </a>
           </div>
 
-          {/* Prominent Double-Bezel Table Indicator Badge */}
-          <div className="p-0.5 rounded-full bg-gradient-to-r from-[#D4AF37]/40 via-white/[0.1] to-[#D4AF37]/40 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
-            <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#120F0D]">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
+          {/* Luxury In-Seat Hardware Key Indicator Badge */}
+          <div className="p-0.5 rounded-full bg-gradient-to-r from-[#D4AF37]/35 via-white/[0.1] to-[#D4AF37]/35 shadow-[0_2px_14px_rgba(0,0,0,0.7)]">
+            <div className="flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full bg-[#130E0B] border border-white/[0.04]">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+              </span>
               <div className="text-left">
                 <span className="sr-only">Ordering from Table {tableNumber}</span>
-                <p className="text-xs sm:text-sm font-serif font-black tracking-wider text-[#D4AF37] uppercase leading-none">
-                  Table {tableNumber}
-                </p>
-                <p className="text-[8px] sm:text-[9px] text-zinc-400 uppercase tracking-widest font-mono leading-none mt-0.5">
-                  Dine-In Covered
-                </p>
+                <div className="flex items-baseline gap-1.5">
+                  <p className="text-xs sm:text-sm font-mono font-bold tracking-wider text-[#F3C766] uppercase leading-none">
+                    TABLE {tableNumber}
+                  </p>
+                  <p className="text-[9px] text-zinc-400 uppercase tracking-widest font-mono leading-none hidden sm:inline">
+                    • In-Seat Service
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -202,40 +223,104 @@ const QRContent: React.FC = () => {
             type="button"
             onClick={() => setIsDrawerOpen(true)}
             aria-label={`View cart with ${cartCount} items`}
-            className="relative flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs sm:text-sm uppercase tracking-wider hover:shadow-[0_8px_25px_rgba(212,175,55,0.35)] transition-all active:scale-95 cursor-pointer shadow-md"
+            className="relative flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-full bg-[#18120D] hover:bg-[#221912] text-[#F3C766] border border-[#D4AF37]/40 hover:border-[#D4AF37] shadow-[0_2px_12px_rgba(212,175,55,0.15)] transition-all active:scale-95 cursor-pointer group"
           >
-            <span className="material-symbols-outlined text-base font-bold">shopping_bag</span>
-            <span className="hidden sm:inline">My Order</span>
-            {cartCount > 0 && (
-              <span className="px-2 py-0.5 text-[10px] bg-[#070605] text-[#D4AF37] font-mono font-bold rounded-full min-w-[20px] text-center shadow">
+            <span className="material-symbols-outlined text-[17px] text-[#D4AF37] group-hover:scale-110 transition-transform">shopping_bag</span>
+            <span className="text-xs font-semibold uppercase tracking-wider font-sans text-stone-200 hidden sm:inline">My Order</span>
+            {cartCount > 0 ? (
+              <span className="w-5 h-5 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#0A0705] font-mono font-black text-[10px] flex items-center justify-center shadow-md">
                 {cartCount}
               </span>
+            ) : (
+              <span className="text-[10px] font-mono text-stone-500 hidden sm:inline">0</span>
             )}
           </button>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-6 sm:pt-10">
-        {/* Double-Bezel Table Welcome Banner */}
-        <section aria-labelledby="qr-table-heading" className="mb-8 p-1 rounded-[2.5rem] bg-gradient-to-b from-[#D4AF37]/30 via-white/[0.06] to-transparent border border-[#D4AF37]/35 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden">
-          <div className="p-6 sm:p-10 rounded-[calc(2.5rem-0.25rem)] bg-[#120F0D] relative z-10 text-center sm:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-mono font-bold uppercase tracking-wider mb-4">
-              <span className="material-symbols-outlined text-sm">restaurant</span>
-              <span>Dine-In Table Service</span>
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-4 sm:pt-6">
+        {/* Cinematic Atmospheric In-Seat Hero Banner */}
+        <section
+          aria-labelledby="qr-table-heading"
+          className="relative mb-6 sm:mb-8 p-1 rounded-3xl bg-gradient-to-b from-[#D4AF37]/25 via-white/[0.06] to-white/[0.02] border border-[#D4AF37]/25 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden"
+        >
+          <div className="relative rounded-[calc(1.5rem-0.125rem)] bg-gradient-to-br from-[#18120D] via-[#100C09] to-[#0A0705] p-6 sm:p-9 overflow-hidden">
+            {/* Cinematic Background Image Backdrop */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <picture>
+                <source srcSet="/images/hero-cinematic.avif" type="image/avif" />
+                <source srcSet="/images/hero-cinematic.webp" type="image/webp" />
+                <img
+                  src="/images/hero-cinematic.webp"
+                  alt="Atmospheric Nocturnal Dining"
+                  className="w-full h-full object-cover opacity-25 mix-blend-luminosity scale-105"
+                  loading="eager"
+                  decoding="async"
+                />
+              </picture>
+              <div className="absolute inset-0 bg-gradient-to-r from-[#100C09] via-[#100C09]/90 to-[#100C09]/50" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0705] via-transparent to-[#18120D]/60" />
+              <div className="absolute right-0 top-0 w-96 h-96 rounded-full bg-[#D4AF37]/10 blur-[120px]" />
             </div>
-            <h1 id="qr-table-heading" className="text-3xl sm:text-5xl font-serif font-black text-white tracking-tight mb-2">
-              {restaurantConfig.businessName.toUpperCase()}
-            </h1>
-            <p className="text-lg sm:text-xl text-[#D4AF37] font-serif font-bold tracking-wide">
-              TABLE {tableNumber} • Smart Digital Service
-            </p>
-            <p className="text-zinc-400 text-xs sm:text-sm max-w-2xl mt-2 leading-relaxed">
-              Explore our freshly prepared artisanal menu below. Add dishes to your bag and submit directly to our kitchen with zero wait time.
-            </p>
-          </div>
 
-          <div className="absolute right-[-40px] bottom-[-40px] w-64 h-64 rounded-full bg-[#D4AF37]/10 blur-[100px] pointer-events-none" aria-hidden="true" />
+            <div className="relative z-10 text-left">
+              {/* Service Badges */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#F3C766] text-xs font-mono font-bold uppercase tracking-wider shadow-xs">
+                  <span className="material-symbols-outlined text-sm text-[#D4AF37]">restaurant</span>
+                  <span>TABLE {tableNumber} • Table Service</span>
+                </div>
+
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-[11px] font-mono shadow-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Kitchen Direct Service</span>
+                </div>
+              </div>
+
+              {/* Title & Subheading */}
+              <h1 id="qr-table-heading" className="text-3xl sm:text-5xl font-serif font-normal text-white tracking-tight mb-2 drop-shadow-md">
+                {restaurantConfig.businessName}
+              </h1>
+              <p className="text-base sm:text-lg text-[#F3C766] font-serif font-light italic mb-2">
+                TABLE {tableNumber} • Smart Digital Service
+              </p>
+              <p className="text-zinc-300/85 text-xs sm:text-sm max-w-2xl leading-relaxed font-sans font-light">
+                Explore our freshly prepared artisanal menu below. Add dishes to your bag and submit directly to our kitchen with zero wait time.
+              </p>
+
+              {/* 3-Pill Hospitality Micro-Deck */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-5 mt-5 border-t border-white/[0.08] text-xs">
+                <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-black/40 border border-white/[0.06] backdrop-blur-sm shadow-inner">
+                  <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#F3C766] shrink-0">
+                    <span className="material-symbols-outlined text-base">bolt</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium text-xs">Direct Line Tickets</p>
+                    <p className="text-stone-400 text-[10px]">Zero line waiting</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-black/40 border border-white/[0.06] backdrop-blur-sm shadow-inner">
+                  <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#F3C766] shrink-0">
+                    <span className="material-symbols-outlined text-base">room_service</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium text-xs">Floor Concierge</p>
+                    <p className="text-stone-400 text-[10px]">Attentive service on-call</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-black/40 border border-white/[0.06] backdrop-blur-sm shadow-inner">
+                  <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#F3C766] shrink-0">
+                    <span className="material-symbols-outlined text-base">payments</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium text-xs">Flexible Checkout</p>
+                    <p className="text-stone-400 text-[10px]">Counter or instant online</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Existing Cart Conflict Notification */}
@@ -243,7 +328,7 @@ const QRContent: React.FC = () => {
           <aside
             role="alert"
             aria-live="polite"
-            className="mb-8 p-1 rounded-2xl bg-gradient-to-b from-amber-500/30 to-transparent border border-amber-500/40 shadow-xl"
+            className="mb-6 p-1 rounded-2xl bg-gradient-to-b from-amber-500/30 to-transparent border border-amber-500/40 shadow-xl"
           >
             <div className="p-4 sm:p-5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3">
@@ -261,14 +346,14 @@ const QRContent: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleStartFresh}
-                  className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-400 hover:text-white border border-white/[0.08] transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-400 hover:text-white border border-white/[0.08] transition-colors cursor-pointer"
                 >
                   Start Fresh
                 </button>
                 <button
                   type="button"
                   onClick={handleKeepItems}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
                 >
                   Keep Items
                 </button>
@@ -277,9 +362,9 @@ const QRContent: React.FC = () => {
           </aside>
         )}
 
-        {/* The Reused Menu Component */}
+        {/* Modern Food Photography Catalog Grid Menu */}
         <section aria-label="Restaurant Menu" className="w-full">
-          <Menu />
+          <Menu isQrMode forcedVariant="catalog-grid" />
         </section>
       </main>
 
@@ -290,22 +375,22 @@ const QRContent: React.FC = () => {
           aria-label="Order summary bar"
           className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-8 sm:bottom-8 sm:w-96 z-40 transition-all duration-300 animate-in slide-in-from-bottom"
         >
-          <div className="p-1 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] shadow-[0_10px_40px_rgba(0,0,0,0.85)]">
-            <div className="flex items-center justify-between gap-4 p-3.5 sm:p-4 rounded-[calc(1rem-0.125rem)] bg-[#070605]">
+          <div className="p-0.5 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] shadow-[0_12px_45px_rgba(0,0,0,0.9)]">
+            <div className="flex items-center justify-between gap-4 p-3.5 sm:p-4 rounded-[calc(1rem-0.125rem)] bg-[#0C0806] border border-white/[0.06]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#D4AF37] text-[#070605] flex items-center justify-center font-mono font-black text-sm shadow">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#F3C766] text-[#070605] flex items-center justify-center font-mono font-black text-sm shadow">
                   {cartCount}
                 </div>
                 <div className="text-left">
                   <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Table {tableNumber}</p>
-                  <p className="text-base font-serif font-black text-white">{formatPrice(totals.total)}</p>
+                  <p className="text-base font-serif font-bold text-white">{formatPrice(totals.total)}</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsDrawerOpen(true)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs uppercase tracking-wider hover:shadow-[0_6px_20px_rgba(212,175,55,0.4)] active:scale-95 transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider hover:shadow-[0_6px_20px_rgba(212,175,55,0.4)] active:scale-95 transition-all cursor-pointer shadow-md"
               >
                 <span>View Order</span>
                 <span className="material-symbols-outlined text-base">arrow_forward</span>
@@ -318,13 +403,69 @@ const QRContent: React.FC = () => {
       {/* Cart Drawer Modal */}
       <CartDrawer />
 
-      {/* Lightweight Footer for QR Page */}
-      <footer className="mt-16 pt-8 border-t border-white/[0.06] text-center text-zinc-500 text-xs max-w-7xl mx-auto px-4 font-mono">
-        <p className="font-serif uppercase tracking-[0.2em] text-[#D4AF37] text-sm font-bold mb-1">
+      {/* Luxury In-Seat Hospitality Concierge Deck */}
+      <section className="max-w-4xl mx-auto px-4 mt-12 mb-6">
+        <div className="p-1 rounded-3xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-xl">
+          <div className="rounded-[calc(1.5rem-0.125rem)] bg-[#100C09] p-6 sm:p-8 text-center flex flex-col items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 text-primary flex items-center justify-center shadow-inner">
+              <span className="material-symbols-outlined text-2xl font-light">room_service</span>
+            </div>
+
+            <div>
+              <h3 className="font-serif text-xl sm:text-2xl text-white font-normal mb-1">
+                Hospitality Concierge • Table {tableNumber}
+              </h3>
+              <p className="text-xs sm:text-sm text-stone-400 max-w-lg leading-relaxed font-sans font-light">
+                Need extra cutlery, customized spice levels, water refills, or chef recommendations? Our floor team is delighted to assist.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleCallStaff}
+                disabled={isStaffCalled}
+                className={`px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer active:scale-95 ${
+                  isStaffCalled
+                    ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/50'
+                    : 'bg-primary text-on-primary hover:opacity-95 shadow-md shadow-primary/20'
+                }`}
+              >
+                <span className="material-symbols-outlined text-base">{isStaffCalled ? 'check' : 'notifications_active'}</span>
+                <span>{isStaffCalled ? 'Floor Staff Alerted' : 'Call Floor Staff'}</span>
+              </button>
+
+              <a
+                href="/"
+                className="px-5 py-2.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-stone-300 hover:text-white border border-white/[0.1] text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-base">explore</span>
+                <span>Visit Main Site</span>
+              </a>
+            </div>
+
+            <div className="w-full pt-4 mt-2 border-t border-white/[0.06] flex flex-wrap items-center justify-center gap-4 text-[11px] text-stone-500 font-mono">
+              <span>Wi-Fi: TheCafe_Guest</span>
+              <span>•</span>
+              <span>Zero-Wait Line Dispatch</span>
+              <span>•</span>
+              <span>Cantonment, Barrackpore</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Discrete Legal & Brand Signature */}
+      <footer className="text-center text-zinc-600 text-xs max-w-7xl mx-auto px-4 font-mono pb-6">
+        <p className="font-serif uppercase tracking-[0.2em] text-[#D4AF37]/80 text-xs font-semibold mb-1">
           {restaurantConfig.businessName}
         </p>
-        <p className="text-zinc-500">{restaurantConfig.address.line1} • Need assistance? Please speak to our floor staff.</p>
-        <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-zinc-600">
+        <p className="text-zinc-500 text-[11px]">
+          {restaurantConfig.address.line1} • Handcrafted Culinary Sanctuary
+        </p>
+        <div className="mt-2 flex items-center justify-center gap-3 text-[10px] text-zinc-600">
+          <span>© {new Date().getFullYear()} All rights reserved</span>
+          <span>•</span>
           <span>Dine-In Table {tableNumber}</span>
           <span>•</span>
           <a href="/" className="hover:text-[#D4AF37] transition-colors underline">Visit Full Website</a>

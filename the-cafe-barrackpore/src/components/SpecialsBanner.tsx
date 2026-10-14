@@ -149,15 +149,18 @@ export const SpecialsBanner: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
                   {/* Left Column: Panoramic Gourmet Photography */}
                   <div className="lg:col-span-7 relative min-h-[280px] sm:min-h-[340px] lg:min-h-[420px] bg-surface-container-lowest overflow-hidden">
-                    <img
-                      src={masterPlatter.image}
-                      alt={masterPlatter.name}
-                      width="800"
-                      height="500"
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
-                    />
+                    <picture>
+                      <source srcSet={masterPlatter.image.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
+                      <img
+                        src={masterPlatter.image}
+                        alt={masterPlatter.name}
+                        width="800"
+                        height="500"
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
+                      />
+                    </picture>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-black/20 lg:to-surface-container pointer-events-none" />
 
                     {/* Spotlight Badges */}
@@ -237,15 +240,18 @@ export const SpecialsBanner: React.FC = () => {
                   >
                     {/* Image Column */}
                     <div className="sm:w-5/12 relative min-h-[200px] sm:min-h-[220px] bg-surface-container-lowest overflow-hidden">
-                      <img
-                        src={combo.image}
-                        alt={combo.name}
-                        width="400"
-                        height="300"
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
-                      />
+                      <picture>
+                        <source srcSet={combo.image.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
+                        <img
+                          src={combo.image}
+                          alt={combo.name}
+                          width="400"
+                          height="300"
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
+                        />
+                      </picture>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                       <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
                         <span className="px-2 py-0.5 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-primary/40 text-[9px] uppercase tracking-wider text-primary font-semibold">
@@ -320,15 +326,18 @@ export const SpecialsBanner: React.FC = () => {
                   <div className="flex flex-col h-full">
                     {/* Photo Container */}
                     <div className="relative aspect-[16/11] w-full overflow-hidden bg-surface-container-lowest">
-                      <img
-                        src={combo.image}
-                        alt={combo.name}
-                        width="500"
-                        height="340"
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.08] will-change-transform"
-                      />
+                      <picture>
+                        <source srcSet={combo.image.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
+                        <img
+                          src={combo.image}
+                          alt={combo.name}
+                          width="500"
+                          height="340"
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.08] will-change-transform"
+                        />
+                      </picture>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
 
                       <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-2">

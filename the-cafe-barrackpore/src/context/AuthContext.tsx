@@ -156,6 +156,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               setStaffProfile(profile);
             }
           }
+        } else if (cachedStaffData && (cachedStaffData.profile?.id?.startsWith('staff-demo') || cachedStaffData.profile?.user_id?.startsWith('demo-'))) {
+          // Preserve demo staff profile for local development & testing
+          if (isMounted) {
+            setStaffProfile(cachedStaffData.profile);
+            setUser({
+              id: cachedStaffData.profile.user_id,
+              email: cachedStaffData.email || 'manager@thecafebarrackpore.com',
+              app_metadata: {},
+              user_metadata: { full_name: cachedStaffData.profile.full_name },
+              aud: 'authenticated',
+              created_at: cachedStaffData.profile.created_at || new Date().toISOString(),
+            } as User);
+          }
         } else {
           setCachedStaffData(null);
           if (isMounted) {
@@ -200,6 +213,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         }
       } else {
+        const currentCached = getCachedStaffData();
+        if (currentCached && (currentCached.profile?.id?.startsWith('staff-demo') || currentCached.profile?.user_id?.startsWith('demo-'))) {
+          return;
+        }
         setCachedStaffData(null);
         if (isMounted) {
           setSession(null);

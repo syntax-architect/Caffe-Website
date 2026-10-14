@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { KitchenOrder } from '../../services/kitchenService';
 import { playTicketBumpSound, playDispatchChime } from '../../services/soundService';
+import { printKitchenKOT } from '../../utils/printReceipt';
 
 interface KitchenTicketProps {
   order: KitchenOrder;
@@ -243,6 +244,17 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
                 <span>{action.label}</span>
               </>
             )}
+          </button>
+
+          {/* Quick Thermal KOT Print */}
+          <button
+            type="button"
+            onClick={() => printKitchenKOT(order)}
+            className="p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] text-stone-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer"
+            title="Print Kitchen Ticket (KOT)"
+            aria-label={`Print KOT for order ${order.order_ref}`}
+          >
+            <span className="material-symbols-outlined text-base">print</span>
           </button>
 
           {/* Cancellation Option */}

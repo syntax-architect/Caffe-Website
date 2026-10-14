@@ -58,6 +58,7 @@
   ```sql
   SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public';
   ```
+- [ ] Turn OFF public sign-ups in Supabase Dashboard (Authentication -> Configuration -> Disable "Allow new users to sign up").
 - [ ] Deploy all Supabase Edge Functions:
   ```bash
   supabase functions deploy create-payment
@@ -69,6 +70,7 @@
   supabase functions deploy daily-sales-summary
   supabase functions deploy stock-alerts
   supabase functions deploy verify-turnstile
+  supabase functions deploy invite-staff
   ```
 - [ ] Configure webhook URLs in Stripe / Razorpay merchant dashboard:
   - `https://<project-ref>.supabase.co/functions/v1/payment-webhook`

@@ -129,5 +129,7 @@ export interface OrderResult {
   orderRef: string;
   paymentToken?: string;
   isDemoMode?: boolean;
+  isOfflineQueued?: boolean;
+  message?: string;
   error?: string;
 }

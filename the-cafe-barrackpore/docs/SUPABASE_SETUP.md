@@ -205,9 +205,34 @@ The Café Barrackpore utilizes Supabase Authentication for restaurant staff, man
   * Active staff members are granted SELECT and UPDATE access on `orders` and `reservations`.
   * Anonymous public users remain completely locked out from reading staff, order, or reservation records.
 
-### 11.2 How to Create the First Staff User Manually
+### 11.1 Turning Off Public Sign-ups (Mandatory Security Hardening)
 
-Since there is no public registration (`/staff/register` does not exist), staff accounts are provisioned via Supabase:
+To prevent unauthorized external visitors from creating arbitrary accounts in your Supabase authentication pool:
+1. In your Supabase Dashboard, navigate to **Authentication** → **Configuration** → **User Signups** (or **Providers**).
+2. Under **Email**, toggle **OFF** "Allow new users to sign up" (or disable "Enable Signups").
+3. Click **Save**.
+
+**Why this is required:**
+* The platform operates exclusively on guest checkout for dining orders and reservations. Customers do not register or maintain persistent authentication profiles.
+* Operational staff, floor managers, and kitchen stations are provisioned exclusively by restaurant owners:
+  - The primary owner creates the initial account in the dashboard or via seed.
+  - Subsequent staff members are invited by the owner directly from the **Staff & Terminals** dashboard using the `invite-staff` Edge Function (which calls `auth.admin.inviteUserByEmail`).
+* Disabling public sign-ups prevents bot attacks, unauthorized auth pool exhaustion, and malicious attempts to probe internal operational routes.
+
+### 11.2 Automated Owner-Only Staff Provisioning (`invite-staff` Edge Function)
+
+Restaurant owners can provision new team members directly from the staff portal cockpit (**Staff & Terminals** -> **Provision Account**):
+1. The Owner inputs the staff member's full name, email, and designated role (`staff`, `manager`, or `owner`).
+2. The frontend invokes the `invite-staff` Edge Function with the caller's JWT.
+3. The Edge Function:
+   - Verifies that the caller holds an active `owner` role in `staff_profiles`.
+   - Calls `auth.admin.inviteUserByEmail` via Supabase Service Role.
+   - Inserts the corresponding row in `staff_profiles` with `restaurant_id` and the selected role.
+   - Writes an immutable event to `public.audit_log` detailing the action, target user ID, and requester IP address.
+
+### 11.3 How to Create the First Staff User Manually (Initial Bootstrap)
+
+Since public registration is disabled, the initial proprietor account can be bootstrapped via Supabase:
 
 1. In your Supabase Dashboard, go to **Authentication** > **Users**.
 2. Click **Add user** > **Create user**.

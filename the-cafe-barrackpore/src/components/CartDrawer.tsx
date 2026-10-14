@@ -22,6 +22,13 @@ import {
   validateDiscountCode,
 } from '../services/ownerService';
 import type { ActiveHappyHour, DiscountValidationResult } from '../types/owner';
+import { getPendingOfflineCount, syncOfflineOrders } from '../utils/offlineQueue';
+import {
+  getLoyaltyProfile,
+  awardOrderStamp,
+  getGoogleReviewUrl,
+  type CustomerLoyaltyProfile,
+} from '../utils/loyalty';
 
 type DrawerStep = 'cart' | 'details' | 'review' | 'payment_process' | 'payment_failed' | 'confirmed';
 type OrderType = 'dine-in' | 'takeaway';
@@ -65,6 +72,13 @@ export const CartDrawer: React.FC = () => {
   const [paymentToken, setPaymentToken] = useState<string | null>(null);
   const [isDemoSubmission, setIsDemoSubmission] = useState(false);
 
+  // Offline Resilience & Loyalty State
+  const [offlinePendingCount, setOfflinePendingCount] = useState<number>(0);
+  const [isSyncingOffline, setIsSyncingOffline] = useState<boolean>(false);
+  const [loyaltyProfile, setLoyaltyProfile] = useState<CustomerLoyaltyProfile | null>(null);
+  const [isOfflineSubmission, setIsOfflineSubmission] = useState<boolean>(false);
+  const [isMilestoneRewardUnlocked, setIsMilestoneRewardUnlocked] = useState<boolean>(false);
+
   const handleCloseDrawer = useCallback(() => {
     setIsDrawerOpen(false);
     setStep('cart');
@@ -82,8 +96,16 @@ export const CartDrawer: React.FC = () => {
     if (isDrawerOpen) {
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+      const lenis = (window as any).__lenis;
+      if (lenis && typeof lenis.stop === 'function') {
+        lenis.stop();
+      }
       return () => {
         document.body.style.overflow = originalOverflow;
+        const l = (window as any).__lenis;
+        if (l && typeof l.start === 'function') {
+          l.start();
+        }
       };
     }
   }, [isDrawerOpen]);
@@ -94,6 +116,28 @@ export const CartDrawer: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Monitor offline queue and update count badge
+  useEffect(() => {
+    getPendingOfflineCount().then(setOfflinePendingCount);
+    const handleQueueChange = () => {
+      getPendingOfflineCount().then(setOfflinePendingCount);
+    };
+    window.addEventListener('cafe:offline-queue-changed', handleQueueChange);
+    return () => {
+      window.removeEventListener('cafe:offline-queue-changed', handleQueueChange);
+    };
+  }, []);
+
+  // Lookup loyalty profile dynamically as guest inputs phone number
+  useEffect(() => {
+    if (phone && phone.trim().length >= 10) {
+      const prof = getLoyaltyProfile(phone);
+      setLoyaltyProfile(prof);
+    } else {
+      setLoyaltyProfile(null);
+    }
+  }, [phone]);
 
   const totals = calculateOrderTotals(items, {
     enabled: restaurantConfig.tax.enabled,
@@ -206,7 +250,7 @@ export const CartDrawer: React.FC = () => {
     }
   };
 
-  const dispatchWhatsApp = (finalRef: string) => {
+  const dispatchWhatsApp = (finalRef: string, keepDrawerOpen: boolean = false) => {
     const isTableLocked = Boolean(isQrOrder && isQrValid && qrTable);
     const resolvedTable = isTableLocked ? qrTable : tableNumber.trim();
     const resolvedOrderType = isTableLocked ? 'dine-in' : orderType;
@@ -230,12 +274,14 @@ export const CartDrawer: React.FC = () => {
     const cleanTargetPhone = (restaurantConfig.contact.whatsapp || clientDetails.whatsapp).replace(/\D/g, '');
     window.open(`https://wa.me/${cleanTargetPhone}?text=${text}`, '_blank');
 
-    // Clear cart and reset state
-    clearCart();
-    setStep('cart');
-    setOrderRef('');
-    setSubmissionError(null);
-    setIsDrawerOpen(false);
+    if (!keepDrawerOpen) {
+      // Clear cart and reset state
+      clearCart();
+      setStep('cart');
+      setOrderRef('');
+      setSubmissionError(null);
+      setIsDrawerOpen(false);
+    }
   };
 
   const handleConfirmOrder = async () => {
@@ -415,27 +461,25 @@ export const CartDrawer: React.FC = () => {
         });
 
         if (result.success) {
+          if (result.isOfflineQueued) {
+            setIsOfflineSubmission(true);
+          }
+          // Award digital loyalty stamp (Zero-cost customer retention)
+          const loyaltyResult = awardOrderStamp(normalizedPhone, customerName);
+          setLoyaltyProfile(loyaltyResult.profile);
+          setIsMilestoneRewardUnlocked(loyaltyResult.isNewRewardUnlocked);
+
           if (result.isDemoMode && !isDev) {
             setSubmissionError('Demo orders are disabled in production builds. A live database connection is required.');
             setIsSubmitting(false);
             return;
           }
           setIsDemoSubmission(isDev && result.isDemoMode === true);
-          if (result.isDemoMode && isDev) {
-            setOrderRef(result.orderRef);
-            setPaidAmount(null);
-            setConfirmedTotal(finalPayableTotal);
-            setStep('confirmed');
-            clearCart();
-          } else if (restaurantConfig.contact.primaryMethod === 'whatsapp') {
-            dispatchWhatsApp(result.orderRef);
-          } else {
-            setOrderRef(result.orderRef);
-            setPaidAmount(null);
-            setConfirmedTotal(finalPayableTotal);
-            setStep('confirmed');
-            clearCart();
-          }
+          setOrderRef(result.orderRef);
+          setPaidAmount(null);
+          setConfirmedTotal(finalPayableTotal);
+          setStep('confirmed');
+          clearCart();
         } else {
           setSubmissionError(result.error || 'Unable to register order with the server.');
         }
@@ -800,6 +844,32 @@ export const CartDrawer: React.FC = () => {
                 <span className="material-symbols-outlined text-base">close</span>
               </button>
             </div>
+
+            {/* Offline Queue Resilience Indicator */}
+            {offlinePendingCount > 0 && (
+              <div className="px-5 py-2.5 bg-amber-500/10 border-b border-[#D4AF37]/30 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 text-amber-200">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="font-mono text-[11px]">
+                    {offlinePendingCount} order{offlinePendingCount > 1 ? 's' : ''} queued offline
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  disabled={isSyncingOffline}
+                  onClick={async () => {
+                    setIsSyncingOffline(true);
+                    await syncOfflineOrders();
+                    const cnt = await getPendingOfflineCount();
+                    setOfflinePendingCount(cnt);
+                    setIsSyncingOffline(false);
+                  }}
+                  className="px-2.5 py-1 rounded bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 text-[#D4AF37] text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  {isSyncingOffline ? 'Syncing...' : 'Sync Now'}
+                </button>
+              </div>
+            )}
 
             {/* Luxury 3-Step Breadcrumb Bar (Pre-submission flow only) */}
             {(activeStep === 'cart' || activeStep === 'details' || activeStep === 'review') && (
@@ -1422,10 +1492,10 @@ export const CartDrawer: React.FC = () => {
                       </p>
                       <button
                         type="button"
-                        onClick={() => dispatchWhatsApp(orderRef || generateClientOrderRef())}
+                        onClick={() => dispatchWhatsApp(orderRef || generateClientOrderRef(), false)}
                         className="text-left font-semibold text-primary underline hover:text-primary/80 transition-colors pt-1 cursor-pointer"
                       >
-                        Continue and dispatch directly via WhatsApp ➔
+                        Prefer WhatsApp? Send order directly via WhatsApp ➔
                       </button>
                     </div>
                   )}
@@ -1455,13 +1525,13 @@ export const CartDrawer: React.FC = () => {
                         ? 'Processing...'
                         : isOnlinePayment
                         ? `Pay Securely · ${formatPrice(finalPayableTotal)}`
-                        : restaurantConfig.contact.primaryMethod === 'whatsapp'
-                        ? 'Send via WhatsApp'
+                        : ((isQrOrder && isQrValid && qrTable) || orderType === 'dine-in')
+                        ? `Place Order · Table ${(isQrOrder && isQrValid && qrTable ? qrTable : tableNumber) || 'Dining'}`
                         : 'Place Order (Pay at Counter)'}
                     </span>
                     <span className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
                       <span className="material-symbols-outlined text-[16px] text-[#120B08]">
-                        {isOnlinePayment ? 'lock' : restaurantConfig.contact.primaryMethod === 'whatsapp' ? 'send' : 'check'}
+                        {isOnlinePayment ? 'lock' : 'check_circle'}
                       </span>
                     </span>
                   </button>
@@ -1672,8 +1742,105 @@ export const CartDrawer: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Offline Resilience Feedback */}
+                {isOfflineSubmission && (
+                  <div className="w-full max-w-sm p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-center gap-2.5 text-left">
+                    <span className="material-symbols-outlined text-amber-400 text-lg shrink-0">cloud_off</span>
+                    <div>
+                      <p className="font-bold text-[11px] uppercase tracking-wider text-amber-300">Offline Ticket Queued</p>
+                      <p className="text-[10px] text-amber-200/80 mt-0.5">Your order is preserved locally and will sync to kitchen display automatically once network resumes.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Digital Loyalty Stamp Card */}
+                {loyaltyProfile && (
+                  <div className="w-full max-w-sm rounded-2xl bg-gradient-to-br from-[#1C120D] via-[#160E0A] to-[#110B07] border border-[#D4AF37]/30 p-4 text-left space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-sm text-[#D4AF37]">stars</span>
+                        <span className="text-[10px] uppercase font-mono tracking-wider text-[#D4AF37] font-bold">
+                          Café Loyalty Card
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-on-surface/60 font-mono">
+                        {loyaltyProfile.stamps} / 5 Stamps
+                      </span>
+                    </div>
+
+                    {/* 5-Stamp Visual Slots */}
+                    <div className="flex justify-between items-center px-1">
+                      {[1, 2, 3, 4, 5].map((slot) => {
+                        const isStamped = slot <= loyaltyProfile.stamps;
+                        return (
+                          <div
+                            key={slot}
+                            className={`w-10 h-10 rounded-full flex flex-col items-center justify-center border transition-all ${
+                              isStamped
+                                ? 'bg-gradient-to-br from-[#D4AF37] to-[#8C6D1F] border-[#F3E5AB] text-[#120B08] shadow-[0_0_12px_rgba(212,175,55,0.4)]'
+                                : 'bg-black/30 border-white/10 text-white/20'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-base">
+                              {isStamped ? 'local_cafe' : 'coffee'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {isMilestoneRewardUnlocked ? (
+                      <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-[11px] text-emerald-200 text-center font-medium">
+                        🎉 Milestone Reached! Enjoy a complimentary beverage or dessert on your next order.
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-on-surface/60 text-center font-sans">
+                        Collect 5 stamps to unlock a complimentary artisanal roast or house dessert!
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* 1-Tap Google 5-Star Review Prompt */}
+                <a
+                  href={getGoogleReviewUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full max-w-sm p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/10 hover:border-[#D4AF37]/40 flex items-center justify-between text-left transition-all group cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-amber-400 text-lg">★★★★★</span>
+                    <div>
+                      <p className="text-xs font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
+                        Enjoyed your visit?
+                      </p>
+                      <p className="text-[10px] text-on-surface/60">
+                        Help us grow with a 5-star Google review!
+                      </p>
+                    </div>
+                  </div>
+                  <span className="material-symbols-outlined text-sm text-stone-400 group-hover:text-white transition-transform group-hover:translate-x-1">
+                    open_in_new
+                  </span>
+                </a>
+
+                {/* WhatsApp Receipt Action */}
+                <div className="w-full max-w-sm space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => dispatchWhatsApp(orderRef, true)}
+                    className="w-full h-11 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-[#0A1A0F] font-bold text-xs uppercase tracking-wider shadow-[0_4px_16px_rgba(37,211,102,0.25)] flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <span className="material-symbols-outlined text-base">chat</span>
+                    <span>Send Order Receipt to WhatsApp</span>
+                  </button>
+                  <p className="text-[10px] text-on-surface/50 text-center font-sans">
+                    Tap to send your order receipt to our WhatsApp desk for live updates.
+                  </p>
+                </div>
+
                 {/* Contact Actions: Call, WhatsApp, Maps */}
-                {!isDemoSubmission && <div className="w-full max-w-sm grid grid-cols-3 gap-2">
+                <div className="w-full max-w-sm grid grid-cols-3 gap-2">
                   <a
                     href={`tel:${restaurantConfig.contact.phone}`}
                     className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-[#160E0A] border border-white/10 hover:border-primary/30 transition-colors"
@@ -1699,7 +1866,7 @@ export const CartDrawer: React.FC = () => {
                     <span className="material-symbols-outlined text-lg text-sky-400">location_on</span>
                     <span className="text-[9px] uppercase tracking-wider font-semibold text-on-surface/70">Directions</span>
                   </a>
-                </div>}
+                </div>
 
                 {/* Order Again Button */}
                 <button

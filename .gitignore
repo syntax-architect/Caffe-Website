@@ -73,4 +73,7 @@ lighthouse-report*.json
 # Workflows (requires elevated OAuth scope)
 .github/
 
+.temp/
+*.temp/
+the-cafe-barrackpore/supabase/.temp/
 

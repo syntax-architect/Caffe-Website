@@ -276,15 +276,18 @@ export const Gallery: React.FC = () => {
                       </div>
 
                       {/* Photo */}
-                      <img 
-                        loading="lazy" 
-                        decoding="async" 
-                        width="600" 
-                        height="450" 
-                        src={item.src} 
-                        alt={item.alt || "The Café Hospitality"}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.07] will-change-transform"
-                      />
+                      <picture className="absolute inset-0 w-full h-full">
+                        <source srcSet={item.src.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
+                        <img 
+                          loading="lazy" 
+                          decoding="async" 
+                          width="600" 
+                          height="450" 
+                          src={item.src} 
+                          alt={item.alt || "The Café Hospitality"}
+                          className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.07] will-change-transform"
+                        />
+                      </picture>
                   </div>
                 );
               })}
@@ -449,15 +452,18 @@ export const Gallery: React.FC = () => {
                       </div>
 
                       {/* Photography Image with Restrained Zoom */}
-                      <img 
-                        loading="lazy" 
-                        decoding="async" 
-                        width="600" 
-                        height="450" 
-                        src={item.src} 
-                        alt={item.alt || `${businessName} Hospitality`}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.07] will-change-transform"
-                      />
+                      <picture className="absolute inset-0 w-full h-full">
+                        <source srcSet={item.src.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
+                        <img 
+                          loading="lazy" 
+                          decoding="async" 
+                          width="600" 
+                          height="450" 
+                          src={item.src} 
+                          alt={item.alt || `${businessName} Hospitality`}
+                          className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.07] will-change-transform"
+                        />
+                      </picture>
                   </div>
                 );
               })}

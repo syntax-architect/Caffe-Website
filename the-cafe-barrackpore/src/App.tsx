@@ -18,6 +18,7 @@ import { SpecialsBanner } from './components/SpecialsBanner';
 import { Menu } from './components/Menu';
 import { Footer } from './components/Footer';
 import { smoothScrollTo } from './utils/scroll';
+import { initOfflineSyncListener } from './utils/offlineQueue';
 
 // Code-split heavy interactive modal overlays (only fetched when user opens them or on idle)
 const CartDrawer = lazy(() => import('./components/CartDrawer').then(module => ({ default: module.CartDrawer })));
@@ -38,10 +39,13 @@ export const AppLayout: React.FC = () => {
     window.addEventListener('scroll', triggerConsent, { once: true, passive: true });
     window.addEventListener('pointerdown', triggerConsent, { once: true, passive: true });
     window.addEventListener('keydown', triggerConsent, { once: true, passive: true });
+    const cleanupOfflineSync = initOfflineSyncListener();
+
     return () => {
       window.removeEventListener('scroll', triggerConsent);
       window.removeEventListener('pointerdown', triggerConsent);
       window.removeEventListener('keydown', triggerConsent);
+      cleanupOfflineSync();
     };
   }, []);
 
@@ -76,7 +80,7 @@ export const AppLayout: React.FC = () => {
       )}
 
       {/* Overlays mounted strictly on demand to keep critical path zero-overhead */}
-      {(isDrawerOpen || isReservationOpen || showConsent) && (
+      {(isDrawerOpen || isReservationOpen || isContactOpen || showConsent) && (
         <Suspense fallback={null}>
           {isDrawerOpen && <CartDrawer />}
           {isReservationOpen && <ReservationDrawer />}

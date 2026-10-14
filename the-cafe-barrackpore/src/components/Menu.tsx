@@ -84,14 +84,19 @@ const FloatingMenuPreview: React.FC<FloatingMenuPreviewProps> = React.memo(({ im
   );
 });
 
-export const Menu: React.FC = () => {
+export interface MenuProps {
+  forcedVariant?: MenuVariant;
+  isQrMode?: boolean;
+}
+
+export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) => {
   const [categories, setCategories] = useState<MenuCategory[]>(MENU_CATEGORIES_FALLBACK);
   const [activeCategoryId, setActiveCategoryId] = useState<string>(
     MENU_CATEGORIES_FALLBACK[0]?.id || 'burgers-pizzas'
   );
   const [menuItems, setMenuItems] = useState<MenuItem[]>(MENU_ITEMS_FALLBACK);
   const [isLoading, setIsLoading] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [visibleCount, setVisibleCount] = useState(isQrMode ? 24 : 6);
   const [isVegOnly, setIsVegOnly] = useState(false);
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null);
 
@@ -107,7 +112,7 @@ export const Menu: React.FC = () => {
   const { showToast } = useUI();
   const { isAvailable } = useMenuAvailability();
   const { formatPrice, restaurantConfig, engineConfig } = useSiteConfig();
-  const menuVariant: MenuVariant = engineConfig?.variants?.menu || 'sensory-ledger';
+  const menuVariant: MenuVariant = forcedVariant || engineConfig?.variants?.menu || 'sensory-ledger';
   const menuSectionConfig = engineConfig?.menu;
 
   // Load categories and items from Supabase tables & subscribe to Realtime updates
@@ -426,21 +431,21 @@ export const Menu: React.FC = () => {
   };
 
   return (
-    <section className="w-full pt-14 md:pt-20 pb-10 md:pb-12 bg-background scroll-mt-28" id="menu-section">
-      <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12 flex flex-col gap-8 md:gap-12 relative">
+    <section className={`w-full ${isQrMode ? 'pt-2 md:pt-4 pb-12' : 'pt-14 md:pt-20 pb-10 md:pb-12'} bg-background scroll-mt-28`} id="menu-section">
+      <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12 flex flex-col gap-6 md:gap-8 relative">
         {/* Floating Image (Desktop Only - Isolated RAF GPU Transform) */}
         {!isTouchDevice && <FloatingMenuPreview imageSrc={hoveredImage} />}
 
         <SectionReveal
-          className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8"
+          className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-6"
         >
           <div>
             <div className="inline-flex items-center gap-2 mb-2">
               <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              <span className="editorial-eyebrow">Curated Gastronomy</span>
+              <span className="editorial-eyebrow">{isQrMode ? 'Artisanal Table Selection' : 'Curated Gastronomy'}</span>
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-on-surface font-normal tracking-tight">
-              The Culinary Collection
+              {isQrMode ? 'Explore The Menu' : 'The Culinary Collection'}
             </h2>
           </div>
 
@@ -1102,7 +1107,7 @@ export const Menu: React.FC = () => {
                     <button
                       disabled={!canAdd}
                       type="button"
-                      className={`h-8 px-4 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 ${
+                      className={`h-9 px-4 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 ${
                         !canAdd
                           ? 'bg-surface-elevated/40 border border-outline/20 text-on-surface-variant/40 cursor-not-allowed'
                           : isJustAdded
@@ -1119,9 +1124,9 @@ export const Menu: React.FC = () => {
                       onClick={(e) => handleAddToCart(e, item)}
                     >
                       <span className={`material-symbols-outlined text-[15px] transition-transform ${isJustAdded ? 'scale-110' : ''}`}>
-                        {!itemAvailable ? 'block' : !isOrderingActive ? 'pause_circle' : isJustAdded ? 'check' : 'add'}
+                        {!itemAvailable ? 'block' : !isOrderingActive ? 'pause_circle' : isJustAdded ? 'check' : 'shopping_bag'}
                       </span>
-                      <span>{!itemAvailable ? 'Sold Out' : !isOrderingActive ? 'Paused' : isJustAdded ? 'Added' : 'Add'}</span>
+                      <span>{!itemAvailable ? 'Sold Out' : !isOrderingActive ? 'Paused' : isJustAdded ? 'Added' : 'Add to Order'}</span>
                     </button>
                   </div>
                 </div>

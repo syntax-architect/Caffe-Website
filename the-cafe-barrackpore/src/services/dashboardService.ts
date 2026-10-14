@@ -8,6 +8,7 @@ import type {
   RestaurantTable,
   RestaurantSettings,
 } from '../types/dashboard';
+import { clientDetails } from '../config/client';
 
 /**
  * Fallback tables for local/demo mode or initial setup
@@ -31,14 +32,14 @@ const DEFAULT_TABLES: RestaurantTable[] = [
  * Fallback settings
  */
 const DEFAULT_SETTINGS: RestaurantSettings = {
-  business_name: 'The Café Barrackpore',
-  phone: '+918420507105',
-  address: '14, Riverside Road, Cantonment, Barrackpore, West Bengal 700120',
+  business_name: clientDetails.businessName || 'The Cafe',
+  phone: clientDetails.phone || '+918420507105',
+  address: clientDetails.address || '14, Riverside Road, Cantonment, Barrackpore, West Bengal 700120',
   is_ordering_enabled: true,
   is_table_booking_enabled: true,
   opening_time: '11:00 AM',
   closing_time: '11:00 PM',
-  announcement_banner: 'Welcome to The Café Barrackpore. Serving artisanal coffee & gourmet wood-fired pizza.',
+  announcement_banner: `Welcome to ${clientDetails.businessName || 'The Cafe'}. Serving artisanal coffee & gourmet wood-fired pizza.`,
   country: 'IN',
   currency: 'INR',
   currency_symbol: '₹',
@@ -914,5 +915,59 @@ export const updateRestaurantSettings = async (
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to update settings.' };
+  }
+};
+
+/**
+ * Invokes the owner-only invite-staff Edge Function to invite a new staff member,
+ * create their staff_profile, and record an audit log event.
+ */
+export const inviteStaff = async (
+  email: string,
+  fullName: string,
+  role: StaffRole
+): Promise<{ success: boolean; profile?: StaffProfile; error?: string }> => {
+  if (!supabase || !isSupabaseConfigured) {
+    return {
+      success: false,
+      error: 'Backend authentication service is not configured. Supabase connection required to provision accounts.',
+    };
+  }
+
+  try {
+    const { data, error } = await supabase.functions.invoke('invite-staff', {
+      body: {
+        email: email.trim().toLowerCase(),
+        full_name: fullName.trim(),
+        role,
+      },
+    });
+
+    if (error) {
+      let message = error.message || 'Failed to send staff invitation.';
+      if ('context' in error && (error as any).context) {
+        try {
+          const body = await (error as any).context.json();
+          if (body?.error) message = body.error;
+        } catch {
+          // ignore json parse error
+        }
+      }
+      return { success: false, error: message };
+    }
+
+    if (!data || data.success === false) {
+      return { success: false, error: data?.error || 'Invitation rejected by server.' };
+    }
+
+    return {
+      success: true,
+      profile: data.profile as StaffProfile,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || 'An unexpected error occurred while inviting staff.',
+    };
   }
 };

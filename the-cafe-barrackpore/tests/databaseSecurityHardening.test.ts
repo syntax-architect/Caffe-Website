@@ -540,6 +540,66 @@ if (!refundFunction.includes("This order has no supported refundable payment ref
 }
 console.log('✔ Test 13: Refund owner fields, tenant filters, and provider confirmation guards verified.');
 
+// -------------------------------------------------------------
+// Test 14: Migration 018 contact_inquiries & submit_contact_inquiry RPC
+// -------------------------------------------------------------
+console.log('\nTest 14: Contact Inquiries Migration 018 & RPC Turnstile Security');
+const migration018Path = path.join(migrationsDir, '018_contact_inquiries.sql');
+if (!fs.existsSync(migration018Path)) {
+  throw new Error('Test 14 failed: 018_contact_inquiries.sql migration does not exist');
+}
+const sql018 = fs.readFileSync(migration018Path, 'utf8');
+
+if (!sql018.includes('CREATE TABLE IF NOT EXISTS public.contact_inquiries') ||
+    !sql018.includes('ALTER TABLE public.contact_inquiries ENABLE ROW LEVEL SECURITY;')) {
+  throw new Error('Test 14 failed: contact_inquiries table or RLS missing in 018');
+}
+
+if (!sql018.includes('REVOKE ALL ON TABLE public.contact_inquiries FROM anon, public;')) {
+  throw new Error('Test 14 failed: anon table access not revoked on contact_inquiries');
+}
+
+if (!sql018.includes('CREATE POLICY "staff_view_contact_inquiries"') ||
+    !sql018.includes("sp.role IN ('owner', 'manager')")) {
+  throw new Error('Test 14 failed: staff owner/manager SELECT policy missing on contact_inquiries');
+}
+
+if (!sql018.includes('CREATE OR REPLACE FUNCTION public.submit_contact_inquiry') ||
+    !sql018.includes('SECURITY DEFINER') ||
+    !sql018.includes('DELETE FROM public.verified_tokens') ||
+    !sql018.includes('INSERT INTO public.contact_inquiries')) {
+  throw new Error('Test 14 failed: submit_contact_inquiry RPC missing atomic Turnstile consumption or insertion');
+}
+
+const contactServicePath = path.join(__dirname, '..', 'src', 'services', 'contactService.ts');
+const contactServiceContent = fs.readFileSync(contactServicePath, 'utf8');
+if (!contactServiceContent.includes("rpc('submit_contact_inquiry'")) {
+  throw new Error('Test 14 failed: contactService.ts does not invoke submit_contact_inquiry RPC');
+}
+if (contactServiceContent.includes(".from('contact_inquiries').insert")) {
+  throw new Error('Test 14 failed: contactService.ts still contains direct browser insert');
+}
+if (!contactServiceContent.includes('verifyTurnstileToken')) {
+  throw new Error('Test 14 failed: contactService.ts does not require or verify Turnstile token');
+}
+console.log('✔ Test 14: Migration 018 contact_inquiries, submit_contact_inquiry RPC, and contactService verified.');
+
+// -------------------------------------------------------------
+// Test 15: Nginx Configuration Security Headers
+// -------------------------------------------------------------
+console.log('\nTest 15: Nginx Configuration Security Headers');
+const nginxPath = path.join(__dirname, '..', '..', 'nginx.conf');
+if (fs.existsSync(nginxPath)) {
+  const nginxContent = fs.readFileSync(nginxPath, 'utf8');
+  if (!nginxContent.includes('Content-Security-Policy') ||
+      !nginxContent.includes('Strict-Transport-Security') ||
+      !nginxContent.includes('Referrer-Policy') ||
+      !nginxContent.includes('Permissions-Policy')) {
+    throw new Error('Test 15 failed: nginx.conf is missing one or more required security headers');
+  }
+  console.log('✔ Test 15: nginx.conf headers (CSP, HSTS, Referrer-Policy, Permissions-Policy) verified.');
+}
+
 console.log('\n================================================================');
-console.log('🎉 ALL 13 DATABASE & EDGE FUNCTION HARDENING CHECKS PASSED!');
+console.log('🎉 ALL 15 DATABASE & SECURITY HARDENING CHECKS PASSED!');
 console.log('================================================================');

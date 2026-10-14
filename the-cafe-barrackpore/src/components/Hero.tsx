@@ -250,8 +250,12 @@ export const Hero: React.FC = React.memo(() => {
                 <div className="relative aspect-[4/5] sm:aspect-[16/11] lg:aspect-[4/5] w-full rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-surface-container-lowest">
                   <picture>
                     {heroMobileSrc && (
+                      <source media="(max-width: 768px)" srcSet={heroMobileSrc.replace(/\.webp$/, '.avif')} type="image/avif" />
+                    )}
+                    {heroMobileSrc && (
                       <source media="(max-width: 768px)" srcSet={heroMobileSrc} type="image/webp" />
                     )}
+                    <source srcSet={heroImageSrc.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
                     <img
                       src={heroImageSrc}
                       alt={heroImageAlt}
@@ -441,8 +445,12 @@ export const Hero: React.FC = React.memo(() => {
         >
           <picture>
             {heroMobileSrc && (
+              <source media="(max-width: 768px)" srcSet={heroMobileSrc.replace(/\.webp$/, '.avif')} type="image/avif" width="768" height="1376" />
+            )}
+            {heroMobileSrc && (
               <source media="(max-width: 768px)" srcSet={heroMobileSrc} type="image/webp" width="768" height="1376" />
             )}
+            <source srcSet={heroImageSrc.replace(/\.(webp|jpg)$/, '.avif')} type="image/avif" />
             {heroImageSrc.endsWith('.jpg') && (
               <source srcSet={heroImageSrc.replace(/\.jpg$/, '.webp')} type="image/webp" />
             )}

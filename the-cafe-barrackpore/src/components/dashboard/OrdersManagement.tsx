@@ -8,6 +8,7 @@ import type { OrderRecord, OrderStatus } from '../../types/order';
 import { createOrder } from '../../services/orderService';
 import { unlockAudioContext, playKitchenOrderBell } from '../../services/soundService';
 import { processRefund } from '../../services/paymentService';
+import { printKitchenKOT, printCustomerReceipt } from '../../utils/printReceipt';
 
 interface OrderItemRecord {
   id: string;
@@ -594,6 +595,58 @@ export const OrdersManagement: React.FC = () => {
                     </p>
                   )}
                 </div>
+              </div>
+
+              {/* Thermal Print Station */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    printKitchenKOT({
+                      order_ref: activeOrder.order_ref,
+                      order_type: activeOrder.order_type,
+                      table_number: activeOrder.table_number,
+                      customer_name: activeOrder.customer_name,
+                      created_at: activeOrder.created_at,
+                      notes: (activeOrder as any).special_instructions || (activeOrder as any).notes,
+                      items: activeOrderItems.map(i => ({ item_name: i.item_name, quantity: i.quantity }))
+                    });
+                  }}
+                  className="py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  title="Print Kitchen Order Ticket (80mm/58mm thermal roll)"
+                >
+                  <span className="material-symbols-outlined text-sm">soup_kitchen</span>
+                  Print KOT
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    printCustomerReceipt({
+                      order_ref: activeOrder.order_ref,
+                      order_type: activeOrder.order_type,
+                      table_number: activeOrder.table_number,
+                      customer_name: activeOrder.customer_name,
+                      customer_phone: activeOrder.customer_phone,
+                      created_at: activeOrder.created_at,
+                      items: activeOrderItems.map(i => ({
+                        item_name: i.item_name,
+                        quantity: i.quantity,
+                        unit_price: i.unit_price,
+                        line_total: i.line_total
+                      })),
+                      subtotal: activeOrder.subtotal,
+                      tax_amount: Math.max(0, activeOrder.total - activeOrder.subtotal),
+                      total: activeOrder.total,
+                      payment_status: activeOrder.payment_status,
+                      payment_method: activeOrder.payment_provider || 'counter'
+                    });
+                  }}
+                  className="py-2.5 px-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-stone-200 border border-white/10 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  title="Print Guest Bill Receipt (80mm/58mm thermal roll)"
+                >
+                  <span className="material-symbols-outlined text-sm">receipt_long</span>
+                  Print Bill
+                </button>
               </div>
 
               {/* Guest & Dining Info */}

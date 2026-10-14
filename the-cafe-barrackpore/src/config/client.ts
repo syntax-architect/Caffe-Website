@@ -17,5 +17,7 @@ export const clientDetails = {
   elfsightId: "YOUR_ELFSIGHT_WIDGET_ID", // E.g., '1234567-89ab-cdef-0123-456789abcdef'
   googleReviewLink: "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID", // Replace with actual Google Place ID
   staffDomain: "thecafebarrackpore.com",
+  inquiryPrefix: "INQ-2026",
+  conciergeWhatsAppGreeting: "Hello {businessName} Concierge! ☕",
   location: { address: "Barrackpore Trunk Road, West Bengal", city: "Barrackpore" },
 };
