@@ -37,7 +37,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     const updateTime = () => {
       const now = new Date();
       setCurrentTime(
-        formatRestaurantDateTime(now, restaurantConfig.timezone, restaurantConfig.locale)
+        formatRestaurantDateTime(now, restaurantConfig.locale, restaurantConfig.timezone)
       );
     };
     updateTime();

@@ -716,13 +716,13 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                       <div>
                         {/* Signature Food Photography Frame OR Compact Editorial Fallback */}
                         {displayImage ? (
-                          <div className="w-full aspect-[16/10] sm:aspect-[4/3] rounded-2xl overflow-hidden relative bg-surface-container-lowest shadow-md mb-6 group/img">
+                          <div className="w-full aspect-[16/10] sm:aspect-[4/3] min-h-[190px] max-h-[300px] sm:max-h-none rounded-2xl overflow-hidden relative bg-surface-container-lowest shadow-md mb-6 group/img">
                             <img
                               src={displayImage}
                               alt={featuredItem.name}
                               width="600"
                               height="450"
-                              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out will-change-transform"
+                              className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out will-change-transform"
                               loading="eager"
                               decoding="async"
                             />

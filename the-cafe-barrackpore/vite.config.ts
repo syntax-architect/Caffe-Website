@@ -4,6 +4,12 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Content-Security-Policy': "default-src 'self' 'unsafe-inline' 'unsafe-eval' * data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* ws://localhost:* *; frame-ancestors *;",
+    },
+  },
   build: {
     emptyOutDir: true,
     rollupOptions: {

@@ -325,20 +325,20 @@ const defaultContextValue: SiteConfigContextType = {
   formatDate: (date: Date | string) =>
     formatRestaurantDate(
       date,
-      DEFAULT_RESTAURANT_CONFIG.timezone,
-      DEFAULT_RESTAURANT_CONFIG.locale
+      DEFAULT_RESTAURANT_CONFIG.locale,
+      DEFAULT_RESTAURANT_CONFIG.timezone
     ),
   formatTime: (date: Date | string) =>
     formatRestaurantTime(
       date,
-      DEFAULT_RESTAURANT_CONFIG.timezone,
-      DEFAULT_RESTAURANT_CONFIG.locale
+      DEFAULT_RESTAURANT_CONFIG.locale,
+      DEFAULT_RESTAURANT_CONFIG.timezone
     ),
   formatDateTime: (date: Date | string) =>
     formatRestaurantDateTime(
       date,
-      DEFAULT_RESTAURANT_CONFIG.timezone,
-      DEFAULT_RESTAURANT_CONFIG.locale
+      DEFAULT_RESTAURANT_CONFIG.locale,
+      DEFAULT_RESTAURANT_CONFIG.timezone
     ),
   updateRestaurantConfig: async () => false,
   setThemePreset: () => {},
@@ -727,22 +727,22 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
   const formatDate = (date: Date | string) =>
     formatRestaurantDate(
       date,
-      restaurantConfig.timezone,
-      restaurantConfig.locale
+      restaurantConfig.locale,
+      restaurantConfig.timezone
     );
 
   const formatTime = (date: Date | string) =>
     formatRestaurantTime(
       date,
-      restaurantConfig.timezone,
-      restaurantConfig.locale
+      restaurantConfig.locale,
+      restaurantConfig.timezone
     );
 
   const formatDateTime = (date: Date | string) =>
     formatRestaurantDateTime(
       date,
-      restaurantConfig.timezone,
-      restaurantConfig.locale
+      restaurantConfig.locale,
+      restaurantConfig.timezone
     );
 
   // Dynamically assemble engineConfig reflecting current restaurantConfig and live content state

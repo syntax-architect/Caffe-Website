@@ -244,7 +244,7 @@ export const AboutVibe: React.FC = () => {
                 fetchPriority="low"
                 alt={getItemAlt(primaryItem, 0)} 
                 src={isNear ? getItemImage(primaryItem, 0) : placeholderSvg} 
-                className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
+                className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
               />
             </picture>
             {/* Cinematic Gradient Vignette */}
@@ -339,7 +339,7 @@ export const AboutVibe: React.FC = () => {
                   fetchPriority="low"
                   alt={getItemAlt(item1, 1)} 
                   src={isNear ? getItemImage(item1, 1) : placeholderSvg} 
-                  className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
+                  className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
                 />
               </picture>
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
@@ -372,7 +372,7 @@ export const AboutVibe: React.FC = () => {
                   fetchPriority="low"
                   alt={getItemAlt(item2, 2)} 
                   src={isNear ? getItemImage(item2, 2) : placeholderSvg} 
-                  className="absolute inset-0 w-full h-[120%] object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
+                  className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-[1.5s] ease-out will-change-transform" 
                 />
               </picture>
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />

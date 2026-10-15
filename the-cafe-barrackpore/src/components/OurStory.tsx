@@ -166,7 +166,7 @@ export const OurStory: React.FC = () => {
       style={{ minHeight: `${sectionMinHeight}vh` }}
     >
       {/* Sticky Viewport Stage */}
-      <div className="sticky top-16 sm:top-20 lg:top-24 w-full h-[80vh] sm:h-[82vh] lg:h-[85vh] max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-2 z-0">
+      <div className="sticky top-16 sm:top-20 lg:top-24 w-full h-[84vh] sm:h-[82vh] lg:h-[85vh] max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-2 z-0">
         
         {/* Architectural Story Stage Frame */}
         <div 
@@ -202,31 +202,31 @@ export const OurStory: React.FC = () => {
             <div className="absolute top-6 right-8 sm:top-10 sm:right-16 w-80 h-80 bg-primary/20 blur-[100px] rounded-full pointer-events-none z-10" />
 
             {/* 3. PINNED HUD TELEMETRY HEADER */}
-            <div className="absolute top-4 left-4 right-4 sm:top-7 sm:left-8 sm:right-8 flex items-center justify-between z-20 pointer-events-none">
-              <div className="inline-flex items-center gap-2.5 px-3 sm:px-4 py-1.5 rounded-full bg-surface-container/90 backdrop-blur-md border border-primary/35 shadow-lg text-primary">
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                <span className="font-mono text-[9px] sm:text-[10px] tracking-[0.22em] uppercase text-primary/80">
+            <div className="absolute top-3.5 left-3.5 right-3.5 sm:top-7 sm:left-8 sm:right-8 flex items-center justify-between gap-2 z-20 pointer-events-none">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-surface-container/90 backdrop-blur-md border border-primary/35 shadow-lg text-primary max-w-full truncate">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+                <span className="font-mono text-[9px] sm:text-[10px] tracking-[0.22em] uppercase text-primary/80 shrink-0">
                   ACT VI
                 </span>
-                <span className="text-outline/40">•</span>
-                <span className="font-sans text-[10px] sm:text-[11px] font-semibold tracking-[0.22em] uppercase text-primary">
+                <span className="text-outline/40 shrink-0">•</span>
+                <span className="font-sans text-[10px] sm:text-[11px] font-semibold tracking-[0.22em] uppercase text-primary truncate">
                   {ourStory?.tagline || 'THE PHILOSOPHY & HERITAGE'}
                 </span>
               </div>
 
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container/80 backdrop-blur-md border border-outline/25 text-[10px] uppercase tracking-widest text-on-surface-variant font-mono shadow-md">
-                <span className="hidden sm:inline">{ourStory?.hudLocation || 'EST. BARRACKPORE'}</span>
-                <span className="hidden sm:inline text-outline/40">•</span>
+              <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container/80 backdrop-blur-md border border-outline/25 text-[10px] uppercase tracking-widest text-on-surface-variant font-mono shadow-md shrink-0">
+                <span>{ourStory?.hudLocation || 'EST. BARRACKPORE'}</span>
+                <span className="text-outline/40">•</span>
                 <span className="text-primary">{ourStory?.hudAmbiance || '2200K NOCTURNE'}</span>
               </div>
             </div>
 
             {/* 4. FLOATING EDITORIAL CHAPTER CARD (Stable height to prevent layout jumps) */}
-            <div className="absolute inset-x-4 bottom-14 sm:bottom-16 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-6 lg:right-10 md:left-auto md:max-w-lg lg:max-w-xl z-20">
-              <div className="rounded-3xl lg:rounded-[2.25rem] bg-surface-container/95 backdrop-blur-2xl p-6 sm:p-8 md:p-10 border border-primary/30 shadow-[0_24px_50px_rgba(0,0,0,0.6)] flex flex-col justify-between min-h-[290px] sm:min-h-[320px] md:min-h-[340px]">
+            <div className="absolute inset-x-3 sm:inset-x-4 bottom-11 sm:bottom-16 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-6 lg:right-10 md:left-auto md:max-w-lg lg:max-w-xl z-20">
+              <div className="rounded-2xl sm:rounded-3xl lg:rounded-[2.25rem] bg-surface-container/95 backdrop-blur-2xl p-4 sm:p-8 md:p-10 border border-primary/30 shadow-[0_24px_50px_rgba(0,0,0,0.6)] flex flex-col justify-between min-h-[250px] sm:min-h-[320px] md:min-h-[340px]">
                 
                 {/* Chapter Header with Interactive Connected Indicators */}
-                <div className="flex items-center justify-between border-b border-outline/15 pb-3">
+                <div className="flex items-center justify-between border-b border-outline/15 pb-2.5 sm:pb-3">
                   <div className="inline-flex items-center gap-2">
                     <span className="font-mono text-xs font-semibold text-primary tracking-wider">
                       {currentChapter.step}
@@ -258,7 +258,7 @@ export const OurStory: React.FC = () => {
                   </div>
 
                   {/* Chapter Content with Smooth Layout-Stable Motion */}
-                  <div className="relative py-2 flex-1 flex flex-col justify-center min-h-[170px] sm:min-h-[190px]">
+                  <div className="relative py-1.5 sm:py-2 flex-1 flex flex-col justify-center min-h-[140px] sm:min-h-[190px]">
                     <AnimatePresence mode="wait" custom={direction}>
                       <motion.div
                         key={currentChapter.id}
@@ -267,10 +267,10 @@ export const OurStory: React.FC = () => {
                         initial="initial"
                         animate="animate"
                         exit="exit"
-                        className="flex flex-col gap-3 sm:gap-5"
+                        className="flex flex-col gap-2.5 sm:gap-5"
                       >
                         {/* Chapter Headline */}
-                        <h3 className="font-sans text-2xl sm:text-3xl lg:text-4xl xl:text-[2.6rem] font-medium tracking-tight text-on-surface leading-[1.08]">
+                        <h3 className="font-sans text-xl sm:text-3xl lg:text-4xl xl:text-[2.6rem] font-medium tracking-tight text-on-surface leading-[1.1]">
                           <span>{currentChapter.title} </span>
                           <span className="font-serif italic font-normal text-primary">
                             {currentChapter.titleItalic}
@@ -278,7 +278,7 @@ export const OurStory: React.FC = () => {
                         </h3>
 
                         {/* Chapter Description */}
-                        <p className="font-sans text-[15px] sm:text-base text-on-surface-variant font-light leading-relaxed">
+                        <p className="font-sans text-[15px] sm:text-base text-on-surface-variant font-light leading-relaxed line-clamp-3 sm:line-clamp-none">
                           {currentChapter.description}
                         </p>
 

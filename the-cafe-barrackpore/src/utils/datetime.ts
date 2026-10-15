@@ -10,6 +10,25 @@
  * - US: May 24, 2026
  * - GB: 24 May 2026
  */
+function resolveLocaleAndTimeZone(
+  localeCandidate = 'en-IN',
+  timeZoneCandidate = 'Asia/Kolkata'
+): { locale: string; timeZone: string } {
+  // If the first argument contains a slash, it is a timezone identifier (e.g. 'Asia/Kolkata')
+  if (typeof localeCandidate === 'string' && localeCandidate.includes('/')) {
+    return {
+      timeZone: localeCandidate,
+      locale: typeof timeZoneCandidate === 'string' && !timeZoneCandidate.includes('/')
+        ? timeZoneCandidate
+        : 'en-IN',
+    };
+  }
+  return {
+    locale: localeCandidate || 'en-IN',
+    timeZone: timeZoneCandidate || 'Asia/Kolkata',
+  };
+}
+
 export function formatRestaurantDate(
   dateInput: string | number | Date,
   locale = 'en-IN',
@@ -20,8 +39,9 @@ export function formatRestaurantDate(
     const d = typeof dateInput === 'string' || typeof dateInput === 'number' ? new Date(dateInput) : dateInput;
     if (isNaN(d.getTime())) return '';
 
-    return new Intl.DateTimeFormat(locale, {
-      timeZone,
+    const resolved = resolveLocaleAndTimeZone(locale, timeZone);
+    return new Intl.DateTimeFormat(resolved.locale, {
+      timeZone: resolved.timeZone,
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -48,8 +68,9 @@ export function formatRestaurantTime(
     const d = typeof dateInput === 'string' || typeof dateInput === 'number' ? new Date(dateInput) : dateInput;
     if (isNaN(d.getTime())) return '';
 
-    return new Intl.DateTimeFormat(locale, {
-      timeZone,
+    const resolved = resolveLocaleAndTimeZone(locale, timeZone);
+    return new Intl.DateTimeFormat(resolved.locale, {
+      timeZone: resolved.timeZone,
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
@@ -73,8 +94,9 @@ export function formatRestaurantDateTime(
     const d = typeof dateInput === 'string' || typeof dateInput === 'number' ? new Date(dateInput) : dateInput;
     if (isNaN(d.getTime())) return '';
 
-    return new Intl.DateTimeFormat(locale, {
-      timeZone,
+    const resolved = resolveLocaleAndTimeZone(locale, timeZone);
+    return new Intl.DateTimeFormat(resolved.locale, {
+      timeZone: resolved.timeZone,
       day: 'numeric',
       month: 'short',
       year: 'numeric',

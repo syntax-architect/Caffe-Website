@@ -428,7 +428,7 @@ export const Gallery: React.FC = () => {
                   <div 
                     key={item.id || idx}
                     onClick={() => setSelectedPhoto({ index: idx, data: { src: item.src, alt: item.alt, tag, caption } })}
-                    className={`${spanClass} min-w-[82vw] sm:min-w-0 snap-center shrink-0 sm:shrink rounded-[2rem] overflow-hidden relative h-full w-full bg-surface-obsidian border border-outline/15 hover:border-primary/60 shadow-xl hover:shadow-[0_16px_36px_rgba(0,0,0,0.4),0_0_24px_rgba(var(--color-primary-rgb),0.15)] transition-all duration-500 ease-out cursor-pointer group flex flex-col hover:-translate-y-1 active:scale-[0.98]`}
+                    className={`${spanClass} min-w-[82vw] max-w-[340px] sm:min-w-0 sm:max-w-none aspect-[4/3] sm:aspect-auto sm:h-full snap-center shrink-0 sm:shrink rounded-[2rem] overflow-hidden relative w-full bg-surface-obsidian border border-outline/15 hover:border-primary/60 shadow-xl hover:shadow-[0_16px_36px_rgba(0,0,0,0.4),0_0_24px_rgba(var(--color-primary-rgb),0.15)] transition-all duration-500 ease-out cursor-pointer group flex flex-col hover:-translate-y-1 active:scale-[0.98]`}
                   >
                     {/* Subtle Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 opacity-75 group-hover:opacity-45 transition-opacity duration-500 z-10 pointer-events-none" />

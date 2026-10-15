@@ -149,8 +149,8 @@ export const SpecialsBanner: React.FC = () => {
               <div className="rounded-3xl lg:rounded-[2.5rem] bg-surface-container border border-outline/25 hover:border-primary/50 shadow-2xl transition-all duration-500 overflow-hidden group">
                 <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
                   {/* Left Column: Panoramic Gourmet Photography */}
-                  <div className="lg:col-span-7 relative min-h-[280px] sm:min-h-[340px] lg:min-h-[420px] bg-surface-container-lowest overflow-hidden">
-                    <picture>
+                  <div className="lg:col-span-7 relative w-full aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto min-h-[200px] max-h-[300px] sm:max-h-none lg:min-h-[420px] bg-surface-container-lowest overflow-hidden">
+                    <picture className="absolute inset-0 w-full h-full">
                       {getAvifSource(masterPlatter.image) && (
                         <source srcSet={getAvifSource(masterPlatter.image)!} type="image/avif" />
                       )}
@@ -161,7 +161,7 @@ export const SpecialsBanner: React.FC = () => {
                         height="500"
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
                       />
                     </picture>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-black/20 lg:to-surface-container pointer-events-none" />
@@ -242,8 +242,8 @@ export const SpecialsBanner: React.FC = () => {
                     className="min-w-[82vw] sm:min-w-[340px] md:min-w-0 snap-center shrink-0 md:shrink rounded-3xl bg-surface-container border border-outline/25 hover:border-primary/50 shadow-xl transition-all duration-300 overflow-hidden group flex flex-col sm:flex-row items-stretch"
                   >
                     {/* Image Column */}
-                    <div className="sm:w-5/12 relative min-h-[200px] sm:min-h-[220px] bg-surface-container-lowest overflow-hidden">
-                      <picture>
+                    <div className="w-full sm:w-5/12 relative aspect-[16/10] sm:aspect-auto min-h-[190px] max-h-[240px] sm:max-h-none sm:min-h-[220px] bg-surface-container-lowest overflow-hidden shrink-0">
+                      <picture className="absolute inset-0 w-full h-full">
                         {getAvifSource(combo.image) && (
                           <source srcSet={getAvifSource(combo.image)!} type="image/avif" />
                         )}
@@ -254,7 +254,7 @@ export const SpecialsBanner: React.FC = () => {
                           height="300"
                           loading="lazy"
                           decoding="async"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
+                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
                         />
                       </picture>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
@@ -266,10 +266,10 @@ export const SpecialsBanner: React.FC = () => {
                     </div>
 
                     {/* Content Column */}
-                    <div className="sm:w-7/12 p-5 sm:p-6 flex flex-col justify-between gap-4">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <h4 className="font-serif text-xl sm:text-2xl text-on-surface font-normal group-hover:text-primary transition-colors">
+                    <div className="w-full sm:w-7/12 p-4 sm:p-6 flex flex-col justify-between gap-3 sm:gap-4 min-w-0">
+                      <div className="flex flex-col gap-1.5 min-w-0">
+                        <div className="flex items-center justify-between gap-2 min-w-0">
+                          <h4 className="font-serif text-xl sm:text-2xl text-on-surface font-normal group-hover:text-primary transition-colors truncate">
                             {combo.name}
                           </h4>
                           {renderDietaryIndicator(combo.diet)}
@@ -282,8 +282,8 @@ export const SpecialsBanner: React.FC = () => {
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between gap-3 pt-3 border-t border-outline/15">
-                        <div className="font-serif text-2xl text-primary font-normal tabular-nums">
+                      <div className="flex items-center justify-between gap-2 pt-3 border-t border-outline/15 w-full">
+                        <div className="font-serif text-xl sm:text-2xl text-primary font-normal tabular-nums shrink-0">
                           {formatPrice(combo.price)}
                         </div>
 
@@ -292,7 +292,7 @@ export const SpecialsBanner: React.FC = () => {
                           whileTap={{ scale: 0.95 }}
                           type="button"
                           onClick={() => handleAddCombo(combo)}
-                          className={`h-10 sm:h-9 min-h-[44px] sm:min-h-0 px-4 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer ${
+                          className={`h-9 min-h-[44px] sm:min-h-0 px-3.5 sm:px-4 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
                             isJustAdded
                               ? 'bg-primary text-on-primary shadow-sm scale-105'
                               : 'bg-primary hover:bg-primary-fixed text-on-primary shadow-xs'
@@ -330,8 +330,8 @@ export const SpecialsBanner: React.FC = () => {
                 >
                   <div className="flex flex-col h-full">
                     {/* Photo Container */}
-                    <div className="relative aspect-[16/11] w-full overflow-hidden bg-surface-container-lowest">
-                      <picture>
+                    <div className="relative aspect-[16/11] w-full min-h-[190px] max-h-[250px] md:max-h-none overflow-hidden bg-surface-container-lowest">
+                      <picture className="absolute inset-0 w-full h-full">
                         {getAvifSource(combo.image) && (
                           <source srcSet={getAvifSource(combo.image)!} type="image/avif" />
                         )}
@@ -342,7 +342,7 @@ export const SpecialsBanner: React.FC = () => {
                           height="340"
                           loading="lazy"
                           decoding="async"
-                          className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.08] will-change-transform"
+                          className="w-full h-full object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.08] will-change-transform"
                         />
                       </picture>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
@@ -401,11 +401,7 @@ export const SpecialsBanner: React.FC = () => {
           </div>
         )}
 
-        {/* Mobile Carousel Swipe Indicator (only on smaller screens) */}
-        <div className="flex md:hidden items-center justify-center gap-1.5 pt-2 text-[10px] uppercase tracking-wider text-primary/80 font-sans">
-          <span className="material-symbols-outlined text-sm">swipe</span>
-          <span>Swipe horizontally to view banquet platters</span>
-        </div>
+
 
       </div>
     </section>
