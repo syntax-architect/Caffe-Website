@@ -1,472 +1,322 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useReducedMotion } from 'motion/react';
+import { useSiteConfig } from '../context/SiteConfigContext';
+
+const DESKTOP_FRAMES = 120;
+const MOBILE_FRAMES = 60;
+
+interface ExtractionActSpec {
+  id: string;
+  indexLabel: string;
+  actCode: string;
+  eyebrow: string;
+  titleBefore: string;
+  titleHighlight: string;
+  titleAfter?: string;
+  description: string;
+  watermark: string;
+  /** Normalized scroll range [start, end] within 0..1 */
+  window: [number, number];
+  /** Peak plateau [plateauStart, plateauEnd] where opacity === 1 */
+  plateau: [number, number];
+}
+
+const EXTRACTION_ACTS: ExtractionActSpec[] = [
+  {
+    id: 'act-extraction',
+    indexLabel: '01 / 03',
+    actCode: 'ACT I · THE EXTRACTION',
+    eyebrow: '01 / 03 • EXTRACTION',
+    titleBefore: 'Crafted to ',
+    titleHighlight: 'Perfection.',
+    description:
+      'Single-origin Arabica beans, slow-roasted in small batches and ground to micron precision before nine bars of hydraulic pressure awaken the crema.',
+    watermark: '93.4°C',
+    window: [0.0, 0.31],
+    plateau: [0.03, 0.23],
+  },
+  {
+    id: 'act-precision',
+    indexLabel: '02 / 03',
+    actCode: 'ACT II · THE CREMA',
+    eyebrow: '02 / 03 • PRECISION',
+    titleBefore: 'Every Drop ',
+    titleHighlight: 'Matters.',
+    description:
+      'Tiger-flecked hazelnut crema meets syrupy dark-cocoa body—pulled to the exact tenth of a gram for an unhurried, velvety mouthfeel.',
+    watermark: '9.0 BAR',
+    window: [0.34, 0.65],
+    plateau: [0.41, 0.58],
+  },
+  {
+    id: 'act-lounge',
+    indexLabel: '03 / 03',
+    actCode: 'ACT III · UNVEILED',
+    eyebrow: '03 / 03 • SANCTUARY', // 03 / 03 • ATMOSPHERE
+    titleBefore: 'The True ',
+    titleHighlight: 'Lounge',
+    titleAfter: ' Experience',
+    description:
+      'Poured into preheated porcelain beneath 2200K tungsten filament glow at Barrackpore’s premier nocturnal dining retreat.',
+    watermark: '2200K',
+    window: [0.68, 1.0],
+    plateau: [0.75, 0.96],
+  },
+];
+
+/**
+ * Pure envelope calculator guaranteeing zero overlap between acts.
+ * Outside [window[0], window[1]], opacity is strictly 0.
+ */
+function computeActEnvelope(
+  progress: number,
+  window: [number, number],
+  plateau: [number, number]
+): { opacity: number; translateY: number; scale: number; blur: number; isVisible: boolean } {
+  const [start, end] = window;
+  const [pStart, pEnd] = plateau;
+
+  if (progress < start || progress > end) {
+    return { opacity: 0, translateY: 28, scale: 0.97, blur: 6, isVisible: false };
+  }
+
+  let opacity = 1;
+  if (progress < pStart) {
+    opacity = (progress - start) / Math.max(0.001, pStart - start);
+  } else if (progress > pEnd) {
+    opacity = (end - progress) / Math.max(0.001, end - pEnd);
+  }
+
+  const clampedOpacity = Math.max(0, Math.min(1, opacity));
+  const localNorm = (progress - start) / Math.max(0.001, end - start); // 0..1
+  const translateY = (0.5 - localNorm) * -28; // +14px entry -> 0px center -> -14px exit
+  const scale = 0.98 + clampedOpacity * 0.02;
+  const blur = (1 - clampedOpacity) * 4;
+
+  return {
+    opacity: clampedOpacity,
+    translateY,
+    scale,
+    blur,
+    isVisible: clampedOpacity > 0.01,
+  };
+}
 
 export const ScrollSequence: React.FC = () => {
+  const { engineConfig } = useSiteConfig();
+  const prefersReducedMotion = useReducedMotion();
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const exitOverlayRef = useRef<HTMLDivElement>(null);
-  const text1Ref = useRef<HTMLDivElement>(null);
-  const text2Ref = useRef<HTMLDivElement>(null);
-  const text3Ref = useRef<HTMLDivElement>(null);
-  const prefersReducedMotion = useReducedMotion();
-  const checkIsMobile = () => {
-    if (typeof window === 'undefined') return false;
-    const isNarrow = window.innerWidth < 768;
-    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    return isNarrow || (isMobileUA && window.innerWidth < 1024);
-  };
-  
-  useEffect(() => {
-    if (prefersReducedMotion) return;
-    const isMobileRef = checkIsMobile();
-    const frameCount = isMobileRef ? 60 : 120;
-    let lastFrameIndex = -1;
-    let images: HTMLImageElement[] = [];
-    
+  const imagesRef = useRef<HTMLImageElement[]>([]);
+  const currentFrameRef = useRef<number>(0);
+  const rafRef = useRef<number | null>(null);
+  const velocityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastScrollSampleRef = useRef<{ y: number; t: number }>({ y: 0, t: 0 });
+
+  const [progress, setProgress] = useState<number>(0);
+  const [frameCount, setFrameCount] = useState<number>(DESKTOP_FRAMES);
+  const [velocityLabel, setVelocityLabel] = useState<string>('1.0x');
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const dragStartRef = useRef<{ clientX: number; startProgress: number }>({
+    clientX: 0,
+    startProgress: 0,
+  });
+
+  const drawFrameOnCanvas = useCallback((frameIndex: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const context = canvas.getContext('2d');
-    if (!context) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    const drawImageCover = (ctx: CanvasRenderingContext2D, img: HTMLImageElement, canvasWidth: number, canvasHeight: number) => {
-      const imgRatio = img.width / img.height;
-      const canvasRatio = canvasWidth / canvasHeight;
-      let sWidth = img.width;
-      let sHeight = img.height;
-      let sX = 0;
-      let sY = 0;
-      if (canvasRatio > imgRatio) {
-        sHeight = img.width / canvasRatio;
-        sY = (img.height - sHeight) / 2;
-      } else {
-        sWidth = img.height * canvasRatio;
-        sX = (img.width - sWidth) / 2;
+    const img = imagesRef.current[frameIndex];
+    if (!img || !img.complete || img.naturalWidth === 0) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const viewW = window.innerWidth;
+    const viewH = window.innerHeight;
+
+    if (canvas.width !== Math.floor(viewW * dpr) || canvas.height !== Math.floor(viewH * dpr)) {
+      canvas.width = Math.floor(viewW * dpr);
+      canvas.height = Math.floor(viewH * dpr);
+    }
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+
+    const scale = Math.max(viewW / img.naturalWidth, viewH / img.naturalHeight);
+    const drawW = img.naturalWidth * scale;
+    const drawH = img.naturalHeight * scale;
+    const offsetX = (viewW - drawW) / 2;
+    const offsetY = (viewH - drawH) / 2;
+
+    ctx.clearRect(0, 0, viewW, viewH);
+    ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+    ctx.restore();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (prefersReducedMotion) return;
+
+    const isMobile = window.innerWidth < 768;
+    const total = isMobile ? MOBILE_FRAMES : DESKTOP_FRAMES;
+    const folder = isMobile ? '/frames-mobile' : '/frames';
+    setFrameCount(total);
+
+    const loadedImages: HTMLImageElement[] = new Array(total);
+    imagesRef.current = loadedImages;
+
+    const pad3 = (n: number) => String(n).padStart(3, '0');
+
+    // Priority-load and pre-decode frame 1 immediately on mount for instant paint, then progressively load remaining frames
+    const loadSingleFrame = (idx: number) => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = `${folder}/ezgif-frame-${pad3(idx + 1)}.webp`;
+      if (idx === 0) {
+        if (typeof img.decode === 'function') {
+          img.decode().catch(() => {}).then(() => drawFrameOnCanvas(0));
+        } else {
+          img.onload = () => drawFrameOnCanvas(0);
+        }
       }
-      ctx.drawImage(img, sX, sY, sWidth, sHeight, 0, 0, canvasWidth, canvasHeight);
+      loadedImages[idx] = img;
     };
 
-    const currentFrame = (index: number) => {
-      const pad = index.toString().padStart(3, '0');
-      return isMobileRef
-        ? `/frames-mobile/ezgif-frame-${pad}.webp`
-        : `/frames/ezgif-frame-${pad}.webp`;
+    loadSingleFrame(0);
+
+    // Load keyframe stride first (every 4th frame) for instant scrubbing responsiveness, then fill in-betweens
+    let idleHandle: number | ReturnType<typeof setTimeout>;
+    const loadRemaining = () => {
+      for (let i = 1; i < total; i += 4) {
+        loadSingleFrame(i);
+      }
+      for (let i = 1; i < total; i++) {
+        if (i % 4 !== 0) loadSingleFrame(i);
+      }
     };
 
-    let cachedWinWidth = -1;
-    let cachedWinHeight = -1;
-    let cachedSectionTop = 0;
-    let cachedSectionHeight = 0;
+    if ('requestIdleCallback' in window) {
+      idleHandle = (window as any).requestIdleCallback(loadRemaining, { timeout: 600 });
+    } else {
+      idleHandle = setTimeout(loadRemaining, 120);
+    }
 
-    const section = document.getElementById('scroll-sequence-section');
+    const handleScroll = () => {
+      const container = containerRef.current;
+      if (!container) return;
 
-    const updateGeometry = () => {
-      if (!section) return;
-      const rect = section.getBoundingClientRect();
-      cachedSectionTop = rect.top + window.scrollY;
-      cachedSectionHeight = rect.height;
+      const rect = container.getBoundingClientRect();
+      const maxScroll = Math.max(1, container.offsetHeight - window.innerHeight);
+      const nextProgress = Math.max(0, Math.min(1, -rect.top / maxScroll));
+
+      // Compute Valmora-style reel scrub velocity
+      const now = performance.now();
+      const dt = Math.max(16, now - lastScrollSampleRef.current.t);
+      const dy = Math.abs(window.scrollY - lastScrollSampleRef.current.y);
+      const rawSpeed = (dy / dt) * 1.65;
+      lastScrollSampleRef.current = { y: window.scrollY, t: now };
+
+      const targetFrame = Math.min(
+        total - 1,
+        Math.max(0, Math.floor(nextProgress * (total - 1)))
+      );
+
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        if (targetFrame !== currentFrameRef.current) {
+          currentFrameRef.current = targetFrame;
+          drawFrameOnCanvas(targetFrame);
+        }
+        setProgress(nextProgress);
+
+        if (rawSpeed > 2.1) {
+          setVelocityLabel('>> 2.4x');
+        } else if (rawSpeed > 1.2) {
+          setVelocityLabel(`>> ${Math.min(2.2, rawSpeed).toFixed(1)}x`);
+        } else if (rawSpeed < 0.35) {
+          setVelocityLabel('0.5x SLOW');
+        } else {
+          setVelocityLabel('1.0x');
+        }
+      });
+
+      if (velocityTimerRef.current) clearTimeout(velocityTimerRef.current);
+      velocityTimerRef.current = setTimeout(() => {
+        setVelocityLabel('1.0x');
+      }, 260);
     };
 
     const handleResize = () => {
-      const newWidth = window.innerWidth;
-      const newHeight = window.innerHeight;
-      
-      updateGeometry();
-
-      // On mobile, scrolling causes the address bar to hide/show, triggering resize events.
-      // We only want to resize the canvas if the width changes (orientation change) 
-      // to avoid massive stuttering from canvas reallocation during scroll.
-      if (isMobileRef && newWidth === cachedWinWidth) {
-        return;
-      }
-      
-      cachedWinWidth = newWidth;
-      cachedWinHeight = newHeight;
-      const dpr = isMobileRef ? 1 : Math.min(window.devicePixelRatio || 1, 1.5); // Optimal DPI scaling without GPU memory bloat
-      
-      // Only set canvas dimensions if they actually changed to avoid clearing the context
-      if (canvas.width !== cachedWinWidth * dpr || canvas.height !== cachedWinHeight * dpr) {
-        canvas.width = cachedWinWidth * dpr;
-        canvas.height = cachedWinHeight * dpr;
-        // Reset transform to identity before applying new scale to prevent cumulative scaling
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.scale(dpr, dpr);
-        context.imageSmoothingEnabled = true;
-        
-        // Use lower smoothing quality on mobile for better performance
-        if (!isMobileRef) {
-          context.imageSmoothingQuality = 'high';
-        }
-        
-        const activeImg = (lastFrameIndex >= 0 && images[lastFrameIndex]?.complete)
-          ? images[lastFrameIndex]
-          : (currentProgress >= 0.5 ? images[frameCount - 1] : images[0]);
-
-        if (activeImg && activeImg.complete && activeImg.naturalWidth > 0) {
-          drawImageCover(context, activeImg, cachedWinWidth, cachedWinHeight);
-        }
-      }
-    };
-    
-    window.addEventListener('resize', handleResize, { passive: true });
-
-    // Helper to instantiate and manage a frame image with WebP-to-JPEG fallback
-    const ensureFrame = (index: number, priority = false): HTMLImageElement => {
-      const zeroIdx = Math.max(0, Math.min(frameCount - 1, index - 1));
-      if (images[zeroIdx]) {
-        return images[zeroIdx]!;
-      }
-      const img = new Image();
-      img.decoding = 'async';
-      if (priority && 'fetchPriority' in img) {
-        (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = 'high';
-      }
-      const primarySrc = currentFrame(index);
-      img.src = primarySrc;
-      img.onerror = () => {
-        // Gracefully fallback to .jpg if .webp ever fails to load
-        if (primarySrc.endsWith('.webp')) {
-          img.src = primarySrc.replace('.webp', '.jpg');
-        }
-      };
-      images[zeroIdx] = img;
-      return img;
-    };
-
-    // Calculate actual current progress based on viewport position
-    const computeActualProgress = () => {
-      if (!section) return 0;
-      updateGeometry();
-      const scrollableDistance = cachedSectionHeight - window.innerHeight;
-      if (scrollableDistance <= 0) return 0;
-      const currentDistance = window.scrollY - cachedSectionTop;
-      return Math.max(0, Math.min(1, currentDistance / scrollableDistance));
-    };
-
-    let targetProgress = computeActualProgress();
-    let currentProgress = targetProgress;
-    let animationFrameId: number | null = null;
-    let isRunning = false;
-    let isVisible = false;
-
-    // PHASE A: Load key anchor frames immediately on demand (Head & Tail frames)
-    let phaseAStarted = false;
-    const startPhaseA = () => {
-      if (phaseAStarted) return;
-      phaseAStarted = true;
-      handleResize();
-
-      // Immediate pre-decode of frame 1 for downwards scroll
-      const firstImg = ensureFrame(1, true);
-      firstImg.onload = () => {
-        if (canvasRef.current && currentProgress < 0.5 && firstImg.naturalWidth > 0) {
-          drawImageCover(context, firstImg, cachedWinWidth, cachedWinHeight);
-        }
-      };
-      if (typeof firstImg.decode === 'function') {
-        firstImg.decode().catch(() => {}).then(() => {
-          if (canvasRef.current && currentProgress < 0.5 && firstImg.naturalWidth > 0) {
-            drawImageCover(context, firstImg, cachedWinWidth, cachedWinHeight);
-          }
-        });
-      }
-
-      // Immediate pre-decode of final frame for upwards scroll (prevents blank black screen when coming from below)
-      const lastImg = ensureFrame(frameCount, true);
-      lastImg.onload = () => {
-        if (canvasRef.current && currentProgress >= 0.5 && lastImg.naturalWidth > 0) {
-          drawImageCover(context, lastImg, cachedWinWidth, cachedWinHeight);
-        }
-      };
-      if (typeof lastImg.decode === 'function') {
-        lastImg.decode().catch(() => {}).then(() => {
-          if (canvasRef.current && currentProgress >= 0.5 && lastImg.naturalWidth > 0) {
-            drawImageCover(context, lastImg, cachedWinWidth, cachedWinHeight);
-          }
-        });
-      }
-
-      // Buffer initial neighboring frames at both edges
-      ensureFrame(2, false);
-      ensureFrame(3, false);
-      ensureFrame(frameCount - 1, false);
-      ensureFrame(frameCount - 2, false);
-    };
-
-    // Chunks loader for Phase B and Phase C
-    let phaseBStarted = false;
-    let phaseCStarted = false;
-    let nextPreloadIndex = 4;
-
-    const loadChunk = (endIndex: number, onComplete?: () => void) => {
-      if (nextPreloadIndex > endIndex || nextPreloadIndex > frameCount) {
-        onComplete?.();
-        return;
-      }
-
-      const chunkSize = isMobileRef ? 4 : 6;
-      const chunkLimit = Math.min(nextPreloadIndex + chunkSize, endIndex + 1);
-      let loadedInChunk = 0;
-      const totalInChunk = chunkLimit - nextPreloadIndex;
-
-      for (let i = nextPreloadIndex; i < chunkLimit; i++) {
-        const img = ensureFrame(i);
-        const onDone = () => {
-          loadedInChunk++;
-          if (loadedInChunk === totalInChunk) {
-            nextPreloadIndex = chunkLimit;
-            if (nextPreloadIndex <= endIndex && nextPreloadIndex <= frameCount) {
-              const scheduleNext = typeof window !== 'undefined' && 'requestIdleCallback' in window
-                ? (cb: () => void) => (window as any).requestIdleCallback(cb, { timeout: 120 })
-                : (cb: () => void) => setTimeout(cb, 30);
-              scheduleNext(() => loadChunk(endIndex, onComplete));
-            } else {
-              onComplete?.();
-            }
-          }
-        };
-        if (img.complete && img.naturalWidth > 0) {
-          onDone();
-        } else {
-          img.addEventListener('load', onDone, { once: true });
-          img.addEventListener('error', onDone, { once: true });
-        }
-      }
-    };
-
-    // PHASE B: Preload initial small chunk when section enters viewport
-    const startPhaseB = () => {
-      if (phaseBStarted) return;
-      phaseBStarted = true;
-      const phaseBLimit = isMobileRef ? 16 : 28;
-      loadChunk(phaseBLimit);
-    };
-
-    // PHASE C: Background preload remaining frames only when user scrolls through sequence
-    const startPhaseC = () => {
-      if (phaseCStarted) return;
-      phaseCStarted = true;
-      loadChunk(frameCount);
-    };
-
-    const renderLoop = () => {
-      if (!isVisible) {
-        isRunning = false;
-        return;
-      }
-      
-      const diff = targetProgress - currentProgress;
-      if (Math.abs(diff) < 0.0005) {
-        currentProgress = targetProgress;
-        isRunning = false;
-      } else {
-        // Lerp progress for smooth playback in both upwards and downwards directions
-        currentProgress += diff * 0.22;
-      }
-      
-      const targetIndex = Math.floor(currentProgress * (frameCount - 1));
-      let renderIndex = targetIndex;
-
-      // Closest-available-frame fallback: prevents blank frames if scrolling faster than preload
-      if (!images[renderIndex] || !images[renderIndex]?.complete || images[renderIndex]?.naturalWidth === 0) {
-        let closestIndex = -1;
-
-        // If in upper half of sequence, search backwards first, then forwards
-        if (targetIndex >= frameCount / 2) {
-          for (let i = targetIndex; i < frameCount; i++) {
-            if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
-              closestIndex = i;
-              break;
-            }
-          }
-          if (closestIndex === -1) {
-            for (let i = targetIndex - 1; i >= 0; i--) {
-              if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
-                closestIndex = i;
-                break;
-              }
-            }
-          }
-        } else {
-          for (let i = targetIndex - 1; i >= 0; i--) {
-            if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
-              closestIndex = i;
-              break;
-            }
-          }
-          if (closestIndex === -1) {
-            for (let i = targetIndex + 1; i < frameCount; i++) {
-              if (images[i] && images[i]?.complete && images[i]!.naturalWidth > 0) {
-                closestIndex = i;
-                break;
-              }
-            }
-          }
-        }
-
-        if (closestIndex !== -1) {
-          renderIndex = closestIndex;
-        } else if (targetIndex >= frameCount / 2 && images[frameCount - 1]?.complete && images[frameCount - 1]!.naturalWidth > 0) {
-          renderIndex = frameCount - 1;
-        } else if (images[0] && images[0]?.complete && images[0]!.naturalWidth > 0) {
-          renderIndex = 0;
-        }
-      }
-      
-      if (images[renderIndex] && images[renderIndex]?.complete && images[renderIndex]!.naturalWidth > 0) {
-        if (renderIndex !== lastFrameIndex) {
-          drawImageCover(context, images[renderIndex]!, cachedWinWidth, cachedWinHeight);
-          lastFrameIndex = renderIndex;
-          
-          // Only update text opacity when the visual frame actually changes
-          const updateText = (ref: React.RefObject<HTMLDivElement | null>, show: boolean) => {
-            if (ref.current) {
-              const isShowing = ref.current.style.opacity === '1';
-              if (show && !isShowing) {
-                ref.current.style.opacity = '1';
-                ref.current.style.transform = 'translateY(0)';
-              } else if (!show && (isShowing || ref.current.style.opacity === '')) {
-                ref.current.style.opacity = '0';
-                ref.current.style.transform = 'translateY(2rem)';
-              }
-            }
-          };
-
-          updateText(text1Ref, currentProgress >= 0.02 && currentProgress < 0.34);
-          updateText(text2Ref, currentProgress >= 0.34 && currentProgress < 0.67);
-          // Preserve Text 3 actively through the tail so upwards scrolling immediately reveals the scene without black gaps
-          updateText(text3Ref, currentProgress >= 0.67);
-        }
-      }
-
-      // Exit overlay dissolve: maintained for test contracts while ensuring zero black void in bidirectional scrolling
-      if (exitOverlayRef.current) {
-        const exitProgress = 0;
-        exitOverlayRef.current.style.opacity = String(exitProgress);
-      }
-
-      // Continue animating if still lerping
-      if (isRunning) {
-        animationFrameId = window.requestAnimationFrame(renderLoop);
-      }
-    };
-
-    const triggerRender = () => {
-      if (!isRunning && isVisible) {
-        isRunning = true;
-        animationFrameId = window.requestAnimationFrame(renderLoop);
-      }
-    };
-
-    const onFirstUserScroll = () => {
-      if (isVisible) {
-        startPhaseA();
-        startPhaseB();
-        triggerRender();
-      }
-    };
-    window.addEventListener('scroll', onFirstUserScroll, { passive: true, once: true });
-
-    // Phase A trigger: Approach observer (handles approach from above AND from below)
-    const approachObserver = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          updateGeometry();
-          startPhaseA();
-          // If approaching from below, preload tail frames immediately
-          if (window.scrollY > cachedSectionTop) {
-            for (let f = Math.max(1, frameCount - 12); f <= frameCount; f++) {
-              ensureFrame(f, true);
-            }
-          }
-        }
-      },
-      { threshold: 0, rootMargin: isMobileRef ? '150px 0px 250px 0px' : '300px 0px 450px 0px' }
-    );
-
-    // Phase B & render visibility observer (when section actually enters viewport)
-    const visibilityObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          isVisible = entry.isIntersecting;
-          if (entry.isIntersecting) {
-            updateGeometry();
-            startPhaseA();
-            startPhaseB();
-            targetProgress = computeActualProgress();
-            currentProgress = targetProgress;
-            triggerRender();
-          }
-        });
-      },
-      { threshold: 0, rootMargin: '80px 0px' }
-    );
-
-    if (section) {
-      approachObserver.observe(section);
-      visibilityObserver.observe(section);
-      updateGeometry();
-    }
-
-    let lastBufferedFrame = -1;
-    const handleScroll = () => {
-      if (!section) return;
-      const scrollableDistance = cachedSectionHeight - window.innerHeight;
-      
-      if (scrollableDistance > 0) {
-        const currentDistance = window.scrollY - cachedSectionTop;
-        targetProgress = Math.max(0, Math.min(1, currentDistance / scrollableDistance));
-
-        // Start progressive Phase C when user has scrolled into sequence
-        if (targetProgress > 0.05) {
-          startPhaseC();
-        }
-
-        // Bidirectional buffered window loading around current scroll position (throttled)
-        const targetFrame = Math.floor(targetProgress * (frameCount - 1)) + 1;
-        if (targetFrame !== lastBufferedFrame) {
-          lastBufferedFrame = targetFrame;
-          const windowSize = isMobileRef ? 5 : 8;
-          const startWindow = Math.max(1, targetFrame - windowSize);
-          const endWindow = Math.min(frameCount, targetFrame + windowSize);
-          for (let f = startWindow; f <= endWindow; f++) {
-            ensureFrame(f);
-          }
-        }
-
-        triggerRender();
-      }
+      drawFrameOnCanvas(currentFrameRef.current);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Initial setup with immediate frame pre-decode and geometric alignment
-    startPhaseA();
+    window.addEventListener('resize', handleResize, { passive: true });
     handleScroll();
-    triggerRender();
 
     return () => {
-      if (section) {
-        approachObserver.unobserve(section);
-        visibilityObserver.unobserve(section);
-      }
-      approachObserver.disconnect();
-      visibilityObserver.disconnect();
-      window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleScroll);
-      if (animationFrameId) {
-        window.cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', handleResize);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (velocityTimerRef.current) clearTimeout(velocityTimerRef.current);
+      if ('cancelIdleCallback' in window && typeof idleHandle === 'number') {
+        (window as any).cancelIdleCallback(idleHandle);
+      } else {
+        clearTimeout(idleHandle as ReturnType<typeof setTimeout>);
       }
-
-      // Clean up image memory references to prevent leaks
-      images.forEach((img) => {
-        if (img) {
-          img.onload = null;
-          img.onerror = null;
-          img.src = '';
-        }
-      });
-      images = [];
     };
-  }, [prefersReducedMotion]);
+  }, [drawFrameOnCanvas, prefersReducedMotion]);
+
+  // Interactive Pointer Drag-to-Scrub (Valmora "DRAG TO REVEAL" tactile mechanic)
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'touch') return; // Let native vertical touch scroll work seamlessly on mobile
+    setIsDragging(true);
+    dragStartRef.current = {
+      clientX: e.clientX,
+      startProgress: progress,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging || !containerRef.current) return;
+    const deltaX = e.clientX - dragStartRef.current.clientX;
+    const scrubSensitivity = Math.max(320, window.innerWidth * 0.45);
+    const nextProgress = Math.max(
+      0,
+      Math.min(1, dragStartRef.current.startProgress + deltaX / scrubSensitivity)
+    );
+
+    // Sync window scroll position so scroll and drag stay 100% unified
+    const containerTop = containerRef.current.offsetTop;
+    const maxScroll = Math.max(1, containerRef.current.offsetHeight - window.innerHeight);
+    window.scrollTo({
+      top: containerTop + nextProgress * maxScroll,
+      behavior: 'auto',
+    });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // Ignore if pointer capture already released
+    }
+  };
+
+  const jumpToChapter = (targetNorm: number) => {
+    if (!containerRef.current || typeof window === 'undefined') return;
+    const containerTop = containerRef.current.offsetTop;
+    const maxScroll = Math.max(1, containerRef.current.offsetHeight - window.innerHeight);
+    window.scrollTo({
+      top: containerTop + targetNorm * maxScroll,
+      behavior: 'smooth',
+    });
+  };
 
   if (prefersReducedMotion) {
     return (
@@ -483,8 +333,8 @@ export const ScrollSequence: React.FC = () => {
               loading="lazy"
               decoding="async"
             />
-            {/* Dark photographic scrim */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/30 pointer-events-none" />
+            {/* Dark photographic scrim (bg-black/40) for text legibility */}
+            <div className="absolute inset-0 bg-black/40 pointer-events-none" />
             <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10">
               <span className="px-3 py-1 rounded-full bg-surface-obsidian/90 border border-primary/30 text-[10px] font-sans font-semibold uppercase tracking-widest text-primary mb-3">
                 ARTISANAL EXTRACTION
@@ -502,76 +352,262 @@ export const ScrollSequence: React.FC = () => {
     );
   }
 
-  return (
-    <section 
-      id="scroll-sequence-section" 
-      className="relative w-full bg-background h-[calc(100dvh+450px)] lg:h-[calc(100vh+850px)]"
-    >
-      <div className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center bg-background layer-isolated">
-        {/* Canvas Frame Sequence with calibrated Golden Espresso tone */}
-        <canvas 
-          ref={canvasRef}
-          id="scroll-video-canvas" 
-          className="absolute inset-0 w-full h-full opacity-100 transform-gpu will-change-transform contrast-[1.03] brightness-[0.99] saturate-[1.04]"
-        />
-        
-        {/* Brand Palette Primary Tone Harmonizer */}
-        <div className="absolute inset-0 bg-primary/[0.04] pointer-events-none mix-blend-color" />
+  if (engineConfig?.sections?.scrollSequence === false) {
+    return null;
+  }
 
-        {/* High-contrast dark photographic scrim protecting text across both Nocturnal Gold & Editorial Cream */}
+  // Real-time Barista Telemetry Metrics derived from scroll progress (0..1)
+  const livePressure =
+    progress < 0.08
+      ? (progress * 112.5).toFixed(1)
+      : (9.0 + Math.sin(progress * Math.PI * 6) * 0.12).toFixed(1);
+  const liveYieldGrams = (progress * 36.0).toFixed(1);
+  const shotClockRemaining = Math.max(0, 28.4 * (1 - progress)).toFixed(1).padStart(4, '0');
+  const elapsedSeconds = (progress * 28.4).toFixed(2).padStart(5, '0');
+  const currentFrameNumber = String(
+    Math.min(frameCount, Math.max(1, Math.round(progress * (frameCount - 1)) + 1))
+  ).padStart(3, '0');
+
+  const activeAct =
+    EXTRACTION_ACTS.find((a) => progress >= a.window[0] && progress <= a.window[1]) ||
+    (progress < 0.5 ? EXTRACTION_ACTS[0] : EXTRACTION_ACTS[2]);
+
+  const exitProgress = Math.max(0, Math.min(1, (progress - 0.95) / 0.05));
+
+  return (
+    <section
+      ref={containerRef}
+      id="scroll-sequence-section"
+      data-section-id="extraction-sequence"
+      aria-label="Artisanal Espresso Extraction Sequence"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      className={`relative w-full h-[320vh] bg-background select-none ${
+        isDragging ? 'cursor-grabbing' : 'md:cursor-grab'
+      }`}
+    >
+      {/* Anchor for extraction-sequence deep link */}
+      <div id="extraction-sequence" className="absolute top-0 pointer-events-none" aria-hidden="true" />
+
+      <div className="sticky top-0 left-0 w-full h-screen overflow-hidden bg-background">
+        {/* 1. Hardware-Accelerated 120-Frame WebP Canvas */}
+        <canvas
+          ref={canvasRef}
+          className="w-full h-full object-cover brightness-[0.82] contrast-[1.08] transition-transform duration-300"
+        />
+
+        {/* High-contrast dark photographic scrim (bg-black/40) for text legibility */}
         <div className="absolute inset-0 bg-black/40 pointer-events-none" />
-        
-        {/* Subtle cinematic 35mm grain overlay */}
-        <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-15 hidden md:block" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
-        
-        {/* Seamless edge blending into semantic theme background */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background from-0% via-background/40 via-15% to-transparent to-35%" />
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-background from-0% via-background/40 via-15% to-transparent to-35%" />
-        
+
+        {/* 2. Radial Obsidian Vignette & Vertical Edge Feathering */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(circle at 50% 46%, rgba(17,11,8,0.14) 0%, rgba(17,11,8,0.72) 78%, rgba(17,11,8,0.96) 100%)',
+          }}
+        />
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background via-background/60 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-background via-background/75 to-transparent pointer-events-none" />
+
         {/* Smooth dissolve into AboutVibe ambient background as sequence finishes */}
-        <div 
+        <div
           ref={exitOverlayRef}
-          className="absolute inset-0 bg-background pointer-events-none transition-opacity duration-200" 
-          style={{ opacity: 0 }}
+          className="absolute inset-0 bg-background pointer-events-none transition-opacity duration-200"
+          style={{ opacity: exitProgress }}
           aria-hidden="true"
         />
-        
-        {/* Floating text that appears during scroll */}
-        <div className="relative z-10 max-w-[1400px] mx-auto px-6 w-full flex flex-col items-center justify-center text-center h-full pointer-events-none">
-          <div ref={text1Ref} className="opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform flex flex-col items-center">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-obsidian/85 border border-primary/30 backdrop-blur-md mb-3.5 shadow-lg">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-primary font-semibold">
-                01 / 03 • EXTRACTION
-              </span>
-            </div>
-            <h2 className="font-sans text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tight drop-shadow-md">
-              Crafted to <br className="sm:hidden" /><span className="text-primary italic font-serif">Perfection.</span>
-            </h2>
+
+        {/* 3. Giant Architectural Background Watermark (Valmora "1961" Style) */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
+        >
+          <span className="font-serif text-[20vw] sm:text-[17vw] font-normal tracking-tighter text-on-surface/[0.035] select-none transition-all duration-500">
+            {activeAct.watermark}
+          </span>
+        </div>
+
+        {/* 4. TOP TELEMETRY VIEWFINDER HUD (Valmora Reel HUD + Chamber Specs) */}
+        <div className="absolute top-20 sm:top-24 left-4 right-4 sm:left-12 sm:right-12 z-20 flex items-center justify-between gap-2 pointer-events-none font-mono text-[10px] sm:text-[11px] tracking-[0.2em] uppercase">
+          {/* Left: Barista Chamber Telemetry */}
+          <div className="inline-flex items-center gap-2.5 sm:gap-3.5 px-3.5 py-1.5 rounded-full bg-surface-obsidian/80 border border-primary/30 backdrop-blur-md text-on-surface/85 shadow-[0_8px_24px_rgba(0,0,0,0.6)]">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-primary font-semibold">CHAMBER 01</span>
+            <span className="text-outline/40">|</span>
+            <span>{livePressure} BAR</span>
+            <span className="hidden md:inline text-outline/40">|</span>
+            <span className="hidden md:inline text-on-surface/65">93.4°C PID</span>
           </div>
 
-          <div ref={text2Ref} className="opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform flex flex-col items-center">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-obsidian/85 border border-primary/30 backdrop-blur-md mb-3.5 shadow-lg">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-primary font-semibold">
-                02 / 03 • PRECISION
-              </span>
-            </div>
-            <h2 className="font-sans text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tight drop-shadow-md">
-              Every Drop <br className="sm:hidden" /><span className="text-primary italic font-serif">Matters.</span>
-            </h2>
+          {/* Right: Valmora Reel Timecode & Velocity Multiplier */}
+          <div className="inline-flex items-center gap-2.5 sm:gap-3.5 px-3.5 py-1.5 rounded-full bg-surface-obsidian/80 border border-outline/30 backdrop-blur-md text-on-surface/80 shadow-[0_8px_24px_rgba(0,0,0,0.6)]">
+            <span>REEL 01 · 00:{elapsedSeconds}</span>
+            <span className="text-primary font-semibold">{velocityLabel}</span>
+            <span className="hidden sm:inline text-on-surface/40">
+              [{currentFrameNumber}/{String(frameCount).padStart(3, '0')}]
+            </span>
+          </div>
+        </div>
+
+        {/* 5. VALMORA CURVED SVG DRAG-TO-REVEAL PROMPT (Visible in Opening Frames) */}
+        <div
+          aria-hidden={progress > 0.22}
+          style={{
+            opacity: progress < 0.16 ? 1 : Math.max(0, 1 - (progress - 0.16) / 0.08),
+          }}
+          className="hidden lg:flex absolute top-1/3 right-[14%] z-20 flex-col items-start pointer-events-none transition-opacity duration-300"
+        >
+          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-surface-obsidian/85 border border-primary/40 backdrop-blur-md shadow-[0_0_25px_rgba(212,175,55,0.2)]">
+            <span className="w-2.5 h-2.5 rounded-full bg-primary animate-ping" />
+            <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-on-surface font-semibold">
+              DRAG OR SCROLL TO EXTRACT
+            </span>
+          </div>
+          <svg
+            width="140"
+            height="95"
+            viewBox="0 0 140 95"
+            fill="none"
+            className="mt-1 ml-4 text-primary/60"
+          >
+            <path
+              d="M 6 6 Q 88 22 124 86"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeDasharray="3 3"
+            />
+            <circle cx="124" cy="86" r="3.5" fill="currentColor" />
+          </svg>
+        </div>
+
+        {/* 6. ODDBALL-INSPIRED SHOT-CLOCK & YIELD TELEMETRY CARD (Right HUD) */}
+        <div className="hidden xl:flex absolute bottom-24 right-12 z-20 flex-col w-52 rounded-2xl bg-surface-obsidian/85 border border-outline/25 backdrop-blur-md p-4 pointer-events-none shadow-[0_16px_40px_rgba(0,0,0,0.75)]">
+          <div className="flex items-center justify-between border-b border-outline/20 pb-2 mb-2.5">
+            <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-on-surface/55">
+              EXTRACTION CLOCK
+            </span>
+            <span className="flex gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              <span className={`w-1.5 h-1.5 rounded-full ${progress > 0.33 ? 'bg-primary' : 'bg-outline/30'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${progress > 0.66 ? 'bg-primary' : 'bg-outline/30'}`} />
+            </span>
+          </div>
+          <div className="font-mono text-3xl font-bold text-on-surface tracking-tight leading-none mb-3">
+            {shotClockRemaining}
+            <span className="text-xs font-normal text-primary ml-1">s</span>
+          </div>
+          <div className="flex items-center justify-between font-mono text-[10px] tracking-[0.18em] uppercase text-on-surface/75">
+            <span>YIELD GRAMS</span>
+            <span className="text-primary font-bold">{liveYieldGrams}g</span>
+          </div>
+          <div className="w-full h-1 rounded-full bg-surface-container-highest mt-2 overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all duration-150"
+              style={{ width: `${Math.round(progress * 100)}%` }}
+            />
+          </div>
+        </div>
+
+        {/* 7. CENTER NON-OVERLAPPING 3-ACT STAGE (Strict Mutually Exclusive Windows) */}
+        <div className="absolute inset-0 z-20 flex items-center justify-center px-6 pointer-events-none">
+          {EXTRACTION_ACTS.map((act) => {
+            const env = computeActEnvelope(progress, act.window, act.plateau);
+            return (
+              <div
+                key={act.id}
+                aria-hidden={!env.isVisible}
+                style={{
+                  opacity: env.opacity,
+                  transform: `translate3d(0, ${env.translateY.toFixed(1)}px, 0) scale(${env.scale.toFixed(3)})`,
+                  filter: env.blur > 0.2 ? `blur(${env.blur.toFixed(1)}px)` : 'none',
+                  visibility: env.isVisible ? 'visible' : 'hidden',
+                }}
+                className="absolute max-w-4xl w-full text-center flex flex-col items-center transition-none"
+              >
+                {/* Eyebrow Pill */}
+                <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-surface-obsidian/85 border border-primary/35 backdrop-blur-md mb-5 shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.24em] uppercase text-primary font-semibold">
+                    {act.eyebrow}
+                  </span>
+                </div>
+
+                {/* Display Headline */}
+                <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl text-on-surface font-normal tracking-tight leading-[1.06] drop-shadow-[0_14px_36px_rgba(0,0,0,0.9)]">
+                  {act.titleBefore}
+                  <span className="italic font-light text-primary">{act.titleHighlight}</span>
+                  {act.titleAfter || ''}
+                </h2>
+
+                {/* Editorial Subcopy */}
+                <p className="mt-4 max-w-xl font-sans text-sm sm:text-base text-on-surface-variant/90 font-light leading-relaxed drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)]">
+                  {act.description}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 8. BOTTOM INTERACTIVE CHAPTER RAIL (Valmora Act I / II / III Scrubber) */}
+        <div className="absolute bottom-6 sm:bottom-8 left-6 right-6 sm:left-12 sm:right-12 z-20 flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Interactive Act Switcher Buttons */}
+          <div className="flex items-center gap-4 sm:gap-6 bg-surface-obsidian/80 border border-outline/25 backdrop-blur-md px-4 py-2 rounded-full">
+            {EXTRACTION_ACTS.map((act, idx) => {
+              const isActActive = progress >= act.window[0] && progress <= act.window[1];
+              const actTargetMidpoint = (act.window[0] + act.window[1]) / 2;
+              const fillPct =
+                progress >= act.window[1]
+                  ? 100
+                  : progress <= act.window[0]
+                  ? 0
+                  : ((progress - act.window[0]) / (act.window[1] - act.window[0])) * 100;
+
+              return (
+                <React.Fragment key={act.id}>
+                  <button
+                    type="button"
+                    onClick={() => jumpToChapter(actTargetMidpoint)}
+                    className="group flex items-center gap-2 text-left focus:outline-none pointer-events-auto"
+                  >
+                    <span
+                      className={`font-mono text-xs tracking-widest transition-colors ${
+                        isActActive
+                          ? 'text-primary font-bold'
+                          : 'text-on-surface/40 group-hover:text-on-surface/80'
+                      }`}
+                    >
+                      0{idx + 1}
+                    </span>
+                    <span
+                      className={`hidden md:inline font-mono text-[10px] tracking-[0.18em] uppercase transition-colors ${
+                        isActActive
+                          ? 'text-on-surface font-medium'
+                          : 'text-on-surface/40 group-hover:text-on-surface/70'
+                      }`}
+                    >
+                      {act.actCode}
+                    </span>
+                  </button>
+
+                  {idx < EXTRACTION_ACTS.length - 1 && (
+                    <div className="w-8 sm:w-14 h-[1.5px] bg-outline/30 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary transition-all duration-150"
+                        style={{ width: `${fillPct}%` }}
+                      />
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
 
-          <div ref={text3Ref} className="opacity-0 transition-all duration-700 translate-y-8 absolute w-full left-0 px-4 will-change-transform flex flex-col items-center">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-obsidian/85 border border-primary/30 backdrop-blur-md mb-3.5 shadow-lg">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="font-mono text-[10px] tracking-[0.24em] uppercase text-primary font-semibold">
-                03 / 03 • ATMOSPHERE
-              </span>
-            </div>
-            <h2 className="font-sans text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium tracking-tight drop-shadow-md">
-              The True <br className="sm:hidden" /><span className="text-primary italic font-serif">Lounge</span> Experience
-            </h2>
+          {/* Right Bottom Progress Readout */}
+          <div className="font-mono text-[10px] tracking-[0.24em] uppercase text-primary/85 pointer-events-none">
+            CREMA EXTRACTION • {Math.round(progress * 100)}%
           </div>
         </div>
       </div>

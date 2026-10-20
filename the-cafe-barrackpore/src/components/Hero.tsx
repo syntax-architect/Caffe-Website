@@ -588,6 +588,26 @@ export const Hero: React.FC = React.memo(() => {
           </span>
         </a>
       </div>
+
+      {/* Valmora-Inspired Architectural Viewfinder Corner Brackets */}
+      <div className="pointer-events-none absolute inset-6 sm:inset-10 z-20 hidden lg:block" aria-hidden="true">
+        <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-primary/35" />
+        <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-primary/35" />
+        <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-primary/35" />
+        <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-primary/35" />
+      </div>
+
+      {/* Top-Right Live Sanctuary Telemetry HUD (Valmora / Oddball Hybrid) */}
+      <div className="hidden xl:flex items-center gap-3 absolute top-8 right-14 z-20 px-4 py-2 rounded-full bg-surface-obsidian/75 border border-outline/25 backdrop-blur-md pointer-events-none">
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-on-surface/80">
+          SANCTUARY LIVE · 2200K AMBER
+        </span>
+        <span className="text-outline/40">|</span>
+        <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-primary font-semibold">
+          REEL 01 READY
+        </span>
+      </div>
     </section>
   );
 });
