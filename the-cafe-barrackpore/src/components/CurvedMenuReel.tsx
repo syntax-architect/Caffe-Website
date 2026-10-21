@@ -124,6 +124,7 @@ export const CurvedMenuReel: React.FC = () => {
   const [offset, setOffset] = useState<number>(0);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [selectedDish, setSelectedDish] = useState<SignatureDishItem | null>(null);
 
   // Physics & drag state
   const isDraggingRef = useRef(false);
@@ -150,13 +151,19 @@ export const CurvedMenuReel: React.FC = () => {
   const cardPitch = isMobile ? 160 : 210;
   const totalWidth = SIGNATURE_REEL_DISHES.length * cardPitch;
 
+  // Discrete nudge for Chevrons and Keyboard arrows
+  const nudge = useCallback((direction: number) => {
+    // direction: +1 = previous / rightward spin, -1 = next / leftward spin
+    velocityRef.current = direction * 16;
+  }, []);
+
   // 60fps Physics & Auto-Scroll Loop
   const tickPhysics = useCallback(() => {
     const now = performance.now();
     const dt = Math.min(0.05, (now - lastTimeRef.current) / 1000);
     lastTimeRef.current = now;
 
-    if (!isDraggingRef.current && !isPaused) {
+    if (!isDraggingRef.current && !isPaused && !selectedDish) {
       if (Math.abs(velocityRef.current) > 0.3) {
         // Momentum decay (decays ~95% per second)
         velocityRef.current *= Math.pow(0.95, dt * 60);
@@ -168,7 +175,7 @@ export const CurvedMenuReel: React.FC = () => {
     }
 
     rafRef.current = requestAnimationFrame(tickPhysics);
-  }, [totalWidth, isPaused]);
+  }, [totalWidth, isPaused, selectedDish]);
 
   useEffect(() => {
     rafRef.current = requestAnimationFrame(tickPhysics);
@@ -176,6 +183,17 @@ export const CurvedMenuReel: React.FC = () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [tickPhysics]);
+
+  // Keyboard navigation & Escape-to-close listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedDish) {
+        setSelectedDish(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedDish]);
 
   // Pointer drag interaction handlers
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -283,9 +301,41 @@ export const CurvedMenuReel: React.FC = () => {
           </span>
         </div>
 
+        {/* Left / Right Floating Chevrons (Desktop) */}
+        <button
+          type="button"
+          aria-label="Previous signature dishes"
+          onClick={() => nudge(1)}
+          className="hidden md:flex absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-surface-obsidian/90 hover:bg-primary border border-primary/35 hover:border-primary text-primary hover:text-on-primary items-center justify-center transition-all duration-300 shadow-[0_6px_24px_rgba(0,0,0,0.85)] hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md group"
+        >
+          <span className="material-symbols-outlined text-xl transition-transform group-hover:-translate-x-0.5">chevron_left</span>
+        </button>
+
+        <button
+          type="button"
+          aria-label="Next signature dishes"
+          onClick={() => nudge(-1)}
+          className="hidden md:flex absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-surface-obsidian/90 hover:bg-primary border border-primary/35 hover:border-primary text-primary hover:text-on-primary items-center justify-center transition-all duration-300 shadow-[0_6px_24px_rgba(0,0,0,0.85)] hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md group"
+        >
+          <span className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-0.5">chevron_right</span>
+        </button>
+
         {/* 3D Cylindrical Reel Stage */}
         <div
           ref={containerRef}
+          tabIndex={0}
+          role="region"
+          aria-label="3D Cylindrical Signature Menu Reel"
+          aria-roledescription="carousel"
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              nudge(1);
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              nudge(-1);
+            }
+          }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -295,8 +345,12 @@ export const CurvedMenuReel: React.FC = () => {
             setIsPaused(false);
             isDraggingRef.current = false;
           }}
-          className="relative w-full h-[320px] sm:h-[380px] lg:h-[420px] overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing my-2"
-          style={{ touchAction: 'pan-y' }}
+          className="relative w-full h-[320px] sm:h-[380px] lg:h-[420px] overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing my-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/40 rounded-2xl"
+          style={{
+            touchAction: 'pan-y',
+            perspective: '1200px',
+            transformStyle: 'preserve-3d',
+          }}
         >
           {/* Edge Blur Vignette Masks */}
           <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-20 bg-gradient-to-r from-surface-obsidian via-surface-obsidian/80 to-transparent z-20 pointer-events-none" />
@@ -341,7 +395,12 @@ export const CurvedMenuReel: React.FC = () => {
             return (
               <div
                 key={dish.id}
-                className="absolute transition-transform will-change-transform rounded-2xl overflow-hidden border border-primary/30 bg-surface-obsidian/95 shadow-[0_20px_50px_rgba(0,0,0,0.85)] group backdrop-blur-xl"
+                onClick={() => {
+                  if (!hasMovedSignificantRef.current) {
+                    setSelectedDish(dish);
+                  }
+                }}
+                className="absolute transition-transform will-change-transform rounded-2xl overflow-hidden border border-primary/30 bg-surface-obsidian/95 shadow-[0_20px_50px_rgba(0,0,0,0.85)] group backdrop-blur-xl cursor-pointer"
                 style={{
                   width: `${cardWidth}px`,
                   height: `${cardHeight}px`,
@@ -410,7 +469,7 @@ export const CurvedMenuReel: React.FC = () => {
       <div className="relative z-10 pt-3 border-t border-outline/15 flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[0.2em] uppercase text-on-surface/50">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-xs text-primary animate-pulse">drag_indicator</span>
-          <span>DRAG OR SWIPE TO SPIN • HOVER TO PAUSE</span>
+          <span>DRAG OR SWIPE TO SPIN • HOVER TO PAUSE • CLICK CARD FOR CRAFT NOTES</span>
         </div>
         <div className="flex items-center gap-2 text-primary font-semibold">
           <span>8 SIGNATURE CREATIONS</span>
@@ -418,6 +477,133 @@ export const CurvedMenuReel: React.FC = () => {
           <span>TAP ADD TO ORDER</span>
         </div>
       </div>
+
+      {/* Sensory Dish Detail Modal */}
+      {selectedDish && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dish-modal-title"
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
+          onClick={() => setSelectedDish(null)}
+        >
+          <div
+            className="relative w-full max-w-lg rounded-3xl bg-surface-obsidian border border-primary/35 p-5 sm:p-7 shadow-[0_25px_90px_rgba(0,0,0,0.95)] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Close Button */}
+            <button
+              type="button"
+              aria-label="Close dish details"
+              onClick={() => setSelectedDish(null)}
+              className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-surface-container-high/80 hover:bg-primary text-on-surface hover:text-on-primary flex items-center justify-center transition-all cursor-pointer border border-outline/20"
+            >
+              <span className="material-symbols-outlined text-sm">close</span>
+            </button>
+
+            {/* Modal Image Header */}
+            <div className="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden mb-5 border border-outline/20">
+              <picture>
+                {getAvifSource(selectedDish.image) && (
+                  <source srcSet={getAvifSource(selectedDish.image)!} type="image/avif" />
+                )}
+                <img
+                  src={selectedDish.image}
+                  alt={selectedDish.name}
+                  className="w-full h-full object-cover brightness-[0.88]"
+                />
+              </picture>
+              <div className="absolute inset-0 bg-gradient-to-t from-surface-obsidian via-surface-obsidian/30 to-transparent" />
+              <div className="absolute top-3 left-3 flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-surface-obsidian/85 backdrop-blur-md border border-primary/30 font-mono text-[9px] uppercase tracking-wider text-primary font-semibold flex items-center gap-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${selectedDish.diet === 'veg' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                  <span>{selectedDish.tag}</span>
+                </span>
+                <span className="font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-surface-obsidian/80 text-on-surface/80 border border-outline/20">
+                  {selectedDish.craftTelemetry}
+                </span>
+              </div>
+            </div>
+
+            {/* Title & Category */}
+            <div className="mb-4">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-primary/80 block mb-1">
+                {selectedDish.category} • {selectedDish.accentNote}
+              </span>
+              <div className="flex items-baseline justify-between gap-3">
+                <h3 id="dish-modal-title" className="font-serif text-xl sm:text-2xl text-on-surface font-semibold">
+                  {selectedDish.name}
+                </h3>
+                <span className="font-mono text-lg sm:text-xl text-primary font-bold">
+                  ₹{selectedDish.price}
+                </span>
+              </div>
+              <p className="font-sans text-xs sm:text-sm text-on-surface/75 mt-1.5 leading-relaxed">
+                {selectedDish.subtitle}
+              </p>
+            </div>
+
+            {/* Sensory Tri-Spectrum Craft Strip */}
+            <div className="mb-5 p-3 rounded-xl bg-surface-container-lowest/80 border border-outline/20 space-y-2 font-mono text-[9px] uppercase tracking-wider">
+              <div className="flex justify-between text-on-surface/60">
+                <span>CHEF SENSORY CALIBRATION</span>
+                <span className="text-primary font-semibold">AUTHENTIC PROFILE</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 pt-1 border-t border-outline/15">
+                <div>
+                  <div className="flex justify-between text-on-surface/70 mb-1">
+                    <span>CRAFT</span>
+                    <span className="text-primary font-bold">99%</span>
+                  </div>
+                  <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">
+                    <div className="h-full bg-primary w-[99%]" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-on-surface/70 mb-1">
+                    <span>AROMA</span>
+                    <span className="text-primary font-bold">97%</span>
+                  </div>
+                  <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">
+                    <div className="h-full bg-primary w-[97%]" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-on-surface/70 mb-1">
+                    <span>BALANCE</span>
+                    <span className="text-primary font-bold">98%</span>
+                  </div>
+                  <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">
+                    <div className="h-full bg-primary w-[98%]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex items-center gap-3 pt-3 border-t border-outline/15">
+              <button
+                type="button"
+                onClick={() => setSelectedDish(null)}
+                className="flex-1 py-2.5 rounded-full border border-outline/30 hover:bg-surface-container text-on-surface font-sans text-xs font-medium transition-colors cursor-pointer text-center"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  handleQuickAdd(e, selectedDish);
+                  setSelectedDish(null);
+                }}
+                className="flex-1 py-2.5 rounded-full bg-primary text-on-primary font-sans font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.4)] hover:scale-102 active:scale-98 transition-all cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
+                <span>Add to Order · ₹{selectedDish.price}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
