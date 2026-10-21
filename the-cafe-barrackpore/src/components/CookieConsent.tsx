@@ -34,47 +34,48 @@ export const CookieConsent: React.FC = () => {
       role="region"
       aria-label="Cookie Consent Banner"
       aria-labelledby="cookie-consent-title"
-      className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-6 left-3.5 right-3.5 sm:left-auto sm:right-6 sm:max-w-md z-40 animate-in fade-in slide-in-from-bottom duration-500"
+      className="fixed bottom-[max(1rem,calc(0.75rem+env(safe-area-inset-bottom,0px)))] sm:bottom-6 left-4 right-4 sm:left-6 sm:right-auto sm:max-w-md z-40 animate-in fade-in slide-in-from-bottom duration-500 pointer-events-auto"
     >
-      <div className="p-1 rounded-2xl bg-gradient-to-r from-[#D4AF37]/50 via-amber-600/40 to-[#D4AF37]/50 shadow-[0_12px_40px_rgba(0,0,0,0.85)] border border-[#D4AF37]/30">
-        <div className="p-4 sm:p-5 rounded-[calc(1rem-0.125rem)] bg-[#140D09] flex flex-col gap-3">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center shrink-0 text-[#D4AF37]">
-              <span className="material-symbols-outlined text-[18px]">cookie</span>
+      <div className="p-[1px] rounded-2xl bg-gradient-to-r from-primary/45 via-primary-fixed-dim/25 to-primary/45 shadow-[0_16px_40px_rgba(0,0,0,0.85)] border border-outline/25 backdrop-blur-xl">
+        <div className="p-3.5 sm:p-4 rounded-[calc(1rem-1px)] bg-surface-obsidian/95 text-on-surface flex flex-col gap-2.5">
+          {/* Header & Details */}
+          <div className="flex items-start gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0 text-primary mt-0.5">
+              <span className="material-symbols-outlined text-[17px]">cookie</span>
             </div>
-            <div className="flex-1">
-              <h3 id="cookie-consent-title" className="text-xs font-serif font-bold text-white tracking-wide">
-                Bespoke Dining Experience &amp; Privacy
-              </h3>
-              <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
-                We use essential cookies and local storage to preserve your table QR session, save cart selections, and remember your language preferences.
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h3 id="cookie-consent-title" className="text-xs font-mono font-semibold tracking-wider text-on-surface uppercase">
+                  Dining Privacy &amp; Cookies
+                </h3>
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-on-surface/50 shrink-0">
+                  <a href="/privacy" className="hover:text-primary underline transition-colors">Privacy</a>
+                  <span>·</span>
+                  <a href="/terms" className="hover:text-primary underline transition-colors">Terms</a>
+                </div>
+              </div>
+              <p className="text-[11px] text-on-surface/75 mt-0.5 leading-snug line-clamp-2">
+                Essential local storage preserves your table QR order, dining cart, and language preferences.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/5">
-            <div className="flex items-center gap-2 text-[10px] text-zinc-400">
-              <a href="/privacy" className="hover:text-[#D4AF37] underline transition-colors">Privacy</a>
-              <span>·</span>
-              <a href="/terms" className="hover:text-[#D4AF37] underline transition-colors">Terms</a>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleConsent('essential')}
-                className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                Essential Only
-              </button>
-              <button
-                type="button"
-                onClick={() => handleConsent('all')}
-                className="px-3.5 py-1.5 rounded-lg text-[11px] font-bold text-[#140D09] bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] hover:from-[#F3E5AB] hover:to-[#D4AF37] shadow-sm transition-all cursor-pointer"
-              >
-                Accept All
-              </button>
-            </div>
+          {/* Single-Click Action Buttons in Pill Layout */}
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-outline/15">
+            <button
+              type="button"
+              onClick={() => handleConsent('essential')}
+              className="px-3.5 py-1.5 rounded-full font-mono text-[10px] tracking-wider uppercase font-medium text-on-surface/75 hover:text-on-surface bg-surface-container hover:bg-surface-elevated border border-outline/25 transition-all cursor-pointer active:scale-95"
+            >
+              Essential Only
+            </button>
+            <button
+              type="button"
+              onClick={() => handleConsent('all')}
+              className="px-4 py-1.5 rounded-full font-mono text-[10px] tracking-wider uppercase font-bold text-on-primary bg-primary hover:bg-primary-fixed shadow-sm transition-all cursor-pointer active:scale-95"
+            >
+              Accept All
+            </button>
           </div>
         </div>
       </div>
@@ -83,3 +84,4 @@ export const CookieConsent: React.FC = () => {
 };
 
 export default CookieConsent;
+

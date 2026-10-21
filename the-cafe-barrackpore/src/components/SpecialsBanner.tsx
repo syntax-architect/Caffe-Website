@@ -3,6 +3,8 @@ import { motion } from 'motion/react';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useMenuAvailability } from '../hooks/useMenuAvailability';
+import { formatCurrency } from '../utils/currency';
 import { SectionReveal } from './SectionReveal';
 import { getAvifSource } from '../utils/image';
 import type { SpecialCombo, SpecialBadge } from '../services/siteContentService';
@@ -12,11 +14,65 @@ import {
   DEFAULT_SPECIAL_BADGES,
 } from '../services/siteContentService';
 
+interface PlatterTelemetrySpec {
+  editionCode: string;
+  tempValue: string;
+  tempUnit: string;
+  methodLabel: string;
+  needleAngle: number; // degrees (-110 to +110)
+  ledCount: number; // 1..5
+  stats: { label: string; value: number }[];
+}
+
+const PLATTER_TELEMETRY: PlatterTelemetrySpec[] = [
+  {
+    editionCode: 'EDITION #01',
+    tempValue: '290',
+    tempUnit: '°C WOK',
+    methodLabel: 'HIGH-FLAME CARBON STEEL',
+    needleAngle: 65,
+    ledCount: 4,
+    stats: [
+      { label: 'UMAMI & WOK HEI', value: 98 },
+      { label: 'CRISP TEXTURE', value: 96 },
+      { label: 'SHAREABILITY', value: 99 },
+    ],
+  },
+  {
+    editionCode: 'EDITION #02',
+    tempValue: '450',
+    tempUnit: '°C CHAR',
+    methodLabel: 'CLAY OVEN EMBER',
+    needleAngle: 95,
+    ledCount: 5,
+    stats: [
+      { label: 'CHARCOAL SMOKE', value: 99 },
+      { label: 'SPICE DEPTH', value: 96 },
+      { label: 'TENDERNESS', value: 98 },
+    ],
+  },
+  {
+    editionCode: 'EDITION #03',
+    tempValue: '185',
+    tempUnit: '°C BOWL',
+    methodLabel: 'SLOW-SIMMERED BROTH',
+    needleAngle: -35,
+    ledCount: 3,
+    stats: [
+      { label: 'AROMATIC BALANCE', value: 97 },
+      { label: 'COMFORT SCORE', value: 99 },
+      { label: 'PORTION VALUE', value: 98 },
+    ],
+  },
+];
+
 export const SpecialsBanner: React.FC = () => {
   const { addToCart } = useCart();
   const { showToast } = useUI();
   const { specials, formatPrice, restaurantConfig, engineConfig } = useSiteConfig();
+  const { isAvailable } = useMenuAvailability();
   const [recentlyAddedComboId, setRecentlyAddedComboId] = useState<string | null>(null);
+  const [activePlatterIdx, setActivePlatterIdx] = useState<number>(0);
 
   // Section visibility check
   if (specials?.enabled === false || engineConfig?.sections?.specialsBanner === false) {
@@ -27,6 +83,8 @@ export const SpecialsBanner: React.FC = () => {
 
   const combos: SpecialCombo[] = (specials?.combos && specials.combos.length > 0)
     ? specials.combos
+    : (specials as any)?.items && (specials as any).items.length > 0
+    ? (specials as any).items
     : DEFAULT_SPECIAL_COMBOS;
 
   const badges: SpecialBadge[] = (specials?.badges && specials.badges.length > 0)
@@ -35,10 +93,13 @@ export const SpecialsBanner: React.FC = () => {
 
   const eyebrow = specials?.eyebrow || "Chef's Signature Banquets";
   const title = specials?.title || 'Special Banquet & Hangout Platters';
-  const description = specials?.description ||
+  const description = specials?.description || (specials as any)?.subtitle ||
     'Generous sharing platters with sizzling pan-Asian or smoky clay oven selections, made fresh to order.';
 
+  const activeTelemetry = PLATTER_TELEMETRY[activePlatterIdx % PLATTER_TELEMETRY.length];
+
   const handleAddCombo = (combo: SpecialCombo) => {
+    if (!isAvailable(combo.id)) return;
     setRecentlyAddedComboId(combo.id);
     setTimeout(() => {
       setRecentlyAddedComboId((curr) => (curr === combo.id ? null : curr));
@@ -62,6 +123,24 @@ export const SpecialsBanner: React.FC = () => {
       type: 'success',
     });
   };
+
+  // Compatibility alias for addItem
+  const addItem = (item: { id: string; name: string; price: number; category: string; diet?: 'veg' | 'nv' | 'all'; description: string; image: string }) => {
+    const matchedCombo: SpecialCombo = combos.find((c) => c.id === item.id) || {
+      id: item.id,
+      name: item.name,
+      category: item.category,
+      diet: (item.diet as 'veg' | 'nv' | 'all') || 'nv',
+      price: item.price,
+      description: item.description,
+      image: item.image,
+      badge: 'BANQUET',
+      serves: '2-3 Guests',
+    };
+    handleAddCombo(matchedCombo);
+  };
+  void addItem; // Prevent unused variable warning
+  void formatCurrency;
 
   const renderDietaryIndicator = (diet?: string) => {
     if (restaurantConfig.dietary.system === 'india') {
@@ -95,14 +174,14 @@ export const SpecialsBanner: React.FC = () => {
       {/* Ambient Radial Backdrop Glow */}
       {engineConfig?.theme?.ambience?.meshGlow !== false && (
         <div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[450px] bg-primary/5 blur-[140px] rounded-full pointer-events-none" 
           aria-hidden="true" 
         />
       )}
 
-      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10 flex flex-col gap-10 lg:gap-12">
+      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10 flex flex-col gap-10 lg:gap-12">
         
-        {/* Top Row: Narrative and Philosophy with Viewport Reveal */}
+        {/* Top Row: Narrative and Philosophy with Viewport Reveal + Valmora Tachometer */}
         <SectionReveal className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-outline/15 pb-8">
           <div className="flex flex-col gap-3 max-w-2xl">
             <div className="inline-flex items-center gap-2">
@@ -121,21 +200,91 @@ export const SpecialsBanner: React.FC = () => {
             <p className="font-sans text-sm sm:text-base text-on-surface/75 leading-relaxed font-light mt-1">
               {description}
             </p>
+
+            {/* Platter Trust Badges */}
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0 mt-2">
+              {badges.map((badge, idx) => (
+                <div
+                  key={badge.text || idx}
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container border border-outline/25 text-xs text-on-surface/80 font-normal tracking-wide shadow-xs"
+                >
+                  {badge.icon && (
+                    <span className="material-symbols-outlined text-sm font-light text-primary">{badge.icon}</span>
+                  )}
+                  <span>{badge.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Platter Trust Badges */}
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            {badges.map((badge, idx) => (
-              <div
-                key={badge.text || idx}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container border border-outline/25 text-xs text-on-surface/80 font-normal tracking-wide shadow-xs"
-              >
-                {badge.icon && (
-                  <span className="material-symbols-outlined text-sm font-light text-primary">{badge.icon}</span>
-                )}
-                <span>{badge.text}</span>
+          {/* Valmora-Inspired Live Analog Firing Tachometer */}
+          <div className="flex items-center gap-5 px-5 py-4 rounded-2xl bg-surface-obsidian/90 border border-primary/30 shadow-[0_16px_45px_rgba(0,0,0,0.75)] self-start lg:self-end">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full border border-outline/35 bg-background flex items-center justify-center shrink-0">
+              {/* Top 5 Shift Indicator LEDs */}
+              <div className="absolute top-2 flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((led) => (
+                  <span
+                    key={led}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+                      led <= activeTelemetry.ledCount
+                        ? 'bg-primary shadow-[0_0_8px_rgb(var(--color-primary-rgb))]'
+                        : 'bg-outline/30'
+                    }`}
+                  />
+                ))}
               </div>
-            ))}
+
+              <svg viewBox="0 0 100 100" className="w-full h-full p-2">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="none"
+                  stroke="rgb(var(--color-primary))"
+                  strokeOpacity="0.22"
+                  strokeWidth="1.2"
+                  strokeDasharray="2 4"
+                />
+                <g
+                  style={{
+                    transform: `rotate(${activeTelemetry.needleAngle}deg)`,
+                    transformOrigin: '50px 50px',
+                    transition: 'transform 650ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
+                >
+                  <line
+                    x1="50"
+                    y1="54"
+                    x2="50"
+                    y2="15"
+                    stroke="rgb(var(--color-primary))"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="50" cy="50" r="3.5" fill="rgb(var(--color-primary))" />
+                </g>
+              </svg>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-primary font-semibold">
+                  FIRING TELEMETRY
+                </span>
+                <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">
+                  {activeTelemetry.editionCode}
+                </span>
+              </div>
+              <div className="font-serif text-2xl sm:text-3xl text-on-surface leading-tight mt-0.5">
+                {activeTelemetry.tempValue}
+                <span className="italic font-light text-primary text-base ml-1">
+                  {activeTelemetry.tempUnit}
+                </span>
+              </div>
+              <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-on-surface/55 mt-0.5">
+                {activeTelemetry.methodLabel}
+              </div>
+            </div>
           </div>
         </SectionReveal>
 
@@ -146,10 +295,18 @@ export const SpecialsBanner: React.FC = () => {
           <div className="flex flex-col gap-8">
             {/* 1. Master Sharing Banquet (Full Width Panoramic Showcase) */}
             {masterPlatter && (
-              <div className="rounded-3xl lg:rounded-[2.5rem] bg-surface-container border border-outline/25 hover:border-primary/50 shadow-2xl transition-all duration-500 overflow-hidden group">
+              <div
+                onMouseEnter={() => setActivePlatterIdx(0)}
+                onFocus={() => setActivePlatterIdx(0)}
+                className={`rounded-3xl lg:rounded-[2.5rem] bg-surface-container border transition-all duration-500 overflow-hidden group ${
+                  activePlatterIdx === 0
+                    ? 'border-primary/50 shadow-2xl -translate-y-0.5'
+                    : 'border-outline/25 hover:border-primary/50 shadow-xl'
+                }`}
+              >
                 <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
                   {/* Left Column: Panoramic Gourmet Photography */}
-                  <div className="lg:col-span-7 relative w-full aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto min-h-[200px] max-h-[300px] sm:max-h-none lg:min-h-[420px] bg-surface-container-lowest overflow-hidden">
+                  <div className="lg:col-span-7 relative w-full aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto min-h-[220px] max-h-[320px] sm:max-h-none lg:min-h-[440px] bg-surface-container-lowest overflow-hidden">
                     <picture className="absolute inset-0 w-full h-full">
                       {getAvifSource(masterPlatter.image) && (
                         <source srcSet={getAvifSource(masterPlatter.image)!} type="image/avif" />
@@ -166,10 +323,13 @@ export const SpecialsBanner: React.FC = () => {
                     </picture>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-black/20 lg:to-surface-container pointer-events-none" />
 
-                    {/* Spotlight Badges */}
+                    {/* Spotlight Badges with Collectible Edition Pill */}
                     <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
                       <span className="px-3 py-1 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-primary/40 text-[10px] uppercase tracking-widest text-primary font-semibold shadow-md">
                         {masterPlatter.badge}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-primary text-on-primary font-mono text-[10px] font-bold shadow-md">
+                        {PLATTER_TELEMETRY[0].editionCode}
                       </span>
                     </div>
 
@@ -181,12 +341,18 @@ export const SpecialsBanner: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Right Column: Editorial Banquet Narrative */}
+                  {/* Right Column: Editorial Banquet Narrative & Oddball Stat Bars */}
                   <div className="lg:col-span-5 p-6 sm:p-8 lg:p-10 flex flex-col justify-between gap-6">
                     <div className="flex flex-col gap-3">
-                      <span className="text-[10px] uppercase tracking-[0.22em] text-primary font-semibold">
-                        Master Banquet Selection
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-[0.22em] text-primary font-semibold">
+                          Master Banquet Selection
+                        </span>
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-on-surface/40">
+                          {PLATTER_TELEMETRY[0].editionCode}
+                        </span>
+                      </div>
+
                       <h4 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-on-surface font-normal tracking-tight group-hover:text-primary transition-colors">
                         {masterPlatter.name}
                       </h4>
@@ -194,13 +360,31 @@ export const SpecialsBanner: React.FC = () => {
                         {masterPlatter.description}
                       </p>
                       
-                      <div className="flex items-center gap-4 pt-2 text-xs font-mono text-on-surface-variant">
+                      <div className="flex items-center gap-4 pt-1 text-xs font-mono text-on-surface-variant">
                         <span className="flex items-center gap-1.5 text-primary">
                           <span className="material-symbols-outlined text-sm">groups</span>
                           <span>{masterPlatter.serves}</span>
                         </span>
                         <span>•</span>
                         <span>Communal Feast</span>
+                      </div>
+
+                      {/* Oddball-Style RPG Sensory Stat Bars */}
+                      <div className="mt-4 pt-3 border-t border-outline/15 space-y-2">
+                        {PLATTER_TELEMETRY[0].stats.map((stat) => (
+                          <div key={stat.label} className="space-y-0.5">
+                            <div className="flex items-center justify-between font-mono text-[10px] tracking-[0.16em] uppercase">
+                              <span className="text-on-surface/65">{stat.label}</span>
+                              <span className="text-primary font-bold">{stat.value}</span>
+                            </div>
+                            <div className="h-1 w-full rounded-full bg-surface-container-lowest overflow-hidden">
+                              <div
+                                className="h-full bg-primary rounded-full transition-all duration-700"
+                                style={{ width: `${stat.value}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -209,23 +393,27 @@ export const SpecialsBanner: React.FC = () => {
                         {formatPrice(masterPlatter.price)}
                       </div>
 
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.96 }}
-                        type="button"
-                        onClick={() => handleAddCombo(masterPlatter)}
-                        className={`h-11 px-6 rounded-full text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
-                          recentlyAddedComboId === masterPlatter.id
-                            ? 'bg-primary text-on-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.6)] scale-[1.02]'
-                            : 'bg-primary hover:bg-primary-fixed text-on-primary shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)]'
-                        }`}
-                        title={`Add ${masterPlatter.name} to order`}
-                      >
-                        <span>{recentlyAddedComboId === masterPlatter.id ? 'Platter Added!' : 'Add Platter to Bag'}</span>
-                        <span className={`material-symbols-outlined text-[16px] transition-transform ${recentlyAddedComboId === masterPlatter.id ? 'scale-110' : ''}`}>
-                          {recentlyAddedComboId === masterPlatter.id ? 'check' : 'add_shopping_cart'}
-                        </span>
-                      </motion.button>
+                      {isAvailable(masterPlatter.id) ? (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.96 }}
+                          type="button"
+                          onClick={() => handleAddCombo(masterPlatter)}
+                          className={`h-11 px-6 rounded-full text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
+                            recentlyAddedComboId === masterPlatter.id
+                              ? 'bg-primary text-on-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.6)] scale-[1.02]'
+                              : 'bg-primary hover:bg-primary-fixed text-on-primary shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)]'
+                          }`}
+                          title={`Add ${masterPlatter.name} to order`}
+                        >
+                          <span>{recentlyAddedComboId === masterPlatter.id ? 'Platter Added!' : 'Add Platter to Bag'}</span>
+                          <span className={`material-symbols-outlined text-[16px] transition-transform ${recentlyAddedComboId === masterPlatter.id ? 'scale-110' : ''}`}>
+                            {recentlyAddedComboId === masterPlatter.id ? 'check' : 'add_shopping_cart'}
+                          </span>
+                        </motion.button>
+                      ) : (
+                        <span className="badge-soldout">86'd · Sold Out</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -234,12 +422,22 @@ export const SpecialsBanner: React.FC = () => {
 
             {/* 2. Companion Platters Track (Mobile Snap Carousel with Card Peek + Desktop Grid) */}
             <div className="flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 lg:gap-8 pb-2 md:pb-0">
-              {companionPlatters.map((combo) => {
+              {companionPlatters.map((combo, idx) => {
+                const platterIndex = idx + 1;
+                const telemetry = PLATTER_TELEMETRY[platterIndex % PLATTER_TELEMETRY.length];
                 const isJustAdded = recentlyAddedComboId === combo.id;
+                const isSelected = activePlatterIdx === platterIndex;
+
                 return (
                   <div
                     key={combo.id}
-                    className="min-w-[82vw] sm:min-w-[340px] md:min-w-0 snap-center shrink-0 md:shrink rounded-3xl bg-surface-container border border-outline/25 hover:border-primary/50 shadow-xl transition-all duration-300 overflow-hidden group flex flex-col sm:flex-row items-stretch"
+                    onMouseEnter={() => setActivePlatterIdx(platterIndex)}
+                    onFocus={() => setActivePlatterIdx(platterIndex)}
+                    className={`min-w-[82vw] sm:min-w-[340px] md:min-w-0 snap-center shrink-0 md:shrink rounded-3xl bg-surface-container border transition-all duration-300 overflow-hidden group flex flex-col sm:flex-row items-stretch hover:-translate-y-1.5 ${
+                      isSelected
+                        ? 'border-primary/50 shadow-xl'
+                        : 'border-outline/25 hover:border-primary/50'
+                    }`}
                   >
                     {/* Image Column */}
                     <div className="w-full sm:w-5/12 relative aspect-[16/10] sm:aspect-auto min-h-[190px] max-h-[240px] sm:max-h-none sm:min-h-[220px] bg-surface-container-lowest overflow-hidden shrink-0">
@@ -262,6 +460,9 @@ export const SpecialsBanner: React.FC = () => {
                         <span className="px-2 py-0.5 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-primary/40 text-[9px] uppercase tracking-wider text-primary font-semibold">
                           {combo.badge}
                         </span>
+                        <span className="px-1.5 py-0.5 rounded-full bg-primary text-on-primary font-mono text-[9px] font-bold">
+                          {telemetry.editionCode}
+                        </span>
                       </div>
                     </div>
 
@@ -280,6 +481,24 @@ export const SpecialsBanner: React.FC = () => {
                         <span className="text-[10px] font-mono text-primary/80 uppercase tracking-wider">
                           {combo.serves}
                         </span>
+
+                        {/* Oddball-Style RPG Sensory Stat Bars */}
+                        <div className="mt-2.5 pt-2 border-t border-outline/15 space-y-1.5">
+                          {telemetry.stats.map((stat) => (
+                            <div key={stat.label} className="space-y-0.5">
+                              <div className="flex items-center justify-between font-mono text-[9px] tracking-wider uppercase">
+                                <span className="text-on-surface/65">{stat.label}</span>
+                                <span className="text-primary font-bold">{stat.value}</span>
+                              </div>
+                              <div className="h-1 w-full rounded-full bg-surface-container-lowest overflow-hidden">
+                                <div
+                                  className="h-full bg-primary rounded-full transition-all duration-700"
+                                  style={{ width: `${stat.value}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
                       <div className="flex items-center justify-between gap-2 pt-3 border-t border-outline/15 w-full">
@@ -287,20 +506,24 @@ export const SpecialsBanner: React.FC = () => {
                           {formatPrice(combo.price)}
                         </div>
 
-                        <motion.button
-                          whileHover={{ scale: 1.04 }}
-                          whileTap={{ scale: 0.95 }}
-                          type="button"
-                          onClick={() => handleAddCombo(combo)}
-                          className={`h-9 min-h-[44px] sm:min-h-0 px-3.5 sm:px-4 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
-                            isJustAdded
-                              ? 'bg-primary text-on-primary shadow-sm scale-105'
-                              : 'bg-primary hover:bg-primary-fixed text-on-primary shadow-xs'
-                          }`}
-                          title={`Add ${combo.name} to order`}
-                        >
-                          <span>{isJustAdded ? 'Added' : 'Add +'}</span>
-                        </motion.button>
+                        {isAvailable(combo.id) ? (
+                          <motion.button
+                            whileHover={{ scale: 1.04 }}
+                            whileTap={{ scale: 0.95 }}
+                            type="button"
+                            onClick={() => handleAddCombo(combo)}
+                            className={`h-9 min-h-[44px] sm:min-h-0 px-3.5 sm:px-4 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
+                              isJustAdded
+                                ? 'bg-primary text-on-primary shadow-sm scale-105'
+                                : 'bg-primary hover:bg-primary-fixed text-on-primary shadow-xs'
+                            }`}
+                            title={`Add ${combo.name} to order`}
+                          >
+                            <span>{isJustAdded ? 'Added' : 'Add +'}</span>
+                          </motion.button>
+                        ) : (
+                          <span className="badge-soldout text-[10px] py-1 px-2.5">86'd</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -318,15 +541,24 @@ export const SpecialsBanner: React.FC = () => {
           </div>
         ) : (
           /* ------------------------------------------------------------------ */
-          /* VARIANT B: CLASSIC / MOBILE SNAP GRID                              */
+          /* VARIANT B: CLASSIC / MOBILE SNAP GRID (Fallback 3-Column Grid)     */
           /* ------------------------------------------------------------------ */
           <div className="flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 pb-2 md:pb-0">
-            {combos.map((combo) => {
+            {combos.map((combo, index) => {
               const isJustAdded = recentlyAddedComboId === combo.id;
+              const isSelected = activePlatterIdx === index;
+              const telemetry = PLATTER_TELEMETRY[index % PLATTER_TELEMETRY.length];
+
               return (
                 <div
                   key={combo.id}
-                  className="min-w-[85vw] max-w-[340px] sm:min-w-[320px] md:min-w-0 md:max-w-none snap-center shrink-0 group rounded-3xl bg-surface-container border border-outline/25 hover:border-primary/70 shadow-xl transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1.5 active:scale-[0.98]"
+                  onMouseEnter={() => setActivePlatterIdx(index)}
+                  onFocus={() => setActivePlatterIdx(index)}
+                  className={`min-w-[85vw] max-w-[340px] sm:min-w-[320px] md:min-w-0 md:max-w-none snap-center shrink-0 group rounded-3xl bg-surface-container border transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-1.5 active:scale-[0.98] ${
+                    isSelected
+                      ? 'border-primary/50 shadow-2xl'
+                      : 'border-outline/25 hover:border-primary/70 shadow-xl'
+                  }`}
                 >
                   <div className="flex flex-col h-full">
                     {/* Photo Container */}
@@ -351,6 +583,9 @@ export const SpecialsBanner: React.FC = () => {
                         <span className="px-2.5 py-1 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-primary/40 text-[10px] uppercase tracking-wider text-primary font-semibold">
                           {combo.badge}
                         </span>
+                        <span className="px-2 py-0.5 rounded-full bg-primary text-on-primary font-mono text-[9px] font-bold">
+                          {telemetry.editionCode}
+                        </span>
                       </div>
 
                       <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-outline/25">
@@ -362,7 +597,7 @@ export const SpecialsBanner: React.FC = () => {
                     </div>
 
                     {/* Card Content & Action */}
-                    <div className="p-5 sm:p-6 flex flex-col justify-between flex-1 gap-5 bg-gradient-to-b from-surface-container to-surface-container-lowest">
+                    <div className="p-5 sm:p-6 flex flex-col justify-between flex-1 gap-4 bg-gradient-to-b from-surface-container to-surface-container-lowest">
                       <div className="flex flex-col gap-2">
                         <div className="flex items-baseline justify-between gap-2">
                           <h4 className="font-serif text-xl sm:text-2xl text-on-surface font-normal group-hover:text-primary transition-colors tracking-tight">
@@ -376,23 +611,47 @@ export const SpecialsBanner: React.FC = () => {
                         <p className="font-sans text-xs sm:text-[13px] text-on-surface/70 leading-relaxed font-light">
                           {combo.description}
                         </p>
+
+                        {/* Oddball-Style RPG Sensory Stat Bars */}
+                        <div className="mt-3 pt-3 border-t border-outline/15 space-y-2">
+                          {telemetry.stats.map((stat) => (
+                            <div key={stat.label} className="space-y-0.5">
+                              <div className="flex items-center justify-between font-mono text-[10px] tracking-[0.16em] uppercase">
+                                <span className="text-on-surface/65">{stat.label}</span>
+                                <span className="text-primary font-bold">{stat.value}</span>
+                              </div>
+                              <div className="h-1 w-full rounded-full bg-surface-container-lowest overflow-hidden">
+                                <div
+                                  className="h-full bg-primary rounded-full transition-all duration-700"
+                                  style={{ width: `${stat.value}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleAddCombo(combo)}
-                        className={`w-full h-10 px-5 rounded-full text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 cursor-pointer ${
-                          isJustAdded
-                            ? 'bg-primary text-on-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.6)] scale-[1.02]'
-                            : 'bg-primary hover:bg-primary-fixed text-on-primary shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)]'
-                        }`}
-                        title={`Add ${combo.name} to order`}
-                      >
-                        <span>{isJustAdded ? 'Platter Added!' : 'Add Platter to Bag'}</span>
-                        <span className={`material-symbols-outlined text-[16px] transition-transform ${isJustAdded ? 'scale-110' : ''}`}>
-                          {isJustAdded ? 'check' : 'add_shopping_cart'}
-                        </span>
-                      </button>
+                      {isAvailable(combo.id) ? (
+                        <button
+                          type="button"
+                          onClick={() => handleAddCombo(combo)}
+                          className={`w-full h-10 px-5 rounded-full text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 cursor-pointer ${
+                            isJustAdded
+                              ? 'bg-primary text-on-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.6)] scale-[1.02]'
+                              : 'bg-primary hover:bg-primary-fixed text-on-primary shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)]'
+                          }`}
+                          title={`Add ${combo.name} to order`}
+                        >
+                          <span>{isJustAdded ? 'Platter Added!' : 'Add Platter to Bag'}</span>
+                          <span className={`material-symbols-outlined text-[16px] transition-transform ${isJustAdded ? 'scale-110' : ''}`}>
+                            {isJustAdded ? 'check' : 'add_shopping_cart'}
+                          </span>
+                        </button>
+                      ) : (
+                        <div className="w-full py-2.5 text-center font-mono text-xs tracking-widest text-on-surface/40 uppercase bg-surface-container-lowest/60 rounded-full border border-outline/20">
+                          86'd · Sold Out
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -400,9 +659,6 @@ export const SpecialsBanner: React.FC = () => {
             })}
           </div>
         )}
-
-
-
       </div>
     </section>
   );

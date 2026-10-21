@@ -318,8 +318,47 @@ for (const key of FORBIDDEN_CLIENT_KEYS) {
     throw new Error(`SECURITY ALERT: ${key} detected in client environment variables!`);
   }
 }
-console.log('✔ Zero privileged secret keys exposed in client bundles\n');
+// -------------------------------------------------------------
+// 7. Executive Dashboard Live Demo Simulation Toggle Contract
+// -------------------------------------------------------------
+console.log('Test 7: Executive Dashboard Live Demo Simulation Toggle & Telemetry Contract');
+
+import fs from 'node:fs';
+import path from 'node:path';
+
+const dashboardOverviewPath = path.resolve(process.cwd(), 'src/components/dashboard/DashboardOverview.tsx');
+const dashboardOverviewContent = fs.readFileSync(dashboardOverviewPath, 'utf-8');
+
+const requiredTokens = [
+  'simulatePeakService',
+  'setSimulatePeakService',
+  'Simulate Peak Evening',
+  'Live Database Feed',
+  'DEMO SIMULATION',
+  '48 Orders',
+  '36840',
+  '6 Preparing',
+  '11 / 12 Seated',
+  '767',
+  '64% Returning',
+  'Wood-Fired Margherita',
+  'Special Chicken On A Bun',
+  'Chinese Banquet Platter',
+  'Single-Origin Cappuccino',
+  'SIMULATED_PEAK_HOURS',
+  'SIMULATED_RECENT_ORDERS',
+  'SIMULATED_RESERVATIONS',
+];
+
+for (const token of requiredTokens) {
+  if (!dashboardOverviewContent.includes(token)) {
+    throw new Error(`Test 7 Failed: DashboardOverview.tsx must contain token "${token}"`);
+  }
+}
+
+console.log('✔ Executive Dashboard Live Demo Simulation Toggle & Telemetry contract verified\n');
 
 console.log('======================================================');
-console.log('✔ ALL PHASE 1G RESTAURANT DASHBOARD TESTS PASSED (6/6)');
+console.log('✔ ALL PHASE 1G RESTAURANT DASHBOARD TESTS PASSED (7/7)');
 console.log('======================================================');
+

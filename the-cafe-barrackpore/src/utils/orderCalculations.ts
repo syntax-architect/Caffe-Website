@@ -214,19 +214,47 @@ export const calculateOrderTotalsAdvanced = (
 /**
  * Generates human-friendly order reference (e.g. CB-2026-X8K9).
  */
+const generatedOrderCodes = new Set<string>();
+
 export const generateClientOrderRef = (): string => {
   const year = new Date().getFullYear();
-  const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `CB-${year}-${randomCode}`;
+  let code = '';
+  do {
+    code = Math.random().toString(36).substring(2, 6).toUpperCase();
+    if (code.length < 4) {
+      code = code.padEnd(4, 'X');
+    }
+  } while (generatedOrderCodes.has(code));
+
+  generatedOrderCodes.add(code);
+  if (generatedOrderCodes.size > 2000) {
+    generatedOrderCodes.clear();
+  }
+
+  return `CB-${year}-${code}`;
 };
 
 /**
  * Generates human-friendly reservation reference (e.g. RS-2026-7K2P).
  */
+const generatedReservationCodes = new Set<string>();
+
 export const generateClientReservationRef = (): string => {
   const year = new Date().getFullYear();
-  const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `RS-${year}-${randomCode}`;
+  let code = '';
+  do {
+    code = Math.random().toString(36).substring(2, 6).toUpperCase();
+    if (code.length < 4) {
+      code = code.padEnd(4, 'X');
+    }
+  } while (generatedReservationCodes.has(code));
+
+  generatedReservationCodes.add(code);
+  if (generatedReservationCodes.size > 2000) {
+    generatedReservationCodes.clear();
+  }
+
+  return `RS-${year}-${code}`;
 };
 
 /**

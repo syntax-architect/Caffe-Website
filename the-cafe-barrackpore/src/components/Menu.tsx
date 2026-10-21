@@ -6,6 +6,7 @@ import { useUI } from '../context/UIContext';
 import { useMenuAvailability } from '../hooks/useMenuAvailability';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { SectionReveal } from './SectionReveal';
+import { CurvedMenuReel } from './CurvedMenuReel';
 import {
   MENU_CATEGORIES_FALLBACK,
   MENU_ITEMS_FALLBACK,
@@ -643,6 +644,9 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
           </div>
         </SectionReveal>
 
+        {/* ACT IV: 3D CYLINDRICAL CURVED CULINARY REEL (Public Website Showcase) */}
+        {!isQrMode && <CurvedMenuReel />}
+
         {/* Category Narrative Lead */}
         {CATEGORY_DESCRIPTIONS[activeCategoryName] && (
           <div
@@ -781,6 +785,72 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                             {featuredItem.description}
                           </p>
                         )}
+
+                        {/* Interactive Sensory Telemetry & Chef Rating Strip */}
+                        <div className="my-4 p-3.5 rounded-2xl bg-surface-obsidian/80 border border-outline/20 flex flex-col gap-3 font-mono text-[10px] uppercase tracking-wider">
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <span className="text-on-surface/45 block text-[9px]">PREP TELEMETRY</span>
+                              <span className="text-primary font-bold">
+                                {(() => {
+                                  const cat = activeCategoryName.toLowerCase();
+                                  if (cat.includes('sip') || cat.includes('dessert') || cat.includes('coffee')) {
+                                    return '93.4°C · 9.0 BAR';
+                                  }
+                                  if (cat.includes('burger') || cat.includes('pizza')) {
+                                    return '450°C WOOD-FIRED';
+                                  }
+                                  return '290°C WOK SEAR';
+                                })()}
+                              </span>
+                            </div>
+                            <div className="border-x border-outline/20 px-2">
+                              <span className="text-on-surface/45 block text-[9px]">CRAFT SCORE</span>
+                              <span className="text-primary font-bold">99 / 100</span>
+                            </div>
+                            <div className="pl-1">
+                              <span className="text-on-surface/45 block text-[9px]">BATCH STATUS</span>
+                              <span className="text-emerald-400 font-semibold">FRESH PREP</span>
+                            </div>
+                          </div>
+
+                          {/* Animated 3-Bar Mini Sensory Meter */}
+                          <div className="pt-2 border-t border-outline/15 space-y-1.5">
+                            <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-widest text-on-surface/60">
+                              <span>CHEF RATING</span>
+                              <span className="text-primary font-semibold">TRI-SPECTRUM</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="space-y-1">
+                                <div className="flex justify-between font-mono text-[9px] text-on-surface/70">
+                                  <span>CRAFT</span>
+                                  <span className="text-primary font-bold">99</span>
+                                </div>
+                                <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">
+                                  <div className="h-full bg-primary rounded-full w-[99%]" />
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex justify-between font-mono text-[9px] text-on-surface/70">
+                                  <span>AROMA</span>
+                                  <span className="text-primary font-bold">97</span>
+                                </div>
+                                <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">
+                                  <div className="h-full bg-primary rounded-full w-[97%]" />
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex justify-between font-mono text-[9px] text-on-surface/70">
+                                  <span>BALANCE</span>
+                                  <span className="text-primary font-bold">98</span>
+                                </div>
+                                <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">
+                                  <div className="h-full bg-primary rounded-full w-[98%]" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
                         {/* Curated Tasting Notes - De-nested editorial presentation */}
                         {activeSensoryMetadata?.tastingNotes && (

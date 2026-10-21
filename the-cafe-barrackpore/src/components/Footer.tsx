@@ -13,6 +13,8 @@ const IconFacebook = () => <svg className="w-4 h-4" fill="currentColor" viewBox=
 const IconGoogle = () => <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>;
 const IconZomato = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></svg>;
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export const Footer: React.FC = () => {
   const { showModal, setIsReservationOpen, setIsContactOpen } = useUI();
   const { restaurantConfig, engineConfig, logoUrl } = useSiteConfig();
@@ -318,9 +320,43 @@ export const Footer: React.FC = () => {
 
         </div>
 
+        {/* Oddball-Inspired Final LED Craft Scoreboard */}
+        <div className="my-10 rounded-2xl bg-surface-obsidian/95 border border-outline/25 p-5 sm:p-7 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_15px_40px_rgba(0,0,0,0.6)]">
+          <div className="flex items-center gap-3">
+            <span className="px-2.5 py-1 rounded bg-primary text-on-primary font-mono text-[10px] font-bold tracking-widest uppercase">
+              FINAL
+            </span>
+            <span className="font-mono text-sm sm:text-base tracking-[0.22em] uppercase text-on-surface font-semibold">
+              THE CAFÉ · ARTISANAL CRAFT
+            </span>
+          </div>
+
+          <div className="flex items-baseline gap-3 font-mono text-4xl sm:text-6xl font-bold tracking-tight">
+            <span className="text-primary">98</span>
+            <span className="text-outline/40">:</span>
+            <span className="text-on-surface/25">00</span>
+          </div>
+
+          <div className="text-center md:text-right font-mono">
+            <span className="block text-[10px] tracking-[0.22em] uppercase text-primary">
+              2200K NOCTURNE · STRANGE ON PURPOSE
+            </span>
+            <span className="text-xs sm:text-sm tracking-[0.22em] uppercase text-on-surface/40">
+              TEMPLATES · CRAFTED BY HAND
+            </span>
+          </div>
+        </div>
+
+        {/* Valmora-Inspired Monumental Edge-to-Edge Architectural Wordmark */}
+        <div className="w-full overflow-hidden py-4 sm:py-6 select-none pointer-events-none" aria-hidden="true">
+          <div className="font-serif text-[10vw] sm:text-[11vw] leading-[0.88] tracking-tighter uppercase text-center text-primary/15 select-none whitespace-nowrap">
+            THE CAFÉ BARRACKPORE
+          </div>
+        </div>
+
         {/* Bottom Legal & Discrete Staff Login */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 font-sans text-xs text-on-surface/75 text-center md:text-left">
-          <p>© {new Date().getFullYear()} {businessName}. All culinary &amp; brand rights reserved.</p>
+          <p>© {CURRENT_YEAR} {businessName}. All culinary &amp; brand rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <a className="hover:text-primary transition-colors text-on-surface/80" href="/privacy">
               Privacy Policy

@@ -3,11 +3,208 @@ import { useAuth } from '../../hooks/useAuth';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { fetchDashboardOverview } from '../../services/dashboardService';
 import type { DashboardOverviewData } from '../../types/dashboard';
+import type { OrderRecord } from '../../types/order';
+import type { ReservationRecord } from '../../types/reservation';
 import { createOrder } from '../../services/orderService';
 import { unlockAudioContext, playKitchenOrderBell } from '../../services/soundService';
 import { fetchOwnerAnalytics, fetchLowStockItems } from '../../services/ownerService';
 import type { OwnerAnalytics } from '../../types/owner';
 import type { StockAlertItem } from '../../services/ownerService';
+import { formatCurrency } from '../../utils/currency';
+
+interface SimulatedTopItem {
+  item_name: string;
+  total_quantity: number;
+  total_revenue: number;
+}
+
+const SIMULATED_TOP_SELLING_ITEMS: SimulatedTopItem[] = [
+  { item_name: 'Single-Origin Cappuccino', total_quantity: 24, total_revenue: 5280 },
+  { item_name: 'Wood-Fired Margherita', total_quantity: 19, total_revenue: 9405 },
+  { item_name: 'Special Chicken On A Bun', total_quantity: 14, total_revenue: 5320 },
+  { item_name: 'Chinese Banquet Platter', total_quantity: 11, total_revenue: 7480 },
+];
+
+const SIMULATED_PEAK_HOURS = [
+  { hour: 11, order_count: 1, revenue: 650 },
+  { hour: 12, order_count: 2, revenue: 1480 },
+  { hour: 13, order_count: 3, revenue: 2310 },
+  { hour: 14, order_count: 2, revenue: 1540 },
+  { hour: 15, order_count: 1, revenue: 760 },
+  { hour: 16, order_count: 1, revenue: 680 },
+  { hour: 17, order_count: 2, revenue: 1620 },
+  { hour: 18, order_count: 4, revenue: 3120 },
+  { hour: 19, order_count: 11, revenue: 8450 }, // Peaking 19:00 - 21:30
+  { hour: 20, order_count: 14, revenue: 10820 }, // Peak summit (20:00)
+  { hour: 21, order_count: 6, revenue: 4620 },  // Peak (21:00-21:30)
+  { hour: 22, order_count: 1, revenue: 790 },
+];
+
+const SIMULATED_RECENT_ORDERS: OrderRecord[] = [
+  {
+    id: 'sim-ord-1',
+    order_ref: 'CB-2026-F942',
+    customer_name: 'Pooja Sengupta',
+    customer_phone: '9830111222',
+    order_type: 'dine_in',
+    table_number: '04',
+    subtotal: 1480,
+    total: 1480,
+    currency: 'INR',
+    status: 'preparing',
+    source: 'qr',
+    payment_required: false,
+    payment_status: 'not_required',
+    created_at: '2026-10-21T19:24:00.000Z',
+    updated_at: '2026-10-21T19:24:00.000Z',
+    items: [],
+  } as any,
+  {
+    id: 'sim-ord-2',
+    order_ref: 'CB-2026-M810',
+    customer_name: 'Rohan Banerjee',
+    customer_phone: '9830222333',
+    order_type: 'dine_in',
+    table_number: '08',
+    subtotal: 2150,
+    total: 2150,
+    currency: 'INR',
+    status: 'preparing',
+    source: 'qr',
+    payment_required: false,
+    payment_status: 'not_required',
+    created_at: '2026-10-21T19:20:00.000Z',
+    updated_at: '2026-10-21T19:20:00.000Z',
+    items: [],
+  } as any,
+  {
+    id: 'sim-ord-3',
+    order_ref: 'CB-2026-K105',
+    customer_name: 'Siddharth Roy',
+    customer_phone: '9830333444',
+    order_type: 'dine_in',
+    table_number: '11',
+    subtotal: 1890,
+    total: 1890,
+    currency: 'INR',
+    status: 'preparing',
+    source: 'qr',
+    payment_required: false,
+    payment_status: 'not_required',
+    created_at: '2026-10-21T19:16:00.000Z',
+    updated_at: '2026-10-21T19:16:00.000Z',
+    items: [],
+  } as any,
+  {
+    id: 'sim-ord-4',
+    order_ref: 'CB-2026-T304',
+    customer_name: 'Tanushree Deb',
+    customer_phone: '9830444555',
+    order_type: 'takeaway',
+    table_number: null,
+    subtotal: 780,
+    total: 780,
+    currency: 'INR',
+    status: 'preparing',
+    source: 'website',
+    payment_required: true,
+    payment_status: 'paid',
+    created_at: '2026-10-21T19:12:00.000Z',
+    updated_at: '2026-10-21T19:12:00.000Z',
+    items: [],
+  } as any,
+  {
+    id: 'sim-ord-5',
+    order_ref: 'CB-2026-W512',
+    customer_name: 'Debashis Das',
+    customer_phone: '9830555666',
+    order_type: 'dine_in',
+    table_number: '02',
+    subtotal: 1250,
+    total: 1250,
+    currency: 'INR',
+    status: 'preparing',
+    source: 'qr',
+    payment_required: false,
+    payment_status: 'not_required',
+    created_at: '2026-10-21T19:08:00.000Z',
+    updated_at: '2026-10-21T19:08:00.000Z',
+    items: [],
+  } as any,
+  {
+    id: 'sim-ord-6',
+    order_ref: 'CB-2026-B721',
+    customer_name: 'Ayesha Khan',
+    customer_phone: '9830666777',
+    order_type: 'dine_in',
+    table_number: '07',
+    subtotal: 1620,
+    total: 1620,
+    currency: 'INR',
+    status: 'preparing',
+    source: 'qr',
+    payment_required: false,
+    payment_status: 'not_required',
+    created_at: '2026-10-21T19:02:00.000Z',
+    updated_at: '2026-10-21T19:02:00.000Z',
+    items: [],
+  } as any,
+];
+
+const SIMULATED_RESERVATIONS: ReservationRecord[] = [
+  {
+    id: 'sim-res-1',
+    customer_name: 'Dr. A. Mukherjee',
+    customer_phone: '9830001122',
+    party_size: 4,
+    reservation_date: '2026-10-21',
+    reservation_time: '19:30',
+    table_number: '03',
+    status: 'seated',
+    special_requests: 'Riverside window booth preferred',
+    created_at: '2026-10-21T10:00:00.000Z',
+    updated_at: '2026-10-21T19:30:00.000Z',
+  } as any,
+  {
+    id: 'sim-res-2',
+    customer_name: 'S. Ganguly (Anniversary)',
+    customer_phone: '9830002233',
+    party_size: 2,
+    reservation_date: '2026-10-21',
+    reservation_time: '20:00',
+    table_number: '07',
+    status: 'seated',
+    special_requests: 'Candlelight setting for 10th anniversary',
+    created_at: '2026-10-21T10:00:00.000Z',
+    updated_at: '2026-10-21T20:00:00.000Z',
+  } as any,
+  {
+    id: 'sim-res-3',
+    customer_name: 'B. K. Sen (Family Gathering)',
+    customer_phone: '9830003344',
+    party_size: 6,
+    reservation_date: '2026-10-21',
+    reservation_time: '20:30',
+    table_number: '09',
+    status: 'seated',
+    special_requests: 'Quiet area with high-chair needed',
+    created_at: '2026-10-21T10:00:00.000Z',
+    updated_at: '2026-10-21T20:30:00.000Z',
+  } as any,
+  {
+    id: 'sim-res-4',
+    customer_name: 'P. Roychoudhury (VIP Club)',
+    customer_phone: '9830004455',
+    party_size: 8,
+    reservation_date: '2026-10-21',
+    reservation_time: '21:00',
+    table_number: '12',
+    status: 'confirmed',
+    special_requests: 'VIP Private Lounge reserve & pre-order dinner',
+    created_at: '2026-10-21T10:00:00.000Z',
+    updated_at: '2026-10-21T21:00:00.000Z',
+  } as any,
+];
 
 interface DashboardOverviewProps {
   onNavigate: (path: string) => void;
@@ -39,6 +236,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
   });
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
+  const [simulatePeakService, setSimulatePeakService] = useState<boolean>(false);
   const [simulationMessage, setSimulationMessage] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<OwnerAnalytics | null>(null);
   const [lowStockItems, setLowStockItems] = useState<StockAlertItem[]>([]);
@@ -166,7 +364,33 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               </p>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+              {/* Executive Demo Simulation Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setSimulatePeakService((prev) => !prev)}
+                className={`group py-2.5 px-4 rounded-xl border text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98] ${
+                  simulatePeakService
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+                    : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-stone-300 hover:text-white'
+                }`}
+                title={simulatePeakService ? 'Switch to Live Database Feed' : 'Simulate Peak Evening (Friday Dinner Rush)'}
+              >
+                <span
+                  className={`material-symbols-outlined text-base ${
+                    simulatePeakService ? 'text-amber-400 animate-pulse' : 'text-[#D4AF37]'
+                  }`}
+                >
+                  {simulatePeakService ? 'bolt' : 'speed'}
+                </span>
+                <span>{simulatePeakService ? 'Live Database Feed' : 'Simulate Peak Evening'}</span>
+                {simulatePeakService && (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-400 text-black">
+                    DEMO
+                  </span>
+                )}
+              </button>
+
               <button
                 type="button"
                 onClick={loadOverview}
@@ -199,9 +423,40 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
         </div>
       </section>
 
+      {/* Simulated Telemetry Alert Banner */}
+      {simulatePeakService && (
+        <section aria-label="Demo Simulation Active" className="p-1 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-500/40 shadow-lg animate-fadeIn">
+          <div className="rounded-[calc(1rem-0.25rem)] bg-[#14100C]/90 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-amber-400 animate-ping shrink-0" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold border border-amber-500/40">
+                    DEMO SIMULATION
+                  </span>
+                  <span className="text-xs font-bold text-white tracking-wide">
+                    Peak Friday Dinner Service Telemetry Active
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-400 mt-0.5">
+                  Cockpit populated with high-volume telemetry for sales presentations. Live database queries remain authoritative.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSimulatePeakService(false)}
+              className="px-3.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-xs font-semibold text-stone-200 hover:text-white transition-all cursor-pointer shrink-0"
+            >
+              Exit Simulation
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* KPI Cards Grid - Double-Bezel Hardware Architecture */}
       <section aria-label="Key Performance Indicators" className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {/* KPI 1: Today's Orders */}
+        {/* KPI 1: Today's Orders / Daily Volume */}
         <div className="group p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
             <div className="flex items-center justify-between text-stone-400 mb-2">
@@ -214,17 +469,17 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             </div>
             <div>
               <p className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
-                {isLoading ? '...' : kpis.todayOrdersCount}
+                {isLoading ? '...' : (simulatePeakService ? '48 Orders' : kpis.todayOrdersCount)}
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
                 <span className="text-emerald-400 font-medium">100% synced</span>
-                <span>• Today's tickets</span>
+                <span>• {simulatePeakService ? 'DEMO SIMULATION' : "Today's tickets"}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* KPI 2: Today's Revenue */}
+        {/* KPI 2: Today's Revenue / Gross Revenue */}
         <div className="group p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
             <div className="flex items-center justify-between text-stone-400 mb-2">
@@ -237,17 +492,23 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             </div>
             <div>
               <p className="text-2xl sm:text-3xl font-serif font-bold text-emerald-400 tracking-tight">
-                {isLoading ? '...' : formatPrice(kpis.todayRevenue)}
+                {isLoading
+                  ? '...'
+                  : (simulatePeakService
+                      ? formatCurrency(36840, restaurantConfig.currency, restaurantConfig.locale)
+                      : formatPrice(kpis.todayRevenue))}
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
-                <span className="text-stone-300 font-mono text-[10px]">Net of voids</span>
+                <span className="text-stone-300 font-mono text-[10px]">
+                  {simulatePeakService ? 'DEMO SIMULATION' : 'Net of voids'}
+                </span>
                 <span>• Live revenue</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* KPI 3: Pending Orders */}
+        {/* KPI 3: Pending Orders / Active Kitchen */}
         <div className="group p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
             <div className="flex items-center justify-between text-stone-400 mb-2">
@@ -260,17 +521,17 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             </div>
             <div>
               <p className="text-2xl sm:text-3xl font-serif font-bold text-amber-300 tracking-tight">
-                {isLoading ? '...' : kpis.pendingOrdersCount}
+                {isLoading ? '...' : (simulatePeakService ? '6 Preparing' : kpis.pendingOrdersCount)}
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                <span>Pending prep</span>
+                <span>{simulatePeakService ? 'DEMO SIMULATION' : 'Pending prep'}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* KPI 4: Today's Reservations */}
+        {/* KPI 4: Today's Reservations / Table Covers */}
         <div className="group p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
             <div className="flex items-center justify-between text-stone-400 mb-2">
@@ -283,11 +544,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             </div>
             <div>
               <p className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
-                {isLoading ? '...' : kpis.todayReservationsCount}
+                {isLoading ? '...' : (simulatePeakService ? '11 / 12 Seated' : kpis.todayReservationsCount)}
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
-                <span className="text-stone-300 font-mono text-[10px]">Dining schedule</span>
-                <span>• Reserved today</span>
+                <span className="text-stone-300 font-mono text-[10px]">
+                  {simulatePeakService ? 'DEMO SIMULATION' : 'Dining schedule'}
+                </span>
+                <span>• {simulatePeakService ? 'Peak covers' : 'Reserved today'}</span>
               </div>
             </div>
           </div>
@@ -306,10 +569,16 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             </div>
             <div>
               <p className="text-2xl sm:text-3xl font-serif font-bold text-sky-400 tracking-tight">
-                {isLoading ? '...' : formatPrice(analytics?.averageOrderValue || 0)}
+                {isLoading
+                  ? '...'
+                  : (simulatePeakService
+                      ? formatCurrency(767, restaurantConfig.currency, restaurantConfig.locale)
+                      : formatPrice(analytics?.averageOrderValue || 0))}
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
-                <span className="text-stone-300 font-mono text-[10px]">AOV</span>
+                <span className="text-stone-300 font-mono text-[10px]">
+                  {simulatePeakService ? 'DEMO SIMULATION' : 'AOV'}
+                </span>
                 <span>• Today</span>
               </div>
             </div>
@@ -329,10 +598,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             </div>
             <div>
               <p className="text-2xl sm:text-3xl font-serif font-bold text-violet-300 tracking-tight">
-                {isLoading ? '...' : (analytics?.repeatCustomerCount || 0)}
+                {isLoading ? '...' : (simulatePeakService ? '64% Returning' : (analytics?.repeatCustomerCount || 0))}
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
-                <span className="text-stone-300 font-mono text-[10px]">Loyalty</span>
+                <span className="text-stone-300 font-mono text-[10px]">
+                  {simulatePeakService ? 'DEMO SIMULATION' : 'Loyalty'}
+                </span>
                 <span>• Returning</span>
               </div>
             </div>
@@ -372,13 +643,20 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             <div className="flex items-center gap-2 mb-4">
               <span className="material-symbols-outlined text-[#D4AF37]">star</span>
               <h3 className="font-serif text-lg font-bold text-white tracking-wide">Top Selling Items</h3>
+              {simulatePeakService && (
+                <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-mono font-bold border border-amber-500/30">
+                  DEMO SIMULATION
+                </span>
+              )}
             </div>
             <div className="space-y-2">
-              {(analytics?.topSellingItems || []).map((item, index) => (
+              {(simulatePeakService ? SIMULATED_TOP_SELLING_ITEMS : (analytics?.topSellingItems || [])).map((item, index) => (
                 <div key={item.item_name} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
                   <div className="flex items-center gap-3">
                     <span className="w-6 h-6 rounded-md bg-[#D4AF37]/10 flex items-center justify-center text-xs font-bold text-[#F3C766]">{index + 1}</span>
-                    <span className="text-sm font-medium text-white">{item.item_name}</span>
+                    <span className="text-sm font-medium text-white">
+                      {item.item_name} {simulatePeakService ? `(${item.total_quantity})` : ''}
+                    </span>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-bold text-emerald-400">{formatPrice(item.total_revenue)}</div>
@@ -386,37 +664,57 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                   </div>
                 </div>
               ))}
-              {(!analytics?.topSellingItems || analytics.topSellingItems.length === 0) && (
+              {!simulatePeakService && (!analytics?.topSellingItems || analytics.topSellingItems.length === 0) && (
                 <div className="text-center py-6 text-stone-500 text-sm">No sales data available</div>
               )}
             </div>
           </div>
         </section>
 
-        {/* Busiest Hours */}
+        {/* Busiest / Peak Hours */}
         <section aria-label="Busiest Hours" className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-xl">
           <div className="rounded-[calc(2rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-6 h-full flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <span className="material-symbols-outlined text-[#D4AF37]">bar_chart</span>
               <h3 className="font-serif text-lg font-bold text-white tracking-wide">Peak Hours</h3>
+              {simulatePeakService && (
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="text-[10px] font-mono text-[#D4AF37] font-semibold hidden sm:inline">
+                    Peak: 19:00 – 21:30
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-mono font-bold border border-amber-500/30">
+                    DEMO SIMULATION
+                  </span>
+                </div>
+              )}
             </div>
             
             <div className="flex items-end gap-1 h-32 mt-auto">
-              {(analytics?.busiestHours || []).map((h) => {
-                const maxCount = Math.max(...(analytics?.busiestHours || []).map((x) => x.order_count), 1);
-                const heightPct = (h.order_count / maxCount) * 100;
-                return (
-                  <div key={h.hour} className="flex-1 flex flex-col items-center gap-1">
-                    <div
-                      className="w-full rounded-t-md bg-gradient-to-t from-[#D4AF37]/60 to-[#D4AF37] min-h-[2px] transition-all"
-                      style={{ height: `${heightPct}%` }}
-                      title={`${h.order_count} orders, ${formatPrice(h.revenue)}`}
-                    />
-                    <span className="text-[9px] text-stone-500 font-mono">{h.hour > 12 ? h.hour - 12 : h.hour}{h.hour >= 12 ? 'p' : 'a'}</span>
-                  </div>
-                );
-              })}
-              {(!analytics?.busiestHours || analytics.busiestHours.length === 0) && (
+              {(() => {
+                const hoursList = simulatePeakService ? SIMULATED_PEAK_HOURS : (analytics?.busiestHours || []);
+                const maxCount = Math.max(...hoursList.map((x) => x.order_count), 1);
+                return hoursList.map((h) => {
+                  const heightPct = (h.order_count / maxCount) * 100;
+                  const isPeakHour = simulatePeakService && (h.hour >= 19 && h.hour <= 21);
+                  return (
+                    <div key={h.hour} className="flex-1 flex flex-col items-center gap-1">
+                      <div
+                        className={`w-full rounded-t-md min-h-[2px] transition-all ${
+                          isPeakHour
+                            ? 'bg-gradient-to-t from-amber-500 to-[#F3C766] shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                            : 'bg-gradient-to-t from-[#D4AF37]/60 to-[#D4AF37]'
+                        }`}
+                        style={{ height: `${heightPct}%` }}
+                        title={`${h.order_count} orders, ${formatPrice(h.revenue)} ${isPeakHour ? '(Peak 19:00 - 21:30)' : ''}`}
+                      />
+                      <span className={`text-[9px] font-mono ${isPeakHour ? 'text-[#F3C766] font-bold' : 'text-stone-500'}`}>
+                        {h.hour > 12 ? h.hour - 12 : h.hour}{h.hour >= 12 ? 'p' : 'a'}
+                      </span>
+                    </div>
+                  );
+                });
+              })()}
+              {!simulatePeakService && (!analytics?.busiestHours || analytics.busiestHours.length === 0) && (
                 <div className="w-full text-center text-stone-500 text-sm mb-12">No hourly data available</div>
               )}
             </div>
@@ -566,11 +864,20 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
           <div className="rounded-[calc(2rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="font-serif text-lg font-bold text-white tracking-wide">
-                  Live Order Activity
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-serif text-lg font-bold text-white tracking-wide">
+                    Live Order Activity
+                  </h3>
+                  {simulatePeakService && (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-mono font-bold border border-amber-500/30">
+                      DEMO SIMULATION
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-stone-400">
-                  Transactions streaming from Dining Room QR & Direct Channels
+                  {simulatePeakService
+                    ? 'Simulated Friday dinner rush telemetry streaming from Floor QR & Direct Channels'
+                    : 'Transactions streaming from Dining Room QR & Direct Channels'}
                 </p>
               </div>
               <button
@@ -585,12 +892,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               </button>
             </div>
 
-            {isLoading ? (
+            {!simulatePeakService && isLoading ? (
               <div className="py-16 text-center text-stone-400 text-xs">
                 <span className="w-6 h-6 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin inline-block mb-3" />
                 <p>Loading live activity...</p>
               </div>
-            ) : !data || data.recentOrders.length === 0 ? (
+            ) : (!simulatePeakService && (!data || data.recentOrders.length === 0)) ? (
               <div className="py-16 text-center text-stone-400 text-xs">
                 <span className="material-symbols-outlined text-3xl mb-2 text-stone-600 block">receipt_long</span>
                 No orders registered yet today.
@@ -608,7 +915,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.05]">
-                    {data.recentOrders.map((order) => {
+                    {(simulatePeakService ? SIMULATED_RECENT_ORDERS : data!.recentOrders).map((order) => {
                       const statusColor = {
                         pending: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
                         confirmed: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
@@ -624,8 +931,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                           onClick={() => onNavigate('/staff/orders')}
                           className="hover:bg-white/[0.04] cursor-pointer transition-colors group"
                         >
-                          <td className="py-3.5 font-mono font-bold text-[#F3C766] group-hover:underline">
-                            {order.order_ref}
+                          <td className="py-3.5 font-mono font-bold text-[#F3C766] group-hover:underline flex items-center gap-1.5">
+                            <span>{order.order_ref}</span>
+                            {simulatePeakService && (
+                              <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                DEMO
+                              </span>
+                            )}
                           </td>
                           <td className="py-3.5 text-white font-medium">{order.customer_name}</td>
                           <td className="py-3.5 text-stone-400">
@@ -663,10 +975,19 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             <div>
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-white tracking-wide">
-                    Today's Bookings
-                  </h3>
-                  <p className="text-xs text-stone-400">Seating schedule</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-serif text-lg font-bold text-white tracking-wide">
+                      Today's Bookings
+                    </h3>
+                    {simulatePeakService && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-mono font-bold border border-amber-500/30">
+                        DEMO SIMULATION
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-stone-400">
+                    {simulatePeakService ? 'Simulated dinner service seating schedule' : 'Seating schedule'}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -680,26 +1001,33 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 </button>
               </div>
 
-              {isLoading ? (
+              {!simulatePeakService && isLoading ? (
                 <div className="py-16 text-center text-stone-400 text-xs">
                   <span className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin inline-block mb-2" />
                   <p>Loading schedule...</p>
                 </div>
-              ) : !data || data.todayReservations.length === 0 ? (
+              ) : (!simulatePeakService && (!data || data.todayReservations.length === 0)) ? (
                 <div className="py-16 text-center text-stone-400 text-xs">
                   <span className="material-symbols-outlined text-3xl mb-2 text-stone-600 block">event_seat</span>
                   No reservations booked for today.
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {data.todayReservations.map((res) => (
+                  {(simulatePeakService ? SIMULATED_RESERVATIONS : data!.todayReservations).map((res) => (
                     <div
                       key={res.id}
                       onClick={() => onNavigate('/staff/reservations')}
                       className="p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.07] hover:border-[#D4AF37]/35 cursor-pointer transition-all duration-200"
                     >
                       <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold text-white">{res.customer_name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-semibold text-white">{res.customer_name}</p>
+                          {simulatePeakService && (
+                            <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              DEMO
+                            </span>
+                          )}
+                        </div>
                         <span className="font-mono text-xs font-bold text-[#F3C766] px-2 py-0.5 rounded bg-[#D4AF37]/15 border border-[#D4AF37]/25">
                           {res.reservation_time}
                         </span>

@@ -21,6 +21,14 @@ const GALLERY_METADATA: Record<number, { tag: string; caption: string }> = {
   3: { tag: "Acoustic Weekends", caption: "Live unplugged melodies and twilight conversations." },
 };
 
+// Optical Camera Telemetry metadata helper for Valmora Viewfinder
+export const OPTICAL_SPECS = [
+  { lens: '35MM · F/1.4', kelvin: '2200K AMBER', reel: 'FRAME 01 / 04', iso: 'ISO 400' },
+  { lens: '50MM · F/1.2', kelvin: '450°C HEARTH', reel: 'FRAME 02 / 04', iso: '2200K' },
+  { lens: '85MM · F/1.4', kelvin: 'ROAST MACRO', reel: 'FRAME 03 / 04', iso: 'MACRO' },
+  { lens: '24MM · F/1.8', kelvin: 'STAGE GLOW', reel: 'FRAME 04 / 04', iso: 'AMBIENT' },
+];
+
 export const Gallery: React.FC = () => {
   const { gallery, restaurantConfig, engineConfig } = useSiteConfig();
   const [selectedPhoto, setSelectedPhoto] = useState<{ index: number; data: GalleryPhoto } | null>(null);
@@ -66,16 +74,43 @@ export const Gallery: React.FC = () => {
     }
   }, [hasElfsight]);
 
-  // Handle escape key to close lightbox
+  // --------------------------------------------------------------------------
+  // Lightbox PREV / NEXT Scrubbing Helpers
+  // --------------------------------------------------------------------------
+  const handlePrevPhoto = useCallback(() => {
+    if (!selectedPhoto) return;
+    const newIndex = selectedPhoto.index > 0 ? selectedPhoto.index - 1 : items.length - 1;
+    const item = items[newIndex];
+    const tag = item.tag || GALLERY_METADATA[newIndex]?.tag || `${businessName} Experience`;
+    const caption = item.caption || GALLERY_METADATA[newIndex]?.caption || item.alt;
+    setSelectedPhoto({ index: newIndex, data: { src: item.src, alt: item.alt, tag, caption } });
+  }, [selectedPhoto, items, businessName]);
+
+  const handleNextPhoto = useCallback(() => {
+    if (!selectedPhoto) return;
+    const newIndex = selectedPhoto.index < items.length - 1 ? selectedPhoto.index + 1 : 0;
+    const item = items[newIndex];
+    const tag = item.tag || GALLERY_METADATA[newIndex]?.tag || `${businessName} Experience`;
+    const caption = item.caption || GALLERY_METADATA[newIndex]?.caption || item.alt;
+    setSelectedPhoto({ index: newIndex, data: { src: item.src, alt: item.alt, tag, caption } });
+  }, [selectedPhoto, items, businessName]);
+
+  // Handle escape, left, and right keys for fullscreen Cinema Viewfinder lightbox
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedPhoto !== null) {
-        setSelectedPhoto(null);
+      if (selectedPhoto !== null) {
+        if (e.key === 'Escape') {
+          setSelectedPhoto(null);
+        } else if (e.key === 'ArrowLeft') {
+          handlePrevPhoto();
+        } else if (e.key === 'ArrowRight') {
+          handleNextPhoto();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedPhoto]);
+  }, [selectedPhoto, handlePrevPhoto, handleNextPhoto]);
 
   // --------------------------------------------------------------------------
   // Variant B (Carousel-Snap) Controls & Scroll State
@@ -159,6 +194,11 @@ export const Gallery: React.FC = () => {
     }
     return 'lg:col-span-1 lg:row-span-1 h-[320px] sm:h-auto';
   };
+
+  // Selected Photo Optical Spec
+  const activeOpticalSpec = selectedPhoto
+    ? OPTICAL_SPECS[selectedPhoto.index % OPTICAL_SPECS.length]
+    : OPTICAL_SPECS[0];
 
   return (
     <section className="w-full pt-16 sm:pt-18 lg:pt-20 pb-12 sm:pb-14 lg:pb-16 bg-background relative border-t border-outline/15 scroll-mt-28 overflow-hidden" id="gallery">
@@ -246,6 +286,7 @@ export const Gallery: React.FC = () => {
               {items.map((item, idx) => {
                 const tag = item.tag || GALLERY_METADATA[idx]?.tag || "The Café Experience";
                 const caption = item.caption || GALLERY_METADATA[idx]?.caption || item.alt;
+                const spec = OPTICAL_SPECS[idx % OPTICAL_SPECS.length];
 
                 return (
                   <div
@@ -255,13 +296,23 @@ export const Gallery: React.FC = () => {
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 opacity-75 group-hover:opacity-45 transition-opacity duration-500 z-10 pointer-events-none" />
 
-                      {/* Corner Tag */}
-                      <div className="absolute top-3.5 left-3.5 z-20 px-3 py-1 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-primary/35 text-[10px] uppercase tracking-wider text-primary font-semibold shadow-lg">
-                        {tag}
+                      {/* Corner Tag & Optical Camera Telemetry Stamp */}
+                      <div className="absolute top-3.5 left-3.5 z-20 flex flex-col gap-1 items-start">
+                        <div className="px-3 py-1 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-primary/35 text-[10px] uppercase tracking-wider text-primary font-semibold shadow-lg">
+                          {tag}
+                        </div>
+                        <div className="px-2 py-0.5 rounded-md bg-surface-obsidian/85 backdrop-blur-md border border-outline/25 font-mono text-[9px] tracking-widest text-primary/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md">
+                          {spec.lens} · {spec.iso} / REEL 0{idx + 1}
+                        </div>
+                      </div>
+
+                      {/* Top-Right Valmora Optical HUD Pill */}
+                      <div className="absolute top-3.5 right-3.5 z-20 px-2.5 py-1 rounded-full bg-background/80 border border-outline/30 backdrop-blur-md font-mono text-[9px] tracking-[0.2em] uppercase text-on-surface/80 pointer-events-none">
+                        {spec.lens} • {spec.kelvin}
                       </div>
 
                       {/* Expand Button */}
-                      <div className="absolute top-3.5 right-3.5 z-20 w-8 h-8 rounded-full bg-surface-obsidian/85 backdrop-blur-md border border-outline/25 flex items-center justify-center text-on-surface opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 group-hover:border-primary/50 shadow-lg">
+                      <div className="absolute top-12 right-3.5 z-20 w-8 h-8 rounded-full bg-surface-obsidian/85 backdrop-blur-md border border-outline/25 flex items-center justify-center text-on-surface opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 group-hover:border-primary/50 shadow-lg">
                         <span className="material-symbols-outlined text-sm font-light text-primary">fullscreen</span>
                       </div>
 
@@ -338,19 +389,22 @@ export const Gallery: React.FC = () => {
             >
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30 z-10 pointer-events-none" />
 
-                {/* Top Badge: Tag & Index */}
-                <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+                {/* Top Badge: Tag & Index & Optical Camera Telemetry Stamp */}
+                <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-2">
                   <span className="px-3.5 py-1 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-primary/35 text-[10px] uppercase tracking-wider text-primary font-semibold shadow-lg">
                     {activeFilmstripItem?.tag || GALLERY_METADATA[safeFilmstripIndex]?.tag || "The Café Experience"}
                   </span>
                   <span className="px-2.5 py-1 rounded-full bg-surface-obsidian/85 backdrop-blur-md border border-outline/25 text-[10px] font-mono text-on-surface/75">
                     0{safeFilmstripIndex + 1} / 0{items.length}
                   </span>
+                  <span className="px-2.5 py-0.5 rounded-md bg-surface-obsidian/85 backdrop-blur-md border border-outline/25 font-mono text-[9px] tracking-widest text-primary/90 shadow-md">
+                    {OPTICAL_SPECS[safeFilmstripIndex % OPTICAL_SPECS.length].lens} · {OPTICAL_SPECS[safeFilmstripIndex % OPTICAL_SPECS.length].iso} / REEL 0{safeFilmstripIndex + 1}
+                  </span>
                 </div>
 
-                {/* Top Right Fullscreen Icon */}
-                <div className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-surface-obsidian/85 backdrop-blur-md border border-outline/25 flex items-center justify-center text-primary group-hover/showcase:border-primary/60 transition-colors shadow-lg">
-                  <span className="material-symbols-outlined text-base">fullscreen</span>
+                {/* Top-Right Valmora Optical HUD Pill */}
+                <div className="absolute top-4 right-4 z-20 px-2.5 py-1 rounded-full bg-background/80 border border-outline/30 backdrop-blur-md font-mono text-[9px] tracking-[0.2em] uppercase text-on-surface/80 pointer-events-none">
+                  {OPTICAL_SPECS[safeFilmstripIndex % OPTICAL_SPECS.length].lens} • {OPTICAL_SPECS[safeFilmstripIndex % OPTICAL_SPECS.length].kelvin}
                 </div>
 
                 {/* Bottom Showcase Caption Overlay */}
@@ -423,6 +477,7 @@ export const Gallery: React.FC = () => {
                 const tag = item.tag || GALLERY_METADATA[idx]?.tag || "The Café Experience";
                 const caption = item.caption || GALLERY_METADATA[idx]?.caption || item.alt;
                 const spanClass = getSpanClass(item, idx);
+                const spec = OPTICAL_SPECS[idx % OPTICAL_SPECS.length];
 
                 return (
                   <div 
@@ -433,13 +488,23 @@ export const Gallery: React.FC = () => {
                     {/* Subtle Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 opacity-75 group-hover:opacity-45 transition-opacity duration-500 z-10 pointer-events-none" />
 
-                      {/* Corner Category Tag */}
-                      <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 z-20 px-3 py-1 sm:px-3.5 sm:py-1 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-primary/35 text-[10px] uppercase tracking-wider text-primary font-semibold shadow-lg">
-                        {tag}
+                      {/* Corner Category Tag & Optical Camera Telemetry Stamp */}
+                      <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 z-20 flex flex-col gap-1 sm:gap-1.5 items-start">
+                        <div className="px-3 py-1 sm:px-3.5 sm:py-1 rounded-full bg-surface-obsidian/90 backdrop-blur-md border border-primary/35 text-[10px] uppercase tracking-wider text-primary font-semibold shadow-lg">
+                          {tag}
+                        </div>
+                        <div className="px-2.5 py-0.5 rounded-md bg-surface-obsidian/85 backdrop-blur-md border border-outline/25 font-mono text-[9px] tracking-widest text-primary/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md">
+                          {spec.lens} · {spec.iso} / {spec.reel}
+                        </div>
+                      </div>
+
+                      {/* Top-Right Valmora Optical HUD Pill */}
+                      <div className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-20 px-2.5 py-1 rounded-full bg-background/80 border border-outline/30 backdrop-blur-md font-mono text-[9px] tracking-[0.2em] uppercase text-on-surface/80 pointer-events-none">
+                        {spec.lens} • {spec.kelvin}
                       </div>
 
                       {/* Concentric Expand Button */}
-                      <div className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-obsidian/85 backdrop-blur-md border border-outline/25 flex items-center justify-center text-on-surface opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 group-hover:border-primary/50 shadow-lg">
+                      <div className="absolute top-12 right-3.5 sm:top-13 sm:right-4 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-obsidian/85 backdrop-blur-md border border-outline/25 flex items-center justify-center text-on-surface opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 group-hover:border-primary/50 shadow-lg">
                         <span className="material-symbols-outlined text-sm font-light text-primary">fullscreen</span>
                       </div>
 
@@ -484,7 +549,7 @@ export const Gallery: React.FC = () => {
 
       </div>
 
-      {/* Luxury Fullscreen Lightbox Modal (Shared across all variants) */}
+      {/* Luxury Fullscreen Valmora Cinema Viewfinder Lightbox Modal */}
       <AnimatePresence>
         {selectedPhoto && (
           <motion.div 
@@ -492,20 +557,30 @@ export const Gallery: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[250] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 sm:p-8"
+            className="fixed inset-0 z-[250] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-between p-4 sm:p-6 md:p-8"
             onClick={() => setSelectedPhoto(null)}
           >
-            {/* Top Close Bar */}
-            <div className="absolute top-6 left-6 right-6 flex items-center justify-between text-on-surface z-30 max-w-5xl mx-auto w-full">
+            {/* Top Bar: Telemetry, Reel Index & Dismiss */}
+            <div 
+              className="flex items-center justify-between text-on-surface z-30 max-w-5xl mx-auto w-full pt-2"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="flex items-center gap-3">
-                <span className="font-sans text-xs uppercase tracking-widest text-primary font-semibold">
-                  {String(selectedPhoto.index + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
+                <span className="px-2.5 py-1 rounded bg-primary/20 border border-primary/40 font-mono text-[10px] tracking-widest text-primary font-bold uppercase">
+                  REEL 02 · FRAME 0{selectedPhoto.index + 1} / 0{items.length}
                 </span>
-                <span className="text-outline/40">|</span>
-                <span className="font-sans text-xs uppercase tracking-wider text-on-surface/75">
+                <span className="hidden sm:inline text-outline/40">|</span>
+                <span className="hidden sm:inline font-sans text-xs uppercase tracking-wider text-on-surface/75">
                   {selectedPhoto.data.tag}
                 </span>
               </div>
+
+              {/* Viewfinder Status Badge */}
+              <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-surface-obsidian/85 border border-outline/30 font-mono text-[10px] text-on-surface/70 tracking-widest">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>VALMORA CINEMA VIEWFINDER · 24FPS</span>
+              </div>
+
               <motion.button 
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -517,35 +592,91 @@ export const Gallery: React.FC = () => {
               </motion.button>
             </div>
 
-            {/* Modal Image Container with Double Bezel */}
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 360, damping: 26 }}
-              className="relative max-w-4xl max-h-[75vh] rounded-[2rem] p-1.5 bg-gradient-to-b from-surface-container to-surface-obsidian border border-primary/35 shadow-2xl bg-surface-container"
+            {/* Stage: Viewfinder Image Container with PREV / NEXT Controls */}
+            <div 
+              className="relative w-full max-w-5xl flex items-center justify-center my-auto px-4 sm:px-12"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="rounded-[calc(2rem-0.375rem)] overflow-hidden max-h-[calc(75vh-12px)]">
-                <img 
-                  src={selectedPhoto.data.src} 
-                  alt={selectedPhoto.data.alt} 
-                  width="1200" 
-                  height="800" 
-                  decoding="async" 
-                  className="w-full h-full max-h-[75vh] object-contain"
-                />
-              </div>
-            </motion.div>
+              {/* PREV Scrubbing Button */}
+              <button
+                type="button"
+                onClick={handlePrevPhoto}
+                className="absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-surface-obsidian/90 hover:bg-surface-elevated border border-outline/30 hover:border-primary/60 text-on-surface hover:text-primary transition-all flex items-center justify-center shadow-2xl cursor-pointer active:scale-95 group/prev"
+                aria-label="Previous photograph"
+              >
+                <span className="material-symbols-outlined text-2xl group-hover/prev:-translate-x-0.5 transition-transform">chevron_left</span>
+              </button>
 
-            {/* Modal Caption */}
-            <div className="mt-6 text-center max-w-xl z-30" onClick={(e) => e.stopPropagation()}>
-              <p className="font-serif text-lg sm:text-xl text-on-surface font-light">
-                {selectedPhoto.data.caption}
-              </p>
-              <p className="font-sans text-xs text-primary/80 mt-1 uppercase tracking-widest">
-                {businessName}
-              </p>
+              {/* NEXT Scrubbing Button */}
+              <button
+                type="button"
+                onClick={handleNextPhoto}
+                className="absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-surface-obsidian/90 hover:bg-surface-elevated border border-outline/30 hover:border-primary/60 text-on-surface hover:text-primary transition-all flex items-center justify-center shadow-2xl cursor-pointer active:scale-95 group/next"
+                aria-label="Next photograph"
+              >
+                <span className="material-symbols-outlined text-2xl group-hover/next:translate-x-0.5 transition-transform">chevron_right</span>
+              </button>
+
+              {/* Viewfinder Main Frame */}
+              <motion.div 
+                key={selectedPhoto.data.src}
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 360, damping: 26 }}
+                className="relative max-w-4xl max-h-[65vh] sm:max-h-[70vh] rounded-[2rem] p-1.5 bg-gradient-to-b from-surface-container to-surface-obsidian border border-primary/35 shadow-2xl bg-surface-container overflow-hidden group/frame"
+              >
+                {/* Optical Viewfinder Corner Brackets */}
+                <div className="absolute top-4 left-4 w-5 h-5 border-t-2 border-l-2 border-primary/70 pointer-events-none z-20" />
+                <div className="absolute top-4 right-4 w-5 h-5 border-t-2 border-r-2 border-primary/70 pointer-events-none z-20" />
+                <div className="absolute bottom-4 left-4 w-5 h-5 border-b-2 border-l-2 border-primary/70 pointer-events-none z-20" />
+                <div className="absolute bottom-4 right-4 w-5 h-5 border-b-2 border-r-2 border-primary/70 pointer-events-none z-20" />
+
+                {/* Subtle Center Focus Crosshair */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20 opacity-30">
+                  <div className="w-6 h-6 border border-primary/50 rounded-full flex items-center justify-center">
+                    <span className="text-[10px] text-primary font-mono">+</span>
+                  </div>
+                </div>
+
+                <div className="rounded-[calc(2rem-0.375rem)] overflow-hidden max-h-[calc(65vh-12px)] sm:max-h-[calc(70vh-12px)] flex items-center justify-center bg-black/60">
+                  <img 
+                    src={selectedPhoto.data.src} 
+                    alt={selectedPhoto.data.alt} 
+                    width="1200" 
+                    height="800" 
+                    decoding="async" 
+                    className="w-full h-full max-h-[65vh] sm:max-h-[70vh] object-contain select-none"
+                  />
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Bottom Section: Optical Metadata Bar & Caption */}
+            <div 
+              className="flex flex-col items-center gap-3 z-30 max-w-2xl mx-auto w-full pb-2" 
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Optical Camera Telemetry Metadata Bar */}
+              <div className="px-5 py-2 rounded-full bg-surface-obsidian/90 border border-primary/30 backdrop-blur-md flex flex-wrap items-center justify-center gap-2 sm:gap-4 font-mono text-[9px] sm:text-[11px] tracking-widest uppercase text-on-surface/85 shadow-xl">
+                <span className="text-primary font-bold">LENS: {activeOpticalSpec.lens}</span>
+                <span className="text-outline/40">•</span>
+                <span>KELVIN: {activeOpticalSpec.kelvin}</span>
+                <span className="text-outline/40">•</span>
+                <span>PROFILE: {activeOpticalSpec.iso}</span>
+                <span className="text-outline/40">•</span>
+                <span className="text-primary font-semibold">FRAME 0{selectedPhoto.index + 1} / 0{items.length}</span>
+              </div>
+
+              {/* Modal Caption */}
+              <div className="text-center">
+                <p className="font-serif text-base sm:text-lg text-on-surface font-light leading-snug">
+                  {selectedPhoto.data.caption}
+                </p>
+                <p className="font-sans text-[11px] text-primary/80 mt-0.5 uppercase tracking-widest">
+                  {businessName} · BARRACKPORE CANTONMENT
+                </p>
+              </div>
             </div>
           </motion.div>
         )}

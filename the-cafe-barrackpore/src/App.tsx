@@ -35,16 +35,34 @@ export const AppLayout: React.FC = () => {
   const sections = engineConfig?.sections;
 
   useEffect(() => {
-    const triggerConsent = () => setShowConsent(true);
-    window.addEventListener('scroll', triggerConsent, { once: true, passive: true });
-    window.addEventListener('pointerdown', triggerConsent, { once: true, passive: true });
-    window.addEventListener('keydown', triggerConsent, { once: true, passive: true });
+    let triggered = false;
+    const triggerConsent = () => {
+      if (!triggered) {
+        triggered = true;
+        setShowConsent(true);
+      }
+    };
+
+    // 1. Scroll-triggered: Only mount when user scrolls past initial Hero/ScrollSequence (> 450px)
+    const handleScroll = () => {
+      if (typeof window !== 'undefined' && window.scrollY > 450) {
+        triggerConsent();
+        window.removeEventListener('scroll', handleScroll);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // 2. Idle timer: Trigger after 4-second delay if user stays at the top
+    const timer = setTimeout(() => {
+      triggerConsent();
+      window.removeEventListener('scroll', handleScroll);
+    }, 4000);
+
     const cleanupOfflineSync = initOfflineSyncListener();
 
     return () => {
-      window.removeEventListener('scroll', triggerConsent);
-      window.removeEventListener('pointerdown', triggerConsent);
-      window.removeEventListener('keydown', triggerConsent);
+      clearTimeout(timer);
+      window.removeEventListener('scroll', handleScroll);
       cleanupOfflineSync();
     };
   }, []);
