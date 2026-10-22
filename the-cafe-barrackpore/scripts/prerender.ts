@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execSync } from 'node:child_process';
+import { build as viteBuild } from 'vite';
 import { clientDetails } from '../src/config/client';
 import { getPublicSiteOrigin } from '../src/utils/url';
 import { SUPPORTED_SEO_LANGUAGES } from '../src/utils/seo';
@@ -51,9 +52,14 @@ async function prerender() {
 
   // 1. Build SSR server entry
   console.log('📦 Compiling SSR bundle with Vite...');
-  execSync('npx vite build --ssr src/entry-server.tsx --outDir dist-server', {
-    cwd: projectRoot,
-    stdio: 'inherit',
+  await viteBuild({
+    build: {
+      ssr: 'src/entry-server.tsx',
+      outDir: 'dist-server',
+      copyPublicDir: false,
+      emptyOutDir: false,
+    },
+    logLevel: 'warn',
   });
 
   // 2. Import compiled SSR module
