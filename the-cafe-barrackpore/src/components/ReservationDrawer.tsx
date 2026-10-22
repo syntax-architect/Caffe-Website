@@ -6,12 +6,14 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { createReservation } from '../services/reservationService';
 import { generateClientReservationRef } from '../utils/orderCalculations';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useI18n } from '../i18n';
 import { validatePhoneNumber } from '../utils/phone';
 import { TurnstileWidget } from './TurnstileWidget';
 
 export const ReservationDrawer: React.FC = () => {
   const { isReservationOpen, setIsReservationOpen } = useUI();
   const { restaurantConfig } = useSiteConfig();
+  const { t } = useI18n();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [confirmedRef, setConfirmedRef] = useState<string | null>(null);
@@ -223,13 +225,13 @@ export const ReservationDrawer: React.FC = () => {
             {/* Header */}
             <div className={`flex items-center justify-between p-6 border-b border-outline/20 bg-surface-container/90 shrink-0 ${isMobile ? 'rounded-t-none' : ''}`}>
               <div>
-                <span className="editorial-eyebrow text-[10px] block mb-1">Hospitality Reservations</span>
-                <h2 id="reservation-drawer-title" className="font-serif text-2xl text-on-surface font-normal">Book a Table</h2>
+                <span className="editorial-eyebrow text-[10px] block mb-1">{t('reservations.subtitle', 'Hospitality Reservations')}</span>
+                <h2 id="reservation-drawer-title" className="font-serif text-2xl text-on-surface font-normal">{t('reservations.title', 'Book a Table')}</h2>
                 <p className="font-sans text-xs text-on-surface/65 mt-0.5 font-light">Experience intimate dining at {restaurantConfig.businessName}.</p>
               </div>
               <button
                 onClick={() => setIsReservationOpen(false)}
-                aria-label="Close reservation drawer"
+                aria-label={t('common.close', 'Close reservation drawer')}
                 className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-on-surface/70 hover:text-on-surface transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
@@ -245,10 +247,10 @@ export const ReservationDrawer: React.FC = () => {
                 </div>
                 <div>
                   <span className="font-sans text-[10px] uppercase tracking-widest text-primary font-bold">
-                    {isDemoSubmission ? 'Demo Request Only' : 'Reservation Request Registered'}
+                    {isDemoSubmission ? 'Demo Request Only' : t('reservations.reservationConfirmed', 'Reservation Request Registered')}
                   </span>
                   <h3 className="font-serif text-2xl text-on-surface font-normal mt-1">
-                    See You Soon, {formData.name}!
+                    {t('orderSuccess.title', 'See You Soon')}, {formData.name}!
                   </h3>
                   <p className="font-serif text-lg text-primary mt-2 font-semibold tracking-wide">
                     {confirmedRef}
@@ -268,7 +270,7 @@ export const ReservationDrawer: React.FC = () => {
                     className="w-full h-11 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-[#0A1A0F] font-bold text-xs uppercase tracking-wider shadow-[0_4px_16px_rgba(37,211,102,0.25)] flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <span className="material-symbols-outlined text-base">chat</span>
-                    <span>Send Booking Details to WhatsApp</span>
+                    <span>{t('cart.whatsappConfirmation', 'Send Booking Details to WhatsApp')}</span>
                   </button>
                   <p className="text-[10px] text-on-surface/50 text-center font-sans">
                     Need instant booking confirmation on your phone? Tap to message our reservation concierge.
@@ -294,7 +296,7 @@ export const ReservationDrawer: React.FC = () => {
                   }}
                   className="w-full max-w-sm h-12 rounded-full bg-primary text-[#120B08] font-semibold text-xs uppercase tracking-wider hover:bg-primary-hover transition-colors shadow-md cursor-pointer"
                 >
-                  Done
+                  {t('common.done', 'Done')}
                 </button>
               </div>
             ) : (
@@ -320,7 +322,7 @@ export const ReservationDrawer: React.FC = () => {
                     {/* Name */}
                     <div className="flex flex-col gap-1.5">
                       <label htmlFor="res-name" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">
-                        Full Name <span className="text-primary">*</span>
+                        {t('cart.name', 'Full Name')} <span className="text-primary">*</span>
                       </label>
                       <input
                         id="res-name"
@@ -329,7 +331,7 @@ export const ReservationDrawer: React.FC = () => {
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        placeholder="e.g. Rahul Sharma"
+                        placeholder={t('cart.namePlaceholder', 'e.g. Rahul Sharma')}
                         className="w-full bg-[#0D0705] border border-white/10 rounded-xl px-4 py-3 text-on-surface font-sans text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40 transition-colors placeholder:text-white/20"
                       />
                     </div>
@@ -337,7 +339,7 @@ export const ReservationDrawer: React.FC = () => {
                     {/* Phone */}
                     <div className="flex flex-col gap-1.5">
                       <label htmlFor="res-phone" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">
-                        Mobile Number <span className="text-primary">*</span>
+                        {t('cart.phone', 'Mobile Number')} <span className="text-primary">*</span>
                       </label>
                       <input
                         id="res-phone"
@@ -361,12 +363,12 @@ export const ReservationDrawer: React.FC = () => {
 
                     {/* Guests Stepper */}
                     <div className="flex flex-col gap-1.5">
-                      <label className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">Party Size (Guests)</label>
+                      <label className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">{t('reservations.guests', 'Party Size (Guests)')}</label>
                       <div className="flex items-center justify-between bg-[#0D0705] border border-white/10 rounded-xl px-4 py-2">
                         <button 
                           type="button" 
                           onClick={() => handleGuestChange(-1)} 
-                          aria-label="Decrease guest count" 
+                          aria-label={t('a11y.decreaseQuantity', 'Decrease guest count')} 
                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-on-surface/80 hover:text-primary transition-colors cursor-pointer"
                         >
                           <span className="material-symbols-outlined text-sm">remove</span>
@@ -374,13 +376,13 @@ export const ReservationDrawer: React.FC = () => {
                         <div className="flex items-center gap-1.5 font-serif text-lg text-primary tabular-nums font-medium">
                           <span>{formData.guests}</span>
                           <span className="font-sans text-xs text-on-surface/50 font-normal">
-                            {formData.guests === 1 ? 'Guest' : 'Guests'}
+                            {formData.guests === 1 ? t('reservations.guests', 'Guest') : t('reservations.guests', 'Guests')}
                           </span>
                         </div>
                         <button 
                           type="button" 
                           onClick={() => handleGuestChange(1)} 
-                          aria-label="Increase guest count" 
+                          aria-label={t('a11y.increaseQuantity', 'Increase guest count')} 
                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-on-surface/80 hover:text-primary transition-colors cursor-pointer"
                         >
                           <span className="material-symbols-outlined text-sm">add</span>
@@ -391,7 +393,7 @@ export const ReservationDrawer: React.FC = () => {
                     {/* Date & Time Row */}
                     <div className="grid grid-cols-2 gap-3.5">
                       <div className="flex flex-col gap-1.5">
-                        <label htmlFor="res-date" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">Date <span className="text-primary">*</span></label>
+                        <label htmlFor="res-date" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">{t('reservations.date', 'Date')} <span className="text-primary">*</span></label>
                         <input
                           id="res-date"
                           type="date"
@@ -404,7 +406,7 @@ export const ReservationDrawer: React.FC = () => {
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label htmlFor="res-time" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">Time Slot <span className="text-primary">*</span></label>
+                        <label htmlFor="res-time" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">{t('reservations.time', 'Time Slot')} <span className="text-primary">*</span></label>
                         <select
                           id="res-time"
                           name="time"
@@ -435,13 +437,13 @@ export const ReservationDrawer: React.FC = () => {
 
                     {/* Notes */}
                     <div className="flex flex-col gap-1.5">
-                      <label htmlFor="res-notes" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">Special Occasion or Seating Request</label>
+                      <label htmlFor="res-notes" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">{t('reservations.specialOccasion', 'Special Occasion or Seating Request')}</label>
                       <textarea
                         id="res-notes"
                         name="notes"
                         value={formData.notes}
                         onChange={handleChange}
-                        placeholder="e.g. Birthday dinner, private booth preferred, quiet corner..."
+                        placeholder={t('cart.specialRequestsPlaceholder', 'e.g. Birthday dinner, private booth preferred, quiet corner...')}
                         rows={3}
                         className="w-full bg-[#0D0705] border border-white/10 rounded-xl px-4 py-2.5 text-on-surface font-sans text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40 transition-colors resize-none placeholder:text-white/20"
                       />
@@ -492,10 +494,10 @@ export const ReservationDrawer: React.FC = () => {
                   >
                     <span>
                       {restaurantConfig.isTableBookingEnabled === false
-                        ? 'Reservations Paused'
+                        ? t('reservations.closed', 'Reservations Paused')
                         : isSubmitting
-                        ? 'Reserving Table...'
-                        : 'Confirm Reservation'}
+                        ? t('common.loading', 'Reserving Table...')
+                        : t('reservations.confirmReservation', 'Confirm Reservation')}
                     </span>
                     <span className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
                       <span className="material-symbols-outlined text-[15px] text-[#120B08]">

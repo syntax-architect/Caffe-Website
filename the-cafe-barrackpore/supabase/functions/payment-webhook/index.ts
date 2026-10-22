@@ -14,6 +14,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
 import Stripe from 'https://esm.sh/stripe@14.25.0?target=deno';
+import { toMinorUnits, fromMinorUnits } from '../_shared/currency.ts';
 
 /**
  * Constant-time Razorpay HMAC-SHA256 signature verification using Web Crypto API.
@@ -305,7 +306,7 @@ serve(async (req: Request) => {
       }
 
       const authoritativeAmount = Number(order.payment_amount ?? order.total);
-      const expectedAmountUnits = Math.round(authoritativeAmount * 100);
+      const expectedAmountUnits = toMinorUnits(authoritativeAmount, expectedCurrency);
 
       if (paidAmountInSmallestUnits !== null && Math.abs(paidAmountInSmallestUnits - expectedAmountUnits) > 5) {
         return new Response(

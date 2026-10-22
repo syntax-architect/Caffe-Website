@@ -88,7 +88,8 @@ export function formatRestaurantTime(
 export function formatRestaurantDateTime(
   dateInput: string | number | Date,
   locale = 'en-IN',
-  timeZone = 'Asia/Kolkata'
+  timeZone = 'Asia/Kolkata',
+  options?: Intl.DateTimeFormatOptions
 ): string {
   try {
     const d = typeof dateInput === 'string' || typeof dateInput === 'number' ? new Date(dateInput) : dateInput;
@@ -103,6 +104,7 @@ export function formatRestaurantDateTime(
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
+      ...options,
     }).format(d);
   } catch (err) {
     console.warn('[formatRestaurantDateTime] Error formatting date-time:', err);

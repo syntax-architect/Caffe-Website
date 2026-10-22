@@ -754,7 +754,25 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
           </div>
         )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+          {/* Action 0: POS Terminal */}
+          <button
+            type="button"
+            onClick={() => onNavigate('/staff/pos')}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-[#241A12] to-[#140E0A] hover:from-[#2F2218] hover:to-[#1B130E] border border-[#D4AF37]/50 text-left transition-all duration-300 group shadow-lg flex items-center gap-3.5 active:scale-[0.98] cursor-pointer"
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#D4AF37] text-black flex items-center justify-center font-bold group-hover:scale-110 transition-transform shadow-md">
+              <span className="material-symbols-outlined text-xl">point_of_sale</span>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-[#F3C766] flex items-center gap-1.5">
+                <span>POS Screen</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
+              </p>
+              <p className="text-[10px] text-stone-400 mt-0.5">Counter & Tables</p>
+            </div>
+          </button>
+
           {/* Action 1: KDS */}
           <button
             type="button"

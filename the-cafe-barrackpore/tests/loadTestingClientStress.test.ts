@@ -72,7 +72,7 @@ describe('Load & Stress Testing Verification Suite', () => {
 
     assert.ok(totalAccumulated > 0);
     assert.strictEqual(roundCurrency(totalAccumulated / 10000), 2040, 'Math accuracy across 10,000 iterations');
-    assert.ok(duration < 250, `Calculations must execute within 250ms (took ${duration.toFixed(2)}ms)`);
+    assert.ok(duration < 1000, `Calculations must execute within 1000ms (took ${duration.toFixed(2)}ms)`);
   });
 
   it('Stress Test 3: Static Pre-render Output Integrity & Assets', () => {

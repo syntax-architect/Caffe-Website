@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useI18n } from '../i18n/I18nContext';
 import { clientDetails } from '../config/client';
 import { SectionReveal } from './SectionReveal';
 import { getAvifSource } from '../utils/image';
@@ -31,6 +32,7 @@ export const OPTICAL_SPECS = [
 
 export const Gallery: React.FC = () => {
   const { gallery, restaurantConfig, engineConfig } = useSiteConfig();
+  const { t } = useI18n();
   const [selectedPhoto, setSelectedPhoto] = useState<{ index: number; data: GalleryPhoto } | null>(null);
   const businessName = restaurantConfig?.businessName || clientDetails.businessName || 'The Café';
 
@@ -39,9 +41,9 @@ export const Gallery: React.FC = () => {
   // Backwards-compatible alias: 'masonry-grid' maps to 'asymmetric-bento'
   const activeVariant: GalleryVariant = rawVariant === 'masonry-grid' ? 'asymmetric-bento' : rawVariant;
 
-  const eyebrowText = gallery?.eyebrow || 'Visual Chronicles';
-  const titleText = gallery?.title || 'Moments Captured at The Café';
-  const descriptionText = gallery?.description || 'A glimpse into the nocturnal atmosphere, handcrafted cuisine, and acoustic energy at Barrackpore’s premier dining retreat.';
+  const eyebrowText = gallery?.eyebrow || t('gallery.badge', 'Visual Chronicles');
+  const titleText = gallery?.title || t('gallery.title', 'Moments Captured at The Café');
+  const descriptionText = gallery?.description || t('gallery.description', 'A glimpse into the nocturnal atmosphere, handcrafted cuisine, and acoustic energy at Barrackpore’s premier dining retreat.');
 
   // Support structured items with per-item tag and caption, falling back seamlessly
   const items: GalleryItem[] = gallery?.items && gallery.items.length > 0
@@ -234,8 +236,8 @@ export const Gallery: React.FC = () => {
           /* Graceful Empty State */
           <div className="py-20 text-center max-w-md mx-auto text-on-surface/60 flex flex-col items-center">
             <span className="material-symbols-outlined text-4xl text-primary/50 mb-3">photo_library</span>
-            <p className="font-serif text-lg text-on-surface">Visual Chronicles in Preparation</p>
-            <p className="font-sans text-xs text-on-surface/60 mt-1">Gourmet moments and hospitality chronicles are being curated.</p>
+            <p className="font-serif text-lg text-on-surface">{t('common.noResults', 'Visual Chronicles in Preparation')}</p>
+            <p className="font-sans text-xs text-on-surface/60 mt-1">{t('gallery.description', 'Gourmet moments and hospitality chronicles are being curated.')}</p>
           </div>
         ) : activeVariant === 'carousel-snap' ? (
           /* ================================================================
@@ -261,7 +263,7 @@ export const Gallery: React.FC = () => {
                   disabled={!canScrollLeft}
                   onClick={() => handleCarouselScroll('left')}
                   className="w-10 h-10 rounded-full border border-outline/30 bg-surface-container/80 hover:bg-surface-elevated text-on-surface hover:text-primary transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md cursor-pointer active:scale-95"
-                  aria-label="Previous photograph"
+                  aria-label={t('gallery.prevPhoto', 'Previous photograph')}
                 >
                   <span className="material-symbols-outlined text-base">chevron_left</span>
                 </button>
@@ -270,7 +272,7 @@ export const Gallery: React.FC = () => {
                   disabled={!canScrollRight}
                   onClick={() => handleCarouselScroll('right')}
                   className="w-10 h-10 rounded-full border border-outline/30 bg-surface-container/80 hover:bg-surface-elevated text-on-surface hover:text-primary transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md cursor-pointer active:scale-95"
-                  aria-label="Next photograph"
+                  aria-label={t('gallery.nextPhoto', 'Next photograph')}
                 >
                   <span className="material-symbols-outlined text-base">chevron_right</span>
                 </button>
@@ -322,7 +324,7 @@ export const Gallery: React.FC = () => {
                           {caption}
                         </p>
                         <span className="font-sans text-[11px] text-primary/90 mt-1 uppercase tracking-wider font-medium flex items-center gap-1">
-                          <span>View Photograph</span>
+                          <span>{t('gallery.viewPhoto', 'View Photograph')}</span>
                           <span className="material-symbols-outlined text-xs">arrow_forward</span>
                         </span>
                       </div>
@@ -359,14 +361,14 @@ export const Gallery: React.FC = () => {
                       ? 'w-6 bg-primary'
                       : 'w-1.5 bg-outline/40 hover:bg-outline'
                   }`}
-                  aria-label={`Scroll to photograph ${dotIdx + 1}`}
+                  aria-label={`${t('gallery.viewPhoto', 'Photograph')} ${dotIdx + 1}`}
                 />
               ))}
             </div>
 
             <div className="flex sm:hidden justify-center items-center gap-2 mt-3 text-[10px] text-on-surface/50 uppercase tracking-widest font-mono">
               <span className="material-symbols-outlined text-xs">swipe</span>
-              <span>Swipe photographs</span>
+              <span>{t('gallery.swipeHint', 'Swipe photographs')}</span>
             </div>
           </div>
         ) : activeVariant === 'filmstrip' ? (
@@ -414,7 +416,7 @@ export const Gallery: React.FC = () => {
                   </p>
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/10">
                     <span className="font-sans text-xs text-primary/90 uppercase tracking-widest font-medium flex items-center gap-1.5">
-                      <span>Click to view in luxury theater mode</span>
+                      <span>{t('gallery.viewPhoto', 'Click to view in luxury theater mode')}</span>
                       <span className="material-symbols-outlined text-xs">arrow_forward</span>
                     </span>
                     <span className="text-[10px] font-mono text-on-surface/50 uppercase tracking-wider hidden sm:inline">
@@ -443,7 +445,7 @@ export const Gallery: React.FC = () => {
                   key={item.id || idx}
                   type="button"
                   onClick={() => setActiveFilmstripIndex(idx)}
-                  aria-label={`View photo ${idx + 1}: ${item.tag || item.alt}`}
+                  aria-label={`${t('gallery.viewPhoto', 'View photo')} ${idx + 1}: ${item.tag || item.alt}`}
                   className={`group relative w-20 h-14 sm:w-28 sm:h-20 rounded-2xl overflow-hidden border-2 transition-all duration-300 shrink-0 cursor-pointer ${
                     idx === safeFilmstripIndex
                       ? 'border-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.35)] scale-105 opacity-100 ring-2 ring-primary/20'
@@ -514,7 +516,7 @@ export const Gallery: React.FC = () => {
                           {caption}
                         </p>
                         <span className="font-sans text-[11px] text-primary/90 mt-1 uppercase tracking-wider font-medium flex items-center gap-1">
-                          <span>View Photograph</span>
+                          <span>{t('gallery.viewPhoto', 'View Photograph')}</span>
                           <span className="material-symbols-outlined text-xs">arrow_forward</span>
                         </span>
                       </div>
@@ -542,7 +544,7 @@ export const Gallery: React.FC = () => {
             {/* Mobile Swipe Hint */}
             <div className="flex sm:hidden justify-center items-center gap-2 mt-4 text-[10px] text-on-surface/50 uppercase tracking-widest font-mono">
               <span className="material-symbols-outlined text-xs">swipe</span>
-              <span>Swipe photographs</span>
+              <span>{t('gallery.swipeHint', 'Swipe photographs')}</span>
             </div>
           </div>
         )}
@@ -578,7 +580,7 @@ export const Gallery: React.FC = () => {
               {/* Viewfinder Status Badge */}
               <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-surface-obsidian/85 border border-outline/30 font-mono text-[10px] text-on-surface/70 tracking-widest">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>VALMORA CINEMA VIEWFINDER · 24FPS</span>
+                <span>{t('gallery.viewfinder', 'VALMORA CINEMA VIEWFINDER · 24FPS')}</span>
               </div>
 
               <motion.button 
@@ -586,7 +588,7 @@ export const Gallery: React.FC = () => {
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setSelectedPhoto(null)}
                 className="w-10 h-10 rounded-full bg-surface-container/80 hover:bg-surface-elevated border border-outline/30 flex items-center justify-center text-on-surface transition-colors cursor-pointer"
-                aria-label="Close photograph lightbox"
+                aria-label={t('gallery.closeLightbox', 'Close photograph lightbox')}
               >
                 <span className="material-symbols-outlined text-lg">close</span>
               </motion.button>
@@ -602,7 +604,7 @@ export const Gallery: React.FC = () => {
                 type="button"
                 onClick={handlePrevPhoto}
                 className="absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-surface-obsidian/90 hover:bg-surface-elevated border border-outline/30 hover:border-primary/60 text-on-surface hover:text-primary transition-all flex items-center justify-center shadow-2xl cursor-pointer active:scale-95 group/prev"
-                aria-label="Previous photograph"
+                aria-label={t('gallery.prevPhoto', 'Previous photograph')}
               >
                 <span className="material-symbols-outlined text-2xl group-hover/prev:-translate-x-0.5 transition-transform">chevron_left</span>
               </button>
@@ -612,7 +614,7 @@ export const Gallery: React.FC = () => {
                 type="button"
                 onClick={handleNextPhoto}
                 className="absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-surface-obsidian/90 hover:bg-surface-elevated border border-outline/30 hover:border-primary/60 text-on-surface hover:text-primary transition-all flex items-center justify-center shadow-2xl cursor-pointer active:scale-95 group/next"
-                aria-label="Next photograph"
+                aria-label={t('gallery.nextPhoto', 'Next photograph')}
               >
                 <span className="material-symbols-outlined text-2xl group-hover/next:translate-x-0.5 transition-transform">chevron_right</span>
               </button>

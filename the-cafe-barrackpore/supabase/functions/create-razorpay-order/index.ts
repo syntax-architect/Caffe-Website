@@ -9,6 +9,7 @@
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
+import { toMinorUnits } from '../_shared/currency.ts';
 
 async function computeSha256(input: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -119,9 +120,18 @@ serve(async (req: Request) => {
     // Query restaurant settings for currency and business name
     const { data: settings } = await supabase
       .from('restaurant_settings')
-      .select('currency, business_name')
+      .select('currency, business_name, payments_enabled, payment_enabled, features')
       .limit(1)
       .maybeSingle();
+
+    const paymentsEnabled = (settings as any)?.payments_enabled ?? (settings as any)?.payment_enabled ?? true;
+    const isOnlinePaymentsEnabled = (settings as any)?.features?.online_payments !== false;
+    if (!paymentsEnabled || !isOnlinePaymentsEnabled) {
+      return new Response(
+        JSON.stringify({ error: 'Online payments are currently disabled by the restaurant.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const currency = (order.currency || settings?.currency)?.toUpperCase();
     if (!currency) {
@@ -160,7 +170,7 @@ serve(async (req: Request) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: Math.round(amount * 100), // In paise (smallest unit)
+        amount: toMinorUnits(amount, currency), // In provider minor units
         currency: currency,
         accept_partial: false,
         reference_id: order.order_ref,
@@ -213,6 +223,7 @@ serve(async (req: Request) => {
         orderId: rzpData.order_id || rzpData.id,
         checkoutUrl: checkoutUrl,
         amount,
+        amountInMinorUnits: toMinorUnits(amount, currency),
         currency,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

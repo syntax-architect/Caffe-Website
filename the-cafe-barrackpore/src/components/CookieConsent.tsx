@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useI18n } from '../i18n';
 
 export const CookieConsent: React.FC = () => {
+  const { t } = useI18n();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export const CookieConsent: React.FC = () => {
   return (
     <div
       role="region"
-      aria-label="Cookie Consent Banner"
+      aria-label={t('cookie.title', 'Cookie Consent Banner')}
       aria-labelledby="cookie-consent-title"
       className="fixed bottom-[max(1rem,calc(0.75rem+env(safe-area-inset-bottom,0px)))] sm:bottom-6 left-4 right-4 sm:left-6 sm:right-auto sm:max-w-md z-40 animate-in fade-in slide-in-from-bottom duration-500 pointer-events-auto"
     >
@@ -46,16 +48,16 @@ export const CookieConsent: React.FC = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <h3 id="cookie-consent-title" className="text-xs font-mono font-semibold tracking-wider text-on-surface uppercase">
-                  Dining Privacy &amp; Cookies
+                  {t('cookie.title', 'Dining Privacy & Cookies')}
                 </h3>
                 <div className="flex items-center gap-1.5 text-[10px] font-mono text-on-surface/50 shrink-0">
-                  <a href="/privacy" className="hover:text-primary underline transition-colors">Privacy</a>
+                  <a href="/privacy" className="hover:text-primary underline transition-colors">{t('cookie.privacy', 'Privacy')}</a>
                   <span>·</span>
-                  <a href="/terms" className="hover:text-primary underline transition-colors">Terms</a>
+                  <a href="/terms" className="hover:text-primary underline transition-colors">{t('cookie.terms', 'Terms')}</a>
                 </div>
               </div>
               <p className="text-[11px] text-on-surface/75 mt-0.5 leading-snug line-clamp-2">
-                Essential local storage preserves your table QR order, dining cart, and language preferences.
+                {t('cookie.message', 'Essential local storage preserves your table QR order, dining cart, and language preferences.')}
               </p>
             </div>
           </div>
@@ -67,14 +69,14 @@ export const CookieConsent: React.FC = () => {
               onClick={() => handleConsent('essential')}
               className="px-3.5 py-1.5 rounded-full font-mono text-[10px] tracking-wider uppercase font-medium text-on-surface/75 hover:text-on-surface bg-surface-container hover:bg-surface-elevated border border-outline/25 transition-all cursor-pointer active:scale-95"
             >
-              Essential Only
+              {t('cookie.essentialOnly', 'Essential Only')}
             </button>
             <button
               type="button"
               onClick={() => handleConsent('all')}
               className="px-4 py-1.5 rounded-full font-mono text-[10px] tracking-wider uppercase font-bold text-on-primary bg-primary hover:bg-primary-fixed shadow-sm transition-all cursor-pointer active:scale-95"
             >
-              Accept All
+              {t('cookie.acceptAll', 'Accept All')}
             </button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { useDevice } from '../hooks/useDevice';
 import { useCart } from '../context/CartContext';
@@ -13,6 +13,7 @@ import {
 } from '../data/menuFallbacks';
 import type { MenuItem, MenuCategory } from '../types/menu';
 import type { MenuVariant } from '../types/restaurantEngine';
+import { useI18n } from '../i18n';
 
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Burgers & Pizzas': 'Hand-stretched sourdough crusts flame-baked to crisp perfection & artisanal toasted brioche burgers.',
@@ -113,6 +114,23 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
   const { showToast } = useUI();
   const { isAvailable } = useMenuAvailability();
   const { formatPrice, restaurantConfig, engineConfig } = useSiteConfig();
+  const { t, language } = useI18n();
+
+  const getCategoryName = useCallback((cat?: MenuCategory) => {
+    if (!cat) return '';
+    return cat.translations?.[language]?.name || cat.name;
+  }, [language]);
+
+  const getItemName = useCallback((item?: MenuItem | null) => {
+    if (!item) return '';
+    return item.translations?.[language]?.name || item.name;
+  }, [language]);
+
+  const getItemDescription = useCallback((item?: MenuItem | null) => {
+    if (!item) return '';
+    return item.translations?.[language]?.description || item.description;
+  }, [language]);
+
   const menuVariant: MenuVariant = forcedVariant || engineConfig?.variants?.menu || 'sensory-ledger';
   const menuSectionConfig = engineConfig?.menu;
 
@@ -365,23 +383,25 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
       setRecentlyAddedId((curr) => (curr === item.id ? null : curr));
     }, 850);
 
+    const localizedName = getItemName(item);
+    const localizedDesc = getItemDescription(item);
     const displayImage = item.image_url || item.image;
     addToCart({
       id: item.id,
-      name: item.name,
+      name: localizedName,
       price: item.price,
       image: displayImage,
       category_id: item.category_id,
       category: item.category_id,
       diet: item.diet,
-      description: item.description,
+      description: localizedDesc,
       popular: item.popular,
       available: item.available,
       sort_order: item.sort_order,
     });
     showToast({
-      title: 'Added to Order',
-      message: item.name,
+      title: t('menu.addedToOrder', 'Added to Order'),
+      message: localizedName,
       subtext: `${formatPrice(item.price)}`,
       type: 'success',
     });
@@ -455,10 +475,10 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
           <div>
             <div className="inline-flex items-center gap-2 mb-2">
               <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              <span className="editorial-eyebrow">{isQrMode ? 'Artisanal Table Selection' : 'Curated Gastronomy'}</span>
+              <span className="editorial-eyebrow">{isQrMode ? t('menu.artisanalSelection', 'Artisanal Table Selection') : t('menu.curatedGastronomy', 'Curated Gastronomy')}</span>
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-on-surface font-normal tracking-tight">
-              {isQrMode ? 'Explore The Menu' : 'The Culinary Collection'}
+              {isQrMode ? t('menu.title', 'Explore The Menu') : t('menu.culinaryCollection', 'The Culinary Collection')}
             </h2>
           </div>
 
@@ -480,7 +500,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                       isVegOnly ? 'text-emerald-400 font-semibold' : 'text-on-surface/60'
                     }`}
                   >
-                    Pure Veg Only
+                    {t('menu.pureVegOnly', 'Pure Veg Only')}
                   </span>
                 </div>
                 <button
@@ -488,7 +508,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                   onClick={() => setIsVegOnly(!isVegOnly)}
                   role="switch"
                   aria-checked={isVegOnly}
-                  aria-label="Filter vegetarian only items"
+                  aria-label={t('menu.filterVeg', 'Filter vegetarian only items')}
                   className={`w-11 h-6 rounded-full p-0.5 transition-all duration-300 ease-in-out flex items-center border cursor-pointer ${
                     isVegOnly
                       ? 'bg-emerald-500/20 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
@@ -509,11 +529,11 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                   type="button"
                   onClick={() => setIsCategoryPickerOpen(!isCategoryPickerOpen)}
                   className="px-3 py-1.5 rounded-full bg-surface-container border border-primary/40 text-primary text-xs font-sans font-medium flex items-center gap-1.5 active:scale-95 shadow-sm hover:border-primary transition-all cursor-pointer"
-                  aria-label="View all categories"
+                  aria-label={t('menu.allCategories', 'View all categories')}
                   aria-expanded={isCategoryPickerOpen}
                 >
                   <span className="material-symbols-outlined text-[15px]">menu_book</span>
-                  <span>Categories ({categories.length})</span>
+                  <span>{t('menu.categories', 'Categories')} ({categories.length})</span>
                   <span
                     className="material-symbols-outlined text-sm transition-transform duration-200"
                     style={{ transform: isCategoryPickerOpen ? 'rotate(180deg)' : 'none' }}
@@ -532,8 +552,8 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                     />
                     <div className="absolute right-0 top-full mt-2 z-50 w-64 p-2 rounded-2xl bg-surface-obsidian/98 backdrop-blur-2xl border border-primary/50 shadow-[0_12px_40px_rgba(0,0,0,0.85)] animate-fade-in flex flex-col gap-1">
                       <div className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-primary font-semibold border-b border-outline/15 flex items-center justify-between">
-                        <span>All Categories</span>
-                        <span>{categories.length} Total</span>
+                        <span>{t('menu.allCategories', 'All Categories')}</span>
+                        <span>{categories.length} {t('common.total', 'Total')}</span>
                       </div>
                       {categories.map((cat) => {
                         const isActive = activeCategoryId === cat.id;
@@ -550,7 +570,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                           >
                             <span className="flex items-center gap-2">
                               <span className="material-symbols-outlined text-sm">{getCategoryIcon(cat.name)}</span>
-                              <span>{cat.name}</span>
+                              <span>{getCategoryName(cat)}</span>
                             </span>
                             {isActive && <span className="material-symbols-outlined text-xs text-primary">check</span>}
                           </button>
@@ -566,10 +586,10 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
             <div className="flex md:hidden items-center justify-between w-full px-0.5 text-[11px] font-sans text-on-surface/65">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                <span className="font-medium text-on-surface/80">{categories.length} Categories</span>
+                <span className="font-medium text-on-surface/80">{categories.length} {t('menu.categories', 'Categories')}</span>
               </span>
               <span className="flex items-center gap-1 text-primary text-[10px] uppercase tracking-wider font-semibold">
-                <span>Swipe or tap arrows</span>
+                <span>{t('menu.swipeHint', 'Swipe or tap arrows')}</span>
                 <span className="material-symbols-outlined text-xs animate-pulse">arrow_forward</span>
               </span>
             </div>
@@ -582,7 +602,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                   <button
                     type="button"
                     onClick={() => scrollCategories('left')}
-                    aria-label="Scroll to previous categories"
+                    aria-label={t('menu.scrollPrev', 'Scroll to previous categories')}
                     className="w-7 h-7 rounded-full bg-surface-container/95 border border-primary/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-sm">chevron_left</span>
@@ -620,7 +640,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                         <span className="material-symbols-outlined text-[15px] z-10">
                           {getCategoryIcon(category.name)}
                         </span>
-                        <span className="z-10">{category.name}</span>
+                        <span className="z-10">{getCategoryName(category)}</span>
                       </button>
                     );
                   })}
@@ -633,7 +653,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                   <button
                     type="button"
                     onClick={() => scrollCategories('right')}
-                    aria-label="Scroll to more categories"
+                    aria-label={t('menu.scrollNext', 'Scroll to more categories')}
                     className="w-7 h-7 rounded-full bg-surface-container/95 border border-primary/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-sm">chevron_right</span>
@@ -665,14 +685,14 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
             <div className="flex items-center gap-3">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
               <div>
-                <p className="text-sm font-semibold text-white">Online Ordering is Temporarily Paused</p>
+                <p className="text-sm font-semibold text-white">{t('menu.orderingPausedTitle', 'Online Ordering is Temporarily Paused')}</p>
                 <p className="text-xs text-on-surface/70 mt-0.5">
-                  Browse our artisanal menu below. In-person dining and counter service remain active.
+                  {t('menu.browsingModeDesc', 'Browse our artisanal menu below. In-person dining and counter service remain active.')}
                 </p>
               </div>
             </div>
             <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-semibold bg-primary/15 text-primary border border-primary/30">
-              Browsing Mode
+              {t('menu.browsingMode', 'Browsing Mode')}
             </span>
           </div>
         )}
@@ -723,7 +743,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                           <div className="w-full aspect-[16/10] sm:aspect-[4/3] min-h-[190px] max-h-[300px] sm:max-h-none rounded-2xl overflow-hidden relative bg-surface-container-lowest shadow-md mb-6 group/img">
                             <img
                               src={displayImage}
-                              alt={featuredItem.name}
+                              alt={getItemName(featuredItem)}
                               width="600"
                               height="450"
                               className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out will-change-transform"
@@ -742,7 +762,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
 
                             {!itemAvailable && (
                               <div className="absolute top-3 right-3">
-                                <span className="badge-soldout shadow-lg">86'd · Sold Out</span>
+                                <span className="badge-soldout shadow-lg">86'd · {t('menu.soldOut', 'Sold Out')}</span>
                               </div>
                             )}
                           </div>
@@ -767,14 +787,14 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                                   : 'text-on-surface/50 line-through'
                               }`}
                             >
-                              {featuredItem.name}
+                              {getItemName(featuredItem)}
                             </h3>
                           </div>
 
                           {/* Signature Pick badge only rendered when item is an explicit signature */}
                           {activeSensoryMetadata?.isExplicitSignature && featuredItem.popular && (
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-widest font-semibold bg-primary/15 text-primary border border-primary/30 shrink-0">
-                              Signature Pick
+                              {t('menu.signaturePick', 'Signature Pick')}
                             </span>
                           )}
                         </div>
@@ -782,7 +802,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                         {/* Description */}
                         {featuredItem.description && (
                           <p className="font-sans text-[13px] sm:text-sm text-on-surface/80 leading-relaxed font-light mb-4">
-                            {featuredItem.description}
+                            {getItemDescription(featuredItem)}
                           </p>
                         )}
 
@@ -913,7 +933,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                               ? "Item is temporarily unavailable (86'd)"
                               : !isOrderingActive
                               ? "Online ordering is temporarily paused by the restaurant"
-                              : `Add ${featuredItem.name} to order`
+                              : `Add ${getItemName(featuredItem)} to order`
                           }
                           onClick={(e) => handleAddToCart(e, featuredItem)}
                         >
@@ -921,7 +941,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                             {!itemAvailable ? 'block' : !isOrderingActive ? 'pause_circle' : isJustAdded ? 'check' : 'shopping_bag'}
                           </span>
                           <span>
-                            {!itemAvailable ? 'Sold Out' : !isOrderingActive ? 'Paused' : isJustAdded ? 'Added' : 'Add to Order'}
+                            {!itemAvailable ? t('menu.soldOut', 'Sold Out') : !isOrderingActive ? t('menu.orderingPaused', 'Paused') : isJustAdded ? t('menu.added', 'Added') : t('menu.addToCart', 'Add to Order')}
                           </span>
                         </motion.button>
                       </div>
@@ -977,17 +997,17 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                                     : 'text-on-surface/50 line-through'
                                 }`}
                               >
-                                {item.name}
+                                {getItemName(item)}
                               </h4>
 
                               {item.popular && (
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-semibold bg-primary/15 text-primary border border-primary/30 shrink-0 self-center">
-                                  Chef's Pick
+                                  {t('menu.chefsPick', "Chef's Pick")}
                                 </span>
                               )}
 
                               {!itemAvailable && (
-                                <span className="badge-soldout shrink-0 text-[10px] self-center">86'd</span>
+                                <span className="badge-soldout shrink-0 text-[10px] self-center">86'd · {t('menu.soldOut', 'Sold Out')}</span>
                               )}
                             </div>
 
@@ -1018,14 +1038,14 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                                   ? "Item is temporarily unavailable (86'd)"
                                   : !isOrderingActive
                                   ? "Online ordering is temporarily paused by the restaurant"
-                                  : `Add ${item.name} to order`
+                                  : `Add ${getItemName(item)} to order`
                               }
                               onClick={(e) => handleAddToCart(e, item)}
                             >
                               <span className={`material-symbols-outlined text-[14px] transition-transform ${isJustAdded ? 'scale-110' : ''}`}>
                                 {!itemAvailable ? 'block' : !isOrderingActive ? 'pause_circle' : isJustAdded ? 'check' : 'add'}
                               </span>
-                              <span>{!itemAvailable ? 'Sold Out' : !isOrderingActive ? 'Paused' : isJustAdded ? 'Added' : 'Add'}</span>
+                              <span>{!itemAvailable ? t('menu.soldOut', 'Sold Out') : !isOrderingActive ? t('menu.orderingPaused', 'Paused') : isJustAdded ? t('menu.added', 'Added') : t('menu.add', 'Add')}</span>
                             </motion.button>
                           </div>
                         </div>
@@ -1035,7 +1055,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                           <div className="flex-1 min-w-0">
                             {item.description && (
                               <p className="font-sans text-[13px] sm:text-sm text-on-surface/75 leading-relaxed font-light">
-                                {item.description}
+                                {getItemDescription(item)}
                               </p>
                             )}
 
@@ -1062,7 +1082,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                             <div className="w-10 h-10 sm:hidden rounded-lg overflow-hidden shrink-0 border border-outline/25 bg-surface-container-lowest">
                               <img
                                 src={displayImage}
-                                alt={item.name}
+                                alt={getItemName(item)}
                                 width="40"
                                 height="40"
                                 className="w-full h-full object-cover"
@@ -1118,24 +1138,24 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                               : 'text-on-surface/50 line-through'
                           }`}
                         >
-                          {item.name}
+                          {getItemName(item)}
                         </h3>
 
                         {item.popular && (
                           <span className="px-2 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-semibold bg-primary/15 text-primary border border-primary/30 shadow-xs">
-                            Chef's Pick
+                            {t('menu.chefsPick', "Chef's Pick")}
                           </span>
                         )}
 
                         {!itemAvailable && (
-                          <span className="badge-soldout">86'd · Sold Out</span>
+                          <span className="badge-soldout">86'd · {t('menu.soldOut', 'Sold Out')}</span>
                         )}
                       </div>
 
                       {/* Description */}
                       {item.description && (
                         <p className="font-sans text-xs sm:text-sm text-on-surface/65 leading-relaxed font-light line-clamp-2 mt-1">
-                          {item.description}
+                          {getItemDescription(item)}
                         </p>
                       )}
 
@@ -1163,7 +1183,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                       <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 border border-primary/30 bg-surface-container-lowest shadow-md">
                         <img
                           src={displayImage}
-                          alt={item.name}
+                          alt={getItemName(item)}
                           width="64"
                           height="64"
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
@@ -1201,14 +1221,14 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                           ? "Item is temporarily unavailable (86'd)"
                           : !isOrderingActive
                           ? "Online ordering is temporarily paused by the restaurant"
-                          : `Add ${item.name} to order`
+                          : `Add ${getItemName(item)} to order`
                       }
                       onClick={(e) => handleAddToCart(e, item)}
                     >
                       <span className={`material-symbols-outlined text-[15px] transition-transform ${isJustAdded ? 'scale-110' : ''}`}>
                         {!itemAvailable ? 'block' : !isOrderingActive ? 'pause_circle' : isJustAdded ? 'check' : 'shopping_bag'}
                       </span>
-                      <span>{!itemAvailable ? 'Sold Out' : !isOrderingActive ? 'Paused' : isJustAdded ? 'Added' : 'Add to Order'}</span>
+                      <span>{!itemAvailable ? t('menu.soldOut', 'Sold Out') : !isOrderingActive ? t('menu.orderingPaused', 'Paused') : isJustAdded ? t('menu.added', 'Added') : t('menu.addToCart', 'Add to Order')}</span>
                     </button>
                   </div>
                 </div>
@@ -1234,7 +1254,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                 }}
                 className="h-11 px-7 rounded-full border border-outline/30 text-on-surface/80 hover:bg-surface-elevated/40 hover:text-on-surface transition-all text-xs font-sans font-semibold tracking-wider uppercase cursor-pointer active:scale-95"
               >
-                Show Less
+                {t('common.showLess', 'Show Less')}
               </button>
             )}
 
@@ -1244,7 +1264,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                 onClick={() => setVisibleCount((prev) => prev + 6)}
                 className="h-11 px-7 rounded-full btn-outline-premium text-xs font-semibold cursor-pointer active:scale-95"
               >
-                Load More Items
+                {t('menu.loadMore', 'Load More Items')}
               </button>
             )}
           </div>
@@ -1255,7 +1275,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
             <span className="material-symbols-outlined text-4xl mb-4 opacity-50">
               search_off
             </span>
-            <p className="font-body-lg">No culinary creations found in this category.</p>
+            <p className="font-body-lg">{t('menu.noItems', 'No culinary creations found in this category.')}</p>
           </div>
         )}
       </div>

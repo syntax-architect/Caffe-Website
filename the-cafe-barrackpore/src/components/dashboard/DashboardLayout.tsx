@@ -5,6 +5,7 @@ import { useNotification } from '../../hooks/useNotification';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatRestaurantDateTime } from '../../utils/datetime';
+import { LanguageSwitcher } from '../LanguageSwitcher';
 
 export interface DashboardLayoutProps {
   currentPath: string;
@@ -23,7 +24,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
   const { staffProfile, role, signOut, signOutEverywhere, isOwner, isManager } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotification();
-  const { restaurantConfig, logoUrl } = useSiteConfig();
+  const { restaurantConfig, logoUrl, features } = useSiteConfig();
 
   // Enforce automatic 30-minute inactivity logout on staff screens
   useStaffSessionTimeout();
@@ -47,14 +48,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   const navItems = [
     { label: 'Overview', path: '/staff/dashboard', icon: 'dashboard', access: true },
-    { label: 'Kitchen KDS', path: '/staff/kitchen', icon: 'soup_kitchen', access: true, badge: 'Live' },
+    { label: 'POS Terminal', path: '/staff/pos', icon: 'point_of_sale', access: features?.pos !== false, badge: 'Counter' },
+    { label: 'Cash Drawer & Shifts', path: '/staff/drawer', icon: 'payments', access: (features?.pos !== false && features?.cash_drawer !== false) },
+    { label: 'Kitchen KDS', path: '/staff/kitchen', icon: 'soup_kitchen', access: features?.kds !== false, badge: 'Live' },
     { label: 'Orders', path: '/staff/orders', icon: 'receipt_long', access: true },
-    { label: 'Reservations', path: '/staff/reservations', icon: 'event_seat', access: true },
-    { label: 'Tables & QR', path: '/staff/tables', icon: 'qr_code_2', access: true },
+    { label: 'Reservations', path: '/staff/reservations', icon: 'event_seat', access: features?.reservations !== false },
+    { label: 'Tables & QR', path: '/staff/tables', icon: 'qr_code_2', access: features?.qr_table_ordering !== false },
     { label: 'Menu Availability', path: '/staff/menu', icon: 'menu_book', access: true },
     { label: 'Website Content', path: '/staff/content', icon: 'auto_stories', access: true },
     { label: 'Customers', path: '/staff/customers', icon: 'contact_page', access: isOwner || isManager },
-    { label: 'Discounts & Happy Hour', path: '/staff/discounts', icon: 'local_offer', access: isOwner || isManager },
+    { label: 'Discounts & Happy Hour', path: '/staff/discounts', icon: 'local_offer', access: (isOwner || isManager) && features?.discounts !== false },
     { label: 'Staff Roster', path: '/staff/staff', icon: 'group', access: isOwner || isManager },
     { label: 'Security Audit', path: '/staff/audit', icon: 'shield', access: isOwner || isManager },
     { label: 'Settings', path: '/staff/settings', icon: 'tune', access: isOwner },
@@ -77,11 +80,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     setIsMobileMenuOpen(false);
   };
 
-  const roleBadgeStyles = {
+  const roleBadgeStyles: Record<string, string> = {
     owner: 'bg-[#D4AF37]/15 text-[#F3C766] border-[#D4AF37]/30',
     manager: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+    cashier: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+    waiter: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
     staff: 'bg-stone-500/15 text-stone-300 border-stone-500/30',
-  }[role || 'staff'];
+  };
+  const currentBadgeStyle = roleBadgeStyles[role || 'staff'] || roleBadgeStyles['staff'];
 
   return (
     <div className="min-h-screen bg-[#080706] text-[#F3EFEA] flex flex-col lg:flex-row font-sans selection:bg-[#D4AF37]/30 selection:text-[#FFF7E6]">
@@ -109,6 +115,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Staff Language Selector */}
+          <LanguageSwitcher variant="compact" />
+
           {/* Notification Bell */}
           <button
             type="button"
@@ -122,7 +131,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             )}
           </button>
 
-          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${roleBadgeStyles}`}>
+          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${currentBadgeStyle}`}>
             {role || 'staff'}
           </span>
         </div>
@@ -222,11 +231,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 {staffProfile?.full_name || 'Staff Member'}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className={`px-2 py-0.2 rounded-full text-[9px] font-bold uppercase tracking-wider border ${roleBadgeStyles}`}>
+                <span className={`px-2 py-0.2 rounded-full text-[9px] font-bold uppercase tracking-wider border ${currentBadgeStyle}`}>
                   {role || 'staff'}
                 </span>
               </div>
             </div>
+          </div>
+
+          <div className="mb-3">
+            <LanguageSwitcher variant="staff" className="w-full" />
           </div>
 
           <div className="flex items-center gap-2">
@@ -291,6 +304,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <span className="material-symbols-outlined text-sm text-[#D4AF37]">schedule</span>
               <span>{currentTime || 'Syncing clock...'}</span>
             </div>
+
+            {/* Staff Language Selector */}
+            <LanguageSwitcher variant="staff" />
 
             {/* Database & Service Status Indicator */}
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs">

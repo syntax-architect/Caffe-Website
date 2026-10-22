@@ -533,6 +533,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const role = staffProfile?.role ?? null;
   const isOwner = isActiveStaff && role === 'owner';
   const isManager = isActiveStaff && (role === 'owner' || role === 'manager');
+  const isCashier = isActiveStaff && (role === 'owner' || role === 'manager' || role === 'cashier');
+  const isWaiter = isActiveStaff && (role === 'owner' || role === 'manager' || role === 'cashier' || role === 'waiter');
   const isStaff = isActiveStaff;
 
   return (
@@ -547,6 +549,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role,
         isOwner,
         isManager,
+        isCashier,
+        isWaiter,
         isStaff,
         isMfaAwaiting,
         mfaChallengeData,

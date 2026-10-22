@@ -11,6 +11,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
 import Stripe from 'https://esm.sh/stripe@14.25.0?target=deno';
+import { toMinorUnits } from '../_shared/currency.ts';
 
 async function computeSha256(input: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -120,10 +121,10 @@ serve(async (req: Request) => {
       );
     }
 
-    // 2. Query restaurant settings for provider, payment status, currency, and business name
+    // 2. Query restaurant settings for provider, payment status, currency, business name, and features
     const { data: settingsData } = await supabase
       .from('restaurant_settings')
-      .select('payment_provider, payments_enabled, payment_enabled, allow_pay_at_counter, currency, business_name')
+      .select('payment_provider, payments_enabled, payment_enabled, allow_pay_at_counter, currency, business_name, features')
       .limit(1)
       .maybeSingle();
 
@@ -146,9 +147,10 @@ serve(async (req: Request) => {
     }
 
     const paymentsEnabled = settings?.payments_enabled ?? settings?.payment_enabled ?? true;
+    const isOnlinePaymentsFeatureEnabled = settings?.features?.online_payments !== false;
     const configuredProvider = (settings?.payment_provider || order.payment_provider || 'none').toLowerCase();
 
-    if (!paymentsEnabled || configuredProvider === 'none') {
+    if (!paymentsEnabled || !isOnlinePaymentsFeatureEnabled || configuredProvider === 'none') {
       return new Response(
         JSON.stringify({
           error: 'Online payments are currently disabled by the restaurant. Please choose Pay at Counter.',
@@ -175,7 +177,7 @@ serve(async (req: Request) => {
       }
 
       const authHeader = `Basic ${btoa(`${keyId}:${keySecret}`)}`;
-      const amountInPaise = Math.round(amount * 100);
+      const minorAmount = toMinorUnits(amount, effectiveCurrency);
 
       const rzpResponse = await fetch('https://api.razorpay.com/v1/orders', {
         method: 'POST',
@@ -184,7 +186,7 @@ serve(async (req: Request) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: amountInPaise,
+          amount: minorAmount,
           currency: effectiveCurrency,
           receipt: order.order_ref,
           notes: {
@@ -254,6 +256,7 @@ serve(async (req: Request) => {
           razorpayOrderId: rzpData.id,
           keyId: keyId,
           amount: amount,
+          amountInMinorUnits: rzpData.amount,
           amountInPaise: rzpData.amount,
           currency: rzpData.currency,
           orderRef: order.order_ref,
@@ -296,7 +299,7 @@ serve(async (req: Request) => {
                 name: `Order ${order.order_ref}`,
                 description: `${businessName} (${order.customer_name || 'Guest'})`,
               },
-              unit_amount: Math.round(amount * 100),
+              unit_amount: toMinorUnits(amount, effectiveCurrency),
             },
             quantity: 1,
           },
@@ -365,6 +368,7 @@ serve(async (req: Request) => {
           checkoutUrl: session.url,
           clientSecret: session.client_secret,
           amount: amount,
+          amountInMinorUnits: toMinorUnits(amount, effectiveCurrency),
           currency: effectiveCurrency,
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

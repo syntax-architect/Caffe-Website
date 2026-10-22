@@ -85,6 +85,24 @@ for (const [lang, dict] of Object.entries(dictionaries)) {
   if (!staff.login?.signIn || !staff.dashboard?.orders || !staff.kitchen?.bumpTicket || !staff.tables?.tableNumber || !staff.settings?.title) {
     throw new Error(`Test 2 failed: Language "${lang}" has missing staff subsections`);
   }
+
+  // Deep check POS & Billing subsections
+  if (
+    !staff.pos?.terminalTitle ||
+    !staff.pos?.runningBill ||
+    !staff.pos?.sendKOT ||
+    !staff.pos?.splitBill ||
+    !staff.pos?.openDrawer ||
+    !staff.pos?.voidItem ||
+    !staff.pos?.managerPin ||
+    !staff.pos?.applyDiscount ||
+    !staff.pos?.issueRefund ||
+    !staff.pos?.openShift ||
+    !staff.pos?.closeShift ||
+    !staff.pos?.zReport
+  ) {
+    throw new Error(`Test 2 failed: Language "${lang}" has missing staff.pos strings`);
+  }
 }
 console.log('✔ Test 2: All 12 language dictionaries pass full structural and content validation');
 

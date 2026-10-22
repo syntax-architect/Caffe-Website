@@ -8,6 +8,7 @@ import { getCountryTaxProfile } from '../../config/taxProfiles';
 import { useNotification } from '../../hooks/useNotification';
 import { checkPaymentHealth, sendTestPayment, type PaymentHealthStatus } from '../../services/paymentService';
 import type { RestaurantSettings } from '../../types/dashboard';
+import { PrinterSettingsSection } from './PrinterSettingsSection';
 
 export const SettingsManagement: React.FC = () => {
   const { user, isOwner } = useAuth();
@@ -75,6 +76,38 @@ export const SettingsManagement: React.FC = () => {
   const [ownerNotificationEmail, setOwnerNotificationEmail] = useState('');
   const [ownerNotificationMethod, setOwnerNotificationMethod] = useState<'email' | 'whatsapp' | 'both' | 'none'>('none');
   const [lowStockAlertThreshold, setLowStockAlertThreshold] = useState('5');
+
+  // Custom Country Setup Wizard State
+  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [customCountryCode, setCustomCountryCode] = useState('');
+  const [customCountryName, setCustomCountryName] = useState('');
+  const [customCurrency, setCustomCurrency] = useState('');
+  const [customCurrencySymbol, setCustomCurrencySymbol] = useState('');
+  const [customCurrencyDecimals, setCustomCurrencyDecimals] = useState('2');
+  const [customTaxRate, setCustomTaxRate] = useState('10.0');
+  const [customTaxMode, setCustomTaxMode] = useState<'inclusive' | 'exclusive'>('inclusive');
+  const [customFoodRate, setCustomFoodRate] = useState('');
+  const [customAlcoholRate, setCustomAlcoholRate] = useState('');
+  const [customTaxLabel, setCustomTaxLabel] = useState('VAT');
+  const [customTaxIdLabel, setCustomTaxIdLabel] = useState('VAT ID');
+  const [customTaxIdFormat, setCustomTaxIdFormat] = useState('');
+  const [customServiceCharge, setCustomServiceCharge] = useState('0');
+  const [customServiceChargeTaxable, setCustomServiceChargeTaxable] = useState(false);
+  const [customAccountantName, setCustomAccountantName] = useState('');
+  const [customAccountantLicense, setCustomAccountantLicense] = useState('');
+  const [customAccountantConfirmed, setCustomAccountantConfirmed] = useState(false);
+
+  const handleSaveCustomCountry = () => {
+    if (!customCountryCode || !customCountryName) return;
+    setCountry(customCountryCode.toUpperCase());
+    setCurrency(customCurrency || 'USD');
+    setCurrencySymbol(customCurrencySymbol || '$');
+    setTaxLabel(customTaxLabel || 'Tax');
+    setTaxRatePercent(customTaxRate || '0');
+    setTaxMode(customTaxMode);
+    setShowCustomModal(false);
+    addNotification('success', 'Custom Country Applied', `Custom profile for ${customCountryName} applied.`);
+  };
 
   const refreshPaymentHealth = async () => {
     setIsCheckingHealth(true);
@@ -494,9 +527,19 @@ export const SettingsManagement: React.FC = () => {
                     Select a national deployment preset to configure currency, tax rules, and local address standards.
                   </p>
                 </div>
+                {isOwner && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomModal(true)}
+                    className="px-3.5 py-2 rounded-xl bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer self-start sm:self-auto"
+                  >
+                    <span className="material-symbols-outlined text-sm">tune</span>
+                    <span>+ Custom Country Setup Wizard</span>
+                  </button>
+                )}
               </div>
 
-              {/* Interactive Country Preset Selector — 20 Markets */}
+              {/* Interactive Country Preset Selector — 44 Markets */}
               {isOwner && (
                 <div className="space-y-4 pt-1">
                   {Object.entries(PRESET_REGIONS).map(([regionName, countryCodes]) => (
@@ -510,10 +553,12 @@ export const SettingsManagement: React.FC = () => {
                           if (!preset) return null;
                           const isSelected = country === code;
                           const flagMap: Record<string, string> = {
-                            IN: '🇮🇳', AU: '🇦🇺', NZ: '🇳🇿', SG: '🇸🇬', JP: '🇯🇵', TH: '🇹🇭',
-                            US: '🇺🇸', CA: '🇨🇦', MX: '🇲🇽',
-                            GB: '🇬🇧', DE: '🇩🇪', FR: '🇫🇷', IT: '🇮🇹', ES: '🇪🇸', NL: '🇳🇱', TR: '🇹🇷',
-                            AE: '🇦🇪', SA: '🇸🇦', QA: '🇶🇦', ZA: '🇿🇦',
+                            IE: '🇮🇪', GB: '🇬🇧', US: '🇺🇸', CA: '🇨🇦', AU: '🇦🇺', NZ: '🇳🇿', SG: '🇸🇬', AE: '🇦🇪',
+                            DE: '🇩🇪', FR: '🇫🇷', ES: '🇪🇸', IT: '🇮🇹', NL: '🇳🇱', PT: '🇵🇹', BE: '🇧🇪', AT: '🇦🇹',
+                            SE: '🇸🇪', DK: '🇩🇰', NO: '🇳🇴', CH: '🇨🇭', PL: '🇵🇱',
+                            IN: '🇮🇳', JP: '🇯🇵', KR: '🇰🇷', TH: '🇹🇭', MY: '🇲🇾', ID: '🇮🇩', PH: '🇵🇭', VN: '🇻🇳',
+                            HK: '🇭🇰', SA: '🇸🇦', QA: '🇶🇦', KW: '🇰🇼', BH: '🇧🇭', TR: '🇹🇷', IL: '🇮🇱',
+                            ZA: '🇿🇦', NG: '🇳🇬', KE: '🇰🇪', EG: '🇪🇬', MX: '🇲🇽', BR: '🇧🇷', CL: '🇨🇱', CO: '🇨🇴',
                           };
                           return (
                             <button
@@ -1306,7 +1351,10 @@ export const SettingsManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* SECTION 7: SECURITY & PASSWORD MANAGEMENT */}
+          {/* SECTION 7: HARDWARE & THERMAL PRINTER STATIONS */}
+          <PrinterSettingsSection />
+
+          {/* SECTION 8: SECURITY & PASSWORD MANAGEMENT */}
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
               <div className="flex items-center justify-between">
@@ -1413,6 +1461,286 @@ export const SettingsManagement: React.FC = () => {
             </div>
           )}
         </form>
+      )}
+      {/* CUSTOM COUNTRY SETUP WIZARD MODAL */}
+      {showCustomModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[#120F0D] border border-[#D4AF37]/30 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🌐</span>
+                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+                    Manual Jurisdiction Setup
+                  </span>
+                </div>
+                <h3 className="font-serif text-xl font-bold text-white mt-1">
+                  Custom Country Tax Setup Wizard
+                </h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Configure a custom jurisdiction not present in the master registry. Requires certified accountant confirmation to go live.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCustomModal(false)}
+                className="w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Country Code (ISO 3166-1 alpha-2) *
+                </label>
+                <input
+                  type="text"
+                  maxLength={2}
+                  value={customCountryCode}
+                  onChange={(e) => setCustomCountryCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. BR, AR, IS"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Country Name *
+                </label>
+                <input
+                  type="text"
+                  value={customCountryName}
+                  onChange={(e) => setCustomCountryName(e.target.value)}
+                  placeholder="e.g. Brazil, Argentina, Iceland"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Currency Code (ISO 4217)
+                </label>
+                <input
+                  type="text"
+                  maxLength={3}
+                  value={customCurrency}
+                  onChange={(e) => setCustomCurrency(e.target.value.toUpperCase())}
+                  placeholder="e.g. BRL, ARS, ISK"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Currency Symbol & Decimals
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={customCurrencySymbol}
+                    onChange={(e) => setCustomCurrencySymbol(e.target.value)}
+                    placeholder="e.g. R$, $, kr"
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+                  />
+                  <select
+                    value={customCurrencyDecimals}
+                    onChange={(e) => setCustomCurrencyDecimals(e.target.value)}
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  >
+                    <option value="0">0 decimals</option>
+                    <option value="2">2 decimals</option>
+                    <option value="3">3 decimals</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Standard Tax Rate (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={customTaxRate}
+                  onChange={(e) => setCustomTaxRate(e.target.value)}
+                  placeholder="e.g. 19.0"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Tax Calculation Mode
+                </label>
+                <select
+                  value={customTaxMode}
+                  onChange={(e) => setCustomTaxMode(e.target.value as 'inclusive' | 'exclusive')}
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                >
+                  <option value="inclusive">Inclusive (Prices include tax)</option>
+                  <option value="exclusive">Exclusive (Added at checkout)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Food Reduced Rate (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={customFoodRate}
+                  onChange={(e) => setCustomFoodRate(e.target.value)}
+                  placeholder="e.g. 7.0 or leave empty"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Alcohol Tax Rate (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={customAlcoholRate}
+                  onChange={(e) => setCustomAlcoholRate(e.target.value)}
+                  placeholder="e.g. 23.0 or leave empty"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Tax Label
+                </label>
+                <input
+                  type="text"
+                  value={customTaxLabel}
+                  onChange={(e) => setCustomTaxLabel(e.target.value)}
+                  placeholder="VAT, IVA, GST, Sales Tax"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Tax ID Label & Format
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={customTaxIdLabel}
+                    onChange={(e) => setCustomTaxIdLabel(e.target.value)}
+                    placeholder="e.g. CNPJ, RFC, NIF"
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                  />
+                  <input
+                    type="text"
+                    value={customTaxIdFormat}
+                    onChange={(e) => setCustomTaxIdFormat(e.target.value)}
+                    placeholder="e.g. XX.XXX.XXX/XXXX-XX"
+                    className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
+                  Service Charge Rate (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="50"
+                  value={customServiceCharge}
+                  onChange={(e) => setCustomServiceCharge(e.target.value)}
+                  placeholder="0"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+
+              <div className="flex items-center pt-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={customServiceChargeTaxable}
+                    onChange={(e) => setCustomServiceChargeTaxable(e.target.checked)}
+                    className="w-4 h-4 rounded accent-[#D4AF37] cursor-pointer"
+                  />
+                  <span className="text-xs text-zinc-300">Service charge is taxable</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Accountant Sign-off in Wizard */}
+            <div className="p-4 rounded-2xl bg-black/40 border border-[#D4AF37]/30 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">⚖</span>
+                <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                  Certified Accountant / Tax Advisor Sign-off (Mandatory)
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                Under the platform honesty rules, custom jurisdictions must be verified by a certified accountant before live ordering can be unlocked.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  value={customAccountantName}
+                  onChange={(e) => setCustomAccountantName(e.target.value)}
+                  placeholder="Accountant full name or firm"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                />
+                <input
+                  type="text"
+                  value={customAccountantLicense}
+                  onChange={(e) => setCustomAccountantLicense(e.target.value)}
+                  placeholder="CPA / CA license or registration #"
+                  className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
+              <label className="flex items-start gap-2.5 cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  checked={customAccountantConfirmed}
+                  onChange={(e) => setCustomAccountantConfirmed(e.target.checked)}
+                  className="w-4 h-4 rounded accent-[#D4AF37] cursor-pointer mt-0.5"
+                />
+                <span className="text-[11px] text-zinc-300">
+                  I confirm that a licensed accountant has approved these tax rates, category splits, and invoice compliance rules for live restaurant operations.
+                </span>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCustomModal(false)}
+                className="px-4 py-2.5 rounded-xl border border-white/10 text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveCustomCountry}
+                disabled={!customCountryCode || !customCountryName || !customAccountantConfirmed}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider hover:brightness-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-md"
+              >
+                Apply Custom Country Profile
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

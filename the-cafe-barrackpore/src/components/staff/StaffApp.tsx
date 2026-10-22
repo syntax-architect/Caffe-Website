@@ -13,14 +13,29 @@ import { SettingsManagement } from '../dashboard/SettingsManagement';
 import { CustomersManagement } from '../dashboard/CustomersManagement';
 import { DiscountsManagement } from '../dashboard/DiscountsManagement';
 import { AuditLogManagement } from '../dashboard/AuditLogManagement';
+import { POSManagement } from '../dashboard/POSManagement';
+import { CashDrawerManagement } from '../dashboard/CashDrawerManagement';
+import { useSiteConfig } from '../../context/SiteConfigContext';
 
 // Route-level code-splitting for Kitchen Display System
 const KitchenDisplayApp = lazy(() =>
   import('../kitchen/KitchenDisplayApp').then((m) => ({ default: m.KitchenDisplayApp }))
 );
 
+const FeatureDisabledCard: React.FC<{ feature: string; description: string }> = ({ feature, description }) => (
+  <div className="py-20 text-center text-xs text-outline max-w-md mx-auto">
+    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-3 text-amber-400">
+      <span className="material-symbols-outlined text-2xl">power_off</span>
+    </div>
+    <p className="font-semibold text-base text-on-surface">{feature} is Disabled</p>
+    <p className="mt-1 text-zinc-400 leading-relaxed">{description}</p>
+    <p className="mt-3 text-[11px] font-mono text-zinc-500">The restaurant owner can re-enable this capability in Settings &gt; Features.</p>
+  </div>
+);
+
 export const StaffApp: React.FC = () => {
   const { isOwner, isManager } = useAuth();
+  const { features } = useSiteConfig();
 
   const [currentPath, setCurrentPath] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -54,6 +69,14 @@ export const StaffApp: React.FC = () => {
     '/staff/dashboard': {
       title: 'Hospitality Overview',
       subtitle: 'Live floor monitoring, order intake, and dining bookings',
+    },
+    '/staff/pos': {
+      title: 'Staff POS Terminal',
+      subtitle: 'Counter billing, running table bills, table operations, and KOT dispatch',
+    },
+    '/staff/drawer': {
+      title: 'Cash Drawer & Shifts',
+      subtitle: 'Opening floats, cash in/out reason logs, shift closure balancing, and Z-reports',
     },
     '/staff/orders': {
       title: 'Order Management',
@@ -104,11 +127,47 @@ export const StaffApp: React.FC = () => {
 
   const renderContent = () => {
     switch (currentPath) {
+      case '/staff/pos':
+        if (features?.pos === false) {
+          return (
+            <FeatureDisabledCard
+              feature="POS Counter Billing"
+              description="POS terminal billing is disabled in restaurant feature toggles."
+            />
+          );
+        }
+        return <POSManagement />;
+      case '/staff/drawer':
+        if (features?.pos === false || features?.cash_drawer === false) {
+          return (
+            <FeatureDisabledCard
+              feature="Cash Drawer & Shifts"
+              description="Cash drawer & shift tracking is disabled in restaurant feature toggles (requires POS)."
+            />
+          );
+        }
+        return <CashDrawerManagement />;
       case '/staff/orders':
         return <OrdersManagement />;
       case '/staff/reservations':
+        if (features?.reservations === false) {
+          return (
+            <FeatureDisabledCard
+              feature="Table Reservations"
+              description="Reservation booking management is disabled in restaurant feature toggles."
+            />
+          );
+        }
         return <ReservationsManagement />;
       case '/staff/tables':
+        if (features?.qr_table_ordering === false) {
+          return (
+            <FeatureDisabledCard
+              feature="Dining Tables & QR Codes"
+              description="QR Table Ordering is disabled in restaurant feature toggles."
+            />
+          );
+        }
         return <TablesManagement />;
       case '/staff/menu':
         return <MenuManagement />;
@@ -126,6 +185,14 @@ export const StaffApp: React.FC = () => {
         }
         return <CustomersManagement />;
       case '/staff/discounts':
+        if (features?.discounts === false) {
+          return (
+            <FeatureDisabledCard
+              feature="Discounts & Happy Hours"
+              description="Discount codes and promotional coupons are disabled in restaurant feature toggles."
+            />
+          );
+        }
         if (!isOwner && !isManager) {
           return (
             <div className="py-16 text-center text-xs text-outline">
@@ -177,6 +244,16 @@ export const StaffApp: React.FC = () => {
 
   // Dedicated Kitchen Display System (Standalone Fullscreen Operations Console)
   if (currentPath === '/staff/kitchen') {
+    if (features?.kds === false) {
+      return (
+        <div className="min-h-screen bg-[#0d0805] flex items-center justify-center p-6">
+          <FeatureDisabledCard
+            feature="Kitchen Display System (KDS)"
+            description="The live kitchen display system is currently disabled in restaurant feature toggles."
+          />
+        </div>
+      );
+    }
     return (
       <Suspense
         fallback={

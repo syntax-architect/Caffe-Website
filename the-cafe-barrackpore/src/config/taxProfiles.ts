@@ -1,26 +1,52 @@
 /**
- * International Tax Profiles — Researched Country-Specific Tax Configurations
- * Global Restaurant Platform — Production Tax Registry
+ * International Tax Profiles — Master Registry Connector
+ * Global Restaurant Platform — Production Tax Profiles
  *
- * Each profile contains legally-accurate tax rates, modes, labels, service charge
- * norms, and compliance metadata for restaurant businesses.
- *
- * Sources: National tax authority websites, OECD VAT/GST database,
- * PwC Worldwide Tax Summaries 2025–2026, Deloitte Tax Guides.
- *
- * DISCLAIMER: Tax rates change. These are accurate as of mid-2026 but should be
- * verified against official national tax authority guidance before production use
- * in any specific jurisdiction.
+ * Exposes turnkey country tax profiles for all 44 jurisdictions across
+ * Tier 1, Tier 2, and Tier 3, powered by MASTER_TAX_REGISTRY.
  */
 
-import type { TaxConfiguration } from '../types/tax';
+import type { TaxConfiguration, TaxRule, CountryTaxRegistryEntry } from '../types/tax';
+import {
+  MASTER_TAX_REGISTRY,
+  getCountryTaxRegistryEntry,
+  listTaxRegistryEntries,
+  canJurisdictionGoLive,
+  getEffectiveTaxRate,
+  createCustomCountryProfile,
+  CURRENCY_DECIMALS,
+  getCurrencyDecimals,
+  DATED_TAX_RULES,
+  COUNTRY_POLICIES,
+  isRuleStale,
+  getStaleRules,
+  getSubRegionsForCountry,
+  resolveDatedRules,
+} from './taxRegistry';
+
+export {
+  MASTER_TAX_REGISTRY,
+  getCountryTaxRegistryEntry,
+  listTaxRegistryEntries,
+  canJurisdictionGoLive,
+  getEffectiveTaxRate,
+  createCustomCountryProfile,
+  CURRENCY_DECIMALS,
+  getCurrencyDecimals,
+  DATED_TAX_RULES,
+  COUNTRY_POLICIES,
+  isRuleStale,
+  getStaleRules,
+  getSubRegionsForCountry,
+  resolveDatedRules,
+};
 
 export interface CountryTaxProfile {
   /** Full country name */
   name: string;
   /** ISO 3166-1 alpha-2 */
   code: string;
-  /** Tax configuration ready to use */
+  /** Tax configuration ready to use with calculateTaxBreakdown */
   config: TaxConfiguration;
   /** Legal advisory for restaurant owners */
   legalNote: string;
@@ -28,549 +54,146 @@ export interface CountryTaxProfile {
   requiresTaxId: boolean;
   /** Example tax ID format */
   taxIdFormat?: string;
+  /** Direct link to master registry entry */
+  registryEntry?: CountryTaxRegistryEntry;
 }
 
 /**
- * Master registry of country-specific tax profiles.
- * Keyed by ISO 3166-1 alpha-2 country code.
+ * Helper to construct specialized TaxRules based on category splits in each country.
  */
-export const COUNTRY_TAX_PROFILES: Record<string, CountryTaxProfile> = {
-  // ═══════════════════════════════════════════════════════
-  //  ASIA-PACIFIC
-  // ═══════════════════════════════════════════════════════
+function buildCountryTaxRules(entry: CountryTaxRegistryEntry): TaxRule[] | undefined {
+  // India GST intra-state split (CGST 2.5% + SGST 2.5%)
+  if (entry.countryCode === 'IN') {
+    return [
+      { label: 'CGST', rate: 0.025, mode: 'inclusive' },
+      { label: 'SGST', rate: 0.025, mode: 'inclusive' },
+    ];
+  }
 
-  IN: {
-    name: 'India',
-    code: 'IN',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'GST',
-      rate: 0.05,
-      rules: [
-        { label: 'CGST', rate: 0.025, mode: 'inclusive' },
-        { label: 'SGST', rate: 0.025, mode: 'inclusive' },
-      ],
-      serviceCharge: {
-        enabled: false,
-        label: 'Service Charge',
-        rate: 0.10,
-        taxable: false,
-        optional: true, // CCPA India: service charge must be optional
+  // Dual rates for food vs alcohol / soft drinks (Europe & Asia)
+  const foodRate = typeof entry.categoryRates.food === 'number' ? entry.categoryRates.food : entry.restaurantRate;
+  const alcoholRate = typeof entry.categoryRates.alcohol === 'number' ? entry.categoryRates.alcohol : entry.standardRate;
+
+  if (foodRate !== alcoholRate && typeof foodRate === 'number' && typeof alcoholRate === 'number') {
+    const rules: TaxRule[] = [
+      {
+        label: entry.taxLabel,
+        rate: foodRate,
+        mode: entry.taxMode,
+        appliesTo: ['food', 'hot_drink'],
       },
-      taxIdLabel: 'GSTIN',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'GST 5% for restaurants without AC/liquor license (no input tax credit). 18% for AC restaurants. Service charge is voluntary per CCPA guidelines.',
-    requiresTaxId: true,
-    taxIdFormat: '22AAAAA0000A1Z5',
-  },
-
-  AU: {
-    name: 'Australia',
-    code: 'AU',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'GST',
-      rate: 0.10,
-      serviceCharge: {
-        enabled: false,
-        label: 'Service Charge',
-        rate: 0,
-        taxable: false,
-        optional: true,
+      {
+        label: entry.taxLabel,
+        rate: alcoholRate,
+        mode: entry.taxMode,
+        appliesTo: ['alcohol'],
       },
-      taxIdLabel: 'ABN',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'GST 10% inclusive on all restaurant food and beverages. Businesses with turnover > A$75,000 must register for GST.',
-    requiresTaxId: true,
-    taxIdFormat: '12 345 678 901',
-  },
+    ];
 
-  NZ: {
-    name: 'New Zealand',
-    code: 'NZ',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'GST',
-      rate: 0.15,
-      serviceCharge: {
-        enabled: false,
-        label: 'Service Charge',
-        rate: 0,
-        taxable: false,
-        optional: true,
+    const softDrinkRate = typeof entry.categoryRates.softDrink === 'number' ? entry.categoryRates.softDrink : foodRate;
+    if (softDrinkRate !== foodRate && softDrinkRate === alcoholRate) {
+      rules[1].appliesTo?.push('soft_drink', 'bottled_water');
+    } else if (softDrinkRate !== foodRate) {
+      rules.push({
+        label: entry.taxLabel,
+        rate: softDrinkRate,
+        mode: entry.taxMode,
+        appliesTo: ['soft_drink', 'bottled_water'],
+      });
+    } else {
+      rules[0].appliesTo?.push('soft_drink', 'bottled_water');
+    }
+
+    return rules;
+  }
+
+  return undefined;
+}
+
+/**
+ * Generates turnkey CountryTaxProfiles for all jurisdictions in the master registry.
+ */
+function buildAllTaxProfiles(): Record<string, CountryTaxProfile> {
+  const profiles: Record<string, CountryTaxProfile> = {};
+
+  for (const [code, entry] of Object.entries(MASTER_TAX_REGISTRY)) {
+    const hasTax = entry.restaurantRate > 0 || entry.standardRate > 0;
+    const rules = buildCountryTaxRules(entry);
+
+    profiles[code] = {
+      name: entry.countryName,
+      code: entry.countryCode,
+      config: {
+        enabled: hasTax,
+        mode: entry.taxMode,
+        label: entry.taxLabel,
+        rate: entry.restaurantRate,
+        rules,
+        serviceCharge: entry.serviceChargeRules.standardRate > 0
+          ? {
+              enabled: entry.serviceChargeRules.policy === 'included' || entry.serviceChargeRules.policy === 'standard',
+              label: 'Service Charge',
+              rate: entry.serviceChargeRules.standardRate,
+              taxable: entry.serviceChargeRules.isTaxable,
+              optional: entry.serviceChargeRules.policy === 'optional',
+            }
+          : undefined,
+        taxIdLabel: entry.taxIdLabel,
+        showBreakdown: true,
+        roundingMode: entry.taxMode === 'exclusive' ? 'line' : 'total',
       },
-      taxIdLabel: 'GST No.',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'GST 15% on all goods and services. Registration mandatory above NZD 60,000 turnover.',
-    requiresTaxId: true,
-    taxIdFormat: '12-345-678',
-  },
+      legalNote: entry.complianceWarnings.join(' ') || `${entry.taxLabel} ${Math.round(entry.restaurantRate * 100)}% applies.`,
+      requiresTaxId: entry.requiresTaxId,
+      taxIdFormat: entry.taxIdFormat,
+      registryEntry: entry,
+    };
+  }
 
-  SG: {
-    name: 'Singapore',
-    code: 'SG',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'GST',
-      rate: 0.09,
-      serviceCharge: {
-        enabled: true,
-        label: 'Service Charge',
-        rate: 0.10,
-        taxable: true, // GST applies on service charge in Singapore
-        optional: false,
-      },
-      taxIdLabel: 'GST Reg. No.',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'GST 9% (increased from 8% on 1 Jan 2024). 10% service charge is industry standard and GST-taxable. Total effective surcharge: ~19.7% on menu prices.',
-    requiresTaxId: true,
-    taxIdFormat: 'M1-2345678-A',
-  },
+  return profiles;
+}
 
-  JP: {
-    name: 'Japan',
-    code: 'JP',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: '消費税',
-      rate: 0.10,
-      serviceCharge: {
-        enabled: false,
-        label: 'サービス料',
-        rate: 0.10,
-        taxable: true,
-        optional: false, // Fine dining hotels may charge; fast food does not
-      },
-      taxIdLabel: 'Invoice Reg. No.',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'Consumption Tax 10% for dine-in. Takeaway food qualifies for reduced 8% rate. Qualified Invoice System (インボイス制度) required since Oct 2023.',
-    requiresTaxId: true,
-    taxIdFormat: 'T1234567890123',
-  },
-
-  TH: {
-    name: 'Thailand',
-    code: 'TH',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'VAT',
-      rate: 0.07,
-      serviceCharge: {
-        enabled: true,
-        label: 'Service Charge',
-        rate: 0.10,
-        taxable: true, // VAT applies on service charge in Thailand
-        optional: false,
-      },
-      taxIdLabel: 'Tax ID',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'VAT 7% on restaurant services. 10% service charge is standard in upscale restaurants and hotels. Combined effective surcharge: ~17.7%.',
-    requiresTaxId: true,
-    taxIdFormat: '0-1234-56789-01-2',
-  },
-
-  // ═══════════════════════════════════════════════════════
-  //  NORTH AMERICA
-  // ═══════════════════════════════════════════════════════
-
-  US: {
-    name: 'United States',
-    code: 'US',
-    config: {
-      enabled: true,
-      mode: 'exclusive',
-      label: 'Sales Tax',
-      rate: 0.0825, // NYC default; varies by state/city
-      serviceCharge: {
-        enabled: false,
-        label: 'Service Charge',
-        rate: 0,
-        taxable: false,
-        optional: true,
-      },
-      taxIdLabel: 'EIN',
-      showBreakdown: true,
-      roundingMode: 'line', // US standard: round per line item
-    },
-    legalNote: 'Sales Tax varies by state, county, and city (range: 0%–10.25%). Configure the exact combined rate for your jurisdiction. No federal VAT.',
-    requiresTaxId: true,
-    taxIdFormat: '12-3456789',
-  },
-
-  CA: {
-    name: 'Canada',
-    code: 'CA',
-    config: {
-      enabled: true,
-      mode: 'exclusive',
-      label: 'HST',
-      rate: 0.13, // Ontario; varies by province
-      serviceCharge: {
-        enabled: false,
-        label: 'Service Charge',
-        rate: 0,
-        taxable: false,
-        optional: true,
-      },
-      taxIdLabel: 'BN/GST No.',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'HST 13% (Ontario), GST 5% + PST varies by province. Alberta: GST 5% only. British Columbia: GST 5% + PST 7%. Quebec: GST 5% + QST 9.975%.',
-    requiresTaxId: true,
-    taxIdFormat: '123456789RT0001',
-  },
-
-  MX: {
-    name: 'Mexico',
-    code: 'MX',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'IVA',
-      rate: 0.16,
-      serviceCharge: {
-        enabled: false,
-        label: 'Cargo de Servicio',
-        rate: 0,
-        taxable: false,
-        optional: true,
-      },
-      taxIdLabel: 'RFC',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'IVA 16% on all restaurant food and beverages. Electronic invoicing (CFDI) mandatory. Propinas (tips) are voluntary and not taxed as part of the sale.',
-    requiresTaxId: true,
-    taxIdFormat: 'ABCD123456XYZ',
-  },
-
-  // ═══════════════════════════════════════════════════════
-  //  EUROPE
-  // ═══════════════════════════════════════════════════════
-
-  GB: {
-    name: 'United Kingdom',
-    code: 'GB',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'VAT',
-      rate: 0.20,
-      serviceCharge: {
-        enabled: false,
-        label: 'Service Charge',
-        rate: 0.125, // 12.5% is common in UK restaurants
-        taxable: true, // VAT applies on compulsory service charges
-        optional: true, // Legally must be optional if stated
-      },
-      taxIdLabel: 'VAT No.',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'VAT 20% standard rate on all restaurant food and drink. Registration mandatory above £90,000 turnover. Discretionary service charges are subject to VAT.',
-    requiresTaxId: true,
-    taxIdFormat: 'GB 123 4567 89',
-  },
-
-  DE: {
-    name: 'Germany',
-    code: 'DE',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'MwSt.',
-      rate: 0.19,
-      rules: [
-        { label: 'MwSt.', rate: 0.07, mode: 'inclusive', appliesTo: ['food'] },
-        { label: 'MwSt.', rate: 0.19, mode: 'inclusive', appliesTo: ['alcohol', 'beverage'] },
-      ],
-      serviceCharge: {
-        enabled: false,
-        label: 'Servicegebühr',
-        rate: 0,
-        taxable: false,
-        optional: true,
-      },
-      taxIdLabel: 'USt-IdNr.',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'Reduced rate 7% for prepared food (extended through 2026). Standard 19% for beverages and alcohol. Electronic cash register (TSE) mandatory.',
-    requiresTaxId: true,
-    taxIdFormat: 'DE123456789',
-  },
-
-  FR: {
-    name: 'France',
-    code: 'FR',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'TVA',
-      rate: 0.10,
-      rules: [
-        { label: 'TVA', rate: 0.10, mode: 'inclusive', appliesTo: ['food', 'beverage'] },
-        { label: 'TVA', rate: 0.20, mode: 'inclusive', appliesTo: ['alcohol'] },
-      ],
-      serviceCharge: {
-        enabled: true,
-        label: 'Service compris',
-        rate: 0.15, // "Service compris" 15% is standard
-        taxable: true,
-        optional: false, // Legally included in France
-      },
-      taxIdLabel: 'N° TVA',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'TVA 10% for restaurant food and non-alcoholic drinks (reduced rate). 20% for alcoholic beverages. Service is legally included in prices ("service compris"). Electronic ticketing systems (NF525) required.',
-    requiresTaxId: true,
-    taxIdFormat: 'FR12 345678901',
-  },
-
-  IT: {
-    name: 'Italy',
-    code: 'IT',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'IVA',
-      rate: 0.10,
-      rules: [
-        { label: 'IVA', rate: 0.10, mode: 'inclusive', appliesTo: ['food', 'beverage'] },
-        { label: 'IVA', rate: 0.22, mode: 'inclusive', appliesTo: ['alcohol'] },
-      ],
-      serviceCharge: {
-        enabled: true,
-        label: 'Coperto',
-        rate: 0.0, // Coperto is a fixed amount, not percentage
-        taxable: true,
-        optional: false,
-      },
-      taxIdLabel: 'P.IVA',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'IVA 10% for restaurant food services (reduced rate). 22% for alcohol. "Coperto" (cover charge) ranges €1–€5 fixed per person and is legal in most regions except Lazio. Electronic invoicing (fattura elettronica) mandatory.',
-    requiresTaxId: true,
-    taxIdFormat: 'IT12345678901',
-  },
-
-  ES: {
-    name: 'Spain',
-    code: 'ES',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'IVA',
-      rate: 0.10,
-      rules: [
-        { label: 'IVA', rate: 0.10, mode: 'inclusive', appliesTo: ['food', 'beverage'] },
-        { label: 'IVA', rate: 0.21, mode: 'inclusive', appliesTo: ['alcohol'] },
-      ],
-      serviceCharge: {
-        enabled: false,
-        label: 'Servicio',
-        rate: 0,
-        taxable: false,
-        optional: true,
-      },
-      taxIdLabel: 'NIF/CIF',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'IVA 10% for restaurant services (reduced rate). 21% for alcoholic beverages. Electronic billing systems required in many autonomous communities.',
-    requiresTaxId: true,
-    taxIdFormat: 'ES B12345678',
-  },
-
-  NL: {
-    name: 'Netherlands',
-    code: 'NL',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'BTW',
-      rate: 0.09,
-      rules: [
-        { label: 'BTW', rate: 0.09, mode: 'inclusive', appliesTo: ['food', 'beverage'] },
-        { label: 'BTW', rate: 0.21, mode: 'inclusive', appliesTo: ['alcohol'] },
-      ],
-      serviceCharge: {
-        enabled: false,
-        label: 'Servicekosten',
-        rate: 0,
-        taxable: false,
-        optional: true,
-      },
-      taxIdLabel: 'BTW-nummer',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'BTW 9% reduced rate for food and non-alcoholic drinks in restaurants. 21% for alcoholic beverages. Service included in prices by convention.',
-    requiresTaxId: true,
-    taxIdFormat: 'NL123456789B01',
-  },
-
-  TR: {
-    name: 'Turkey',
-    code: 'TR',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'KDV',
-      rate: 0.08,
-      rules: [
-        { label: 'KDV', rate: 0.08, mode: 'inclusive', appliesTo: ['food', 'beverage'] },
-        { label: 'KDV', rate: 0.20, mode: 'inclusive', appliesTo: ['alcohol'] },
-      ],
-      serviceCharge: {
-        enabled: false,
-        label: 'Servis Ücreti',
-        rate: 0.10,
-        taxable: true,
-        optional: true,
-      },
-      taxIdLabel: 'Vergi No.',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'KDV 8% for restaurant food services. 20% for alcoholic beverages. ÖTV (special consumption tax) may also apply to certain alcohol. Electronic fiscal devices required.',
-    requiresTaxId: true,
-    taxIdFormat: '1234567890',
-  },
-
-  // ═══════════════════════════════════════════════════════
-  //  MIDDLE EAST & AFRICA
-  // ═══════════════════════════════════════════════════════
-
-  AE: {
-    name: 'United Arab Emirates',
-    code: 'AE',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'VAT',
-      rate: 0.05,
-      serviceCharge: {
-        enabled: true,
-        label: 'Service Charge',
-        rate: 0.10,
-        taxable: true, // VAT applies on service charge
-        optional: false,
-      },
-      taxIdLabel: 'TRN',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'VAT 5% on all goods and services. TRN (Tax Registration Number) mandatory on invoices. 10% service charge and 7% municipality fee common in Dubai restaurants. No alcohol tax via VAT, but license fees apply.',
-    requiresTaxId: true,
-    taxIdFormat: '100123456700003',
-  },
-
-  SA: {
-    name: 'Saudi Arabia',
-    code: 'SA',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'VAT',
-      rate: 0.15,
-      serviceCharge: {
-        enabled: false,
-        label: 'Service Charge',
-        rate: 0,
-        taxable: false,
-        optional: true,
-      },
-      taxIdLabel: 'VAT No.',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'VAT 15% (increased from 5% in July 2020). Electronic invoicing (FATOORA) Phase 2 compliance mandatory. No alcohol is served in Saudi restaurants.',
-    requiresTaxId: true,
-    taxIdFormat: '300012345600003',
-  },
-
-  QA: {
-    name: 'Qatar',
-    code: 'QA',
-    config: {
-      enabled: false,
-      mode: 'inclusive',
-      label: 'No Tax',
-      rate: 0,
-      serviceCharge: {
-        enabled: true,
-        label: 'Service Charge',
-        rate: 0.10,
-        taxable: false,
-        optional: false,
-      },
-      taxIdLabel: 'Tax Card No.',
-      showBreakdown: false,
-      roundingMode: 'total',
-    },
-    legalNote: 'Qatar has NO VAT or sales tax. Service charges of 10% may be applied by some restaurants. No plans for VAT introduction announced as of 2026.',
-    requiresTaxId: false,
-  },
-
-  ZA: {
-    name: 'South Africa',
-    code: 'ZA',
-    config: {
-      enabled: true,
-      mode: 'inclusive',
-      label: 'VAT',
-      rate: 0.15,
-      serviceCharge: {
-        enabled: false,
-        label: 'Service Charge',
-        rate: 0,
-        taxable: false,
-        optional: true,
-      },
-      taxIdLabel: 'VAT No.',
-      showBreakdown: true,
-      roundingMode: 'total',
-    },
-    legalNote: 'VAT 15% on all restaurant goods and services. Registration mandatory above ZAR 1 million turnover. Tips are customary (10–15%) but not mandatory.',
-    requiresTaxId: true,
-    taxIdFormat: '4123456789',
-  },
-};
+/**
+ * Master registry of country-specific tax profiles covering all 44 countries.
+ */
+export const COUNTRY_TAX_PROFILES: Record<string, CountryTaxProfile> = buildAllTaxProfiles();
 
 /**
  * Get the tax profile for a given country code.
- * Falls back to a generic 0% profile for unknown countries.
+ * Supports country codes and regional overrides (e.g. 'US-CA', 'CA-QC').
+ * Falls back to generic profile for unknown countries.
  */
-export function getCountryTaxProfile(countryCode: string): CountryTaxProfile {
-  const profile = COUNTRY_TAX_PROFILES[countryCode.toUpperCase()];
-  if (profile) return profile;
+export function getCountryTaxProfile(countryCode: string, regionCode?: string): CountryTaxProfile {
+  const cleanCode = (countryCode || 'IN').toUpperCase().trim();
+  const profile = COUNTRY_TAX_PROFILES[cleanCode];
 
-  // Generic fallback for unknown countries
+  if (profile) {
+    // If a regional override is requested for a federal country
+    if (regionCode && profile.registryEntry?.regions) {
+      const cleanSub = regionCode.replace(/^[A-Z]{2}-/i, '').toUpperCase();
+      const region = profile.registryEntry.regions.find(
+        (r) => r.code.toUpperCase() === regionCode.toUpperCase() || r.code.toUpperCase() === cleanSub
+      );
+      if (region) {
+        return {
+          ...profile,
+          name: `${profile.name} (${region.name})`,
+          config: {
+            ...profile.config,
+            rate: region.restaurantRate,
+            label: region.taxLabel,
+            mode: region.taxMode,
+          },
+          legalNote: region.notes || profile.legalNote,
+        };
+      }
+    }
+    return profile;
+  }
+
+  // Generic fallback for unknown jurisdictions
   return {
     name: 'Unknown Country',
-    code: countryCode.toUpperCase(),
+    code: cleanCode,
     config: {
       enabled: false,
       mode: 'inclusive',
@@ -579,19 +202,35 @@ export function getCountryTaxProfile(countryCode: string): CountryTaxProfile {
       showBreakdown: false,
       roundingMode: 'total',
     },
-    legalNote: 'Tax configuration not available for this country. Please configure manually.',
+    legalNote: 'Tax configuration not verified for this country. Please configure manually via the Custom Country Setup Wizard.',
     requiresTaxId: false,
   };
 }
 
 /**
- * List all available country tax profiles.
+ * List all available country tax profiles with summary details.
  */
-export function listAvailableTaxProfiles(): Array<{ code: string; name: string; rate: number; label: string }> {
-  return Object.entries(COUNTRY_TAX_PROFILES).map(([code, profile]) => ({
-    code,
-    name: profile.name,
-    rate: profile.config.rate,
-    label: profile.config.label,
-  }));
+export function listAvailableTaxProfiles(): Array<{
+  code: string;
+  name: string;
+  rate: number;
+  label: string;
+  tier: 1 | 2 | 3;
+  status: 'verified' | 'unverified' | 'conflict';
+  currency: string;
+  currencyDecimals: number;
+}> {
+  return Object.entries(COUNTRY_TAX_PROFILES).map(([code, profile]) => {
+    const entry = profile.registryEntry;
+    return {
+      code,
+      name: profile.name,
+      rate: profile.config.rate,
+      label: profile.config.label,
+      tier: entry?.tier || 3,
+      status: entry?.status || 'unverified',
+      currency: entry?.currency || 'USD',
+      currencyDecimals: entry?.currencyDecimals !== undefined ? entry.currencyDecimals : 2,
+    };
+  });
 }

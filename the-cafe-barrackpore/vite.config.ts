@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   build: {
-    emptyOutDir: true,
+    emptyOutDir: false,
     rollupOptions: {
       output: {
         manualChunks(id) {

@@ -2,7 +2,7 @@
  * Core Order types for The Café Barrackpore ordering foundation.
  */
 import type { PaymentStatus, PaymentProvider } from './payment';
-import type { TaxRule, ServiceChargeConfig, TaxMode } from './tax';
+import type { TaxRule, ServiceChargeConfig, TaxMode, TaxCategory, DatedTaxRule } from './tax';
 
 export type OrderType = 'dine_in' | 'takeaway';
 export type OrderSource = 'website' | 'qr';
@@ -21,6 +21,7 @@ export interface OrderItemInput {
   price: number;
   quantity: number;
   selected_options?: Record<string, unknown>;
+  tax_category?: TaxCategory;
 }
 
 export interface OrderItemRecord {
@@ -32,6 +33,7 @@ export interface OrderItemRecord {
   unit_price: number;
   line_total: number;
   selected_options: Record<string, unknown>;
+  tax_category?: TaxCategory;
   created_at: string;
 }
 
@@ -42,9 +44,19 @@ export interface TaxCalculationOptions {
   mode?: TaxMode;
   serviceCharge?: Partial<ServiceChargeConfig>;
   rules?: TaxRule[];
+  datedRules?: DatedTaxRule[];
+  orderDate?: string | Date;
+  orderType?: OrderType;
+  country?: string;
+  region?: string;
+  taxId?: string;
   taxIdLabel?: string;
+  ratesAsOf?: string;
+  tipAmount?: number;
   showBreakdown?: boolean;
   roundingMode?: 'line' | 'total';
+  currency?: string;
+  discountAmount?: number;
 }
 
 export interface CreateOrderPayload {
@@ -106,13 +118,20 @@ export interface OrderCalculationSummary {
   taxMode?: 'inclusive' | 'exclusive';
   serviceCharge?: number;
   serviceChargeLabel?: string;
+  tipAmount?: number;
   taxBreakdownLines?: Array<{
     label: string;
     rate: number;
     mode: string;
     amount: number;
+    appliedTo?: TaxCategory[];
   }>;
   netSubtotal?: number;
+  discountAmount?: number;
+  discountedSubtotal?: number;
+  ratesAsOf?: string;
+  taxId?: string;
+  taxIdLabel?: string;
   itemCount: number;
   lineItems: Array<{
     menu_item_id: string;
@@ -120,6 +139,7 @@ export interface OrderCalculationSummary {
     quantity: number;
     unit_price: number;
     line_total: number;
+    tax_category?: TaxCategory;
   }>;
 }
 

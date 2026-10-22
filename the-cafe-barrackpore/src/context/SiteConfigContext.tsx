@@ -121,8 +121,10 @@ import {
   formatRestaurantTime,
   formatRestaurantDateTime,
 } from '../utils/datetime';
+import { useOptionalI18n } from '../i18n';
 
-import type { RestaurantSettings } from '../types/dashboard';
+import type { RestaurantSettings, RestaurantFeatureFlags } from '../types/dashboard';
+import { DEFAULT_FEATURE_FLAGS } from '../types/dashboard';
 
 export const RESTAURANT_CONFIG_STORAGE_KEY = 'cafe_restaurant_config';
 export const RESTAURANT_CONFIG_UPDATED_EVENT = 'cafe:restaurant_config_updated';
@@ -132,6 +134,14 @@ const mapSettingsToConfig = (
 ): RestaurantLocalizationConfig => {
   const country = settings.country || 'IN';
   const preset = RESTAURANT_PRESETS[country] || RESTAURANT_PRESETS.IN;
+
+  const resolvedFeatures: RestaurantFeatureFlags = {
+    ...DEFAULT_FEATURE_FLAGS,
+    ...(settings.features || {}),
+    online_ordering: settings.features?.online_ordering ?? settings.is_ordering_enabled ?? true,
+    reservations: settings.features?.reservations ?? settings.is_table_booking_enabled ?? true,
+    online_payments: settings.features?.online_payments ?? settings.payments_enabled ?? settings.payment_enabled ?? false,
+  };
 
   return {
     country,
@@ -145,8 +155,8 @@ const mapSettingsToConfig = (
     phoneValidationMode: 'country',
     openingTime: settings.opening_time || DEFAULT_RESTAURANT_CONFIG.openingTime,
     closingTime: settings.closing_time || DEFAULT_RESTAURANT_CONFIG.closingTime,
-    isOrderingEnabled: settings.is_ordering_enabled ?? true,
-    isTableBookingEnabled: settings.is_table_booking_enabled ?? true,
+    isOrderingEnabled: resolvedFeatures.online_ordering,
+    isTableBookingEnabled: resolvedFeatures.reservations,
     announcementBanner: settings.announcement_banner ?? null,
     governingLaw: settings.governing_law || undefined,
     tax: {
@@ -154,6 +164,21 @@ const mapSettingsToConfig = (
       mode: (settings.tax_mode as any) || preset.taxMode,
       label: settings.tax_label || preset.taxLabel,
       rate: settings.tax_rate ?? preset.taxRate,
+      taxId: settings.tax_id || undefined,
+      taxIdLabel: settings.tax_id_label || (preset as any).taxIdLabel || 'Tax ID',
+      region: settings.region || undefined,
+      accountant_verified: settings.accountant_verified ?? false,
+      showBreakdown: settings.tax_show_breakdown ?? true,
+      roundingMode: settings.tax_rounding_mode || 'total',
+      serviceCharge: settings.service_charge_enabled
+        ? {
+            enabled: true,
+            label: settings.service_charge_label || 'Service Charge',
+            rate: settings.service_charge_rate || 0,
+            taxable: settings.service_charge_taxable ?? false,
+            optional: settings.service_charge_optional ?? false,
+          }
+        : undefined,
     },
     dietary: {
       system: (settings.dietary_system as any) || preset.dietarySystem,
@@ -179,6 +204,7 @@ const mapSettingsToConfig = (
       mode: (settings.payment_mode as any) || preset.payments?.mode || 'disabled',
       allow_pay_at_counter: settings.allow_pay_at_counter ?? true,
     },
+    features: resolvedFeatures,
   };
 };
 
@@ -200,6 +226,7 @@ export interface SiteConfigContextType {
 
   // Localization and international restaurant configuration
   restaurantConfig: RestaurantLocalizationConfig;
+  features: RestaurantFeatureFlags;
   /** Unified Restaurant Engine Configuration (theme, layout variants, section toggles) */
   engineConfig: RestaurantEngineConfig;
   formatPrice: (amount: number, customCurrency?: string) => string;
@@ -315,6 +342,7 @@ const defaultContextValue: SiteConfigContextType = {
   updateSection: async () => false,
 
   restaurantConfig: DEFAULT_RESTAURANT_CONFIG,
+  features: DEFAULT_FEATURE_FLAGS,
   engineConfig: defaultEngineConfig,
   formatPrice: (amount: number, customCurrency?: string) =>
     formatCurrency(
@@ -614,10 +642,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
         });
     };
 
-    const isPublicPage = typeof window !== 'undefined' && !window.location.pathname.startsWith('/staff');
-    if (!isPublicPage) {
-      syncSettings();
-    }
+    syncSettings();
 
     return () => {
       isMounted = false;
@@ -717,31 +742,34 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
     return true;
   };
 
+  const optionalI18n = useOptionalI18n();
+  const activeLocale = optionalI18n?.locale || restaurantConfig.locale;
+
   const formatPrice = (amount: number, customCurrency?: string) =>
     formatCurrency(
       amount,
       customCurrency || restaurantConfig.currency,
-      restaurantConfig.locale
+      activeLocale
     );
 
   const formatDate = (date: Date | string) =>
     formatRestaurantDate(
       date,
-      restaurantConfig.locale,
+      activeLocale,
       restaurantConfig.timezone
     );
 
   const formatTime = (date: Date | string) =>
     formatRestaurantTime(
       date,
-      restaurantConfig.locale,
+      activeLocale,
       restaurantConfig.timezone
     );
 
   const formatDateTime = (date: Date | string) =>
     formatRestaurantDateTime(
       date,
-      restaurantConfig.locale,
+      activeLocale,
       restaurantConfig.timezone
     );
 
@@ -750,6 +778,12 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
     ...defaultEngineConfig,
     operational: restaurantConfig,
     theme: activeTheme,
+    sections: {
+      ...defaultEngineConfig.sections,
+      specialsBanner: restaurantConfig.features.specials_banner,
+      gallery: restaurantConfig.features.gallery,
+      vipClub: restaurantConfig.features.vip_club,
+    },
     content: {
       hero: {
         headline: config.hero.headline || defaultEngineConfig.content?.hero?.headline || '',
@@ -790,6 +824,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
         ...config,
         updateSection,
         restaurantConfig,
+        features: restaurantConfig.features,
         engineConfig,
         formatPrice,
         formatDate,

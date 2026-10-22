@@ -13,19 +13,12 @@ import * as crypto from 'crypto';
 
 console.log('=== RUNNING PHASE 1M PAYMENT WEBHOOK & CONTRACT TESTS ===\n');
 
+import { toMinorUnits, fromMinorUnits } from '../src/utils/currency';
+
 // -------------------------------------------------------------
 // Test 1: Currency Major-to-Subunit Precision & Floating Point Safety
 // -------------------------------------------------------------
 console.log('Test 1: Currency Major-to-Subunit Precision');
-
-function convertToSubunits(amount: number, currency: string): number {
-  const zeroDecimalCurrencies = ['JPY', 'KRW', 'VND', 'CLP', 'BIF', 'DJF', 'GNF', 'KMF', 'PYG', 'RWF', 'UGX'];
-  if (zeroDecimalCurrencies.includes(currency.toUpperCase())) {
-    return Math.round(amount);
-  }
-  // Standard 2-decimal currencies (INR, USD, EUR, GBP, AED, CAD, AUD, etc.)
-  return Math.round(amount * 100);
-}
 
 const subunitCases = [
   { amount: 130.50, currency: 'INR', expected: 13050 },
@@ -33,17 +26,24 @@ const subunitCases = [
   { amount: 0.99, currency: 'EUR', expected: 99 },
   { amount: 5000.00, currency: 'INR', expected: 500000 },
   { amount: 1250, currency: 'JPY', expected: 1250 }, // Zero decimal
+  { amount: 45000, currency: 'KRW', expected: 45000 }, // Zero decimal
+  { amount: 5.250, currency: 'KWD', expected: 5250 }, // 3-decimal
+  { amount: 10.500, currency: 'BHD', expected: 10500 }, // 3-decimal
   { amount: 24.35, currency: 'GBP', expected: 2435 },
   { amount: 100.05, currency: 'AED', expected: 10005 },
 ];
 
 for (const sc of subunitCases) {
-  const result = convertToSubunits(sc.amount, sc.currency);
+  const result = toMinorUnits(sc.amount, sc.currency);
   if (result !== sc.expected) {
     throw new Error(`Test 1 failed: Subunit conversion for ${sc.amount} ${sc.currency} expected ${sc.expected}, got ${result}`);
   }
+  const roundTripped = fromMinorUnits(result, sc.currency);
+  if (roundTripped !== sc.amount) {
+    throw new Error(`Test 1 failed: Round trip for ${sc.amount} ${sc.currency} expected ${sc.amount}, got ${roundTripped}`);
+  }
 }
-console.log('✔ Test 1: Subunit conversions (paise/cents/zero-decimal) verified with 100% precision.');
+console.log('✔ Test 1: Subunit conversions (paise/cents/zero-decimal/three-decimal) verified with 100% precision.');
 
 // -------------------------------------------------------------
 // Test 2: Timing-Safe HMAC SHA-256 Signature Verification Contract

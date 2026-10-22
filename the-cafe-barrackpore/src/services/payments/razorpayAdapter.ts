@@ -7,6 +7,7 @@ import type {
   WebhookEventResult,
 } from '../../types/payment';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { fromMinorUnits } from '../../utils/currency';
 
 /**
  * Razorpay Payment Adapter
@@ -83,6 +84,9 @@ export class RazorpayAdapter implements PaymentProviderAdapter {
             checkoutUrl: data.checkoutUrl,
             orderRef: data.orderRef || params.orderRef,
             amount: typeof data.amount === 'number' ? data.amount : params.amount,
+            amountInMinorUnits: typeof data.amountInMinorUnits === 'number'
+              ? data.amountInMinorUnits
+              : (typeof data.amountInPaise === 'number' ? data.amountInPaise : undefined),
             currency: (data.currency || params.currency).toUpperCase(),
             customer: data.customer,
           };
@@ -217,8 +221,10 @@ export class RazorpayAdapter implements PaymentProviderAdapter {
         event.order_ref;
 
       const providerPaymentId = paymentEntity.id || event.payment_id;
-      const amount = paymentEntity.amount ? paymentEntity.amount / 100 : paymentEntity.amount;
       const currency = paymentEntity.currency?.toUpperCase() || 'INR';
+      const amount = paymentEntity.amount !== undefined && paymentEntity.amount !== null
+        ? fromMinorUnits(Number(paymentEntity.amount), currency)
+        : undefined;
 
       if (eventType === 'payment.captured' || eventType === 'order.paid') {
         return {

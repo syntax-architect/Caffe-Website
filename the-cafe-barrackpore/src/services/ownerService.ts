@@ -52,7 +52,7 @@ const getDemoDiscountCodes = (): DiscountCode[] => {
   const now = new Date().toISOString();
   return [
     { id: 'disc-1', code: 'WELCOME10', description: '10% off for new customers', discount_type: 'percentage', discount_value: 10, min_order_amount: 200, max_discount_amount: 100, max_uses: null, used_count: 24, valid_from: now, valid_until: null, active: true, created_by: null, created_at: now, updated_at: now },
-    { id: 'disc-2', code: 'FLAT50', description: '₹50 off on orders above ₹500', discount_type: 'flat', discount_value: 50, min_order_amount: 500, max_discount_amount: null, max_uses: 100, used_count: 67, valid_from: now, valid_until: '2027-01-01T00:00:00Z', active: true, created_by: null, created_at: now, updated_at: now },
+    { id: 'disc-2', code: 'FLAT50', description: 'Flat 50 off on orders above 500', discount_type: 'flat', discount_value: 50, min_order_amount: 500, max_discount_amount: null, max_uses: 100, used_count: 67, valid_from: now, valid_until: '2027-01-01T00:00:00Z', active: true, created_by: null, created_at: now, updated_at: now },
   ];
 };
 
@@ -427,7 +427,7 @@ export const validateDiscountCode = async (
     const found = codes.find((c) => c.code.toUpperCase() === code.toUpperCase() && c.active);
     if (!found) return { valid: false, error: 'Invalid or expired discount code.' };
     if (orderTotal < found.min_order_amount) {
-      return { valid: false, error: `Minimum order amount: ₹${found.min_order_amount}` };
+      return { valid: false, error: `Minimum order amount: ${found.min_order_amount}` };
     }
     if (found.max_uses && found.used_count >= found.max_uses) {
       return { valid: false, error: 'This code has reached its usage limit.' };
@@ -465,7 +465,7 @@ export const validateDiscountCode = async (
     }
 
     if (orderTotal < (data.min_order_amount || 0)) {
-      return { valid: false, error: `Minimum order amount: ₹${data.min_order_amount}` };
+      return { valid: false, error: `Minimum order amount: ${data.min_order_amount}` };
     }
 
     let discountAmount = 0;

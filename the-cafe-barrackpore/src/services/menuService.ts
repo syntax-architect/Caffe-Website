@@ -58,6 +58,7 @@ export async function fetchMenuItems(): Promise<MenuItem[]> {
         category: row.category_id,
         image: row.image_url,
         tag: row.popular ? 'Bestseller' : null,
+        tax_category: row.tax_category || 'food',
       }));
     }
 
@@ -96,6 +97,7 @@ export async function getCanonicalMenuItem(idOrName: string): Promise<MenuItem |
           category: data.category_id,
           image: data.image_url,
           tag: data.popular ? 'Bestseller' : null,
+          tax_category: data.tax_category || 'food',
         };
         // Add to cache
         inMemoryMenuCache.push(item);
@@ -130,6 +132,9 @@ export async function upsertMenuItem(
     available: item.available !== false,
     sort_order: item.sort_order ?? 0,
     allergens: item.allergens || [],
+    stock_count: item.stock_count !== undefined ? item.stock_count : null,
+    tax_category: item.tax_category || 'food',
+    translations: item.translations || {},
     updated_at: new Date().toISOString(),
   };
 
@@ -141,6 +146,8 @@ export async function upsertMenuItem(
       description: payload.description || '',
       allergens: payload.allergens,
       tag: payload.popular ? 'Bestseller' : null,
+      tax_category: payload.tax_category,
+      translations: payload.translations,
     };
     const existingIdx = inMemoryMenuCache.findIndex((i) => i.id === targetId);
     if (existingIdx !== -1) {
@@ -174,6 +181,7 @@ export async function upsertMenuItem(
       category: data.category_id,
       image: data.image_url,
       tag: data.popular ? 'Bestseller' : null,
+      translations: data.translations || payload.translations,
     };
 
     const existingIdx = inMemoryMenuCache.findIndex((i) => i.id === targetId);

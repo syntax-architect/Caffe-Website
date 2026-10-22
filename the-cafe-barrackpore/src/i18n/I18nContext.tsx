@@ -13,8 +13,25 @@ import React, { createContext, useContext, useState, useEffect, useCallback, typ
 import type { SupportedLanguage, TranslationDictionary, LanguageDirection, LanguageMeta } from './types';
 import { LANGUAGE_META } from './types';
 import { en } from './en';
+import { formatCurrency as baseFormatCurrency, type CurrencyFormatOptions } from '../utils/currency';
+import { formatRestaurantDate, formatRestaurantTime, formatRestaurantDateTime } from '../utils/datetime';
 
 const I18N_STORAGE_KEY = 'cafe_language';
+
+export const LANGUAGE_LOCALE_MAP: Record<SupportedLanguage, string> = {
+  en: 'en-US',
+  ar: 'ar-EG',
+  fr: 'fr-FR',
+  de: 'de-DE',
+  es: 'es-ES',
+  pt: 'pt-BR',
+  ja: 'ja-JP',
+  zh: 'zh-CN',
+  ko: 'ko-KR',
+  hi: 'hi-IN',
+  tr: 'tr-TR',
+  th: 'th-TH',
+};
 
 /**
  * Lazy-loaded language packs — only English is bundled by default.
@@ -51,6 +68,8 @@ function getNestedValue(obj: any, path: string): string | undefined {
 export interface I18nContextType {
   /** Current active language code */
   language: SupportedLanguage;
+  /** Active BCP-47 locale code (e.g. 'en-US', 'ar-EG', 'hi-IN') */
+  locale: string;
   /** Current text direction ('ltr' or 'rtl') */
   direction: LanguageDirection;
   /** Metadata for the current language */
@@ -67,16 +86,32 @@ export interface I18nContextType {
   t: (key: string, fallback?: string) => string;
   /** Switch to a different language */
   setLanguage: (lang: SupportedLanguage) => void;
+  /** Format a number according to the active locale */
+  formatNumber: (amount: number, options?: Intl.NumberFormatOptions) => string;
+  /** Format a currency according to the active locale */
+  formatCurrency: (amount: number, currency?: string, options?: CurrencyFormatOptions) => string;
+  /** Format a date according to the active locale */
+  formatDate: (date: Date | string | number, options?: Intl.DateTimeFormatOptions) => string;
+  /** Format a time according to the active locale */
+  formatTime: (date: Date | string | number, options?: Intl.DateTimeFormatOptions) => string;
+  /** Format a datetime according to the active locale */
+  formatDateTime: (date: Date | string | number, options?: Intl.DateTimeFormatOptions) => string;
 }
 
 const defaultContext: I18nContextType = {
   language: 'en',
+  locale: 'en-US',
   direction: 'ltr',
   meta: LANGUAGE_META.en,
   isLoading: false,
   availableLanguages: Object.values(LANGUAGE_META),
   t: (key: string, fallback?: string) => getNestedValue(en, key) || fallback || key,
   setLanguage: () => {},
+  formatNumber: (amount: number) => String(amount),
+  formatCurrency: (amount: number, currency = 'INR') => `${currency} ${amount}`,
+  formatDate: (date: Date | string | number) => String(date),
+  formatTime: (date: Date | string | number) => String(date),
+  formatDateTime: (date: Date | string | number) => String(date),
 };
 
 const I18nContext = createContext<I18nContextType>(defaultContext);
@@ -173,16 +208,63 @@ export const I18nProvider: React.FC<{ children: ReactNode; defaultLanguage?: Sup
     }
   }, []);
 
+  const locale = LANGUAGE_LOCALE_MAP[language] || 'en-US';
+
+  const formatNumber = useCallback(
+    (amount: number, options?: Intl.NumberFormatOptions): string => {
+      try {
+        return new Intl.NumberFormat(locale, options).format(amount);
+      } catch {
+        return String(amount);
+      }
+    },
+    [locale]
+  );
+
+  const formatCurrency = useCallback(
+    (amount: number, currency = 'INR', options?: CurrencyFormatOptions): string => {
+      return baseFormatCurrency(amount, currency, locale, options);
+    },
+    [locale]
+  );
+
+  const formatDate = useCallback(
+    (date: Date | string | number, options?: Intl.DateTimeFormatOptions): string => {
+      return formatRestaurantDate(date, locale, 'Asia/Kolkata', options);
+    },
+    [locale]
+  );
+
+  const formatTime = useCallback(
+    (date: Date | string | number, options?: Intl.DateTimeFormatOptions): string => {
+      return formatRestaurantTime(date, locale, 'Asia/Kolkata', options);
+    },
+    [locale]
+  );
+
+  const formatDateTime = useCallback(
+    (date: Date | string | number, options?: Intl.DateTimeFormatOptions): string => {
+      return formatRestaurantDateTime(date, locale, 'Asia/Kolkata', options);
+    },
+    [locale]
+  );
+
   return (
     <I18nContext.Provider
       value={{
         language,
+        locale,
         direction,
         meta,
         isLoading,
         availableLanguages: Object.values(LANGUAGE_META),
         t,
         setLanguage,
+        formatNumber,
+        formatCurrency,
+        formatDate,
+        formatTime,
+        formatDateTime,
       }}
     >
       {children}
@@ -198,11 +280,14 @@ export const I18nProvider: React.FC<{ children: ReactNode; defaultLanguage?: Sup
  * return <h1>{t('hero.viewMenu')}</h1>;
  * ```
  */
-// eslint-disable-next-line react-refresh/only-export-components
 export const useI18n = (): I18nContextType => {
   const context = useContext(I18nContext);
   if (!context) {
     throw new Error('useI18n must be used within an I18nProvider');
   }
   return context;
+};
+
+export const useOptionalI18n = (): I18nContextType | null => {
+  return useContext(I18nContext);
 };

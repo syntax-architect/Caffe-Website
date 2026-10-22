@@ -115,6 +115,25 @@ export interface TranslationDictionary {
     specialInstructionsPlaceholder: string;
     allergens?: string;
     customise?: string;
+    curatedGastronomy?: string;
+    artisanalSelection?: string;
+    culinaryCollection?: string;
+    pureVegOnly?: string;
+    filterVeg?: string;
+    categories?: string;
+    swipeHint?: string;
+    scrollPrev?: string;
+    scrollNext?: string;
+    orderingPausedTitle?: string;
+    browsingMode?: string;
+    browsingModeDesc?: string;
+    orderingPaused?: string;
+    add?: string;
+    chefsPick?: string;
+    signaturePick?: string;
+    addedToOrder?: string;
+    loadMore?: string;
+    noItems?: string;
   };
 
   // ─── Cart & Checkout ───────────────────────────────
@@ -298,6 +317,171 @@ export interface TranslationDictionary {
       saving: string;
       saved: string;
     };
+    pos: {
+      terminalTitle: string;
+      runningBill: string;
+      currentBill: string;
+      sendKOT: string;
+      kotTicket: string;
+      splitBill: string;
+      splitEqual: string;
+      splitByItem: string;
+      splitCustom: string;
+      tenderCash: string;
+      tenderCard: string;
+      tenderUPI: string;
+      tenderMixed: string;
+      changeDue: string;
+      tenderedAmount: string;
+      openDrawer: string;
+      voidItem: string;
+      voidBill: string;
+      voidReason: string;
+      managerPin: string;
+      managerAuthRequired: string;
+      applyDiscount: string;
+      discountPercent: string;
+      discountAmount: string;
+      issueRefund: string;
+      openShift: string;
+      closeShift: string;
+      shiftActive: string;
+      cashIn: string;
+      cashOut: string;
+      expectedCash: string;
+      actualCash: string;
+      variance: string;
+      zReport: string;
+      transferTable: string;
+      mergeTables: string;
+    };
+  };
+
+  // ─── Contact & Concierge ────────────────────────────
+  contact: {
+    drawerTitle: string;
+    drawerSubtitle: string;
+    fullName: string;
+    fullNamePlaceholder: string;
+    phone: string;
+    phonePlaceholder: string;
+    email: string;
+    emailPlaceholder: string;
+    inquiryType: string;
+    general: string;
+    event: string;
+    catering: string;
+    feedback: string;
+    press: string;
+    message: string;
+    messagePlaceholder: string;
+    submit: string;
+    submitting: string;
+    sentSuccess: string;
+    sentMessage: string;
+    newInquiry: string;
+    close: string;
+  };
+
+  // ─── VIP Club & Nocturnal Circle ───────────────────
+  vip: {
+    badge: string;
+    eyebrow: string;
+    title: string;
+    titleItalic: string;
+    subtitle: string;
+    emailPlaceholder: string;
+    join: string;
+    joining: string;
+    disclaimer: string;
+    successTitle: string;
+    successMessage: string;
+  };
+
+  // ─── Our Story & Heritage ───────────────────────────
+  story: {
+    badge: string;
+    title: string;
+    titleItalic: string;
+    subtitle: string;
+    description: string;
+    manifesto: string;
+  };
+
+  // ─── Moments Gallery ────────────────────────────────
+  gallery: {
+    badge: string;
+    title: string;
+    description: string;
+    all: string;
+    viewPhoto: string;
+    closeLightbox: string;
+    prevPhoto: string;
+    nextPhoto: string;
+  };
+
+  // ─── Cookie & Privacy Banner ────────────────────────
+  cookie: {
+    title: string;
+    message: string;
+    acceptAll: string;
+    essentialOnly: string;
+    privacy: string;
+    terms: string;
+  };
+
+  // ─── 404 Not Found Page ─────────────────────────────
+  notFound: {
+    title: string;
+    badge: string;
+    heading: string;
+    description: string;
+    backToHome: string;
+    browseMenu: string;
+    backToDining: string;
+  };
+
+  // ─── Order Success & Confirmation ───────────────────
+  orderSuccess: {
+    title: string;
+    subtitle: string;
+    cancelledTitle: string;
+    cancelledSubtitle: string;
+    orderRef: string;
+    table: string;
+    total: string;
+    status: string;
+    prepTime: string;
+    prepTimeNotice: string;
+    printReceipt: string;
+    orderMore: string;
+    backHome: string;
+    loadingOrder: string;
+  };
+
+  // ─── Legal Pages (Privacy & Terms) ─────────────────
+  legal: {
+    privacyTitle: string;
+    termsTitle: string;
+    backToHome: string;
+    effectiveDate: string;
+  };
+
+  // ─── Curved Menu Reel & Signatures ─────────────────
+  curvedReel: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    addToOrder: string;
+    added: string;
+    dragHint: string;
+  };
+
+  // ─── Language Switcher UI ───────────────────────────
+  languageSwitcher: {
+    label: string;
+    selectLanguage: string;
+    currentLanguage: string;
   };
 
   // ─── Notifications ─────────────────────────────────

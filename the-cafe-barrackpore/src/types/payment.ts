@@ -72,6 +72,7 @@ export interface PaymentCheckoutResult {
   orderRef: string;
   paymentToken?: string;
   amount: number;
+  amountInMinorUnits?: number;
   currency: string;
   customer?: { name?: string; contact?: string; phone?: string; email?: string };
   isDemo?: boolean;

@@ -11,11 +11,16 @@ import {
   deleteHappyHourSchedule,
 } from '../../services/ownerService';
 import { fetchMenuCategories, MENU_CATEGORIES_FALLBACK } from '../../services/menuService';
+import { useSiteConfig } from '../../context/SiteConfigContext';
+import { formatCurrency } from '../../utils/currency';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const DiscountsManagement: React.FC = () => {
   const { addNotification } = useNotification();
+  const { restaurantConfig } = useSiteConfig();
+  const currency = restaurantConfig.currency || 'INR';
+  const currencySymbol = restaurantConfig.currencySymbol || '₹';
   
   const [activeTab, setActiveTab] = useState<'discount_codes' | 'happy_hours'>('discount_codes');
   const [isLoading, setIsLoading] = useState(true);
@@ -305,9 +310,9 @@ export const DiscountsManagement: React.FC = () => {
                       <td className="px-4 py-3 font-mono font-bold text-white">{code.code}</td>
                       <td className="px-4 py-3 capitalize">{code.discount_type}</td>
                       <td className="px-4 py-3">
-                        {code.discount_type === 'percentage' ? `${code.discount_value}%` : `₹${code.discount_value}`}
+                        {code.discount_type === 'percentage' ? `${code.discount_value}%` : formatCurrency(code.discount_value, currency)}
                       </td>
-                      <td className="px-4 py-3">₹{code.min_order_amount}</td>
+                      <td className="px-4 py-3">{formatCurrency(code.min_order_amount, currency)}</td>
                       <td className="px-4 py-3">
                         {code.used_count} {code.max_uses ? `/ ${code.max_uses}` : ''}
                       </td>
@@ -459,7 +464,7 @@ export const DiscountsManagement: React.FC = () => {
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
                     >
                       <option value="percentage">Percentage (%)</option>
-                      <option value="flat">Flat Amount (₹)</option>
+                      <option value="flat">Flat Amount ({currencySymbol})</option>
                     </select>
                   </div>
                   <div>
@@ -478,7 +483,7 @@ export const DiscountsManagement: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Min Order (₹)</label>
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Min Order ({currencySymbol})</label>
                     <input
                       type="number"
                       min="0"
@@ -502,7 +507,7 @@ export const DiscountsManagement: React.FC = () => {
 
                 {dcFormType === 'percentage' && (
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Max Discount Amount (₹, Optional)</label>
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Max Discount Amount ({currencySymbol}, Optional)</label>
                     <input
                       type="number"
                       min="1"

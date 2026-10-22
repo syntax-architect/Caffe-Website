@@ -3,7 +3,7 @@ import type { User, Session } from '@supabase/supabase-js';
 /**
  * Allowed staff roles for The Café Barrackpore
  */
-export type StaffRole = 'owner' | 'manager' | 'staff';
+export type StaffRole = 'owner' | 'manager' | 'cashier' | 'waiter' | 'staff';
 
 /**
  * Profile record stored in public.staff_profiles
@@ -51,6 +51,8 @@ export interface AuthContextType {
   role: StaffRole | null;
   isOwner: boolean;
   isManager: boolean;
+  isCashier: boolean;
+  isWaiter: boolean;
   isStaff: boolean;
   isMfaAwaiting: boolean;
   mfaChallengeData: { factorId: string; challengeId: string } | null;

@@ -7,7 +7,9 @@ import type {
   DashboardOverviewData,
   RestaurantTable,
   RestaurantSettings,
+  RestaurantFeatureFlags,
 } from '../types/dashboard';
+import { DEFAULT_FEATURE_FLAGS } from '../types/dashboard';
 import { clientDetails } from '../config/client';
 
 /**
@@ -60,6 +62,7 @@ const DEFAULT_SETTINGS: RestaurantSettings = {
   payment_enabled: false,
   payments_enabled: false,
   allow_pay_at_counter: true,
+  features: DEFAULT_FEATURE_FLAGS,
 };
 
 const getDemoOrders = (): OrderRecord[] => {
@@ -895,8 +898,25 @@ export const updateRestaurantSettings = async (
         phone_country_code: settings.phone_country_code || '+91',
         tax_enabled: settings.tax_enabled ?? true,
         tax_mode: settings.tax_mode || 'inclusive',
-        tax_label: settings.tax_label || 'GST',
+        tax_label: settings.tax_label || 'Tax',
         tax_rate: settings.tax_rate ?? 0.05,
+        tax_rules: (settings as any).tax_rules || [],
+        tax_id: settings.tax_id || null,
+        tax_id_label: settings.tax_id_label || null,
+        tax_show_breakdown: settings.tax_show_breakdown ?? true,
+        tax_rounding_mode: settings.tax_rounding_mode || 'total',
+        region: settings.region || null,
+        accountant_verified: settings.accountant_verified ?? false,
+        accountant_verified_at: settings.accountant_verified_at || null,
+        accountant_notes: settings.accountant_notes || null,
+        cover_charge: settings.cover_charge ?? 0,
+        cover_charge_label: settings.cover_charge_label || 'Cover Charge',
+        cover_charge_taxable: settings.cover_charge_taxable ?? false,
+        service_charge_enabled: settings.service_charge_enabled ?? false,
+        service_charge_rate: settings.service_charge_rate ?? 0,
+        service_charge_label: settings.service_charge_label || 'Service Charge',
+        service_charge_taxable: settings.service_charge_taxable ?? false,
+        service_charge_optional: settings.service_charge_optional ?? false,
         dietary_system: settings.dietary_system || 'india',
         primary_contact_method: settings.primary_contact_method || 'whatsapp',
         email: settings.email || null,
@@ -908,6 +928,7 @@ export const updateRestaurantSettings = async (
         payment_enabled: settings.payments_enabled ?? settings.payment_enabled ?? false,
         payment_mode: settings.payment_mode || 'disabled',
         allow_pay_at_counter: settings.allow_pay_at_counter ?? true,
+        features: settings.features || DEFAULT_FEATURE_FLAGS,
         updated_at: new Date().toISOString(),
       });
 
@@ -917,6 +938,252 @@ export const updateRestaurantSettings = async (
     return { success: false, error: err.message || 'Failed to update settings.' };
   }
 };
+
+/**
+ * Dependency validation for restaurant feature flags.
+ * Rule: split_bills and running_table_bills require pos.
+ * Rule: cash_drawer requires pos.
+ * Rule: kot_printing requires kds or physical printer.
+ */
+export function validateFeatureDependencies(
+  features: RestaurantFeatureFlags,
+  changedKey?: keyof RestaurantFeatureFlags,
+  newValue?: boolean
+): {
+  valid: boolean;
+  autoAdjustedFeatures: RestaurantFeatureFlags;
+  messages: string[];
+} {
+  const current = { ...features };
+  if (changedKey !== undefined && newValue !== undefined) {
+    current[changedKey] = newValue;
+  }
+
+  const messages: string[] = [];
+  const adjusted = { ...current };
+
+  // If turning ON dependent features while POS is OFF:
+  if ((current.split_bills || current.running_table_bills || current.cash_drawer) && !current.pos) {
+    if (changedKey === 'pos' && !newValue) {
+      // User explicitly turned POS OFF -> Auto-turn off dependents
+      if (adjusted.split_bills) {
+        adjusted.split_bills = false;
+        messages.push('Split Bills disabled because POS Counter Billing was turned off.');
+      }
+      if (adjusted.running_table_bills) {
+        adjusted.running_table_bills = false;
+        messages.push('Running Table Bills disabled because POS Counter Billing was turned off.');
+      }
+      if (adjusted.cash_drawer) {
+        adjusted.cash_drawer = false;
+        messages.push('Cash Drawer & Shifts disabled because POS Counter Billing was turned off.');
+      }
+    } else {
+      // User tried to turn on a dependent -> Auto-enable POS
+      adjusted.pos = true;
+      messages.push('POS Counter Billing was automatically enabled because dependent features require it.');
+    }
+  }
+
+  // If turning ON KOT printing while KDS is OFF
+  if (adjusted.kot_printing && !adjusted.kds) {
+    if (changedKey === 'kds' && !newValue) {
+      adjusted.kot_printing = false;
+      messages.push('KOT Printing disabled because Kitchen Display System (KDS) was turned off.');
+    } else {
+      adjusted.kds = true;
+      messages.push('Kitchen Display System (KDS) was automatically enabled to support KOT Printing.');
+    }
+  }
+
+  return {
+    valid: true,
+    autoAdjustedFeatures: adjusted,
+    messages,
+  };
+}
+
+/**
+ * Checks if a feature has active/open data blocking it from being disabled.
+ * E.g., open table bills, open cash shifts, or active in-progress orders.
+ */
+export async function checkFeatureOpenData(
+  featureKey: keyof RestaurantFeatureFlags
+): Promise<{ hasOpenData: boolean; message?: string }> {
+  if (supabase && isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.rpc('check_feature_open_data', {
+        p_feature_key: featureKey,
+      });
+      if (!error && data) {
+        return {
+          hasOpenData: Boolean(data.has_open_data),
+          message: data.message,
+        };
+      }
+    } catch (err) {
+      console.warn('[dashboardService] RPC check_feature_open_data error, falling back to local inspect:', err);
+    }
+  }
+
+  // Demo / local fallback:
+  if (typeof window !== 'undefined') {
+    // 1. Running table bills or POS
+    if (featureKey === 'running_table_bills' || featureKey === 'pos') {
+      try {
+        const rawBills = localStorage.getItem('cafe_demo_running_bills');
+        if (rawBills) {
+          const parsed = JSON.parse(rawBills);
+          if (Array.isArray(parsed)) {
+            const openBills = parsed.filter((b: any) => b.status === 'running');
+            if (openBills.length > 0) {
+              return {
+                hasOpenData: true,
+                message: `Cannot disable ${featureKey === 'pos' ? 'POS Counter Billing' : 'Running Table Bills'}: ${openBills.length} table bill(s) are currently running. Please settle or void them first.`,
+              };
+            }
+          }
+        }
+      } catch {}
+
+      try {
+        const rawOrders = localStorage.getItem('cafe_demo_orders');
+        if (rawOrders) {
+          const parsed = JSON.parse(rawOrders);
+          if (Array.isArray(parsed)) {
+            const activeDineIn = parsed.filter(
+              (o: any) => o.order_type === 'dine_in' && ['pending', 'confirmed', 'preparing'].includes(o.status)
+            );
+            if (activeDineIn.length > 0) {
+              return {
+                hasOpenData: true,
+                message: `Cannot disable ${featureKey === 'pos' ? 'POS Counter Billing' : 'Running Table Bills'}: ${activeDineIn.length} active dine-in table order(s) are in progress. Please complete them first.`,
+              };
+            }
+          }
+        }
+      } catch {}
+    }
+
+    // 2. Cash Drawer
+    if (featureKey === 'cash_drawer') {
+      try {
+        const rawShifts = localStorage.getItem('cafe_demo_cash_shifts');
+        if (rawShifts) {
+          const parsed = JSON.parse(rawShifts);
+          if (Array.isArray(parsed)) {
+            const openShift = parsed.find((s: any) => s.status === 'open');
+            if (openShift) {
+              return {
+                hasOpenData: true,
+                message: 'Cannot disable Cash Drawer & Shifts: There is an active cash shift currently open. Please count and close the shift first.',
+              };
+            }
+          }
+        }
+      } catch {}
+    }
+  }
+
+  return { hasOpenData: false };
+}
+
+/**
+ * Updates restaurant feature flags with dependency verification, open-data guard,
+ * audit logging, and live event dispatch.
+ */
+export async function updateRestaurantFeatures(
+  features: RestaurantFeatureFlags
+): Promise<{ success: boolean; features?: RestaurantFeatureFlags; error?: string; messages?: string[] }> {
+  // 1. Dependency validation
+  const depCheck = validateFeatureDependencies(features);
+  const validatedFeatures = depCheck.autoAdjustedFeatures;
+
+  // 2. Fetch current settings to check which features are being disabled
+  const currentSettings = await fetchRestaurantSettings();
+  const currentFeatures = currentSettings.features || DEFAULT_FEATURE_FLAGS;
+
+  // Check each feature being turned OFF for open data
+  for (const key of Object.keys(validatedFeatures) as (keyof RestaurantFeatureFlags)[]) {
+    if (currentFeatures[key] === true && validatedFeatures[key] === false) {
+      const openCheck = await checkFeatureOpenData(key);
+      if (openCheck.hasOpenData) {
+        return {
+          success: false,
+          error: openCheck.message || `Cannot disable ${key}: Active data exists.`,
+          features: currentFeatures,
+        };
+      }
+    }
+  }
+
+  // 3. Save via RPC if Supabase configured
+  if (supabase && isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.rpc('update_restaurant_features', {
+        p_features: validatedFeatures,
+      });
+      if (error) throw error;
+      const returnedFeatures = data ? (data as RestaurantFeatureFlags) : validatedFeatures;
+
+      // Dispatch live update event
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('cafe:restaurant_features_updated', { detail: returnedFeatures })
+        );
+      }
+      return { success: true, features: returnedFeatures, messages: depCheck.messages };
+    } catch (err: any) {
+      console.warn('[dashboardService] RPC update_restaurant_features failed, attempting settings upsert:', err.message);
+    }
+  }
+
+  // 4. Fallback: Save in restaurant_settings directly
+  try {
+    const updatedSettings: RestaurantSettings = {
+      ...currentSettings,
+      features: validatedFeatures,
+      is_ordering_enabled: validatedFeatures.online_ordering,
+      is_table_booking_enabled: validatedFeatures.reservations,
+      payments_enabled: validatedFeatures.online_payments,
+      payment_enabled: validatedFeatures.online_payments,
+    };
+    const res = await updateRestaurantSettings(updatedSettings);
+    if (!res.success) {
+      return { success: false, error: res.error || 'Failed to update feature toggles.' };
+    }
+
+    // Record audit log entry in demo/local mode
+    if (typeof window !== 'undefined') {
+      try {
+        const rawLogs = localStorage.getItem('cafe_demo_audit_log') || '[]';
+        const logs = JSON.parse(rawLogs);
+        logs.unshift({
+          id: `audit-${Date.now()}`,
+          action: 'feature_flags_updated',
+          target_type: 'restaurant_settings',
+          target_id: 'current',
+          actor_role: 'owner',
+          details: {
+            old_features: currentFeatures,
+            new_features: validatedFeatures,
+            updated_at: new Date().toISOString(),
+          },
+          created_at: new Date().toISOString(),
+        });
+        localStorage.setItem('cafe_demo_audit_log', JSON.stringify(logs.slice(0, 100)));
+      } catch {}
+
+      window.dispatchEvent(
+        new CustomEvent('cafe:restaurant_features_updated', { detail: validatedFeatures })
+      );
+    }
+
+    return { success: true, features: validatedFeatures, messages: depCheck.messages };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Unexpected error updating feature flags.' };
+  }
+}
 
 /**
  * Invokes the owner-only invite-staff Edge Function to invite a new staff member,

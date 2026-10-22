@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSiteConfig } from '../context/SiteConfigContext';
 
 export const AnnouncementBanner: React.FC = () => {
-  const { restaurantConfig } = useSiteConfig();
+  const { restaurantConfig, features } = useSiteConfig();
   const [isDismissed, setIsDismissed] = useState(false);
 
   const bannerText = restaurantConfig.announcementBanner?.trim();
@@ -18,7 +18,7 @@ export const AnnouncementBanner: React.FC = () => {
     }
   }, [bannerText]);
 
-  if (!bannerText || isDismissed) {
+  if (features?.specials_banner === false || !bannerText || isDismissed) {
     return null;
   }
 

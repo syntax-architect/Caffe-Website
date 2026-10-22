@@ -1,18 +1,20 @@
 import React, { useEffect } from 'react';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useI18n } from '../i18n';
 import { clientDetails } from '../config/client';
 import { Breadcrumbs } from './Breadcrumbs';
 
 export const NotFoundPage: React.FC = () => {
   const { restaurantConfig, logoUrl } = useSiteConfig();
+  const { t } = useI18n();
 
   const businessName = restaurantConfig?.businessName || clientDetails.businessName;
   const shortName = restaurantConfig?.shortName || clientDetails.shortName;
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = `404 — Page Not Found | ${businessName}`;
-  }, [businessName]);
+    document.title = `404 — ${t('notFound.title', 'Page Not Found')} | ${businessName}`;
+  }, [businessName, t]);
 
   return (
     <div className="min-h-screen bg-[#0E0906] text-on-surface font-sans selection:bg-[#D4AF37]/30 selection:text-[#D4AF37] flex flex-col justify-between">
@@ -36,14 +38,14 @@ export const NotFoundPage: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-300 hover:text-white border border-white/10 transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            <span>Back to Dining</span>
+            <span>{t('notFound.backToDining', 'Back to Dining')}</span>
           </a>
         </div>
       </header>
 
       {/* Main 404 Hero */}
       <main className="max-w-3xl mx-auto px-4 sm:px-8 py-16 sm:py-24 text-center flex-1 flex flex-col items-center justify-center">
-        <Breadcrumbs items={[{ label: '404 Not Found', current: true }]} className="justify-center" />
+        <Breadcrumbs items={[{ label: `404 ${t('notFound.title', 'Not Found')}`, current: true }]} className="justify-center" />
 
         {/* Monogram Crest with 404 */}
         <div className="relative mb-8">
@@ -54,17 +56,17 @@ export const NotFoundPage: React.FC = () => {
           </div>
           <div className="absolute -bottom-2 inset-x-0 flex justify-center">
             <span className="px-3 py-0.5 rounded-full bg-surface-obsidian border border-primary/40 font-mono text-[10px] tracking-widest text-primary uppercase">
-              Lost In Nocturne
+              {t('notFound.badge', 'Lost In Nocturne')}
             </span>
           </div>
         </div>
 
         <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-white font-normal tracking-tight mb-4 text-balance">
-          This Course Could Not Be Found
+          {t('notFound.heading', 'This Course Could Not Be Found')}
         </h1>
 
         <p className="font-sans text-sm sm:text-base text-zinc-400 font-light max-w-lg mx-auto mb-10 leading-relaxed">
-          The table, dish, or vintage you requested does not exist or has been retired from our cellar. Let us escort you back to our curated experience.
+          {t('notFound.description', 'The table, dish, or vintage you requested does not exist or has been retired from our cellar. Let us escort you back to our curated experience.')}
         </p>
 
         {/* Quick Nav Actions */}
@@ -74,7 +76,7 @@ export const NotFoundPage: React.FC = () => {
             className="w-full sm:w-auto h-12 px-8 rounded-full bg-primary hover:opacity-90 active:opacity-95 text-on-primary text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(var(--color-primary-rgb),0.3)] cursor-pointer"
           >
             <span className="material-symbols-outlined text-[18px]">restaurant</span>
-            <span>Return to Dining</span>
+            <span>{t('notFound.backToHome', 'Return to Dining')}</span>
           </a>
 
           <a
@@ -82,14 +84,14 @@ export const NotFoundPage: React.FC = () => {
             className="w-full sm:w-auto h-12 px-8 rounded-full border border-outline/30 hover:border-primary/60 bg-surface-container/60 hover:bg-surface-container text-on-surface text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-outlined text-[18px]">menu_book</span>
-            <span>Explore Menu</span>
+            <span>{t('notFound.browseMenu', 'Explore Menu')}</span>
           </a>
         </div>
       </main>
 
       {/* Footer Minimal */}
       <footer className="border-t border-white/5 py-6 text-center text-xs text-zinc-500 font-sans">
-        <p>© {new Date().getFullYear()} {businessName}. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} {businessName}. {t('footer.allRightsReserved', 'All rights reserved.')}</p>
       </footer>
     </div>
   );

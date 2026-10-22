@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { smoothScrollTo } from '../utils/scroll';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useI18n } from '../i18n';
 import { getAvifSource } from '../utils/image';
 import type { HeroVariant } from '../types/restaurantEngine';
 
@@ -82,6 +83,7 @@ const HeroActions: React.FC<HeroActionsProps> = ({
 
 export const Hero: React.FC = React.memo(() => {
   const { hero, restaurantConfig, engineConfig } = useSiteConfig();
+  const { t } = useI18n();
   const { setIsReservationOpen } = useUI();
   const prefersReducedMotion = useReducedMotion();
 
@@ -178,16 +180,16 @@ export const Hero: React.FC = React.memo(() => {
     ((!restaurantConfig?.country || restaurantConfig?.country === 'IN') ? '22.76° N, 88.37° E' : '');
 
   const showPrimaryCta = hero?.showPrimaryCta !== false;
-  const primaryCtaText = hero?.primaryCtaText || 'Explore Curated Menu';
+  const primaryCtaText = hero?.primaryCtaText || t('hero.viewMenu', 'Explore Curated Menu');
   const primaryCtaHref = hero?.primaryCtaHref || '#menu-section';
   const primaryCtaTarget = primaryCtaHref.startsWith('#') ? primaryCtaHref.slice(1) : 'menu-section';
 
   const isTableBookingEnabled = restaurantConfig?.isTableBookingEnabled ?? true;
   const showSecondaryCta = (hero?.showSecondaryCta !== false) && isTableBookingEnabled;
-  const secondaryCtaText = hero?.secondaryCtaText || 'Reserve a Table';
+  const secondaryCtaText = hero?.secondaryCtaText || t('hero.bookTable', 'Reserve a Table');
 
-  const establishmentLabel = hero?.establishmentLabel || 'EST. CANTONMENT';
-  const scrollLabel = hero?.scrollLabel || 'SCROLL TO DISCOVER';
+  const establishmentLabel = hero?.establishmentLabel || t('story.badge', 'EST. CANTONMENT');
+  const scrollLabel = hero?.scrollLabel || t('hero.scrollDown', 'SCROLL TO DISCOVER');
 
   // =========================================================================
   // VARIANT B: EDITORIAL SPLIT
@@ -279,6 +281,7 @@ export const Hero: React.FC = React.memo(() => {
                       height="800"
                       className="w-full h-full object-cover filter brightness-[0.95] contrast-[1.06] saturate-[1.06] group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
                       loading="eager"
+                      fetchPriority="high"
                       decoding="async"
                     />
                   </picture>
@@ -402,6 +405,7 @@ export const Hero: React.FC = React.memo(() => {
                   height="600"
                   className="w-full h-full object-cover object-center filter brightness-[0.92] contrast-[1.05] group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
                   loading="eager"
+                  fetchPriority="high"
                   decoding="async"
                 />
               </picture>
@@ -475,6 +479,7 @@ export const Hero: React.FC = React.memo(() => {
               height="768"
               className="w-full h-full object-cover object-[70%_center] lg:object-center filter brightness-[0.94] contrast-[1.08] saturate-[1.08] hero-bg-settle transform-gpu will-change-transform"
               loading="eager"
+              fetchPriority="high"
               decoding="async"
             />
           </picture>

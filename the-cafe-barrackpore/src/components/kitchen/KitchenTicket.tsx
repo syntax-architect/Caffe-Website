@@ -24,6 +24,12 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
   });
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [hasPrinted, setHasPrinted] = useState(false);
+
+  const handlePrint = (isDuplicate = false) => {
+    printKitchenKOT(order, undefined, { isReprint: isDuplicate || hasPrinted });
+    setHasPrinted(true);
+  };
 
   // Live timer update without re-fetching backend
   useEffect(() => {
@@ -246,16 +252,23 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
             )}
           </button>
 
-          {/* Quick Thermal KOT Print */}
-          <button
-            type="button"
-            onClick={() => printKitchenKOT(order)}
-            className="p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] text-stone-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer"
-            title="Print Kitchen Ticket (KOT)"
-            aria-label={`Print KOT for order ${order.order_ref}`}
-          >
-            <span className="material-symbols-outlined text-base">print</span>
-          </button>
+          {/* Quick Thermal KOT Print with Duplicate/Reprint Awareness */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => handlePrint(hasPrinted)}
+              className={`p-3 rounded-xl border transition-colors cursor-pointer flex items-center gap-1 ${
+                hasPrinted
+                  ? 'bg-amber-500/15 hover:bg-amber-500/25 text-[#D4AF37] border-[#D4AF37]/50 shadow-[0_0_12px_rgba(212,175,55,0.2)]'
+                  : 'bg-white/[0.04] hover:bg-white/[0.1] text-stone-300 hover:text-white border-white/[0.08]'
+              }`}
+              title={hasPrinted ? 'Already printed. Click to print DUPLICATE (Reprint)' : 'Print Kitchen Ticket (KOT)'}
+              aria-label={`Print KOT for order ${order.order_ref}`}
+            >
+              <span className="material-symbols-outlined text-base">print</span>
+              {hasPrinted && <span className="text-[9px] font-mono font-bold uppercase text-[#F3C766]">Dup</span>}
+            </button>
+          </div>
 
           {/* Cancellation Option */}
           {onCancel && (

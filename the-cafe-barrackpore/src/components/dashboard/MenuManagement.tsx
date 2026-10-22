@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import { useSiteConfig } from '../../context/SiteConfigContext';
-import type { MenuItem, MenuCategory } from '../../types/menu';
+import type { MenuItem, MenuCategory, MenuItemTranslations } from '../../types/menu';
+import type { TaxCategory } from '../../types/tax';
+import { suggestTaxCategory } from '../../config/taxRegistry';
+import { LANGUAGE_META, type SupportedLanguage } from '../../i18n';
 import {
   fetchMenuItems,
   fetchMenuCategories,
@@ -12,6 +15,10 @@ import {
   MENU_CATEGORIES_FALLBACK,
 } from '../../services/menuService';
 import { uploadSiteImage } from '../../services/storageService';
+
+const TRANSLATION_LANGUAGES: SupportedLanguage[] = [
+  'ar', 'fr', 'de', 'es', 'pt', 'ja', 'zh', 'ko', 'hi', 'tr', 'th'
+];
 
 export const MenuManagement: React.FC = () => {
   const { addNotification } = useNotification();
@@ -41,6 +48,10 @@ export const MenuManagement: React.FC = () => {
   const [formAvailable, setFormAvailable] = useState<boolean>(true);
   const [formAllergens, setFormAllergens] = useState<string[]>([]);
   const [formStockCount, setFormStockCount] = useState<string>('');
+  const [formTaxCategory, setFormTaxCategory] = useState<TaxCategory>('food');
+  const [isTaxCategoryManual, setIsTaxCategoryManual] = useState<boolean>(false);
+  const [formTranslations, setFormTranslations] = useState<MenuItemTranslations>({});
+  const [selectedTransLang, setSelectedTransLang] = useState<SupportedLanguage>('es');
 
   // Build category dictionary for labels
   const categoryLabels = useMemo(() => {
@@ -103,6 +114,10 @@ export const MenuManagement: React.FC = () => {
     setFormAvailable(item.available !== false);
     setFormAllergens(item.allergens || []);
     setFormStockCount(item.stock_count !== undefined && item.stock_count !== null ? String(item.stock_count) : '');
+    const initialTaxCategory = item.tax_category || suggestTaxCategory(item.name, item.description, item.category_id);
+    setFormTaxCategory(initialTaxCategory);
+    setIsTaxCategoryManual(Boolean(item.tax_category));
+    setFormTranslations(item.translations || {});
   };
 
   const handleOpenAdd = () => {
@@ -117,6 +132,9 @@ export const MenuManagement: React.FC = () => {
     setFormAvailable(true);
     setFormAllergens([]);
     setFormStockCount('');
+    setFormTaxCategory('food');
+    setIsTaxCategoryManual(false);
+    setFormTranslations({});
     setIsAddingItem(true);
   };
 
@@ -158,6 +176,8 @@ export const MenuManagement: React.FC = () => {
       sort_order: editingItem?.sort_order ?? items.length + 1,
       allergens: formAllergens,
       stock_count: formStockCount.trim() !== '' ? parseInt(formStockCount, 10) : null,
+      tax_category: formTaxCategory,
+      translations: formTranslations,
     });
 
     setIsSavingItem(false);
@@ -434,6 +454,7 @@ export const MenuManagement: React.FC = () => {
                 <tr className="border-b border-white/[0.06] text-[10px] font-mono uppercase tracking-wider text-zinc-400 bg-white/[0.02]">
                   <th className="py-3.5 px-6">Dish Details</th>
                   <th className="py-3.5 px-4">Category</th>
+                  <th className="py-3.5 px-4">Tax Category</th>
                   <th className="py-3.5 px-4">Diet</th>
                   <th className="py-3.5 px-4">Price</th>
                   <th className="py-3.5 px-4">Stock Inventory</th>
@@ -476,6 +497,12 @@ export const MenuManagement: React.FC = () => {
                                   {item.tag || 'Bestseller'}
                                 </span>
                               )}
+                              {item.translations && Object.keys(item.translations).filter((k) => item.translations?.[k]?.name || item.translations?.[k]?.description).length > 0 && (
+                                <span className="px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-300 text-[9px] font-mono flex items-center gap-1" title={`${Object.keys(item.translations).length} languages translated`}>
+                                  <span className="material-symbols-outlined text-[10px]">translate</span>
+                                  <span>{Object.keys(item.translations).filter((k) => item.translations?.[k]?.name || item.translations?.[k]?.description).length}</span>
+                                </span>
+                              )}
                             </div>
                             <p className="text-zinc-400 text-[11px] line-clamp-1 mt-0.5 max-w-md">
                               {item.description || 'No description provided.'}
@@ -495,6 +522,12 @@ export const MenuManagement: React.FC = () => {
 
                       <td className="py-4 px-4 text-zinc-400 font-mono text-[11px]">
                         {categoryLabels[itemCat] || itemCat}
+                      </td>
+
+                      <td className="py-4 px-4">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 capitalize">
+                          {(item.tax_category || 'food').replace('_', ' ')}
+                        </span>
                       </td>
 
                       <td className="py-4 px-4">
@@ -614,7 +647,13 @@ export const MenuManagement: React.FC = () => {
                     required
                     placeholder="e.g. Signature Truffle Pizza"
                     value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
+                    onChange={(e) => {
+                      const newName = e.target.value;
+                      setFormName(newName);
+                      if (!isTaxCategoryManual) {
+                        setFormTaxCategory(suggestTaxCategory(newName, formDescription, formCategory));
+                      }
+                    }}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]"
                   />
                 </div>
@@ -641,7 +680,13 @@ export const MenuManagement: React.FC = () => {
                     </label>
                     <select
                       value={formCategory}
-                      onChange={(e) => setFormCategory(e.target.value)}
+                      onChange={(e) => {
+                        const newCat = e.target.value;
+                        setFormCategory(newCat);
+                        if (!isTaxCategoryManual) {
+                          setFormTaxCategory(suggestTaxCategory(formName, formDescription, newCat));
+                        }
+                      }}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                     >
                       {categories.map((cat) => (
@@ -649,6 +694,37 @@ export const MenuManagement: React.FC = () => {
                           {cat.name}
                         </option>
                       ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400">
+                        Tax Category
+                      </label>
+                      {!isTaxCategoryManual && formName.trim() && (
+                        <span className="text-[10px] font-mono text-[#D4AF37] px-1.5 py-0.5 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+                          Auto-suggested
+                        </span>
+                      )}
+                    </div>
+                    <select
+                      value={formTaxCategory}
+                      onChange={(e) => {
+                        setFormTaxCategory(e.target.value as TaxCategory);
+                        setIsTaxCategoryManual(true);
+                      }}
+                      className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                    >
+                      <option value="food" className="bg-[#120F0D]">Food (Prepared Meals / Dishes)</option>
+                      <option value="hot_drink" className="bg-[#120F0D]">Hot Drink (Coffee, Tea, Chai)</option>
+                      <option value="soft_drink" className="bg-[#120F0D]">Soft Drink (Soda, Juice, Shake)</option>
+                      <option value="bottled_water" className="bg-[#120F0D]">Bottled Water (Mineral, Spring)</option>
+                      <option value="alcohol" className="bg-[#120F0D]">Alcohol (Beer, Wine, Spirits)</option>
+                      <option value="tobacco" className="bg-[#120F0D]">Tobacco (Cigars, Shisha)</option>
+                      <option value="packaged_goods" className="bg-[#120F0D]">Packaged Goods (Retail Snacks, Merch)</option>
+                      <option value="service" className="bg-[#120F0D]">Service (Delivery, Corkage)</option>
+                      <option value="exempt" className="bg-[#120F0D]">Exempt (Zero-Tax / Gift Cards)</option>
                     </select>
                   </div>
 
@@ -775,6 +851,129 @@ export const MenuManagement: React.FC = () => {
                     onChange={(e) => setFormDescription(e.target.value)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] resize-none"
                   />
+                </div>
+
+                {/* MULTILINGUAL TRANSLATIONS (12 LANGUAGES) */}
+                <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#D4AF37] text-sm">translate</span>
+                      <label className="uppercase font-mono font-bold tracking-wider text-white text-[11px]">
+                        Multilingual Translations (12 Languages)
+                      </label>
+                    </div>
+                    <span className="text-[10px] font-mono text-zinc-400">
+                      {Object.keys(formTranslations).filter((k) => formTranslations[k]?.name?.trim() || formTranslations[k]?.description?.trim()).length} of 11 translated
+                    </span>
+                  </div>
+
+                  {/* Language selection pills */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                    {TRANSLATION_LANGUAGES.map((langCode) => {
+                      const meta = LANGUAGE_META[langCode];
+                      const hasTranslation = Boolean(
+                        formTranslations[langCode]?.name?.trim() || formTranslations[langCode]?.description?.trim()
+                      );
+                      const isSelected = selectedTransLang === langCode;
+
+                      return (
+                        <button
+                          key={langCode}
+                          type="button"
+                          onClick={() => setSelectedTransLang(langCode)}
+                          className={`shrink-0 px-2 py-1 rounded-lg text-[11px] font-mono flex items-center gap-1 border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-white shadow-sm'
+                              : 'bg-black/30 border-white/[0.06] text-zinc-400 hover:text-white'
+                          }`}
+                        >
+                          <span>{meta.flag}</span>
+                          <span>{meta.code.toUpperCase()}</span>
+                          {hasTranslation && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Active Translation Inputs */}
+                  <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">{LANGUAGE_META[selectedTransLang].flag}</span>
+                        <span className="font-bold text-white text-xs">
+                          {LANGUAGE_META[selectedTransLang].nativeName} ({LANGUAGE_META[selectedTransLang].name})
+                        </span>
+                        {LANGUAGE_META[selectedTransLang].direction === 'rtl' && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            RTL
+                          </span>
+                        )}
+                      </div>
+                      {Boolean(formTranslations[selectedTransLang]?.name?.trim() || formTranslations[selectedTransLang]?.description?.trim()) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormTranslations((prev) => {
+                              const next = { ...prev };
+                              delete next[selectedTransLang];
+                              return next;
+                            });
+                          }}
+                          className="text-[10px] text-zinc-500 hover:text-rose-400 transition-colors"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">
+                        Translated Name ({LANGUAGE_META[selectedTransLang].name})
+                      </label>
+                      <input
+                        type="text"
+                        dir={LANGUAGE_META[selectedTransLang].direction}
+                        placeholder={formName ? `Default: ${formName}` : 'Enter translated name...'}
+                        value={formTranslations[selectedTransLang]?.name || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormTranslations((prev) => ({
+                            ...prev,
+                            [selectedTransLang]: {
+                              ...prev[selectedTransLang],
+                              name: val,
+                            },
+                          }));
+                        }}
+                        className="w-full bg-[#070605] border border-white/[0.1] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">
+                        Translated Description ({LANGUAGE_META[selectedTransLang].name})
+                      </label>
+                      <textarea
+                        rows={2}
+                        dir={LANGUAGE_META[selectedTransLang].direction}
+                        placeholder={formDescription ? `Default: ${formDescription}` : 'Enter translated description...'}
+                        value={formTranslations[selectedTransLang]?.description || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormTranslations((prev) => ({
+                            ...prev,
+                            [selectedTransLang]: {
+                              ...prev[selectedTransLang],
+                              description: val,
+                            },
+                          }));
+                        }}
+                        className="w-full bg-[#070605] border border-white/[0.1] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37] resize-none"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-between">

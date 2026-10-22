@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
 import { useSiteConfig } from '../../context/SiteConfigContext';
+import { useI18n } from '../../i18n/I18nContext';
 import { clientDetails } from '../../config/client';
 import { Breadcrumbs } from '../Breadcrumbs';
 
 export const PrivacyPolicyPage: React.FC = () => {
   const { restaurantConfig, logoUrl } = useSiteConfig();
+  const { t } = useI18n();
 
   const businessName = restaurantConfig?.businessName || clientDetails.businessName;
   const shortName = restaurantConfig?.shortName || clientDetails.shortName;
@@ -18,8 +20,8 @@ export const PrivacyPolicyPage: React.FC = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = `Privacy Policy | ${businessName}`;
-  }, [businessName]);
+    document.title = `${t('legal.privacyTitle', 'Privacy Policy')} | ${businessName}`;
+  }, [businessName, t]);
 
   return (
     <div className="min-h-screen bg-[#0E0906] text-on-surface font-sans selection:bg-[#D4AF37]/30 selection:text-[#D4AF37]">
@@ -43,23 +45,23 @@ export const PrivacyPolicyPage: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-300 hover:text-white border border-white/10 transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            <span>Back to Dining</span>
+            <span>{t('legal.backToHome', 'Back to Dining')}</span>
           </a>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
-        <Breadcrumbs items={[{ label: 'Legal', href: '/terms' }, { label: 'Privacy Policy', current: true }]} />
+        <Breadcrumbs items={[{ label: 'Legal', href: '/terms' }, { label: t('legal.privacyTitle', 'Privacy Policy'), current: true }]} />
         <div className="mb-12 border-b border-white/10 pb-8">
           <span className="font-mono text-xs uppercase tracking-widest text-[#D4AF37] mb-2 block">
             Legal &amp; Data Governance
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-white font-normal tracking-tight mb-4">
-            Privacy Policy
+            {t('legal.privacyTitle', 'Privacy Policy')}
           </h1>
           <p className="text-zinc-400 text-sm font-light">
-            Effective Date: October 2, 2026 · Last Updated: October 2026
+            {t('legal.effectiveDate', 'Effective Date')}: October 2, 2026 · Last Updated: October 2026
           </p>
         </div>
 
@@ -143,7 +145,7 @@ export const PrivacyPolicyPage: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-white/10 py-8 px-4 text-center text-xs text-zinc-500">
-        <p>© {new Date().getFullYear()} {businessName}. All culinary and brand rights reserved.</p>
+        <p>© {new Date().getFullYear()} {businessName}. {t('footer.allRightsReserved', 'All culinary and brand rights reserved.')}</p>
       </footer>
     </div>
   );

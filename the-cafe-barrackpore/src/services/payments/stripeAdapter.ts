@@ -7,6 +7,7 @@ import type {
   WebhookEventResult,
 } from '../../types/payment';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { fromMinorUnits } from '../../utils/currency';
 
 /**
  * Stripe Payment Adapter
@@ -82,6 +83,7 @@ export class StripeAdapter implements PaymentProviderAdapter {
             clientSecret: data.clientSecret,
             orderRef: data.orderRef || params.orderRef,
             amount: data.amount ?? params.amount,
+            amountInMinorUnits: typeof data.amountInMinorUnits === 'number' ? data.amountInMinorUnits : undefined,
             currency: (data.currency || params.currency).toUpperCase(),
           };
         }
@@ -210,8 +212,12 @@ export class StripeAdapter implements PaymentProviderAdapter {
         event.order_ref;
 
       const providerPaymentId = dataObj.id || dataObj.payment_intent;
-      const amount = dataObj.amount_total ? dataObj.amount_total / 100 : dataObj.amount;
       const currency = dataObj.currency?.toUpperCase() || 'USD';
+      const amount = dataObj.amount_total !== undefined && dataObj.amount_total !== null
+        ? fromMinorUnits(Number(dataObj.amount_total), currency)
+        : (dataObj.amount !== undefined && dataObj.amount !== null
+          ? fromMinorUnits(Number(dataObj.amount), currency)
+          : undefined);
 
       if (eventType === 'checkout.session.completed' || eventType === 'payment_intent.succeeded') {
         return {

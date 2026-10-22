@@ -4,6 +4,7 @@
  */
 import type { PaymentProvider, PaymentMode } from './payment';
 import type { TaxRule, ServiceChargeConfig } from './tax';
+import type { RestaurantFeatureFlags } from './dashboard';
 
 export type DietarySystem = 'india' | 'international';
 export type PrimaryContactMethod = 'whatsapp' | 'phone' | 'email';
@@ -18,12 +19,20 @@ export interface TaxConfiguration {
   rules?: TaxRule[];
   /** Service charge configuration */
   serviceCharge?: ServiceChargeConfig;
+  /** Tax registration number (e.g. GSTIN, VAT No.) */
+  taxId?: string;
   /** Tax registration ID label (e.g. "GSTIN", "VAT No.") */
   taxIdLabel?: string;
+  /** Tax region / state / province */
+  region?: string;
+  /** Accountant compliance sign-off gate */
+  accountant_verified?: boolean;
   /** Whether to show tax breakdown on receipts */
   showBreakdown?: boolean;
   /** Rounding: 'line' (US) or 'total' (EU/India). Default: 'total' */
   roundingMode?: 'line' | 'total';
+  /** Effective date of tax rates (YYYY-MM-DD) */
+  ratesAsOf?: string;
 }
 
 export interface DietaryConfiguration {
@@ -78,6 +87,7 @@ export interface RestaurantLocalizationConfig {
   contact: ContactConfiguration;
   address: AddressConfiguration;
   payments: PaymentConfiguration;
+  features: RestaurantFeatureFlags;
 }
 
 export interface CountryPreset {

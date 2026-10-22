@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useI18n } from '../i18n/I18nContext';
 import { UIProvider, useUI } from '../context/UIContext';
 import { CartProvider, useCart } from '../context/CartContext';
 import { useTableContext } from '../hooks/useTableContext';
@@ -16,8 +17,36 @@ import { MetaTags } from './MetaTags';
 const QRContent: React.FC = () => {
   const { tableNumber, isQrValid, validationError, hasTableParam } = useTableContext();
   const { items, cartCount, setIsDrawerOpen, clearCart } = useCart();
-  const { restaurantConfig, formatPrice, logoUrl } = useSiteConfig();
+  const { restaurantConfig, formatPrice, logoUrl, features } = useSiteConfig();
+  const { t } = useI18n();
   const { showToast } = useUI();
+
+  // Context conflict detection
+  const [isConflictDismissed, setIsConflictDismissed] = useState(false);
+  const [isStaffCalled, setIsStaffCalled] = useState(false);
+
+  if (features?.qr_table_ordering === false) {
+    return (
+      <div className="min-h-screen bg-[#070504] text-[#F5EFE6] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-black/60 border border-[#D4AF37]/40 flex items-center justify-center p-3 mb-4 shadow-[0_0_30px_rgba(212,175,55,0.25)]">
+          <span className="material-symbols-outlined text-[#D4AF37] text-2xl">qr_code_scanner</span>
+        </div>
+        <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#D4AF37] mb-2">
+          Service Notice
+        </span>
+        <h2 className="text-xl font-serif font-bold text-white mb-2">QR Table Ordering Paused</h2>
+        <p className="text-stone-400 text-xs max-w-sm mb-6 leading-relaxed">
+          Tabletop QR ordering is currently not active for this restaurant. Please contact your floor server to place your order.
+        </p>
+        <a
+          href="/"
+          className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider transition-all"
+        >
+          Return to Home
+        </a>
+      </div>
+    );
+  }
 
   const totals = calculateOrderTotals(items, {
     enabled: restaurantConfig.tax.enabled,
@@ -27,10 +56,6 @@ const QRContent: React.FC = () => {
     serviceCharge: restaurantConfig.tax.serviceCharge,
     rules: restaurantConfig.tax.rules,
   });
-
-  // Context conflict detection
-  const [isConflictDismissed, setIsConflictDismissed] = useState(false);
-  const [isStaffCalled, setIsStaffCalled] = useState(false);
 
   const hasContextMismatch =
     typeof window !== 'undefined' &&
@@ -205,13 +230,13 @@ const QRContent: React.FC = () => {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
               </span>
               <div className="text-left">
-                <span className="sr-only">Ordering from Table {tableNumber}</span>
+                <span className="sr-only">{t('qr.orderForTable', 'Ordering from Table')} {tableNumber}</span>
                 <div className="flex items-baseline gap-1.5">
                   <p className="text-xs sm:text-sm font-mono font-bold tracking-wider text-[#F3C766] uppercase leading-none">
-                    TABLE {tableNumber}
+                    {t('qr.tableLabel', 'TABLE')} {tableNumber}
                   </p>
                   <p className="text-[9px] text-zinc-400 uppercase tracking-widest font-mono leading-none hidden sm:inline">
-                    • In-Seat Service
+                    • {t('qr.orderForTable', 'In-Seat Service')}
                   </p>
                 </div>
               </div>
@@ -222,11 +247,11 @@ const QRContent: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsDrawerOpen(true)}
-            aria-label={`View cart with ${cartCount} items`}
+            aria-label={t('a11y.openCart', `View cart with ${cartCount} items`)}
             className="relative flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-full bg-[#18120D] hover:bg-[#221912] text-[#F3C766] border border-[#D4AF37]/40 hover:border-[#D4AF37] shadow-[0_2px_12px_rgba(212,175,55,0.15)] transition-all active:scale-95 cursor-pointer group"
           >
             <span className="material-symbols-outlined text-[17px] text-[#D4AF37] group-hover:scale-110 transition-transform">shopping_bag</span>
-            <span className="text-xs font-semibold uppercase tracking-wider font-sans text-stone-200 hidden sm:inline">My Order</span>
+            <span className="text-xs font-semibold uppercase tracking-wider font-sans text-stone-200 hidden sm:inline">{t('cart.title', 'My Order')}</span>
             {cartCount > 0 ? (
               <span className="w-5 h-5 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#0A0705] font-mono font-black text-[10px] flex items-center justify-center shadow-md">
                 {cartCount}
@@ -269,12 +294,12 @@ const QRContent: React.FC = () => {
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#F3C766] text-xs font-mono font-bold uppercase tracking-wider shadow-xs">
                   <span className="material-symbols-outlined text-sm text-[#D4AF37]">restaurant</span>
-                  <span>TABLE {tableNumber} • Table Service</span>
+                  <span>{t('qr.tableLabel', 'TABLE')} {tableNumber} • {t('cart.dineIn', 'Table Service')}</span>
                 </div>
 
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-[11px] font-mono shadow-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Kitchen Direct Service</span>
+                  <span>{t('qr.welcomeSubtitle', 'Kitchen Direct Service')}</span>
                 </div>
               </div>
 
@@ -283,10 +308,10 @@ const QRContent: React.FC = () => {
                 {restaurantConfig.businessName}
               </h1>
               <p className="text-base sm:text-lg text-[#F3C766] font-serif font-light italic mb-2">
-                TABLE {tableNumber} • Smart Digital Service
+                {t('qr.tableLabel', 'TABLE')} {tableNumber} • {t('qr.welcomeTitle', 'Smart Digital Service')}
               </p>
               <p className="text-zinc-300/85 text-xs sm:text-sm max-w-2xl leading-relaxed font-sans font-light">
-                Explore our freshly prepared artisanal menu below. Add dishes to your bag and submit directly to our kitchen with zero wait time.
+                {t('menu.curatedGastronomy', 'Explore our freshly prepared artisanal menu below. Add dishes to your bag and submit directly to our kitchen with zero wait time.')}
               </p>
 
               {/* 3-Pill Hospitality Micro-Deck */}
@@ -348,14 +373,14 @@ const QRContent: React.FC = () => {
                   onClick={handleStartFresh}
                   className="px-4 py-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-400 hover:text-white border border-white/[0.08] transition-colors cursor-pointer"
                 >
-                  Start Fresh
+                  {t('cart.clearCart', 'Start Fresh')}
                 </button>
                 <button
                   type="button"
                   onClick={handleKeepItems}
                   className="px-4 py-2 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
                 >
-                  Keep Items
+                  {t('common.confirm', 'Keep Items')}
                 </button>
               </div>
             </div>
@@ -382,7 +407,7 @@ const QRContent: React.FC = () => {
                   {cartCount}
                 </div>
                 <div className="text-left">
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Table {tableNumber}</p>
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">{t('qr.tableLabel', 'Table')} {tableNumber}</p>
                   <p className="text-base font-serif font-bold text-white">{formatPrice(totals.total)}</p>
                 </div>
               </div>
@@ -392,7 +417,7 @@ const QRContent: React.FC = () => {
                 onClick={() => setIsDrawerOpen(true)}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider hover:shadow-[0_6px_20px_rgba(212,175,55,0.4)] active:scale-95 transition-all cursor-pointer shadow-md"
               >
-                <span>View Order</span>
+                <span>{t('cart.reviewOrder', 'View Order')}</span>
                 <span className="material-symbols-outlined text-base">arrow_forward</span>
               </button>
             </div>
@@ -413,7 +438,7 @@ const QRContent: React.FC = () => {
 
             <div>
               <h3 className="font-serif text-xl sm:text-2xl text-white font-normal mb-1">
-                Hospitality Concierge • Table {tableNumber}
+                {t('contact.drawerTitle', 'Hospitality Concierge')} • {t('qr.tableLabel', 'Table')} {tableNumber}
               </h3>
               <p className="text-xs sm:text-sm text-stone-400 max-w-lg leading-relaxed font-sans font-light">
                 Need extra cutlery, customized spice levels, water refills, or chef recommendations? Our floor team is delighted to assist.
@@ -440,7 +465,7 @@ const QRContent: React.FC = () => {
                 className="px-5 py-2.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-stone-300 hover:text-white border border-white/[0.1] text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-2"
               >
                 <span className="material-symbols-outlined text-base">explore</span>
-                <span>Visit Main Site</span>
+                <span>{t('common.back', 'Visit Main Site')}</span>
               </a>
             </div>
 
@@ -464,11 +489,11 @@ const QRContent: React.FC = () => {
           {restaurantConfig.address.line1} • Handcrafted Culinary Sanctuary
         </p>
         <div className="mt-2 flex items-center justify-center gap-3 text-[10px] text-zinc-600">
-          <span>© {new Date().getFullYear()} All rights reserved</span>
+          <span>© {new Date().getFullYear()} {t('footer.allRightsReserved', 'All rights reserved')}</span>
           <span>•</span>
-          <span>Dine-In Table {tableNumber}</span>
+          <span>{t('cart.dineIn', 'Dine-In')} {t('qr.tableLabel', 'Table')} {tableNumber}</span>
           <span>•</span>
-          <a href="/" className="hover:text-[#D4AF37] transition-colors underline">Visit Full Website</a>
+          <a href="/" className="hover:text-[#D4AF37] transition-colors underline">{t('common.back', 'Visit Full Website')}</a>
         </div>
       </footer>
     </div>

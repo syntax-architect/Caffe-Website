@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { KitchenConnectionStatus, KitchenFilter } from '../../services/kitchenService';
 import { unlockAudioContext, playKitchenOrderBell } from '../../services/soundService';
 import { useSiteConfig } from '../../context/SiteConfigContext';
+import { LanguageSwitcher } from '../LanguageSwitcher';
 
 interface KitchenTopBarProps {
   connectionStatus: KitchenConnectionStatus;
@@ -275,6 +276,9 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
             {density === 'comfortable' ? 'view_compact' : 'view_comfortable'}
           </span>
         </button>
+
+        {/* Staff Language Selector */}
+        <LanguageSwitcher variant="staff" />
 
         {/* Fullscreen Toggle */}
         <button

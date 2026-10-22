@@ -144,7 +144,10 @@ export const ScrollSequence: React.FC = () => {
     ctx.save();
     ctx.scale(dpr, dpr);
 
-    const scale = Math.max(viewW / img.naturalWidth, viewH / img.naturalHeight);
+    // Overscan scale factor (1.06x): crops out the bottom-right corner AI watermark cleanly without altering aspect ratio
+    const OVERSCAN = 1.06;
+    const baseScale = Math.max(viewW / img.naturalWidth, viewH / img.naturalHeight);
+    const scale = baseScale * OVERSCAN;
     const drawW = img.naturalWidth * scale;
     const drawH = img.naturalHeight * scale;
     const offsetX = (viewW - drawW) / 2;
@@ -186,21 +189,66 @@ export const ScrollSequence: React.FC = () => {
 
     loadSingleFrame(0);
 
-    // Load keyframe stride first (every 4th frame) for instant scrubbing responsiveness, then fill in-betweens
-    let idleHandle: number | ReturnType<typeof setTimeout>;
-    const loadRemaining = () => {
-      for (let i = 1; i < total; i += 4) {
-        loadSingleFrame(i);
-      }
-      for (let i = 1; i < total; i++) {
-        if (i % 4 !== 0) loadSingleFrame(i);
+    // Progressively load remaining frames only when user approaches the sequence
+    let idleHandle: number | ReturnType<typeof setTimeout> | null = null;
+    let hasStartedLoading = false;
+
+    const startProgressiveLoad = () => {
+      if (hasStartedLoading) return;
+      hasStartedLoading = true;
+
+      let keyIdx = 4;
+      const loadKeyframes = () => {
+        const batchEnd = Math.min(keyIdx + 16, total);
+        for (; keyIdx < batchEnd; keyIdx += 4) {
+          loadSingleFrame(keyIdx);
+        }
+        if (keyIdx < total) {
+          if ('requestIdleCallback' in window) {
+            idleHandle = (window as any).requestIdleCallback(loadKeyframes);
+          } else {
+            idleHandle = setTimeout(loadKeyframes, 40);
+          }
+        } else {
+          // Once keyframes loaded, fill remaining in-betweens in small idle chunks
+          let inBetweenIdx = 1;
+          const loadInBetweens = () => {
+            let loadedInBatch = 0;
+            while (inBetweenIdx < total && loadedInBatch < 4) {
+              if (inBetweenIdx % 4 !== 0) {
+                loadSingleFrame(inBetweenIdx);
+                loadedInBatch++;
+              }
+              inBetweenIdx++;
+            }
+            if (inBetweenIdx < total) {
+              if ('requestIdleCallback' in window) {
+                idleHandle = (window as any).requestIdleCallback(loadInBetweens);
+              } else {
+                idleHandle = setTimeout(loadInBetweens, 40);
+              }
+            }
+          };
+          if ('requestIdleCallback' in window) {
+            idleHandle = (window as any).requestIdleCallback(loadInBetweens);
+          } else {
+            idleHandle = setTimeout(loadInBetweens, 60);
+          }
+        }
+      };
+
+      if ('requestIdleCallback' in window) {
+        idleHandle = (window as any).requestIdleCallback(loadKeyframes);
+      } else {
+        idleHandle = setTimeout(loadKeyframes, 100);
       }
     };
 
-    if ('requestIdleCallback' in window) {
-      idleHandle = (window as any).requestIdleCallback(loadRemaining, { timeout: 600 });
+    if (window.scrollY > 20) {
+      startProgressiveLoad();
     } else {
-      idleHandle = setTimeout(loadRemaining, 120);
+      window.addEventListener('scroll', startProgressiveLoad, { passive: true, once: true });
+      idleHandle = setTimeout(startProgressiveLoad, 6000);
     }
 
     const handleScroll = () => {
@@ -257,14 +305,17 @@ export const ScrollSequence: React.FC = () => {
     handleScroll();
 
     return () => {
+      window.removeEventListener('scroll', startProgressiveLoad);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (velocityTimerRef.current) clearTimeout(velocityTimerRef.current);
-      if ('cancelIdleCallback' in window && typeof idleHandle === 'number') {
-        (window as any).cancelIdleCallback(idleHandle);
-      } else {
-        clearTimeout(idleHandle as ReturnType<typeof setTimeout>);
+      if (idleHandle) {
+        if ('cancelIdleCallback' in window && typeof idleHandle === 'number') {
+          (window as any).cancelIdleCallback(idleHandle);
+        } else {
+          clearTimeout(idleHandle as ReturnType<typeof setTimeout>);
+        }
       }
     };
   }, [drawFrameOnCanvas, prefersReducedMotion]);

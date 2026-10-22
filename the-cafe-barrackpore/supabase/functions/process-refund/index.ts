@@ -9,6 +9,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
 import Stripe from 'https://esm.sh/stripe@14.25.0?target=deno';
+import { toMinorUnits } from '../_shared/currency.ts';
 
 serve(async (req: Request) => {
   const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || Deno.env.get('PUBLIC_SITE_URL');
@@ -137,6 +138,7 @@ serve(async (req: Request) => {
 
     const provider = order.payment_provider;
     const paymentRef = order.payment_reference;
+    const currency = (order.currency as string | undefined)?.toUpperCase();
     let refundId: string;
 
     // 3. Provider Refund Execution
@@ -163,7 +165,7 @@ serve(async (req: Request) => {
       }
       const refundObj = await stripe.refunds.create({
         payment_intent: piId,
-        amount: refundAmount === undefined ? undefined : Math.round(refundAmount * 100),
+        amount: refundAmount === undefined ? undefined : toMinorUnits(refundAmount, currency),
         reason: 'requested_by_customer',
       });
       refundId = refundObj.id;
@@ -211,7 +213,7 @@ serve(async (req: Request) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: refundAmount === undefined ? undefined : Math.round(refundAmount * 100),
+          amount: refundAmount === undefined ? undefined : toMinorUnits(refundAmount, currency),
           notes: { order_ref: orderRef, reason },
         }),
       });

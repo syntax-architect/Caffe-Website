@@ -8,7 +8,8 @@ import type { OrderRecord, OrderStatus } from '../../types/order';
 import { createOrder } from '../../services/orderService';
 import { unlockAudioContext, playKitchenOrderBell } from '../../services/soundService';
 import { processRefund } from '../../services/paymentService';
-import { printKitchenKOT, printCustomerReceipt } from '../../utils/printReceipt';
+import { printKitchenKOT, printCustomerReceipt, kickCashDrawer } from '../../utils/printReceipt';
+import { BillSettlementModal } from './BillSettlementModal';
 
 interface OrderItemRecord {
   id: string;
@@ -38,8 +39,10 @@ export const OrdersManagement: React.FC = () => {
 
   // Refund Management State
   const [showRefundModal, setShowRefundModal] = useState<boolean>(false);
+  const [showSettlementModal, setShowSettlementModal] = useState<boolean>(false);
   const [refundReason, setRefundReason] = useState<string>('requested_by_customer');
   const [isRefunding, setIsRefunding] = useState<boolean>(false);
+  const [printedKotOrders, setPrintedKotOrders] = useState<Set<string>>(new Set());
 
   const loadOrders = useCallback(async () => {
     setIsRefreshing(true);
@@ -599,49 +602,101 @@ export const OrdersManagement: React.FC = () => {
                 </div>
               </div>
 
+              {/* Bill Settlement & Split Control */}
+              <button
+                type="button"
+                onClick={() => setShowSettlementModal(true)}
+                className="w-full mb-3 py-3 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e0b555] text-black font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">point_of_sale</span>
+                {activeOrder.payment_status === 'paid' ? 'Manage Settlement & Splits' : 'Settle Payment / Split Bill'}
+              </button>
+
               {/* Thermal Print Station */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-2 gap-2 mb-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    printKitchenKOT({
-                      order_ref: activeOrder.order_ref,
-                      order_type: activeOrder.order_type,
-                      table_number: activeOrder.table_number,
-                      customer_name: activeOrder.customer_name,
-                      created_at: activeOrder.created_at,
-                      notes: (activeOrder as any).special_instructions || (activeOrder as any).notes,
-                      items: activeOrderItems.map(i => ({ item_name: i.item_name, quantity: i.quantity }))
-                    });
+                  onClick={async () => {
+                    const isDup = printedKotOrders.has(activeOrder.id);
+                    try {
+                      await printKitchenKOT(
+                        {
+                          order_ref: activeOrder.order_ref,
+                          order_type: activeOrder.order_type,
+                          table_number: activeOrder.table_number,
+                          customer_name: activeOrder.customer_name,
+                          created_at: activeOrder.created_at,
+                          notes: (activeOrder as any).special_instructions || (activeOrder as any).notes,
+                          items: activeOrderItems.map(i => ({
+                            item_name: i.item_name,
+                            quantity: i.quantity,
+                            unit_price: i.unit_price,
+                            line_total: i.line_total,
+                          }))
+                        },
+                        undefined,
+                        {
+                          isDuplicate: isDup,
+                          isReprint: isDup,
+                        }
+                      );
+                      setPrintedKotOrders(prev => new Set([...prev, activeOrder.id]));
+                      addNotification(
+                        'success',
+                        'KOT Dispatched',
+                        isDup ? `Reprint / Duplicate KOT sent for #${activeOrder.order_ref}` : `KOT dispatched for #${activeOrder.order_ref}`
+                      );
+                    } catch (err: any) {
+                      addNotification('error', 'Print Error', err?.message || 'Failed to dispatch KOT');
+                    }
                   }}
                   className="py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   title="Print Kitchen Order Ticket (80mm/58mm thermal roll)"
                 >
                   <span className="material-symbols-outlined text-sm">soup_kitchen</span>
-                  Print KOT
+                  {printedKotOrders.has(activeOrder.id) ? 'Reprint KOT (Dup)' : 'Print KOT'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    printCustomerReceipt({
-                      order_ref: activeOrder.order_ref,
-                      order_type: activeOrder.order_type,
-                      table_number: activeOrder.table_number,
-                      customer_name: activeOrder.customer_name,
-                      customer_phone: activeOrder.customer_phone,
-                      created_at: activeOrder.created_at,
-                      items: activeOrderItems.map(i => ({
-                        item_name: i.item_name,
-                        quantity: i.quantity,
-                        unit_price: i.unit_price,
-                        line_total: i.line_total
-                      })),
-                      subtotal: activeOrder.subtotal,
-                      tax_amount: Math.max(0, activeOrder.total - activeOrder.subtotal),
-                      total: activeOrder.total,
-                      payment_status: activeOrder.payment_status,
-                      payment_method: activeOrder.payment_provider || 'counter'
-                    });
+                  onClick={async () => {
+                    try {
+                      await printCustomerReceipt(
+                        {
+                          order_ref: activeOrder.order_ref,
+                          order_type: activeOrder.order_type,
+                          table_number: activeOrder.table_number,
+                          customer_name: activeOrder.customer_name,
+                          customer_phone: activeOrder.customer_phone,
+                          created_at: activeOrder.created_at,
+                          items: activeOrderItems.map(i => ({
+                            item_name: i.item_name,
+                            quantity: i.quantity,
+                            unit_price: i.unit_price,
+                            line_total: i.line_total
+                          })),
+                          subtotal: activeOrder.subtotal,
+                          tax_amount: Math.max(0, activeOrder.total - activeOrder.subtotal),
+                          total: activeOrder.total,
+                          payment_status: activeOrder.payment_status,
+                          payment_method: activeOrder.payment_provider || 'counter'
+                        },
+                        undefined,
+                        {
+                          businessName: restaurantConfig.businessName,
+                          phone: restaurantConfig.contact?.phone,
+                          address: [restaurantConfig.address?.line1, restaurantConfig.address?.city].filter(Boolean).join(', '),
+                          taxLabel: restaurantConfig.tax?.label,
+                          taxRate: restaurantConfig.tax?.rate,
+                          taxRules: restaurantConfig.tax?.rules,
+                          taxId: restaurantConfig.tax?.taxId,
+                          taxIdLabel: restaurantConfig.tax?.taxIdLabel,
+                          ratesAsOf: restaurantConfig.tax?.ratesAsOf || new Date().toISOString().split('T')[0],
+                        }
+                      );
+                      addNotification('success', 'Bill Dispatched', `Guest receipt dispatched for #${activeOrder.order_ref}`);
+                    } catch (err: any) {
+                      addNotification('error', 'Print Error', err?.message || 'Failed to dispatch bill receipt');
+                    }
                   }}
                   className="py-2.5 px-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-stone-200 border border-white/10 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   title="Print Guest Bill Receipt (80mm/58mm thermal roll)"
@@ -650,6 +705,28 @@ export const OrdersManagement: React.FC = () => {
                   Print Bill
                 </button>
               </div>
+
+              {/* Cash Drawer Kick Action */}
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const res = await kickCashDrawer();
+                    if (res.success) {
+                      addNotification('success', 'Cash Drawer Opened', res.message || 'Kick pulse sent to cash drawer.');
+                    } else {
+                      addNotification('warning', 'Cash Drawer Notice', res.message || 'Could not send drawer kick pulse.');
+                    }
+                  } catch (err: any) {
+                    addNotification('error', 'Drawer Error', err?.message || 'Failed to trigger cash drawer.');
+                  }
+                }}
+                className="w-full mb-4 py-2 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                title="Send ESC/POS pulse to open RJ11/RJ12 cash drawer"
+              >
+                <span className="material-symbols-outlined text-sm">lock_open</span>
+                Open Cash Drawer
+              </button>
 
               {/* Guest & Dining Info */}
               <div className="grid grid-cols-2 gap-3 mb-4">
@@ -891,6 +968,24 @@ export const OrdersManagement: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bill Settlement Cockpit Modal */}
+      {showSettlementModal && activeOrder && (
+        <BillSettlementModal
+          order={activeOrder}
+          items={activeOrderItems}
+          onClose={() => setShowSettlementModal(false)}
+          onOrderUpdated={async () => {
+            await loadOrders();
+            if (activeOrder) {
+              const updated = await fetchOrders({ search: activeOrder.order_ref });
+              if (updated && updated.length > 0) {
+                setActiveOrder(updated[0]);
+              }
+            }
+          }}
+        />
       )}
     </div>
   );

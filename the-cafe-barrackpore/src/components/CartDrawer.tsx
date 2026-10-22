@@ -5,8 +5,10 @@ import { clientDetails } from '../config/client';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { createOrder, updatePendingOrder } from '../services/orderService';
 import { generateClientOrderRef, calculateOrderTotals } from '../utils/orderCalculations';
+import { toMinorUnits } from '../utils/currency';
 import { useTableContext } from '../context/TableContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useI18n } from '../i18n';
 import { validatePhoneNumber } from '../utils/phone';
 import { isItemAvailable } from '../services/menuAvailabilityService';
 import {
@@ -21,6 +23,7 @@ import {
   getActiveHappyHour,
   validateDiscountCode,
 } from '../services/ownerService';
+import { DATED_TAX_RULES } from '../config/taxRegistry';
 import type { ActiveHappyHour, DiscountValidationResult } from '../types/owner';
 import { getPendingOfflineCount, syncOfflineOrders } from '../utils/offlineQueue';
 import {
@@ -37,6 +40,11 @@ export const CartDrawer: React.FC = () => {
   const { items, isDrawerOpen, setIsDrawerOpen, updateQuantity, removeFromCart, clearCart } = useCart();
   const { tableNumber: qrTable, isQrOrder, isValidTable: isQrValid } = useTableContext();
   const { restaurantConfig, formatPrice } = useSiteConfig();
+  const { t, language } = useI18n();
+  const getItemName = useCallback((item?: any) => {
+    if (!item) return '';
+    return item.translations?.[language]?.name || item.name;
+  }, [language]);
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
@@ -146,6 +154,12 @@ export const CartDrawer: React.FC = () => {
     rate: restaurantConfig.tax.rate,
     serviceCharge: restaurantConfig.tax.serviceCharge,
     rules: restaurantConfig.tax.rules,
+    datedRules: DATED_TAX_RULES,
+    orderDate: new Date().toISOString().split('T')[0],
+    country: restaurantConfig.country,
+    region: restaurantConfig.tax.region || 'ALL',
+    taxId: restaurantConfig.tax.taxId,
+    taxIdLabel: restaurantConfig.tax.taxIdLabel,
   });
 
   // Fetch active happy hour when drawer is open
@@ -195,9 +209,14 @@ export const CartDrawer: React.FC = () => {
 
   // Payment Configuration Resolution
   const isPaymentEnabled = Boolean(
-    restaurantConfig.payments?.enabled && restaurantConfig.payments?.mode !== 'disabled'
+    restaurantConfig.features?.online_payments !== false &&
+    restaurantConfig.payments?.enabled &&
+    restaurantConfig.payments?.mode !== 'disabled'
   );
-  const paymentMode = restaurantConfig.payments?.mode || 'disabled';
+  const paymentMode =
+    restaurantConfig.features?.online_payments === false
+      ? 'disabled'
+      : (restaurantConfig.payments?.mode || 'disabled');
   const isOnlinePayment =
     isPaymentEnabled &&
     (paymentMode === 'online' || (paymentMode === 'optional' && paymentMethodChoice === 'online'));
@@ -618,7 +637,7 @@ export const CartDrawer: React.FC = () => {
 
       const rzpOptions = {
         key: sessionResult.keyId || (import.meta.env.VITE_RAZORPAY_KEY_ID as string),
-        amount: Math.round(sessionResult.amount * 100), // in paise
+        amount: sessionResult.amountInMinorUnits ?? toMinorUnits(sessionResult.amount, sessionResult.currency || 'INR'),
         currency: sessionResult.currency || 'INR',
         name: restaurantConfig.businessName || 'Order Payment',
         description: `Order ${activeRef}`,
@@ -808,21 +827,21 @@ export const CartDrawer: React.FC = () => {
                       else setStep('cart');
                     }}
                     className="w-8 h-8 rounded-full text-on-surface/70 hover:text-primary hover:bg-white/5 flex items-center justify-center transition-colors cursor-pointer"
-                    aria-label="Back to previous step"
+                    aria-label={t('common.back', 'Back to previous step')}
                   >
                     <span className="material-symbols-outlined text-lg">arrow_back</span>
                   </button>
                 )}
                 <div>
-                  <span className="editorial-eyebrow text-[9px] block">Artisanal Dining</span>
+                  <span className="editorial-eyebrow text-[9px] block">{t('menu.artisanalSelection', 'Artisanal Dining')}</span>
                   <div className="flex items-center gap-2">
                     <h2 id="cart-drawer-heading" className="font-serif text-on-surface font-medium text-xl tracking-tight">
-                      {activeStep === 'cart' && 'Your Order Bag'}
-                      {activeStep === 'details' && 'Guest Details'}
-                      {activeStep === 'review' && 'Confirm & Dispatch'}
-                      {activeStep === 'payment_process' && 'Payment Gateway'}
-                      {activeStep === 'payment_failed' && 'Payment Recovery'}
-                      {activeStep === 'confirmed' && 'Order Confirmed'}
+                      {activeStep === 'cart' && t('cart.title', 'Your Order Bag')}
+                      {activeStep === 'details' && t('cart.guestDetails', 'Guest Details')}
+                      {activeStep === 'review' && t('cart.reviewOrder', 'Confirm & Dispatch')}
+                      {activeStep === 'payment_process' && t('cart.paymentProcessing', 'Payment Gateway')}
+                      {activeStep === 'payment_failed' && t('cart.paymentFailed', 'Payment Recovery')}
+                      {activeStep === 'confirmed' && t('cart.orderPlaced', 'Order Confirmed')}
                     </h2>
                     {items.length > 0 && activeStep === 'cart' && (
                       <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-primary text-[10px] font-sans font-semibold">
@@ -839,7 +858,7 @@ export const CartDrawer: React.FC = () => {
                   setStep('cart');
                 }}
                 className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-on-surface/60 hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer"
-                aria-label="Close cart drawer"
+                aria-label={t('a11y.closeCart', 'Close cart drawer')}
               >
                 <span className="material-symbols-outlined text-base">close</span>
               </button>
@@ -876,17 +895,17 @@ export const CartDrawer: React.FC = () => {
               <div className="px-6 py-2.5 border-b border-[#D4AF37]/10 bg-[#110B07] flex items-center justify-between text-[11px] font-sans">
                 <div className={`flex items-center gap-1.5 ${activeStep === 'cart' ? 'text-primary font-medium' : 'text-on-surface/40'}`}>
                   <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${activeStep === 'cart' ? 'bg-primary text-[#120B08]' : 'bg-white/10 text-white/50'}`}>1</span>
-                  <span>Bag</span>
+                  <span>{t('cart.step1', 'Bag')}</span>
                 </div>
                 <span className="w-8 h-[1px] bg-white/10" />
                 <div className={`flex items-center gap-1.5 ${activeStep === 'details' ? 'text-primary font-medium' : 'text-on-surface/40'}`}>
                   <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${activeStep === 'details' ? 'bg-primary text-[#120B08]' : 'bg-white/10 text-white/50'}`}>2</span>
-                  <span>Details</span>
+                  <span>{t('cart.step2', 'Details')}</span>
                 </div>
                 <span className="w-8 h-[1px] bg-white/10" />
                 <div className={`flex items-center gap-1.5 ${activeStep === 'review' ? 'text-primary font-medium' : 'text-on-surface/40'}`}>
                   <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${activeStep === 'review' ? 'bg-primary text-[#120B08]' : 'bg-white/10 text-white/50'}`}>3</span>
-                  <span>Review</span>
+                  <span>{t('cart.step3', 'Review')}</span>
                 </div>
               </div>
             )}
@@ -902,15 +921,15 @@ export const CartDrawer: React.FC = () => {
                         <span className="material-symbols-outlined text-3xl font-light">shopping_bag</span>
                       </div>
                       <div className="text-center">
-                        <p className="font-serif text-lg text-on-surface font-normal">Your order bag is empty</p>
-                        <p className="font-sans text-xs text-on-surface/50 mt-1">Explore our artisanal roasts &amp; comfort kitchen dishes.</p>
+                        <p className="font-serif text-lg text-on-surface font-normal">{t('cart.empty', 'Your order bag is empty')}</p>
+                        <p className="font-sans text-xs text-on-surface/50 mt-1">{t('cart.emptyMessage', 'Explore our artisanal roasts & comfort kitchen dishes.')}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => setIsDrawerOpen(false)}
                         className="mt-2 px-6 py-2.5 rounded-full btn-premium text-xs font-semibold uppercase tracking-wider cursor-pointer shadow-md"
                       >
-                        Explore Menu
+                        {t('cart.browseMenu', 'Explore Menu')}
                       </button>
                     </div>
                   ) : (
@@ -928,7 +947,7 @@ export const CartDrawer: React.FC = () => {
                               <img
                                 loading="lazy"
                                 src={item.image}
-                                alt={item.name}
+                                alt={getItemName(item)}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                               />
                             </div>
@@ -941,19 +960,19 @@ export const CartDrawer: React.FC = () => {
                             <div>
                               <div className="flex justify-between items-start gap-2">
                                 <h4 className="font-serif text-sm font-medium text-on-surface truncate">
-                                  {item.name}
+                                  {getItemName(item)}
                                 </h4>
                                 <button
                                   type="button"
                                   onClick={() => removeFromCart(item.id)}
-                                  aria-label={`Remove ${item.name} from cart`}
+                                  aria-label={t('cart.removeItem', `Remove ${getItemName(item)} from cart`)}
                                   className="w-6 h-6 rounded-md hover:bg-red-500/10 text-on-surface/35 hover:text-red-400 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
                                 >
                                   <span className="material-symbols-outlined text-sm">delete</span>
                                 </button>
                               </div>
                               <span className="font-serif text-xs text-primary/90 font-normal tabular-nums">
-                                {formatPrice(item.price)} each
+                                {formatPrice(item.price)}
                               </span>
                             </div>
                             <div className="flex items-center justify-between mt-2 gap-2">
@@ -962,7 +981,7 @@ export const CartDrawer: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                  aria-label={`Decrease quantity of ${item.name}`}
+                                  aria-label={t('a11y.decreaseQuantity', `Decrease quantity of ${getItemName(item)}`)}
                                   className="w-6 h-6 rounded-full hover:bg-white/10 text-on-surface/80 hover:text-primary flex items-center justify-center transition-colors cursor-pointer"
                                 >
                                   <span className="material-symbols-outlined text-xs">remove</span>
@@ -973,7 +992,7 @@ export const CartDrawer: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                  aria-label={`Increase quantity of ${item.name}`}
+                                  aria-label={t('a11y.increaseQuantity', `Increase quantity of ${getItemName(item)}`)}
                                   className="w-6 h-6 rounded-full hover:bg-white/10 text-on-surface/80 hover:text-primary flex items-center justify-center transition-colors cursor-pointer"
                                 >
                                   <span className="material-symbols-outlined text-xs">add</span>
@@ -993,15 +1012,34 @@ export const CartDrawer: React.FC = () => {
                 {items.length > 0 && (
                   <div className="p-5 sm:p-6 pb-[max(1.25rem,calc(0.75rem+env(safe-area-inset-bottom,0px)))] border-t border-primary/25 bg-surface-obsidian/95 backdrop-blur-xl flex flex-col gap-3 shadow-[0_-10px_35px_rgba(0,0,0,0.7)]">
                     <div className="flex justify-between items-center text-xs text-on-surface/70 font-sans">
-                      <span>Subtotal ({items.reduce((acc, i) => acc + i.quantity, 0)} items)</span>
+                      <span>{t('common.subtotal', 'Subtotal')} ({items.reduce((acc, i) => acc + i.quantity, 0)} {t('cart.itemsInCart', 'items')})</span>
                       <span className="font-serif text-sm font-medium text-on-surface tabular-nums">{formatPrice(totals.subtotal)}</span>
                     </div>
-                    {restaurantConfig.tax.enabled && (totals.taxRate ?? 0) > 0 && (
-                      <div className="flex justify-between items-center text-xs text-on-surface/60 font-sans">
-                        <span>{totals.taxLabel} ({totals.taxMode === 'inclusive' ? `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}% incl.` : `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}%`})</span>
-                        <span className="font-serif text-xs text-primary/80 tabular-nums">
-                          {formatPrice(totals.tax)}
-                        </span>
+                    {restaurantConfig.tax.enabled && (
+                      totals.taxBreakdownLines && totals.taxBreakdownLines.length > 0 ? (
+                        totals.taxBreakdownLines.map((line, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-xs text-on-surface/60 font-sans">
+                            <span>{line.label} ({line.mode === 'inclusive' ? `${(line.rate * 100).toFixed(line.rate * 100 % 1 === 0 ? 0 : 2)}% incl.` : `${(line.rate * 100).toFixed(line.rate * 100 % 1 === 0 ? 0 : 2)}%`})</span>
+                            <span className="font-serif text-xs text-primary/80 tabular-nums">
+                              {formatPrice(line.amount)}
+                            </span>
+                          </div>
+                        ))
+                      ) : (totals.taxRate ?? 0) > 0 ? (
+                        <div className="flex justify-between items-center text-xs text-on-surface/60 font-sans">
+                          <span>{totals.taxLabel} ({totals.taxMode === 'inclusive' ? `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}% incl.` : `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}%`})</span>
+                          <span className="font-serif text-xs text-primary/80 tabular-nums">
+                            {formatPrice(totals.tax)}
+                          </span>
+                        </div>
+                      ) : null
+                    )}
+                    {totals.taxId && (
+                      <div className="flex justify-between items-center text-[10px] text-on-surface/40 font-mono">
+                        <span>{totals.taxIdLabel || 'Tax ID'}: {totals.taxId}</span>
+                        {totals.ratesAsOf && (
+                          <span>Rates as of: {totals.ratesAsOf}</span>
+                        )}
                       </div>
                     )}
                     {(totals as any).serviceCharge > 0 && (
@@ -1013,13 +1051,13 @@ export const CartDrawer: React.FC = () => {
                       </div>
                     )}
                     <div className="flex justify-between items-center text-on-surface pt-0.5 border-t border-white/5">
-                      <span className="font-sans text-xs font-semibold uppercase tracking-wider text-on-surface/90">Total Payable</span>
+                      <span className="font-sans text-xs font-semibold uppercase tracking-wider text-on-surface/90">{t('common.total', 'Total Payable')}</span>
                       <span className="font-serif text-2xl font-normal text-primary tabular-nums">{formatPrice(totals.total)}</span>
                     </div>
                     {restaurantConfig.isOrderingEnabled === false && (
                       <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs flex items-center gap-2">
                         <span className="material-symbols-outlined text-base shrink-0">pause_circle</span>
-                        <span>Online ordering is currently paused by the restaurant. Checkout is temporarily disabled.</span>
+                        <span>{t('menu.browsingModeDesc', 'Online ordering is currently paused by the restaurant. Checkout is temporarily disabled.')}</span>
                       </div>
                     )}
                     <div className="flex gap-2.5 pt-1.5">
@@ -1028,7 +1066,7 @@ export const CartDrawer: React.FC = () => {
                         onClick={clearCart}
                         className="h-12 px-4 rounded-full border border-white/15 hover:border-white/30 text-on-surface/75 hover:text-on-surface text-xs font-sans font-semibold uppercase tracking-wider transition-colors cursor-pointer"
                       >
-                        Clear
+                        {t('cart.clearCart', 'Clear')}
                       </button>
                       <button
                         type="button"
@@ -1040,7 +1078,7 @@ export const CartDrawer: React.FC = () => {
                             : 'bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] shadow-[0_4px_24px_rgba(212,175,55,0.28)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] cursor-pointer'
                         }`}
                       >
-                        <span>{restaurantConfig.isOrderingEnabled === false ? 'Ordering Paused' : 'Proceed to Details'}</span>
+                        <span>{restaurantConfig.isOrderingEnabled === false ? t('menu.orderingPaused', 'Ordering Paused') : t('cart.proceedToCheckout', 'Proceed to Details')}</span>
                         <span className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
                           <span className="material-symbols-outlined text-[16px] text-[#120B08]">{restaurantConfig.isOrderingEnabled === false ? 'pause' : 'arrow_forward'}</span>
                         </span>
@@ -1059,7 +1097,7 @@ export const CartDrawer: React.FC = () => {
                   {/* Customer Name */}
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="checkout-name" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">
-                      Your Full Name <span className="text-primary">*</span>
+                      {t('cart.name', 'Your Full Name')} <span className="text-primary">*</span>
                     </label>
                     <input
                       id="checkout-name"
@@ -1070,7 +1108,7 @@ export const CartDrawer: React.FC = () => {
                         setCustomerName(e.target.value);
                         if (errors.customerName) setErrors((prev) => ({ ...prev, customerName: '' }));
                       }}
-                      placeholder="e.g. Rahul Sharma"
+                      placeholder={t('cart.namePlaceholder', 'e.g. Rahul Sharma')}
                       className={`w-full bg-[#0D0705] border rounded-xl px-4 py-3 text-on-surface font-sans text-sm focus:outline-none transition-colors placeholder:text-white/20 ${
                         errors.customerName ? 'border-red-400 focus:border-red-400' : 'border-white/10 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40'
                       }`}
@@ -1085,7 +1123,7 @@ export const CartDrawer: React.FC = () => {
                   {/* Phone Number */}
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="checkout-phone" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">
-                      Mobile Number <span className="text-primary">*</span>
+                      {t('cart.phone', 'Mobile Number')} <span className="text-primary">*</span>
                     </label>
                     <input
                       id="checkout-phone"
@@ -1120,7 +1158,7 @@ export const CartDrawer: React.FC = () => {
                   {isQrOrder && isQrValid && qrTable ? (
                     <div className="flex flex-col gap-1.5">
                       <label className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">
-                        Dining Mode
+                        {t('cart.deliveryType', 'Dining Mode')}
                       </label>
                       <div className="p-4 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -1129,10 +1167,10 @@ export const CartDrawer: React.FC = () => {
                           </div>
                           <div>
                             <div className="font-sans text-[10px] uppercase tracking-wider text-primary font-bold">
-                              Dine-in Order
+                              {t('cart.dineIn', 'Dine-in Order')}
                             </div>
                             <div className="font-serif text-sm font-semibold text-on-surface">
-                              Table {qrTable}
+                              {t('cart.tableNumber', 'Table')} {qrTable}
                             </div>
                           </div>
                         </div>
@@ -1146,7 +1184,7 @@ export const CartDrawer: React.FC = () => {
                       {/* Order Type Selection */}
                       <div className="flex flex-col gap-1.5">
                         <label className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">
-                          Dining Mode <span className="text-primary">*</span>
+                          {t('cart.deliveryType', 'Dining Mode')} <span className="text-primary">*</span>
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                           <button
@@ -1162,7 +1200,7 @@ export const CartDrawer: React.FC = () => {
                             }`}
                           >
                             <span className="material-symbols-outlined text-xl">table_restaurant</span>
-                            <span className="font-sans text-xs uppercase tracking-wider">Dine-in</span>
+                            <span className="font-sans text-xs uppercase tracking-wider">{t('cart.dineIn', 'Dine-in')}</span>
                           </button>
                           <button
                             type="button"
@@ -1177,7 +1215,7 @@ export const CartDrawer: React.FC = () => {
                             }`}
                           >
                             <span className="material-symbols-outlined text-xl">shopping_bag</span>
-                            <span className="font-sans text-xs uppercase tracking-wider">Takeaway</span>
+                            <span className="font-sans text-xs uppercase tracking-wider">{t('cart.takeaway', 'Takeaway')}</span>
                           </button>
                         </div>
                       </div>
@@ -1191,7 +1229,7 @@ export const CartDrawer: React.FC = () => {
                           className="flex flex-col gap-1.5"
                         >
                           <label htmlFor="checkout-table" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">
-                            Table Number <span className="text-primary">*</span>
+                            {t('cart.tableNumber', 'Table Number')} <span className="text-primary">*</span>
                           </label>
                           <input
                             id="checkout-table"
@@ -1220,14 +1258,14 @@ export const CartDrawer: React.FC = () => {
                   {/* Special Instructions (Optional) */}
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="checkout-notes" className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">
-                      Kitchen Requests (Optional)
+                      {t('cart.specialRequests', 'Kitchen Requests (Optional)')}
                     </label>
                     <textarea
                       id="checkout-notes"
                       rows={2}
                       value={orderNotes}
                       onChange={(e) => setOrderNotes(e.target.value)}
-                      placeholder="e.g. Less spicy, allergy notes, extra napkins..."
+                      placeholder={t('cart.specialRequestsPlaceholder', 'e.g. Less spicy, allergy notes, extra napkins...')}
                       className="w-full bg-[#0D0705] border border-white/10 rounded-xl px-4 py-2.5 text-on-surface font-sans text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40 transition-colors resize-none placeholder:text-white/20"
                     />
                   </div>
@@ -1256,13 +1294,13 @@ export const CartDrawer: React.FC = () => {
                     onClick={() => setStep('cart')}
                     className="h-12 px-5 rounded-full border border-white/15 hover:bg-white/5 transition-colors text-on-surface/80 hover:text-on-surface font-sans text-xs font-semibold uppercase tracking-wider cursor-pointer"
                   >
-                    Back
+                    {t('common.back', 'Back')}
                   </button>
                   <button
                     type="submit"
                     className="group relative flex-1 h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-semibold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.28)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all duration-300 flex items-center justify-between pl-6 pr-2 cursor-pointer"
                   >
-                    <span>Review Order</span>
+                    <span>{t('cart.reviewOrder', 'Review Order')}</span>
                     <span className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
                       <span className="material-symbols-outlined text-[16px] text-[#120B08]">arrow_forward</span>
                     </span>
@@ -1278,7 +1316,7 @@ export const CartDrawer: React.FC = () => {
                   {/* Reference Banner */}
                   <div className="p-4 rounded-2xl bg-primary/10 border border-primary/30 flex flex-col gap-1">
                     <span className="font-sans text-[10px] uppercase tracking-widest text-primary font-bold">
-                      Order Reference
+                      {t('cart.orderRef', 'Order Reference')}
                     </span>
                     <span className="font-serif text-2xl text-primary font-semibold tracking-wider tabular-nums">
                       {orderRef}
@@ -1291,24 +1329,24 @@ export const CartDrawer: React.FC = () => {
                   {/* Customer Summary Card */}
                   <div className="p-4 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/20 flex flex-col gap-2.5">
                     <div className="flex justify-between items-center text-xs font-sans border-b border-white/5 pb-2">
-                      <span className="text-on-surface/60 uppercase tracking-wider">Customer</span>
+                      <span className="text-on-surface/60 uppercase tracking-wider">{t('cart.name', 'Customer')}</span>
                       <span className="text-on-surface font-medium">{customerName}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs font-sans border-b border-white/5 pb-2">
-                      <span className="text-on-surface/60 uppercase tracking-wider">Phone</span>
+                      <span className="text-on-surface/60 uppercase tracking-wider">{t('cart.phone', 'Phone')}</span>
                       <span className="text-on-surface font-medium">{phone}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs font-sans border-b border-white/5 pb-2">
-                      <span className="text-on-surface/60 uppercase tracking-wider">Service</span>
+                      <span className="text-on-surface/60 uppercase tracking-wider">{t('cart.deliveryType', 'Service')}</span>
                       <span className="text-primary font-medium">
                         {(isQrOrder && isQrValid && qrTable) || orderType === 'dine-in'
-                          ? `Dine-in (Table ${isQrOrder && isQrValid && qrTable ? qrTable : tableNumber})`
-                          : 'Takeaway'}
+                          ? `${t('cart.dineIn', 'Dine-in')} (${t('cart.tableNumber', 'Table')} ${isQrOrder && isQrValid && qrTable ? qrTable : tableNumber})`
+                          : t('cart.takeaway', 'Takeaway')}
                       </span>
                     </div>
                     {orderNotes.trim() && (
                       <div className="flex flex-col text-xs font-sans pt-1">
-                        <span className="text-on-surface/60 uppercase tracking-wider">Kitchen Notes</span>
+                        <span className="text-on-surface/60 uppercase tracking-wider">{t('cart.specialRequests', 'Kitchen Notes')}</span>
                         <span className="text-on-surface/85 mt-1 italic">"{orderNotes}"</span>
                       </div>
                     )}
@@ -1317,12 +1355,12 @@ export const CartDrawer: React.FC = () => {
                   {/* Items Summary */}
                   <div className="p-4 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/20 flex flex-col gap-2">
                     <span className="font-sans text-[11px] uppercase tracking-wider text-primary font-semibold mb-1">
-                      Ordered Line Items ({items.reduce((acc, i) => acc + i.quantity, 0)})
+                      {t('cart.itemsInCart', 'Ordered Line Items')} ({items.reduce((acc, i) => acc + i.quantity, 0)})
                     </span>
                     {items.map((item) => (
                       <div key={item.id} className="flex justify-between items-center text-xs py-1.5 border-b border-white/5 last:border-none">
                         <span className="text-on-surface/85">
-                          {item.quantity} × {item.name}
+                          {item.quantity} × {getItemName(item)}
                         </span>
                         <span className="font-serif text-primary font-normal tabular-nums">
                           {formatPrice(item.price * item.quantity)}
@@ -1335,7 +1373,7 @@ export const CartDrawer: React.FC = () => {
                   {paymentMode === 'optional' && (
                     <div className="p-4 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/20 flex flex-col gap-2.5">
                       <span className="font-sans text-[11px] uppercase tracking-wider text-primary font-semibold">
-                        Select Payment Method
+                        {t('cart.deliveryType', 'Select Payment Method')}
                       </span>
                       <div className="grid grid-cols-2 gap-2">
                         <button
@@ -1348,7 +1386,7 @@ export const CartDrawer: React.FC = () => {
                           }`}
                         >
                           <span className="material-symbols-outlined text-lg">credit_card</span>
-                          <span className="font-sans text-[11px] uppercase tracking-wider">Pay Online</span>
+                          <span className="font-sans text-[11px] uppercase tracking-wider">{t('cart.payNow', 'Pay Online')}</span>
                         </button>
                         <button
                           type="button"
@@ -1360,7 +1398,7 @@ export const CartDrawer: React.FC = () => {
                           }`}
                         >
                           <span className="material-symbols-outlined text-lg">point_of_sale</span>
-                          <span className="font-sans text-[11px] uppercase tracking-wider">Pay at Counter</span>
+                          <span className="font-sans text-[11px] uppercase tracking-wider">{t('cart.payAtCounter', 'Pay at Counter')}</span>
                         </button>
                       </div>
                     </div>
@@ -1375,87 +1413,109 @@ export const CartDrawer: React.FC = () => {
                     <TurnstileWidget action="order" onVerify={(token) => setCaptchaToken(token)} />
                   </div>
 
-                  {/* Happy Hour Active Banner */}
-                  {activeHappyHour && (
-                    <div className="p-3.5 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/30 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-amber-400 text-lg">local_fire_department</span>
-                        <div>
-                          <p className="text-xs font-semibold text-white">{activeHappyHour.label}</p>
-                          <p className="text-[10px] text-stone-400">Happy hour discount active until {activeHappyHour.end_time}</p>
+                  {/* Happy Hour & Promotional Discount Section */}
+                  {restaurantConfig.features?.discounts !== false && (
+                    <>
+                      {/* Happy Hour Active Banner */}
+                      {activeHappyHour && (
+                        <div className="p-3.5 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/30 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-amber-400 text-lg">local_fire_department</span>
+                            <div>
+                              <p className="text-xs font-semibold text-white">{activeHappyHour.label}</p>
+                              <p className="text-[10px] text-stone-400">Happy hour discount active until {activeHappyHour.end_time}</p>
+                            </div>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#F3C766] border border-[#D4AF37]/30 text-xs font-mono font-bold">
+                            {activeHappyHour.discount_percentage}% OFF
+                          </span>
                         </div>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#F3C766] border border-[#D4AF37]/30 text-xs font-mono font-bold">
-                        {activeHappyHour.discount_percentage}% OFF
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Promotional Code Entry */}
-                  <div className="p-3.5 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/20 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-on-surface/75 font-medium uppercase tracking-wider text-[10px]">
-                        Promotional Coupon Code
-                      </span>
-                      {appliedDiscount && (
-                        <button
-                          type="button"
-                          onClick={handleRemoveDiscount}
-                          className="text-[10px] text-red-400 hover:underline cursor-pointer"
-                        >
-                          Remove
-                        </button>
                       )}
-                    </div>
 
-                    {appliedDiscount ? (
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
-                        <div className="flex items-center gap-2 font-mono font-bold">
-                          <span className="material-symbols-outlined text-sm">verified</span>
-                          <span>{appliedDiscount.code}</span>
+                      {/* Promotional Code Entry */}
+                      <div className="p-3.5 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/20 flex flex-col gap-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-on-surface/75 font-medium uppercase tracking-wider text-[10px]">
+                            {t('common.discount', 'Promotional Coupon Code')}
+                          </span>
+                          {appliedDiscount && (
+                            <button
+                              type="button"
+                              onClick={handleRemoveDiscount}
+                              className="text-[10px] text-red-400 hover:underline cursor-pointer"
+                            >
+                              {t('common.remove', 'Remove')}
+                            </button>
+                          )}
                         </div>
-                        <span className="font-semibold font-mono text-[11px]">
-                          -{formatPrice(appliedDiscount.discount_amount || 0)} applied
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={promoCodeInput}
-                          onChange={(e) => {
-                            setPromoCodeInput(e.target.value.toUpperCase());
-                            if (discountError) setDiscountError(null);
-                          }}
-                          placeholder="e.g. WELCOME10"
-                          className="flex-1 bg-[#0D0705] border border-white/10 rounded-xl px-3 py-2 text-xs text-white uppercase font-mono tracking-wider focus:outline-none focus:border-[#D4AF37]"
-                        />
-                        <button
-                          type="button"
-                          disabled={isValidatingDiscount || !promoCodeInput.trim()}
-                          onClick={handleApplyPromoCode}
-                          className="px-4 py-2 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#F3C766] hover:bg-[#D4AF37]/30 text-xs font-semibold cursor-pointer disabled:opacity-50 transition-colors"
-                        >
-                          {isValidatingDiscount ? '...' : 'Apply'}
-                        </button>
-                      </div>
-                    )}
 
-                    {discountError && (
-                      <p className="text-[11px] text-red-400 font-sans">{discountError}</p>
-                    )}
-                  </div>
+                        {appliedDiscount ? (
+                          <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
+                            <div className="flex items-center gap-2 font-mono font-bold">
+                              <span className="material-symbols-outlined text-sm">verified</span>
+                              <span>{appliedDiscount.code}</span>
+                            </div>
+                            <span className="font-semibold font-mono text-[11px]">
+                              -{formatPrice(appliedDiscount.discount_amount || 0)} applied
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={promoCodeInput}
+                              onChange={(e) => {
+                                setPromoCodeInput(e.target.value.toUpperCase());
+                                if (discountError) setDiscountError(null);
+                              }}
+                              placeholder="e.g. WELCOME10"
+                              className="flex-1 bg-[#0D0705] border border-white/10 rounded-xl px-3 py-2 text-xs text-white uppercase font-mono tracking-wider focus:outline-none focus:border-[#D4AF37]"
+                            />
+                            <button
+                              type="button"
+                              disabled={isValidatingDiscount || !promoCodeInput.trim()}
+                              onClick={handleApplyPromoCode}
+                              className="px-4 py-2 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#F3C766] hover:bg-[#D4AF37]/30 text-xs font-semibold cursor-pointer disabled:opacity-50 transition-colors"
+                            >
+                              {isValidatingDiscount ? '...' : t('common.apply', 'Apply')}
+                            </button>
+                          </div>
+                        )}
+
+                        {discountError && (
+                          <p className="text-[11px] text-red-400 font-sans">{discountError}</p>
+                        )}
+                      </div>
+                    </>
+                  )}
 
                   {/* Total Amount Box with Configurable Tax */}
                   <div className="p-4 rounded-2xl bg-[#140D09] border border-[#D4AF37]/30 flex flex-col gap-2">
                     <div className="flex justify-between items-center text-xs text-on-surface/70">
-                      <span>Subtotal</span>
+                      <span>{t('common.subtotal', 'Subtotal')}</span>
                       <span className="font-serif text-sm tabular-nums">{formatPrice(totals.subtotal)}</span>
                     </div>
-                    {restaurantConfig.tax.enabled && (totals.taxRate ?? 0) > 0 && (
-                      <div className="flex justify-between items-center text-xs text-on-surface/60">
-                        <span>{totals.taxLabel} ({totals.taxMode === 'inclusive' ? `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}% incl.` : `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}%`})</span>
-                        <span className="font-serif text-xs text-primary/80 tabular-nums">{formatPrice(totals.tax)}</span>
+                    {restaurantConfig.tax.enabled && (
+                      totals.taxBreakdownLines && totals.taxBreakdownLines.length > 0 ? (
+                        totals.taxBreakdownLines.map((line, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-xs text-on-surface/60">
+                            <span>{line.label} ({line.mode === 'inclusive' ? `${(line.rate * 100).toFixed(line.rate * 100 % 1 === 0 ? 0 : 2)}% incl.` : `${(line.rate * 100).toFixed(line.rate * 100 % 1 === 0 ? 0 : 2)}%`})</span>
+                            <span className="font-serif text-xs text-primary/80 tabular-nums">{formatPrice(line.amount)}</span>
+                          </div>
+                        ))
+                      ) : (totals.taxRate ?? 0) > 0 ? (
+                        <div className="flex justify-between items-center text-xs text-on-surface/60">
+                          <span>{totals.taxLabel} ({totals.taxMode === 'inclusive' ? `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}% incl.` : `${((totals.taxRate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}%`})</span>
+                          <span className="font-serif text-xs text-primary/80 tabular-nums">{formatPrice(totals.tax)}</span>
+                        </div>
+                      ) : null
+                    )}
+                    {totals.taxId && (
+                      <div className="flex justify-between items-center text-[10px] text-on-surface/40 font-mono">
+                        <span>{totals.taxIdLabel || 'Tax ID'}: {totals.taxId}</span>
+                        {totals.ratesAsOf && (
+                          <span>Rates as of: {totals.ratesAsOf}</span>
+                        )}
                       </div>
                     )}
                     {(totals as any).serviceCharge > 0 && (
@@ -1466,14 +1526,14 @@ export const CartDrawer: React.FC = () => {
                     )}
                     {effectiveDiscount > 0 && (
                       <div className="flex justify-between items-center text-xs text-emerald-400">
-                        <span>{activeDiscountLabel || 'Promotional Discount'}</span>
+                        <span>{activeDiscountLabel || t('common.discount', 'Promotional Discount')}</span>
                         <span className="font-serif text-xs font-semibold tabular-nums">
                           -{formatPrice(effectiveDiscount)}
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between items-center pt-2 border-t border-white/5">
-                      <span className="font-sans text-xs font-semibold uppercase tracking-wider text-on-surface">Total Amount</span>
+                      <span className="font-sans text-xs font-semibold uppercase tracking-wider text-on-surface">{t('common.total', 'Total Amount')}</span>
                       <span className="font-serif text-2xl font-normal text-primary tabular-nums">
                         {formatPrice(finalPayableTotal)}
                       </span>
@@ -1512,7 +1572,7 @@ export const CartDrawer: React.FC = () => {
                     }}
                     className="h-12 px-5 rounded-full border border-white/15 hover:bg-white/5 transition-colors text-on-surface/80 hover:text-on-surface font-sans text-xs font-semibold uppercase tracking-wider disabled:opacity-50 cursor-pointer"
                   >
-                    Back
+                    {t('common.back', 'Back')}
                   </button>
                   <button
                     type="button"
@@ -1522,12 +1582,12 @@ export const CartDrawer: React.FC = () => {
                   >
                     <span>
                       {isSubmitting
-                        ? 'Processing...'
+                        ? t('cart.placingOrder', 'Processing...')
                         : isOnlinePayment
-                        ? `Pay Securely · ${formatPrice(finalPayableTotal)}`
+                        ? `${t('cart.payNow', 'Pay Securely')} · ${formatPrice(finalPayableTotal)}`
                         : ((isQrOrder && isQrValid && qrTable) || orderType === 'dine-in')
-                        ? `Place Order · Table ${(isQrOrder && isQrValid && qrTable ? qrTable : tableNumber) || 'Dining'}`
-                        : 'Place Order (Pay at Counter)'}
+                        ? `${t('cart.placeOrder', 'Place Order')} · ${t('cart.tableNumber', 'Table')} ${(isQrOrder && isQrValid && qrTable ? qrTable : tableNumber) || 'Dining'}`
+                        : `${t('cart.placeOrder', 'Place Order')} (${t('cart.payAtCounter', 'Pay at Counter')})`}
                     </span>
                     <span className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
                       <span className="material-symbols-outlined text-[16px] text-[#120B08]">
@@ -1669,7 +1729,7 @@ export const CartDrawer: React.FC = () => {
                     className="w-full h-12 rounded-full bg-primary text-[#120B08] font-bold text-xs uppercase tracking-wider hover:bg-primary-hover transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-base">refresh</span>
-                    <span>Try Payment Again</span>
+                    <span>{t('common.retry', 'Try Payment Again')}</span>
                   </button>
 
                   {(restaurantConfig.payments?.allow_pay_at_counter ?? true) && (
@@ -1679,7 +1739,7 @@ export const CartDrawer: React.FC = () => {
                       onClick={handleSwitchToCounterPayment}
                       className="w-full h-11 rounded-full border border-[#D4AF37]/30 text-primary hover:bg-[#D4AF37]/10 font-sans text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
                     >
-                      {isSubmitting ? 'Updating Order...' : 'Pay at Counter Instead'}
+                      {isSubmitting ? t('cart.placingOrder', 'Updating Order...') : t('cart.payAtCounter', 'Pay at Counter Instead')}
                     </button>
                   )}
                 </div>
@@ -1695,10 +1755,10 @@ export const CartDrawer: React.FC = () => {
 
                 <div>
                   <span className="font-sans text-[10px] uppercase tracking-widest text-primary font-bold">
-                    {isDemoSubmission ? 'Demo Order Only' : 'Order Confirmed'}
+                    {isDemoSubmission ? 'Demo Order Only' : t('cart.orderPlaced', 'Order Confirmed')}
                   </span>
                   <h3 className="font-serif text-2xl text-on-surface font-normal mt-1">
-                    Thank You, {customerName}!
+                    {t('orderSuccess.title', 'Thank You')}, {customerName}!
                   </h3>
                   <p className="font-serif text-xl text-primary mt-1 font-bold tracking-wider font-mono">
                     {orderRef}
@@ -1716,16 +1776,16 @@ export const CartDrawer: React.FC = () => {
                 {/* Operational Details Card */}
                 <div className="w-full max-w-sm rounded-2xl bg-[#160E0A] border border-[#D4AF37]/25 p-4 space-y-2 text-xs font-sans text-left">
                   <div className="flex justify-between items-center">
-                    <span className="text-on-surface/60">Dining Option:</span>
+                    <span className="text-on-surface/60">{t('cart.deliveryType', 'Dining Option')}:</span>
                     <span className="font-semibold text-on-surface">
                       {(isQrOrder && isQrValid && qrTable) || orderType === 'dine-in'
-                        ? `Dine-in (Table ${isQrOrder && isQrValid && qrTable ? qrTable : tableNumber})`
-                        : 'Takeaway'}
+                        ? `${t('cart.dineIn', 'Dine-in')} (${t('cart.tableNumber', 'Table')} ${isQrOrder && isQrValid && qrTable ? qrTable : tableNumber})`
+                        : t('cart.takeaway', 'Takeaway')}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center pt-2 border-t border-white/5">
-                    <span className="text-on-surface/60">Payment Status:</span>
+                    <span className="text-on-surface/60">{t('orderSuccess.status', 'Payment Status')}:</span>
                     {isDemoSubmission ? (
                       <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-500/40 text-[11px] font-bold font-mono">
                         {paidAmount !== null ? 'SIMULATED PAYMENT' : 'SIMULATED • PAY AT COUNTER'} ({formatPrice(paidAmount ?? confirmedTotal ?? totals.total)})
@@ -1736,7 +1796,7 @@ export const CartDrawer: React.FC = () => {
                       </span>
                     ) : (
                       <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-bold font-mono">
-                        PAY AT COUNTER ({formatPrice(confirmedTotal ?? totals.total)})
+                        {t('cart.payAtCounter', 'PAY AT COUNTER')} ({formatPrice(confirmedTotal ?? totals.total)})
                       </span>
                     )}
                   </div>
@@ -1832,7 +1892,7 @@ export const CartDrawer: React.FC = () => {
                     className="w-full h-11 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-[#0A1A0F] font-bold text-xs uppercase tracking-wider shadow-[0_4px_16px_rgba(37,211,102,0.25)] flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <span className="material-symbols-outlined text-base">chat</span>
-                    <span>Send Order Receipt to WhatsApp</span>
+                    <span>{t('cart.whatsappConfirmation', 'Send Order Receipt to WhatsApp')}</span>
                   </button>
                   <p className="text-[10px] text-on-surface/50 text-center font-sans">
                     Tap to send your order receipt to our WhatsApp desk for live updates.
@@ -1846,7 +1906,7 @@ export const CartDrawer: React.FC = () => {
                     className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-[#160E0A] border border-white/10 hover:border-primary/30 transition-colors"
                   >
                     <span className="material-symbols-outlined text-lg text-primary">call</span>
-                    <span className="text-[9px] uppercase tracking-wider font-semibold text-on-surface/70">Call</span>
+                    <span className="text-[9px] uppercase tracking-wider font-semibold text-on-surface/70">{t('footer.phone', 'Call')}</span>
                   </a>
                   <a
                     href={`https://wa.me/${(restaurantConfig.contact.whatsapp || clientDetails.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(`Hi! I just placed order ${orderRef}. Thank you!`)}`}
@@ -1864,7 +1924,7 @@ export const CartDrawer: React.FC = () => {
                     className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-[#160E0A] border border-white/10 hover:border-sky-500/30 transition-colors"
                   >
                     <span className="material-symbols-outlined text-lg text-sky-400">location_on</span>
-                    <span className="text-[9px] uppercase tracking-wider font-semibold text-on-surface/70">Directions</span>
+                    <span className="text-[9px] uppercase tracking-wider font-semibold text-on-surface/70">{t('footer.findUs', 'Directions')}</span>
                   </a>
                 </div>
 
@@ -1878,7 +1938,7 @@ export const CartDrawer: React.FC = () => {
                   className="w-full max-w-sm h-11 rounded-full border border-[#D4AF37]/30 text-primary hover:bg-[#D4AF37]/10 font-sans text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2"
                 >
                   <span className="material-symbols-outlined text-base">replay</span>
-                  <span>Order Again</span>
+                  <span>{t('orderSuccess.orderMore', 'Order Again')}</span>
                 </button>
 
                 {/* Google Review Link */}
@@ -1910,7 +1970,7 @@ export const CartDrawer: React.FC = () => {
                   }}
                   className="w-full max-w-sm h-12 rounded-full bg-primary text-[#120B08] font-bold text-xs uppercase tracking-wider hover:bg-primary-hover transition-colors shadow-md cursor-pointer"
                 >
-                  Done
+                  {t('common.done', 'Done')}
                 </button>
               </div>
             )}

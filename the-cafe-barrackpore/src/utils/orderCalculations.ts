@@ -13,6 +13,7 @@
 import type { OrderItemInput, OrderCalculationSummary, TaxCalculationOptions } from '../types/order';
 import type { TaxConfiguration } from '../types/tax';
 import { calculateTaxBreakdown, formatTaxRate, roundCurrency as roundCurrencyFromEngine } from './taxEngine';
+import { MASTER_TAX_REGISTRY } from '../config/taxRegistry';
 
 export type { TaxCalculationOptions };
 
@@ -29,11 +30,31 @@ function legacyToTaxConfig(opts?: TaxCalculationOptions): TaxConfiguration {
   if (!opts) {
     return { enabled: false, mode: 'inclusive', label: 'Tax', rate: 0 };
   }
+
+  let mappedRules = opts.rules;
+  if (!mappedRules && opts.datedRules && opts.datedRules.length > 0) {
+    mappedRules = opts.datedRules.map((r) => ({
+      label: r.rule_label,
+      rate: r.rate,
+      mode: r.mode,
+      appliesTo: r.applies_to,
+    }));
+  }
+
+  let mode = opts.mode;
+  let rate = typeof opts.rate === 'number' ? opts.rate : 0;
+  let label = opts.label || 'Tax';
+  if (mappedRules && mappedRules.length > 0) {
+    mode = mode || mappedRules[0].mode;
+    rate = rate || mappedRules.reduce((acc, r) => acc + r.rate, 0);
+    label = opts.label || mappedRules[0].label;
+  }
+
   return {
     enabled: opts.enabled ?? true,
-    mode: opts.mode || 'inclusive',
-    label: opts.label || 'Tax',
-    rate: typeof opts.rate === 'number' ? opts.rate : 0,
+    mode: mode || 'inclusive',
+    label,
+    rate,
     serviceCharge: opts.serviceCharge
       ? {
           enabled: Boolean(opts.serviceCharge.enabled),
@@ -43,10 +64,12 @@ function legacyToTaxConfig(opts?: TaxCalculationOptions): TaxConfiguration {
           optional: Boolean(opts.serviceCharge.optional),
         }
       : undefined,
-    rules: opts.rules,
+    rules: mappedRules,
     taxIdLabel: opts.taxIdLabel,
     showBreakdown: opts.showBreakdown,
     roundingMode: opts.roundingMode,
+    currency: opts.currency,
+    discountAmount: opts.discountAmount,
   };
 }
 
@@ -60,21 +83,44 @@ function legacyToTaxConfig(opts?: TaxCalculationOptions): TaxConfiguration {
  * accurate VAT/GST/Sales Tax handling across 20+ countries.
  */
 export const calculateOrderTotals = (
-  items: OrderItemInput[],
+  itemsOrOpts: OrderItemInput[] | (TaxCalculationOptions & { items: OrderItemInput[] }),
   taxOptions?: TaxCalculationOptions
 ): OrderCalculationSummary => {
+  let items: OrderItemInput[];
+  let effectiveOpts: TaxCalculationOptions | undefined;
+  let hasDatedRulesPassedDirectly = false;
+
+  if (Array.isArray(itemsOrOpts)) {
+    items = itemsOrOpts;
+    effectiveOpts = taxOptions;
+  } else if (itemsOrOpts && typeof itemsOrOpts === 'object' && Array.isArray((itemsOrOpts as any).items)) {
+    items = (itemsOrOpts as any).items;
+    const { items: _extractedItems, ...restOpts } = itemsOrOpts as any;
+    effectiveOpts = { ...restOpts, ...taxOptions };
+    if ((itemsOrOpts as any).datedRules && (itemsOrOpts as any).datedRules.length > 0) {
+      hasDatedRulesPassedDirectly = true;
+    }
+  } else {
+    items = [];
+    effectiveOpts = taxOptions;
+  }
+
   if (!Array.isArray(items) || items.length === 0) {
     return {
       subtotal: 0,
       tax: 0,
       total: 0,
-      taxLabel: taxOptions?.label || 'Tax',
-      taxRate: taxOptions?.rate || 0,
-      taxMode: taxOptions?.mode || 'inclusive',
+      taxLabel: effectiveOpts?.label || 'Tax',
+      taxRate: effectiveOpts?.rate || 0,
+      taxMode: effectiveOpts?.mode || 'inclusive',
       itemCount: 0,
       lineItems: [],
+      taxBreakdownLines: [],
     };
   }
+
+  const countryCode = effectiveOpts?.country?.toUpperCase();
+  const currency = effectiveOpts?.currency || (countryCode && MASTER_TAX_REGISTRY[countryCode]?.currency) || 'INR';
 
   let subtotal = 0;
   let itemCount = 0;
@@ -82,8 +128,8 @@ export const calculateOrderTotals = (
   const lineItems = items.map((item) => {
     const quantity = Math.max(1, Math.floor(Number(item.quantity) || 1));
     const rawPrice = item.price !== undefined ? item.price : (item as any).unit_price;
-    const unit_price = Math.max(0, roundCurrency(Number(rawPrice) || 0));
-    const line_total = roundCurrency(quantity * unit_price);
+    const unit_price = Math.max(0, roundCurrency(Number(rawPrice) || 0, currency));
+    const line_total = roundCurrency(quantity * unit_price, currency);
 
     subtotal += line_total;
     itemCount += quantity;
@@ -97,41 +143,56 @@ export const calculateOrderTotals = (
       quantity,
       unit_price,
       line_total,
+      tax_category: item.tax_category || (item as any).taxCategory || 'food',
     };
   });
 
-  const roundedSubtotal = roundCurrency(subtotal);
+  const roundedSubtotal = roundCurrency(subtotal, currency);
 
   // Convert legacy options to full TaxConfiguration
-  const taxConfig = legacyToTaxConfig(taxOptions);
+  const taxConfig = legacyToTaxConfig({ ...effectiveOpts, currency });
 
   // Use the international tax engine for calculation
   const taxableItems = items.map((item) => ({
-    amount: Math.max(0, roundCurrency(Number(item.price ?? (item as any).unit_price) || 0)),
+    amount: Math.max(0, roundCurrency(Number(item.price ?? (item as any).unit_price) || 0, currency)),
     quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
-    category: (item as any).taxCategory || 'food' as const,
+    category: (item.tax_category || (item as any).taxCategory || 'food') as any,
   }));
 
-  const breakdown = calculateTaxBreakdown(taxableItems, taxConfig);
+  const breakdown = calculateTaxBreakdown(taxableItems, taxConfig, {
+    discountAmount: effectiveOpts?.discountAmount,
+    currency,
+  });
+
+  const tipAmount = Math.max(0, roundCurrency(Number(effectiveOpts?.tipAmount) || 0, currency));
+  const finalTotal = roundCurrency(breakdown.grandTotal + tipAmount, currency);
+
+  const displaySubtotal = (hasDatedRulesPassedDirectly && taxConfig.mode === 'inclusive')
+    ? breakdown.netSubtotal
+    : roundedSubtotal;
 
   return {
-    subtotal: roundedSubtotal,
+    subtotal: displaySubtotal,
     tax: breakdown.totalTax,
-    total: breakdown.grandTotal,
+    total: finalTotal,
     taxLabel: taxConfig.label,
     taxRate: taxConfig.rate,
     taxMode: taxConfig.mode,
     itemCount,
     lineItems,
     netSubtotal: breakdown.netSubtotal,
+    discountAmount: breakdown.discountAmount,
+    discountedSubtotal: breakdown.discountedSubtotal,
+    ratesAsOf: effectiveOpts?.ratesAsOf || breakdown.ratesAsOf,
+    taxId: effectiveOpts?.taxId || breakdown.taxId,
+    taxIdLabel: effectiveOpts?.taxIdLabel || breakdown.taxIdLabel,
+    ...(tipAmount > 0 && { tipAmount }),
     // Extended properties for advanced UI (optional consumption)
     ...(breakdown.serviceCharge > 0 && {
       serviceCharge: breakdown.serviceCharge,
       serviceChargeLabel: breakdown.serviceChargeLabel,
     }),
-    ...(breakdown.lines.length > 1 && {
-      taxBreakdownLines: breakdown.lines,
-    }),
+    taxBreakdownLines: breakdown.lines,
   };
 };
 
@@ -141,13 +202,17 @@ export const calculateOrderTotals = (
  */
 export const calculateOrderTotalsAdvanced = (
   items: OrderItemInput[],
-  taxConfig: TaxConfiguration
-): OrderCalculationSummary & {
-  serviceCharge?: number;
-  serviceChargeLabel?: string;
-  taxBreakdownLines?: Array<{ label: string; rate: number; mode: string; amount: number }>;
-  netSubtotal?: number;
-} => {
+  taxConfig: TaxConfiguration,
+  runtimeOpts?: {
+    orderDate?: string | Date;
+    orderType?: 'all' | 'dine_in' | 'takeaway' | 'delivery';
+    country?: string;
+    region?: string;
+    taxId?: string;
+    taxIdLabel?: string;
+  }
+): OrderCalculationSummary => {
+  void runtimeOpts;
   if (!Array.isArray(items) || items.length === 0) {
     return {
       subtotal: 0,
@@ -161,14 +226,16 @@ export const calculateOrderTotalsAdvanced = (
     };
   }
 
+  const currency = taxConfig.currency || 'INR';
+
   let subtotal = 0;
   let itemCount = 0;
 
   const lineItems = items.map((item) => {
     const quantity = Math.max(1, Math.floor(Number(item.quantity) || 1));
     const rawPrice = item.price !== undefined ? item.price : (item as any).unit_price;
-    const unit_price = Math.max(0, roundCurrency(Number(rawPrice) || 0));
-    const line_total = roundCurrency(quantity * unit_price);
+    const unit_price = Math.max(0, roundCurrency(Number(rawPrice) || 0, currency));
+    const line_total = roundCurrency(quantity * unit_price, currency);
 
     subtotal += line_total;
     itemCount += quantity;
@@ -182,18 +249,23 @@ export const calculateOrderTotalsAdvanced = (
       quantity,
       unit_price,
       line_total,
+      tax_category: item.tax_category || (item as any).taxCategory || 'food',
     };
   });
 
-  const roundedSubtotal = roundCurrency(subtotal);
+  const roundedSubtotal = roundCurrency(subtotal, currency);
 
   const taxableItems = items.map((item) => ({
-    amount: Math.max(0, roundCurrency(Number(item.price ?? (item as any).unit_price) || 0)),
+    amount: Math.max(0, roundCurrency(Number(item.price ?? (item as any).unit_price) || 0, currency)),
     quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
-    category: (item as any).taxCategory || 'food' as const,
+    category: item.tax_category || (item as any).taxCategory || 'food' as const,
   }));
 
-  const breakdown = calculateTaxBreakdown(taxableItems, taxConfig);
+  const breakdown = calculateTaxBreakdown(taxableItems, taxConfig, {
+    discountAmount: taxConfig.discountAmount,
+    currency,
+    ...runtimeOpts,
+  });
 
   return {
     subtotal: roundedSubtotal,
@@ -208,6 +280,11 @@ export const calculateOrderTotalsAdvanced = (
     serviceChargeLabel: breakdown.serviceCharge > 0 ? breakdown.serviceChargeLabel : undefined,
     taxBreakdownLines: breakdown.lines.length > 0 ? breakdown.lines : undefined,
     netSubtotal: breakdown.netSubtotal,
+    discountAmount: breakdown.discountAmount,
+    discountedSubtotal: breakdown.discountedSubtotal,
+    ratesAsOf: breakdown.ratesAsOf,
+    taxId: breakdown.taxId,
+    taxIdLabel: breakdown.taxIdLabel,
   };
 };
 

@@ -12,11 +12,14 @@ dist
 dist-ssr
 *.local
 lighthouse-report*.json
+lighthouse-report*.html
 *-report*.json
+*-report*.html
 *.trace.json
 *.devtoolslog.json
 test-results/
 playwright-report/
+src/config/pendingTaxRules.json
 
 # Environment variables
 .env

@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
+import { useSiteConfig } from '../context/SiteConfigContext';
+import { useI18n } from '../i18n';
 import { getAvifSource } from '../utils/image';
 import type { MenuItem } from '../types/menu';
 
@@ -119,6 +121,8 @@ export const SIGNATURE_REEL_DISHES: SignatureDishItem[] = [
 export const CurvedMenuReel: React.FC = () => {
   const { addToCart, setIsDrawerOpen } = useCart();
   const { showToast } = useUI();
+  const { formatPrice } = useSiteConfig();
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [offset, setOffset] = useState<number>(0);
@@ -244,9 +248,9 @@ export const CurvedMenuReel: React.FC = () => {
     addToCart(menuItem);
     setIsDrawerOpen(true);
     showToast({
-      title: 'Added to Order',
+      title: t('curvedReel.added', 'Added to Order'),
       message: dish.name,
-      subtext: `₹${dish.price} • ${dish.craftTelemetry}`,
+      subtext: `${formatPrice(dish.price)} • ${dish.craftTelemetry}`,
       type: 'success',
     });
   };
@@ -261,7 +265,7 @@ export const CurvedMenuReel: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
           <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-primary font-bold">
-            CHEF'S SIGNATURE SELECTION · 3D REEL
+            {t('curvedReel.badge', "CHEF'S SIGNATURE SELECTION")} · 3D REEL
           </span>
         </div>
         <div className="font-mono text-[10px] tracking-widest uppercase text-on-surface/60 flex items-center gap-3">
@@ -275,7 +279,7 @@ export const CurvedMenuReel: React.FC = () => {
       <div className="relative w-full">
         <div className="absolute top-2 left-6 lg:left-12 font-serif italic text-primary/85 text-xs sm:text-sm hidden md:flex items-center gap-3 pointer-events-none z-20">
           <span className="drop-shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.4)]">
-            ✨ Hand-stretched 48h sourdough
+            ✨ {t('curvedReel.title', 'Hand-Crafted Signatures')}
           </span>
           <svg className="w-10 h-10 text-primary/70 animate-pulse" viewBox="0 0 40 40" fill="none" stroke="currentColor">
             <path
@@ -297,14 +301,14 @@ export const CurvedMenuReel: React.FC = () => {
             />
           </svg>
           <span className="drop-shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.4)]">
-            Pulled at 9 Bars Pressure ☕
+            {t('curvedReel.subtitle', 'Pulled at 9 Bars Pressure')} ☕
           </span>
         </div>
 
         {/* Left / Right Floating Chevrons (Desktop) */}
         <button
           type="button"
-          aria-label="Previous signature dishes"
+          aria-label={t('common.previous', 'Previous signature dishes')}
           onClick={() => nudge(1)}
           className="hidden md:flex absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-surface-obsidian/90 hover:bg-primary border border-primary/35 hover:border-primary text-primary hover:text-on-primary items-center justify-center transition-all duration-300 shadow-[0_6px_24px_rgba(0,0,0,0.85)] hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md group"
         >
@@ -313,7 +317,7 @@ export const CurvedMenuReel: React.FC = () => {
 
         <button
           type="button"
-          aria-label="Next signature dishes"
+          aria-label={t('common.next', 'Next signature dishes')}
           onClick={() => nudge(-1)}
           className="hidden md:flex absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-surface-obsidian/90 hover:bg-primary border border-primary/35 hover:border-primary text-primary hover:text-on-primary items-center justify-center transition-all duration-300 shadow-[0_6px_24px_rgba(0,0,0,0.85)] hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md group"
         >
@@ -446,7 +450,7 @@ export const CurvedMenuReel: React.FC = () => {
                   </h4>
                   <div className="flex items-center justify-between pt-1 border-t border-outline/15">
                     <span className="font-mono text-xs sm:text-sm text-primary font-bold">
-                      ₹{dish.price}
+                      {formatPrice(dish.price)}
                     </span>
                     <button
                       type="button"
@@ -455,7 +459,7 @@ export const CurvedMenuReel: React.FC = () => {
                       className="px-2.5 py-1 rounded-full bg-primary text-on-primary font-sans font-semibold text-[11px] sm:text-xs flex items-center gap-1 shadow-[0_0_12px_rgba(var(--color-primary-rgb),0.4)] hover:scale-105 active:scale-95 transition-all cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-xs">add</span>
-                      <span>ADD</span>
+                      <span>{t('menu.add', 'ADD')}</span>
                     </button>
                   </div>
                 </div>
@@ -469,12 +473,12 @@ export const CurvedMenuReel: React.FC = () => {
       <div className="relative z-10 pt-3 border-t border-outline/15 flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[0.2em] uppercase text-on-surface/50">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-xs text-primary animate-pulse">drag_indicator</span>
-          <span>DRAG OR SWIPE TO SPIN • HOVER TO PAUSE • CLICK CARD FOR CRAFT NOTES</span>
+          <span>{t('curvedReel.dragHint', 'DRAG OR SWIPE TO SPIN • HOVER TO PAUSE • CLICK CARD FOR CRAFT NOTES')}</span>
         </div>
         <div className="flex items-center gap-2 text-primary font-semibold">
-          <span>8 SIGNATURE CREATIONS</span>
+          <span>8 {t('curvedReel.badge', 'SIGNATURE CREATIONS')}</span>
           <span>•</span>
-          <span>TAP ADD TO ORDER</span>
+          <span>{t('curvedReel.addToOrder', 'TAP ADD TO ORDER')}</span>
         </div>
       </div>
 
@@ -494,7 +498,7 @@ export const CurvedMenuReel: React.FC = () => {
             {/* Top Close Button */}
             <button
               type="button"
-              aria-label="Close dish details"
+              aria-label={t('common.close', 'Close dish details')}
               onClick={() => setSelectedDish(null)}
               className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-surface-container-high/80 hover:bg-primary text-on-surface hover:text-on-primary flex items-center justify-center transition-all cursor-pointer border border-outline/20"
             >
@@ -535,7 +539,7 @@ export const CurvedMenuReel: React.FC = () => {
                   {selectedDish.name}
                 </h3>
                 <span className="font-mono text-lg sm:text-xl text-primary font-bold">
-                  ₹{selectedDish.price}
+                  {formatPrice(selectedDish.price)}
                 </span>
               </div>
               <p className="font-sans text-xs sm:text-sm text-on-surface/75 mt-1.5 leading-relaxed">
@@ -587,7 +591,7 @@ export const CurvedMenuReel: React.FC = () => {
                 onClick={() => setSelectedDish(null)}
                 className="flex-1 py-2.5 rounded-full border border-outline/30 hover:bg-surface-container text-on-surface font-sans text-xs font-medium transition-colors cursor-pointer text-center"
               >
-                Close
+                {t('common.close', 'Close')}
               </button>
               <button
                 type="button"
@@ -598,7 +602,7 @@ export const CurvedMenuReel: React.FC = () => {
                 className="flex-1 py-2.5 rounded-full bg-primary text-on-primary font-sans font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.4)] hover:scale-102 active:scale-98 transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
-                <span>Add to Order · ₹{selectedDish.price}</span>
+                <span>{t('curvedReel.addToOrder', 'Add to Order')} · {formatPrice(selectedDish.price)}</span>
               </button>
             </div>
           </div>

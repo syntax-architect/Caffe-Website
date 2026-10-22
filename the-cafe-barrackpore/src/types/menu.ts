@@ -1,7 +1,25 @@
+import type { TaxCategory } from './tax';
+
+export interface MenuCategoryTranslations {
+  [languageCode: string]: {
+    name?: string;
+  };
+}
+
+export interface MenuItemTranslations {
+  [languageCode: string]: {
+    name?: string;
+    description?: string;
+    tasting_notes?: string;
+    pairing?: string;
+  };
+}
+
 export interface MenuCategory {
   id: string;
   name: string;
   sort_order: number;
+  translations?: MenuCategoryTranslations;
   created_at?: string;
   updated_at?: string;
 }
@@ -22,10 +40,12 @@ export interface MenuItem {
   tag?: string | null;
   allergens?: string[];
   stock_count?: number | null;
+  tax_category?: TaxCategory;
   created_at?: string;
   updated_at?: string;
   tasting_notes?: string;
   pairing?: string;
+  translations?: MenuItemTranslations;
 }
 
 export interface EditableMenuItemInput {
@@ -41,4 +61,6 @@ export interface EditableMenuItemInput {
   sort_order?: number;
   allergens?: string[];
   stock_count?: number | null;
+  tax_category?: TaxCategory;
+  translations?: MenuItemTranslations;
 }

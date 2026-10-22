@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { useUI } from '../context/UIContext';
+import { useI18n } from '../i18n';
 import { getAvifSource } from '../utils/image';
 import type { VIPPerk } from '../services/siteContentService';
 import { DEFAULT_VIP_PERKS } from '../services/siteContentService';
@@ -15,6 +16,7 @@ const SANCTUARY_PREFERENCES = [
 
 export const VIPClub: React.FC = () => {
   const { vipClub, restaurantConfig, engineConfig } = useSiteConfig();
+  const { t } = useI18n();
   const { setIsReservationOpen } = useUI();
   const openReservation = () => setIsReservationOpen(true);
 
@@ -38,25 +40,25 @@ export const VIPClub: React.FC = () => {
   const vipImageSrc = vipClub?.src || '/images/vip-nocturnal-circle.jpg';
   const vipImageAlt = vipClub?.alt || `${businessName} Nocturnal VIP Salon`;
 
-  const badge = vipClub?.badge || "PRIVATE MEMBERS' SALON";
+  const badge = vipClub?.badge || t('vip.badge', "PRIVATE MEMBERS' SALON");
   const badgeIcon = vipClub?.badgeIcon || 'hotel_class';
-  const eyebrow = vipClub?.eyebrow || "Connoisseurs' Privileges";
-  const title = vipClub?.title || 'Join the Nocturnal Circle';
-  const titleItalic = vipClub?.titleItalic || 'Nocturnal Circle';
+  const eyebrow = vipClub?.eyebrow || t('vip.eyebrow', "Connoisseurs' Privileges");
+  const title = vipClub?.title || t('vip.title', 'Join the Nocturnal Circle');
+  const titleItalic = vipClub?.titleItalic || t('vip.titleItalic', 'Nocturnal Circle');
   const subtitle =
     vipClub?.subtitle ||
-    'Receive discreet invitations to weekend acoustic line-ups, secret seasonal chef previews, and priority booth reservations.';
+    t('vip.subtitle', 'Receive discreet invitations to weekend acoustic line-ups, secret seasonal chef previews, and priority booth reservations.');
 
-  const buttonText = (vipClub as { buttonText?: string })?.buttonText || vipClub?.ctaLabel || 'JOIN PRIVILEGES';
+  const buttonText = (vipClub as { buttonText?: string })?.buttonText || vipClub?.ctaLabel || t('vip.join', 'JOIN PRIVILEGES');
   const ctaLabel = vipClub?.ctaLabel || buttonText;
-  const placeholder = vipClub?.placeholder || 'Enter your private email';
+  const placeholder = vipClub?.placeholder || t('vip.emailPlaceholder', 'Enter your private email');
   const disclaimer =
     vipClub?.disclaimer ||
-    'Discreet hospitality notifications only • Strictly no spam • Unsubscribe anytime';
-  const successTitle = vipClub?.successTitle || 'Welcome to the Inner Circle';
+    t('vip.disclaimer', 'Discreet hospitality notifications only • Strictly no spam • Unsubscribe anytime');
+  const successTitle = vipClub?.successTitle || t('vip.successTitle', 'Welcome to the Inner Circle');
   const successMessage =
     vipClub?.successMessage ||
-    'Your invitation has been recorded. Discreet seasonal invitations will arrive in your private inbox.';
+    t('vip.successMessage', 'Your invitation has been recorded. Discreet seasonal invitations will arrive in your private inbox.');
 
   const perks: VIPPerk[] =
     vipClub?.perks && vipClub.perks.length > 0 ? vipClub.perks : DEFAULT_VIP_PERKS;

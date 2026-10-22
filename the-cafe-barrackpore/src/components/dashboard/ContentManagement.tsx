@@ -69,6 +69,7 @@ export const ImageSpecGuide: React.FC<ImageSpecGuideProps> = ({
 export const ContentManagement: React.FC = () => {
   const siteConfig = useSiteConfig();
   const { addNotification } = useNotification();
+  const currencySymbol = siteConfig.restaurantConfig.currencySymbol || '₹';
 
   const [activeTab, setActiveTab] = useState<ContentTab>('hero');
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
@@ -1146,7 +1147,7 @@ export const ContentManagement: React.FC = () => {
                             </div>
 
                             <div>
-                              <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">Price (₹)</label>
+                              <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">Price ({currencySymbol})</label>
                               <input
                                 type="number"
                                 value={combo.price}

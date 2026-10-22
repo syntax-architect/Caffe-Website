@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useI18n } from '../i18n';
 import { SectionReveal } from './SectionReveal';
 import { getAvifSource } from '../utils/image';
 import { DEFAULT_STORY_CHAPTERS, type StoryChapter } from '../services/siteContentService';
@@ -111,6 +112,7 @@ const EVENING_PHASES: EveningPhaseSpec[] = [
 
 export const OurStory: React.FC = () => {
   const { ourStory, engineConfig } = useSiteConfig();
+  const { t } = useI18n();
   const sectionRef = useRef<HTMLElement>(null);
   const chaptersTrackRef = useRef<HTMLDivElement>(null);
   const [activeChapterIdx, setActiveChapterIdx] = useState(0);
@@ -210,7 +212,7 @@ export const OurStory: React.FC = () => {
     <section
       ref={sectionRef}
       id="our-story"
-      aria-label="Our Story and Philosophy"
+      aria-label={t('story.title', 'Our Story and Philosophy')}
       className="w-full py-16 sm:py-24 lg:py-28 bg-background relative border-t border-outline/15 scroll-mt-24"
     >
       <div className="max-w-[1400px] mx-auto px-6 sm:px-12 relative z-10">
@@ -235,11 +237,11 @@ export const OurStory: React.FC = () => {
                 <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-surface-container-low/90 border border-primary/35 shadow-[0_2px_14px_rgba(var(--color-primary-rgb),0.15)] backdrop-blur-md mb-6">
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                   <span className="font-sans text-[10px] sm:text-[11px] font-semibold tracking-[0.22em] uppercase text-primary">
-                    THE MANIFESTO
+                    {t('story.manifesto', 'THE MANIFESTO')}
                   </span>
                   <span className="text-outline/40 text-xs">•</span>
                   <span className="font-mono text-[10px] uppercase text-on-surface/80 tracking-wider">
-                    UNDER THE 2200K LIGHTS
+                    {t('story.subtitle', 'UNDER THE 2200K LIGHTS')}
                   </span>
                 </div>
 
@@ -363,7 +365,7 @@ export const OurStory: React.FC = () => {
                 <div className="flex items-center gap-2.5">
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                   <span className="text-primary font-semibold">
-                    {ourStory?.tagline || (ourStory as any)?.eyebrow || 'ACT VI • THE PHILOSOPHY & HERITAGE'}
+                    {ourStory?.tagline || (ourStory as any)?.eyebrow || t('story.title', 'ACT VI • THE PHILOSOPHY & HERITAGE')}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -379,7 +381,7 @@ export const OurStory: React.FC = () => {
                 <div
                   onClick={handleNextChapter}
                   className="lg:col-span-6 relative h-56 sm:h-72 lg:h-auto min-h-[220px] sm:min-h-[280px] lg:min-h-[460px] overflow-hidden bg-background cursor-pointer group"
-                  title="Click or scroll to advance chapter"
+                  title={t('story.description', 'Click or scroll to advance chapter')}
                 >
                   {chapters.map((ch, idx) => {
                     const isActive = idx === safeIdx;
@@ -408,7 +410,7 @@ export const OurStory: React.FC = () => {
                         {/* Telemetry Lens Watermark */}
                         <div className="absolute top-4 left-4 font-mono text-[9px] tracking-[0.22em] uppercase px-3 py-1 rounded-full bg-surface-obsidian/85 backdrop-blur-md border border-primary/30 text-primary font-medium pointer-events-none flex items-center gap-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
                           <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                          <span>CHAPTER {String(idx + 1).padStart(2, '0')} · {ch.badge || 'PROVENANCE'}</span>
+                          <span>{t('story.badge', 'CHAPTER')} {String(idx + 1).padStart(2, '0')} · {ch.badge || 'PROVENANCE'}</span>
                         </div>
                       </div>
                     );
@@ -428,7 +430,7 @@ export const OurStory: React.FC = () => {
                           <button
                             key={ch.id || idx}
                             type="button"
-                            aria-label={`Chapter ${idx + 1}`}
+                            aria-label={`${t('story.badge', 'Chapter')} ${idx + 1}`}
                             onClick={() => scrollToChapter(idx)}
                             className={`h-2.5 rounded-full transition-all duration-500 cursor-pointer ${
                               idx === safeIdx
@@ -444,7 +446,7 @@ export const OurStory: React.FC = () => {
                         <button
                           type="button"
                           onClick={handlePrevChapter}
-                          aria-label="Previous story chapter"
+                          aria-label={t('common.previous', 'Previous story chapter')}
                           className="w-10 h-10 rounded-full border border-outline/30 flex items-center justify-center text-on-surface/75 hover:border-primary hover:text-primary transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer bg-surface-obsidian/40 backdrop-blur-sm"
                         >
                           <span className="material-symbols-outlined text-base">arrow_back</span>
@@ -452,7 +454,7 @@ export const OurStory: React.FC = () => {
                         <button
                           type="button"
                           onClick={handleNextChapter}
-                          aria-label="Next story chapter"
+                          aria-label={t('common.next', 'Next story chapter')}
                           className="w-10 h-10 rounded-full border border-outline/30 flex items-center justify-center text-on-surface/75 hover:border-primary hover:text-primary transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer bg-surface-obsidian/40 backdrop-blur-sm"
                         >
                           <span className="material-symbols-outlined text-base">arrow_forward</span>
@@ -465,7 +467,7 @@ export const OurStory: React.FC = () => {
                       <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/15 border border-primary/30 font-mono text-[10px] tracking-[0.2em] uppercase text-primary font-semibold mb-4">
                         <span>{currentChapter.step || String(safeIdx + 1).padStart(2, '0')}</span>
                         <span>•</span>
-                        <span>{currentChapter.badge || 'THE PHILOSOPHY'}</span>
+                        <span>{currentChapter.badge || t('story.badge', 'THE PHILOSOPHY')}</span>
                       </div>
 
                       <h3 className="font-sans text-2xl sm:text-3xl lg:text-4xl text-on-surface font-medium tracking-tight leading-[1.15] mb-4">
@@ -499,11 +501,11 @@ export const OurStory: React.FC = () => {
               <div className="relative px-6 sm:px-10 py-3.5 border-t border-outline/15 flex items-center justify-between font-mono text-[10px] tracking-[0.22em] uppercase text-on-surface/60 overflow-hidden bg-surface-obsidian/90">
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                  <span>• SCROLL OR TAP TO ADVANCE</span>
+                  <span>• {t('story.subtitle', 'SCROLL OR TAP TO ADVANCE')}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-primary font-semibold">
-                    CHAPTER {String(safeIdx + 1).padStart(2, '0')} / {String(chapters.length).padStart(2, '0')}
+                    {t('story.badge', 'CHAPTER')} {String(safeIdx + 1).padStart(2, '0')} / {String(chapters.length).padStart(2, '0')}
                   </span>
                 </div>
 
@@ -528,12 +530,12 @@ export const OurStory: React.FC = () => {
             {/* Top Header & Time Phase Switcher */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-outline/20">
               <div>
-                <span className="editorial-eyebrow block mb-1">SERVICE RHYTHM · DUSK TO MIDNIGHT</span>
+                <span className="editorial-eyebrow block mb-1">{t('story.badge', 'SERVICE RHYTHM · DUSK TO MIDNIGHT')}</span>
                 <h3 className="font-serif text-3xl sm:text-5xl text-on-surface tracking-tight">
-                  AN EVENING AT <span className="italic font-light text-primary">THE CAFÉ.</span>
+                  {t('story.title', 'AN EVENING AT')} <span className="italic font-light text-primary">{t('story.titleItalic', 'THE CAFÉ.')}</span>
                 </h3>
                 <p className="font-sans text-sm sm:text-base text-on-surface-variant/80 font-light mt-1.5 max-w-xl leading-relaxed">
-                  Discover how our sanctuary evolves through the night—from golden-hour espresso to wood-fired dinner service and intimate acoustic nightcaps.
+                  {t('story.description', 'Discover how our sanctuary evolves through the night—from golden-hour espresso to wood-fired dinner service and intimate acoustic nightcaps.')}
                 </p>
               </div>
 

@@ -9,6 +9,8 @@ import {
 } from '../config/defaultEngineConfig';
 import type { SectionVisibilityConfig } from '../types/restaurantEngine';
 import { smoothScrollTo } from '../utils/scroll';
+import { useI18n } from '../i18n';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 /**
  * All website sections in their exact, canonical top-to-bottom narrative sequence.
@@ -110,6 +112,7 @@ export const Header: React.FC = React.memo(() => {
   const { cartCount, setIsDrawerOpen } = useCart();
   const { setIsReservationOpen } = useUI();
   const { restaurantConfig, engineConfig, logoUrl } = useSiteConfig();
+  const { t } = useI18n();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('');
@@ -128,13 +131,43 @@ export const Header: React.FC = React.memo(() => {
   const headerConfig = engineConfig?.header || DEFAULT_HEADER_CONFIG;
   const sections = engineConfig?.sections;
 
-  // Active ordered flagship items respecting dynamic section toggles
+  // Active ordered flagship items respecting dynamic section toggles and active language
   const enabledOrderedSections = useMemo(() => {
     return ORDERED_FLAGSHIP_SECTIONS.filter((item) => {
       if (item.sectionKey && sections && sections[item.sectionKey] === false) return false;
       return true;
+    }).map((item) => {
+      let label = item.label;
+      let shortLabel = item.shortLabel;
+      if (item.sectionKey === 'aboutVibe') {
+        label = t('nav.act1', item.label);
+        shortLabel = t('nav.home', item.shortLabel);
+      } else if (item.sectionKey === 'menu') {
+        label = t('nav.act2', item.label);
+        shortLabel = t('nav.menu', item.shortLabel);
+      } else if (item.sectionKey === 'specialsBanner') {
+        label = t('nav.act3', item.label);
+        shortLabel = t('curvedReel.title', item.shortLabel);
+      } else if (item.sectionKey === 'story') {
+        label = t('nav.act4', item.label);
+        shortLabel = t('nav.ourStory', item.shortLabel);
+      } else if (item.sectionKey === 'gallery') {
+        label = t('nav.act5', item.label);
+        shortLabel = t('nav.gallery', item.shortLabel);
+      } else if (item.sectionKey === 'vipClub') {
+        label = t('nav.act6', item.label);
+        shortLabel = t('vip.title', item.shortLabel);
+      } else if (item.sectionKey === 'footer') {
+        label = t('nav.act7', item.label);
+        shortLabel = t('nav.reservations', item.shortLabel);
+      }
+      return {
+        ...item,
+        label,
+        shortLabel,
+      };
     });
-  }, [sections]);
+  }, [sections, t]);
 
   const totalSectionsCount = enabledOrderedSections.length;
   const maxWindowStart = Math.max(0, totalSectionsCount - WINDOW_SIZE);
@@ -459,6 +492,9 @@ export const Header: React.FC = React.memo(() => {
         
         {/* Right Actions & Tactile Controls */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Multi-Language Switcher */}
+          <LanguageSwitcher variant="header" />
+
           {/* Order Bag / Cart Button with Glow Badge */}
           {isCartEnabled && (
             <motion.button 
@@ -466,8 +502,8 @@ export const Header: React.FC = React.memo(() => {
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsDrawerOpen(true)}
               className="relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:border-primary/50 hover:bg-surface-container-high text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-md"
-              aria-label={`View order bag with ${cartCount} items`}
-              title="View Order Bag"
+              aria-label={t('a11y.openCart', `View order bag with ${cartCount} items`)}
+              title={t('cart.title', 'View Order Bag')}
             >
               <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -497,8 +533,8 @@ export const Header: React.FC = React.memo(() => {
             >
               <span>
                 {restaurantConfig?.isTableBookingEnabled !== false
-                  ? (headerConfig.primaryCtaText || 'Book a Table')
-                  : 'Walk-Ins Welcome'}
+                  ? (headerConfig.primaryCtaText || t('hero.bookTable', 'Book a Table'))
+                  : t('nav.walkIns', 'Walk-Ins Welcome')}
               </span>
               <span className="material-symbols-outlined text-[15px] font-light">
                 {restaurantConfig?.isTableBookingEnabled !== false ? 'table_restaurant' : 'storefront'}
@@ -511,7 +547,7 @@ export const Header: React.FC = React.memo(() => {
             whileTap={{ scale: 0.92 }}
             className="lg:hidden relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:bg-surface-container-high text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-label={isMobileMenuOpen ? t('a11y.closeMenu', 'Close navigation menu') : t('a11y.openMenu', 'Open navigation menu')}
             aria-expanded={isMobileMenuOpen}
           >
             <div className="w-5 h-4 relative flex flex-col justify-between items-center">
@@ -634,6 +670,11 @@ export const Header: React.FC = React.memo(() => {
                   })}
                 </nav>
                 
+                {/* Mobile Language Switcher */}
+                <div className="py-2.5 border-t border-outline/15">
+                  <LanguageSwitcher variant="mobile" />
+                </div>
+
                 {/* Mobile Direct Action Buttons */}
                 <div className="flex flex-col gap-2 pt-1 border-t border-outline/15">
                   {showPrimaryCta && (
@@ -644,8 +685,8 @@ export const Header: React.FC = React.memo(() => {
                     >
                       <span>
                         {restaurantConfig?.isTableBookingEnabled !== false
-                          ? (headerConfig.primaryCtaText || 'Reserve a Table')
-                          : 'Walk-Ins Welcome'}
+                          ? (headerConfig.primaryCtaText || t('hero.bookTable', 'Reserve a Table'))
+                          : t('nav.walkIns', 'Walk-Ins Welcome')}
                       </span>
                       <div className="w-8 h-8 rounded-full bg-on-primary/15 flex items-center justify-center transition-transform group-hover:scale-105">
                         <span className="material-symbols-outlined text-[16px] text-on-primary">
@@ -662,7 +703,7 @@ export const Header: React.FC = React.memo(() => {
                         className="h-11 rounded-full border border-outline/25 bg-surface-container/60 text-on-surface text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 active:bg-surface-container transition-colors"
                       >
                         <span className="material-symbols-outlined text-[16px] text-primary">call</span>
-                        <span>Call Concierge</span>
+                        <span>{t('contact.drawerTitle', 'Call Concierge')}</span>
                       </a>
                     ) : null}
                     {googleMapsLink && headerConfig.showDirectionsAction !== false ? (
@@ -673,7 +714,7 @@ export const Header: React.FC = React.memo(() => {
                         className="h-11 rounded-full border border-outline/25 bg-surface-container/60 text-on-surface text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-2 active:bg-surface-container transition-colors"
                       >
                         <span className="material-symbols-outlined text-[16px] text-primary">directions</span>
-                        <span>Directions</span>
+                        <span>{t('footer.findUs', 'Directions')}</span>
                       </a>
                     ) : null}
                   </div>
@@ -683,7 +724,7 @@ export const Header: React.FC = React.memo(() => {
                 <div className="pt-3 border-t border-outline/10 flex flex-col gap-1.5 text-[11px] text-on-surface/65 font-sans">
                   <div className="flex items-center gap-2 text-primary font-medium">
                     <span className="material-symbols-outlined text-sm">schedule</span>
-                    <span>Daily Service: {openingHours}</span>
+                    <span>{t('footer.openingHours', 'Daily Service')}: {openingHours}</span>
                   </div>
                   {address && (
                     <div className="flex items-center gap-2">

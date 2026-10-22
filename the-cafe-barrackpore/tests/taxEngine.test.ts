@@ -9,6 +9,13 @@ import {
 import {
   getCountryTaxProfile,
   listAvailableTaxProfiles,
+  MASTER_TAX_REGISTRY,
+  getCountryTaxRegistryEntry,
+  canJurisdictionGoLive,
+  getEffectiveTaxRate,
+  createCustomCountryProfile,
+  getCurrencyDecimals,
+  CURRENCY_DECIMALS,
 } from '../src/config/taxProfiles';
 import { calculateOrderTotals } from '../src/utils/orderCalculations';
 
@@ -48,19 +55,23 @@ console.log('India breakdown:', {
 if (indiaBreakdown.grandTotal !== 550) {
   throw new Error(`India inclusive grandTotal failed: expected 550, got ${indiaBreakdown.grandTotal}`);
 }
-// Tax embedded in 550 with CGST 2.5% + SGST 2.5%:
-// CGST = round(550 * (0.025 / 1.05)) = 13.10
-// SGST = round(550 * (0.025 / 1.05)) = 13.10
-// totalTax = 13.10 + 13.10 = 26.20
-if (indiaBreakdown.totalTax !== 26.20) {
-  throw new Error(`India totalTax failed: expected 26.20, got ${indiaBreakdown.totalTax}`);
+// Tax embedded in 550 with CGST 2.5% + SGST 2.5% (Single GST parity rule):
+// Single GST = round(550 * (0.05 / 1.05)) = 26.19
+// CGST = round(26.19 * (0.025 / 0.05)) = 13.10
+// SGST = 26.19 - 13.10 = 13.09
+// totalTax = 13.10 + 13.09 = 26.19
+if (indiaBreakdown.totalTax !== 26.19) {
+  throw new Error(`India totalTax failed: expected 26.19, got ${indiaBreakdown.totalTax}`);
 }
-// Split into CGST (2.5%) and SGST (2.5%): each should be 13.10
+// Split into CGST (2.5%) and SGST (2.5%): 13.10 and 13.09
 if (indiaBreakdown.lines.length !== 2) {
   throw new Error(`India split tax lines expected 2 (CGST + SGST), got ${indiaBreakdown.lines.length}`);
 }
-if (indiaBreakdown.netSubtotal !== 523.80) {
-  throw new Error(`India netSubtotal failed: expected 523.80, got ${indiaBreakdown.netSubtotal}`);
+if (indiaBreakdown.lines[0].amount !== 13.10 || indiaBreakdown.lines[1].amount !== 13.09) {
+  throw new Error(`India split tax lines expected 13.10 and 13.09, got ${indiaBreakdown.lines[0].amount} and ${indiaBreakdown.lines[1].amount}`);
+}
+if (indiaBreakdown.netSubtotal !== 523.81) {
+  throw new Error(`India netSubtotal failed: expected 523.81, got ${indiaBreakdown.netSubtotal}`);
 }
 console.log('✔ Test 2: India GST 5% Inclusive passed');
 
@@ -233,12 +244,12 @@ if (summaryUS !== 'Sales Tax 8.25% added') {
 console.log('✔ Test 10: Formatting Helpers passed');
 
 // -------------------------------------------------------------
-// 11. Registry Validation for ALL 20 Country Tax Profiles
+// 11. Registry Validation for ALL 44 Country Tax Profiles
 // -------------------------------------------------------------
-console.log('Test 11: Validating All 20 Country Tax Profiles');
+console.log('Test 11: Validating All 44 Country Tax Profiles');
 const allProfiles = listAvailableTaxProfiles();
-if (allProfiles.length < 20) {
-  throw new Error(`Expected at least 20 country tax profiles, found ${allProfiles.length}`);
+if (allProfiles.length !== 44) {
+  throw new Error(`Expected exactly 44 country tax profiles, found ${allProfiles.length}`);
 }
 
 for (const profileSummary of allProfiles) {
@@ -315,4 +326,325 @@ if (emptyOrderTotals.total !== 0 || emptyOrderTotals.itemCount !== 0) {
 }
 console.log('✔ Test 13: Empty Cart & Edge Cases passed');
 
-console.log('\n=== ALL 13 TAX ENGINE TESTS PASSED WITH 100% SUCCESS! ===\n');
+// -------------------------------------------------------------
+// 14. Comprehensive 44-Country Master Tax Registry Verification
+// -------------------------------------------------------------
+console.log('Test 14: Comprehensive 44-Country Master Registry Verification');
+const expectedTiers = {
+  tier1: ['IE', 'GB', 'US', 'CA', 'AU', 'NZ', 'SG', 'AE'],
+  tier2: ['DE', 'FR', 'ES', 'IT', 'NL', 'PT', 'BE', 'AT', 'SE', 'DK', 'NO', 'CH', 'PL'],
+  tier3: ['IN', 'JP', 'KR', 'TH', 'MY', 'ID', 'PH', 'VN', 'HK', 'SA', 'QA', 'KW', 'BH', 'TR', 'IL', 'ZA', 'NG', 'KE', 'EG', 'MX', 'BR', 'CL', 'CO'],
+};
+
+const allRegistryCodes = Object.keys(MASTER_TAX_REGISTRY);
+if (allRegistryCodes.length !== 44) {
+  throw new Error(`Expected exactly 44 countries in MASTER_TAX_REGISTRY, found ${allRegistryCodes.length}`);
+}
+
+for (const code of [...expectedTiers.tier1, ...expectedTiers.tier2, ...expectedTiers.tier3]) {
+  const entry = getCountryTaxRegistryEntry(code);
+  if (!entry) {
+    throw new Error(`Missing country registry entry for ${code}`);
+  }
+  if (!entry.countryName || !entry.currency) {
+    throw new Error(`Incomplete country data for ${code}`);
+  }
+  if (!['verified', 'unverified', 'conflict'].includes(entry.status)) {
+    throw new Error(`Invalid verification status for ${code}: ${entry.status}`);
+  }
+  if (!Array.isArray(entry.sources) || entry.sources.length === 0) {
+    throw new Error(`Missing sources array for ${code}`);
+  }
+  const officialSource = entry.sources.find((s) => s.official);
+  if (!officialSource || !officialSource.url) {
+    throw new Error(`Missing official source for ${code}`);
+  }
+  if (!entry.lastVerified) {
+    throw new Error(`Missing lastVerified date in ${code}`);
+  }
+  if (entry.status === 'conflict') {
+    const hasConflict = entry.sources.some((s) => s.conflictNotes) || entry.sources.length >= 2;
+    if (!hasConflict) {
+      throw new Error(`Conflict status for ${code} must list conflicting sources`);
+    }
+  }
+  if (!entry.categoryRates || typeof entry.categoryRates.food !== 'number') {
+    throw new Error(`Missing category rate food for ${code}`);
+  }
+}
+console.log('✔ Test 14: All 44 Countries across Tiers 1, 2, and 3 loaded and validated');
+
+// -------------------------------------------------------------
+// 15. Currency Decimals Precision Standards
+// -------------------------------------------------------------
+console.log('Test 15: Currency Decimals Precision Standards');
+const zeroDecimalCurrencies = ['JPY', 'KRW', 'VND', 'CLP', 'IDR'];
+for (const curr of zeroDecimalCurrencies) {
+  const decimals = getCurrencyDecimals(curr);
+  if (decimals !== 0) {
+    throw new Error(`Expected 0 decimals for ${curr}, got ${decimals}`);
+  }
+}
+// 0 decimals in country entries
+const zeroDecimalCountries = ['JP', 'KR', 'VN', 'CL', 'ID'];
+for (const cCode of zeroDecimalCountries) {
+  const entry = getCountryTaxRegistryEntry(cCode);
+  if (entry?.currencyDecimals !== 0) {
+    throw new Error(`Expected 0 currency decimals in registry for ${cCode}, got ${entry?.currencyDecimals}`);
+  }
+}
+
+// 3 decimals for Bahrain Dinar (BHD) and Kuwait Dinar (KWD)
+const threeDecimalCurrencies = ['BHD', 'KWD'];
+for (const curr of threeDecimalCurrencies) {
+  const decimals = getCurrencyDecimals(curr);
+  if (decimals !== 3) {
+    throw new Error(`Expected 3 decimals for ${curr}, got ${decimals}`);
+  }
+}
+const threeDecimalCountries = ['BH', 'KW'];
+for (const cCode of threeDecimalCountries) {
+  const entry = getCountryTaxRegistryEntry(cCode);
+  if (entry?.currencyDecimals !== 3) {
+    throw new Error(`Expected 3 currency decimals in registry for ${cCode}, got ${entry?.currencyDecimals}`);
+  }
+}
+
+// 2 decimals for standard currencies
+const twoDecimalCurrencies = ['USD', 'EUR', 'GBP', 'INR', 'AUD', 'CAD', 'SGD', 'AED'];
+for (const curr of twoDecimalCurrencies) {
+  const decimals = getCurrencyDecimals(curr);
+  if (decimals !== 2) {
+    throw new Error(`Expected 2 decimals for ${curr}, got ${decimals}`);
+  }
+}
+console.log('✔ Test 15: Currency Decimals Precision (0, 2, 3) verified strictly');
+
+// -------------------------------------------------------------
+// 16. Dated Rate Switch Engine Verification
+// -------------------------------------------------------------
+console.log('Test 16: Dated Rate Switch Engine Verification');
+// Germany (DE): Dine-in was 19% in 2024-2025; switches to 7% permanently on 2026-01-01
+const deRate2025 = getEffectiveTaxRate('DE', { date: '2025-06-01', category: 'food', fulfillment: 'dineIn' }).rate;
+const deRate2026 = getEffectiveTaxRate('DE', { date: '2026-02-01', category: 'food', fulfillment: 'dineIn' }).rate;
+if (deRate2025 !== 0.19) {
+  throw new Error(`Germany 2025 dine-in food rate expected 0.19, got ${deRate2025}`);
+}
+if (deRate2026 !== 0.07) {
+  throw new Error(`Germany 2026 dine-in food rate expected 0.07, got ${deRate2026}`);
+}
+// Alcohol in Germany remains standard 19%
+const deAlcohol2026 = getEffectiveTaxRate('DE', { date: '2026-02-01', category: 'alcohol', fulfillment: 'dineIn' }).rate;
+if (deAlcohol2026 !== 0.19) {
+  throw new Error(`Germany 2026 alcohol rate expected 0.19, got ${deAlcohol2026}`);
+}
+
+// Ireland (IE): 13.5% hospitality reduced rate switches to 9% on 2026-07-01
+const ieRateEarly2026 = getEffectiveTaxRate('IE', { date: '2026-03-01', category: 'food', fulfillment: 'dineIn' }).rate;
+const ieRateLate2026 = getEffectiveTaxRate('IE', { date: '2026-08-01', category: 'food', fulfillment: 'dineIn' }).rate;
+if (ieRateEarly2026 !== 0.135) {
+  throw new Error(`Ireland early 2026 food rate expected 0.135, got ${ieRateEarly2026}`);
+}
+if (ieRateLate2026 !== 0.09) {
+  throw new Error(`Ireland post July 2026 food rate expected 0.09, got ${ieRateLate2026}`);
+}
+
+// Switzerland (CH): 7.7% standard rate switched to 8.1% on 2024-01-01
+const chRate2023 = getEffectiveTaxRate('CH', { date: '2023-06-01', category: 'food', fulfillment: 'dineIn' }).rate;
+const chRate2024 = getEffectiveTaxRate('CH', { date: '2024-06-01', category: 'food', fulfillment: 'dineIn' }).rate;
+if (chRate2023 !== 0.077) {
+  throw new Error(`Switzerland 2023 rate expected 0.077, got ${chRate2023}`);
+}
+if (chRate2024 !== 0.081) {
+  throw new Error(`Switzerland 2024 rate expected 0.081, got ${chRate2024}`);
+}
+
+// Singapore (SG): 8% GST in 2023, 9% GST in 2024+
+const sgRate2023 = getEffectiveTaxRate('SG', { date: '2023-06-01', category: 'food', fulfillment: 'dineIn' }).rate;
+const sgRate2024 = getEffectiveTaxRate('SG', { date: '2024-06-01', category: 'food', fulfillment: 'dineIn' }).rate;
+if (sgRate2023 !== 0.08) {
+  throw new Error(`Singapore 2023 rate expected 0.08, got ${sgRate2023}`);
+}
+if (sgRate2024 !== 0.09) {
+  throw new Error(`Singapore 2024 rate expected 0.09, got ${sgRate2024}`);
+}
+
+// Bahrain (BH): 5% VAT before 2022, 10% VAT in 2022+
+const bhRate2021 = getEffectiveTaxRate('BH', { date: '2021-06-01', category: 'food', fulfillment: 'dineIn' }).rate;
+const bhRate2022 = getEffectiveTaxRate('BH', { date: '2022-06-01', category: 'food', fulfillment: 'dineIn' }).rate;
+if (bhRate2021 !== 0.05) {
+  throw new Error(`Bahrain 2021 rate expected 0.05, got ${bhRate2021}`);
+}
+if (bhRate2022 !== 0.10) {
+  throw new Error(`Bahrain 2022 rate expected 0.10, got ${bhRate2022}`);
+}
+console.log('✔ Test 16: Dated Rate Switch Engine (DE, IE, CH, SG, BH) verified');
+
+// -------------------------------------------------------------
+// 17. Honesty Go-Live Gating & Fiscal Device Hard Block Verification
+// -------------------------------------------------------------
+console.log('Test 17: Honesty Go-Live Gating & Fiscal Hardware Block');
+// Fully verified country without fiscal hardware requirements (IE, GB, NZ, SG, IN)
+const ieGoLive = canJurisdictionGoLive('IE', false);
+if (!ieGoLive.allowed) {
+  throw new Error(`Ireland should allow go-live without accountant block: ${ieGoLive.reason}`);
+}
+
+// Germany requires TSE certified fiscal device (KassenSichV)
+const deGoLiveBlocked = canJurisdictionGoLive('DE', false);
+if (deGoLiveBlocked.allowed || !deGoLiveBlocked.requiresFiscalHardware) {
+  throw new Error('Germany must block go-live without accountant confirmation due to TSE requirement');
+}
+const deGoLiveApproved = canJurisdictionGoLive('DE', true);
+if (!deGoLiveApproved.allowed) {
+  throw new Error('Germany should allow go-live once accountant confirms');
+}
+
+// France requires NF525 / LNE certified cash register
+const frGoLiveBlocked = canJurisdictionGoLive('FR', false);
+if (frGoLiveBlocked.allowed || !frGoLiveBlocked.requiresFiscalHardware) {
+  throw new Error('France must block go-live without accountant confirmation due to NF525 requirement');
+}
+
+// Italy requires Registratore Telematico (RT)
+const itGoLiveBlocked = canJurisdictionGoLive('IT', false);
+if (itGoLiveBlocked.allowed || !itGoLiveBlocked.requiresFiscalHardware) {
+  throw new Error('Italy must block go-live without accountant confirmation due to RT requirement');
+}
+
+// Unverified / Conflict country (Brazil BR or custom) must block go-live
+const brGoLiveBlocked = canJurisdictionGoLive('BR', false);
+if (brGoLiveBlocked.allowed || !brGoLiveBlocked.requiresAccountant) {
+  throw new Error('Brazil must block go-live without accountant confirmation');
+}
+const brGoLiveApproved = canJurisdictionGoLive('BR', true);
+if (!brGoLiveApproved.allowed) {
+  throw new Error('Brazil should allow go-live once accountant confirms');
+}
+
+// Unknown country code
+const unknownGoLive = canJurisdictionGoLive('XYZ', false);
+if (unknownGoLive.allowed || !unknownGoLive.requiresAccountant) {
+  throw new Error('Unknown country must block go-live');
+}
+console.log('✔ Test 17: Honesty Go-Live Gating (Hardware & Status) verified');
+
+// -------------------------------------------------------------
+// 18. Multi-Level Federal Country Regional Pickers
+// -------------------------------------------------------------
+console.log('Test 18: Multi-Level Federal Country Regional Pickers');
+const federalCountries = ['US', 'CA', 'IN', 'AE', 'BR', 'AU'];
+for (const fed of federalCountries) {
+  const entry = getCountryTaxRegistryEntry(fed);
+  if (!entry?.isFederalOrMultiLevel) {
+    throw new Error(`Expected isFederalOrMultiLevel=true for ${fed}`);
+  }
+  if (!entry?.regions || entry.regions.length === 0) {
+    throw new Error(`Expected regional rules list for federal country ${fed}`);
+  }
+}
+
+// Check US States (California vs Texas vs New York)
+const usProfileCA = getCountryTaxProfile('US', 'US-CA');
+if (usProfileCA.config.rate !== 0.095) {
+  throw new Error(`US-CA rate expected 0.095, got ${usProfileCA.config.rate}`);
+}
+const usProfileTX = getCountryTaxProfile('US', 'US-TX');
+if (usProfileTX.config.rate !== 0.0825) {
+  throw new Error(`US-TX rate expected 0.0825, got ${usProfileTX.config.rate}`);
+}
+
+// Check Canada Provinces (Ontario 13% vs Quebec 14.975% vs BC)
+const caProfileON = getCountryTaxProfile('CA', 'CA-ON');
+if (caProfileON.config.rate !== 0.13) {
+  throw new Error(`Canada Ontario HST expected 0.13, got ${caProfileON.config.rate}`);
+}
+const caProfileQC = getCountryTaxProfile('CA', 'CA-QC');
+if (caProfileQC.config.rate !== 0.14975) {
+  throw new Error(`Canada Quebec GST+QST expected 0.14975, got ${caProfileQC.config.rate}`);
+}
+
+// Check UAE Emirates (Abu Dhabi 5% vs Dubai 5% + municipality local fee)
+const aeProfileAUH = getCountryTaxProfile('AE', 'AUH');
+if (aeProfileAUH.config.rate !== 0.05) {
+  throw new Error(`UAE Abu Dhabi rate expected 0.05, got ${aeProfileAUH.config.rate}`);
+}
+const aeProfileDXB = getCountryTaxProfile('AE', 'DXB');
+if (aeProfileDXB.config.rate !== 0.05) {
+  throw new Error(`UAE Dubai base VAT expected 0.05, got ${aeProfileDXB.config.rate}`);
+}
+console.log('✔ Test 18: Multi-Level Federal Regional Rules (US, CA, UAE, AU, IN, BR) verified');
+
+// -------------------------------------------------------------
+// 19. Category-Specific Tax Rate Splits
+// -------------------------------------------------------------
+console.log('Test 19: Category-Specific Tax Rate Splits');
+// Portugal (PT): food 13%, alcohol 23%
+const ptEntry = getCountryTaxRegistryEntry('PT');
+if (ptEntry?.categoryRates.food !== 0.13 || ptEntry?.categoryRates.alcohol !== 0.23) {
+  throw new Error('Portugal category rates expected 13% food and 23% alcohol');
+}
+
+// Malaysia (MY): food 6% service tax, alcohol 8% service tax
+const myEntry = getCountryTaxRegistryEntry('MY');
+if (myEntry?.categoryRates.food !== 0.06 || myEntry?.categoryRates.alcohol !== 0.08) {
+  throw new Error('Malaysia category rates expected 6% food and 8% alcohol');
+}
+
+// Colombia (CO): Impoconsumo 8% on restaurant food & beverage
+const coEntry = getCountryTaxRegistryEntry('CO');
+if (coEntry?.categoryRates.food !== 0.08 || coEntry?.restaurantRate !== 0.08) {
+  throw new Error('Colombia restaurant rate expected 8% Impoconsumo (INC)');
+}
+
+// Indonesia (ID): PBJT 10%
+const idEntry = getCountryTaxRegistryEntry('ID');
+if (idEntry?.restaurantRate !== 0.10) {
+  throw new Error('Indonesia restaurant rate expected 10% PBJT');
+}
+console.log('✔ Test 19: Category-Specific Tax Rates (PT, MY, CO, ID) verified');
+
+// -------------------------------------------------------------
+// 20. Custom Country Profile Creation Wizard
+// -------------------------------------------------------------
+console.log('Test 20: Custom Country Profile Creation Wizard');
+const customProfile = createCustomCountryProfile({
+  countryCode: 'IS',
+  countryName: 'Iceland',
+  currency: 'ISK',
+  currencySymbol: 'kr',
+  currencyDecimals: 0,
+  standardRate: 0.24,
+  restaurantRate: 0.11,
+  taxMode: 'inclusive',
+  taxLabel: 'VSK',
+  categoryRates: {
+    food: 0.11,
+    alcohol: 0.24,
+  },
+  serviceChargeRate: 0,
+  serviceChargeTaxable: false,
+  taxIdLabel: 'VSK-numer',
+  taxIdFormat: 'XXXXX',
+  accountantConfirmed: true,
+  accountantName: 'Gunnar Jonsson & Associates, CPA',
+  accountantLicense: 'IS-CPA-9941',
+  confirmationDate: '2026-10-22',
+});
+
+if (customProfile.countryCode !== 'IS' || customProfile.restaurantRate !== 0.11) {
+  throw new Error('Custom country profile creation failed');
+}
+if (customProfile.currencyDecimals !== 0) {
+  throw new Error('Custom country currencyDecimals expected 0 for ISK');
+}
+if (customProfile.status !== 'verified') {
+  throw new Error('Accountant-confirmed custom country should be marked verified');
+}
+const isGoLive = canJurisdictionGoLive('IS', true);
+if (!isGoLive.allowed) {
+  throw new Error(`Custom country IS should allow go-live once confirmed: ${isGoLive.reason}`);
+}
+console.log('✔ Test 20: Custom Country Profile Creation Wizard passed');
+
+console.log('\n=== ALL 20 TAX ENGINE TESTS PASSED WITH 100% SUCCESS! ===\n');

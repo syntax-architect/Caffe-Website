@@ -59,6 +59,16 @@ export interface RestaurantSettings {
   service_charge_taxable?: boolean;
   /** Whether customer can opt out of service charge */
   service_charge_optional?: boolean;
+  /** Cover charge / coperto (e.g. Italy) */
+  cover_charge?: number;
+  cover_charge_label?: string;
+  cover_charge_taxable?: boolean;
+  /** Sub-national tax region / state / province (e.g. 'NY', 'CA', 'ON', or 'ALL') */
+  region?: string | null;
+  /** Accountant compliance sign-off gate */
+  accountant_verified?: boolean;
+  accountant_verified_at?: string | null;
+  accountant_notes?: string | null;
   dietary_system?: 'india' | 'international';
   primary_contact_method?: 'whatsapp' | 'phone' | 'email';
   email?: string | null;
@@ -76,7 +86,96 @@ export interface RestaurantSettings {
   owner_notification_method?: 'email' | 'whatsapp' | 'both' | 'none';
   low_stock_alert_threshold?: number;
   governing_law?: string | null;
+  features?: RestaurantFeatureFlags;
 }
+
+export interface RestaurantFeatureFlags {
+  online_ordering: boolean;
+  delivery: boolean;
+  takeaway: boolean;
+  qr_table_ordering: boolean;
+  reservations: boolean;
+  kds: boolean;
+  pos: boolean;
+  running_table_bills: boolean;
+  split_bills: boolean;
+  cash_drawer: boolean;
+  kot_printing: boolean;
+  discounts: boolean;
+  tips: boolean;
+  vip_club: boolean;
+  online_payments: boolean;
+  specials_banner: boolean;
+  gallery: boolean;
+  language_switcher: boolean;
+}
+
+export type FeatureFlagKey = keyof RestaurantFeatureFlags;
+
+export const FEATURE_PRESETS: Record<'cafe' | 'full_restaurant' | 'takeaway_only', RestaurantFeatureFlags> = {
+  cafe: {
+    online_ordering: true,
+    delivery: false,
+    takeaway: true,
+    qr_table_ordering: true,
+    reservations: false,
+    kds: true,
+    pos: true,
+    running_table_bills: true,
+    split_bills: false,
+    cash_drawer: false,
+    kot_printing: true,
+    discounts: true,
+    tips: true,
+    vip_club: true,
+    online_payments: true,
+    specials_banner: true,
+    gallery: true,
+    language_switcher: true,
+  },
+  full_restaurant: {
+    online_ordering: true,
+    delivery: true,
+    takeaway: true,
+    qr_table_ordering: true,
+    reservations: true,
+    kds: true,
+    pos: true,
+    running_table_bills: true,
+    split_bills: true,
+    cash_drawer: true,
+    kot_printing: true,
+    discounts: true,
+    tips: true,
+    vip_club: true,
+    online_payments: true,
+    specials_banner: true,
+    gallery: true,
+    language_switcher: true,
+  },
+  takeaway_only: {
+    online_ordering: true,
+    delivery: true,
+    takeaway: true,
+    qr_table_ordering: false,
+    reservations: false,
+    kds: false,
+    pos: true,
+    running_table_bills: false,
+    split_bills: false,
+    cash_drawer: true,
+    kot_printing: true,
+    discounts: true,
+    tips: true,
+    vip_club: false,
+    online_payments: true,
+    specials_banner: true,
+    gallery: false,
+    language_switcher: true,
+  },
+};
+
+export const DEFAULT_FEATURE_FLAGS: RestaurantFeatureFlags = FEATURE_PRESETS.cafe;
 
 export interface DashboardNotification {
   id: string;

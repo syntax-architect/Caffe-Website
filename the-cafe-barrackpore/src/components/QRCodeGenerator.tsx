@@ -6,9 +6,29 @@ import { useSiteConfig } from '../context/SiteConfigContext';
 import { buildTableQrUrl } from '../utils/url';
 
 export const QRCodeGenerator: React.FC = () => {
-  const { restaurantConfig, logoUrl } = useSiteConfig();
+  const { restaurantConfig, logoUrl, features } = useSiteConfig();
   const [tableInput, setTableInput] = useState<string>('07');
   const [copied, setCopied] = useState<boolean>(false);
+
+  if (features?.qr_table_ordering === false) {
+    return (
+      <div className="min-h-screen bg-[#070504] text-[#F5EFE6] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-black/60 border border-[#D4AF37]/40 flex items-center justify-center p-3 mb-4 shadow-[0_0_30px_rgba(212,175,55,0.25)]">
+          <span className="material-symbols-outlined text-[#D4AF37] text-2xl">qr_code_scanner</span>
+        </div>
+        <h2 className="text-xl font-serif font-bold text-white mb-2">QR Table Ordering Paused</h2>
+        <p className="text-stone-400 text-xs max-w-sm mb-6 leading-relaxed">
+          QR Code generation and tabletop ordering are disabled for this restaurant in feature settings.
+        </p>
+        <a
+          href="/"
+          className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider transition-all"
+        >
+          Return to Home
+        </a>
+      </div>
+    );
+  }
 
   const businessName = restaurantConfig?.businessName || clientDetails.businessName;
 

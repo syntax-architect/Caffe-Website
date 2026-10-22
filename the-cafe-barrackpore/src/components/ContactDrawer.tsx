@@ -10,8 +10,10 @@ import {
   type ContactInquiryPayload,
 } from '../services/contactService';
 import { TurnstileWidget } from './TurnstileWidget';
+import { useI18n } from '../i18n';
 
 export const ContactDrawer: React.FC = () => {
+  const { t } = useI18n();
   const { isContactOpen, setIsContactOpen, showToast } = useUI();
   const { restaurantConfig } = useSiteConfig();
 
@@ -97,8 +99,8 @@ export const ContactDrawer: React.FC = () => {
       if (result.success && result.inquiryRef) {
         setConfirmedRef(result.inquiryRef);
         showToast({
-          title: 'Inquiry Sent',
-          message: `Your message has been received (${result.inquiryRef}). Our concierge will respond shortly.`,
+          title: t('contact.sentSuccess', 'Inquiry Sent'),
+          message: `${t('contact.sentMessage', 'Your message has been received')} (${result.inquiryRef}).`,
           type: 'success',
         });
       } else {
@@ -153,10 +155,10 @@ export const ContactDrawer: React.FC = () => {
                 </div>
                 <div>
                   <h2 id="contact-drawer-title" className="font-serif text-xl sm:text-2xl text-white font-normal">
-                    Guest Concierge
+                    {t('contact.drawerTitle', 'Guest Concierge')}
                   </h2>
                   <p className="font-sans text-[11px] uppercase tracking-widest text-primary/80">
-                    Direct Contact &amp; Inquiries
+                    {t('contact.drawerSubtitle', 'Direct Contact & Inquiries')}
                   </p>
                 </div>
               </div>
@@ -165,7 +167,7 @@ export const ContactDrawer: React.FC = () => {
                 type="button"
                 onClick={() => setIsContactOpen(false)}
                 className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                aria-label="Close contact drawer"
+                aria-label={t('common.close', 'Close contact drawer')}
               >
                 <span className="material-symbols-outlined text-2xl">close</span>
               </button>
@@ -181,9 +183,9 @@ export const ContactDrawer: React.FC = () => {
                 <div className="w-16 h-16 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 flex items-center justify-center">
                   <span className="material-symbols-outlined text-3xl">check_circle</span>
                 </div>
-                <h3 className="font-serif text-2xl text-white font-normal">Inquiry Received</h3>
+                <h3 className="font-serif text-2xl text-white font-normal">{t('contact.sentSuccess', 'Inquiry Received')}</h3>
                 <p className="font-mono text-xs uppercase tracking-widest text-primary font-semibold">
-                  Reference: {confirmedRef}
+                  {t('cart.orderRef', 'Reference')}: {confirmedRef}
                 </p>
                 <p className="font-sans text-sm text-zinc-400 max-w-sm font-light leading-relaxed">
                   Thank you, <strong className="text-white">{formData.name}</strong>. Your inquiry has been routed to our floor team at {businessName}.
@@ -204,7 +206,7 @@ export const ContactDrawer: React.FC = () => {
                     onClick={() => setIsContactOpen(false)}
                     className="w-full h-12 rounded-full border border-white/10 hover:border-white/20 text-zinc-300 text-xs font-semibold uppercase tracking-wider flex items-center justify-center cursor-pointer transition-colors"
                   >
-                    Close Window
+                    {t('contact.close', 'Close Window')}
                   </button>
                 </div>
               </div>
@@ -225,14 +227,14 @@ export const ContactDrawer: React.FC = () => {
                   {/* Name */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-medium text-zinc-300 uppercase tracking-wider">
-                      Your Name <span className="text-primary">*</span>
+                      {t('contact.fullName', 'Your Name')} <span className="text-primary">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g. Rahul Sharma"
+                      placeholder={t('contact.fullNamePlaceholder', 'e.g. Rahul Sharma')}
                       className="w-full h-11 px-4 rounded-xl bg-surface-container border border-outline/25 text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-zinc-600"
                     />
                   </div>
@@ -241,27 +243,27 @@ export const ContactDrawer: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <label className="block text-xs font-medium text-zinc-300 uppercase tracking-wider">
-                        Phone Number <span className="text-primary">*</span>
+                        {t('contact.phone', 'Phone Number')} <span className="text-primary">*</span>
                       </label>
                       <input
                         type="tel"
                         required
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+91 98765 43210"
+                        placeholder={t('contact.phonePlaceholder', '+91 98765 43210')}
                         className="w-full h-11 px-4 rounded-xl bg-surface-container border border-outline/25 text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-zinc-600"
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <label className="block text-xs font-medium text-zinc-300 uppercase tracking-wider">
-                        Email Address
+                        {t('contact.email', 'Email Address')}
                       </label>
                       <input
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="guest@example.com"
+                        placeholder={t('contact.emailPlaceholder', 'guest@example.com')}
                         className="w-full h-11 px-4 rounded-xl bg-surface-container border border-outline/25 text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-zinc-600"
                       />
                     </div>
@@ -270,31 +272,31 @@ export const ContactDrawer: React.FC = () => {
                   {/* Subject Dropdown */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-medium text-zinc-300 uppercase tracking-wider">
-                      Inquiry Category <span className="text-primary">*</span>
+                      {t('contact.inquiryType', 'Inquiry Category')} <span className="text-primary">*</span>
                     </label>
                     <select
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value as InquirySubject })}
                       className="w-full h-11 px-4 rounded-xl bg-surface-container border border-outline/25 text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
                     >
-                      <option value="general">General Dining &amp; Location Question</option>
-                      <option value="event">Private Event &amp; Banqueting</option>
-                      <option value="catering">Artisanal Catering Inquiry</option>
-                      <option value="feedback">Guest Experience &amp; Feedback</option>
+                      <option value="general">{t('contact.general', 'General Dining & Location Question')}</option>
+                      <option value="event">{t('contact.event', 'Private Event & Banqueting')}</option>
+                      <option value="catering">{t('contact.catering', 'Artisanal Catering Inquiry')}</option>
+                      <option value="feedback">{t('contact.feedback', 'Guest Experience & Feedback')}</option>
                     </select>
                   </div>
 
                   {/* Message */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-medium text-zinc-300 uppercase tracking-wider">
-                      Your Message <span className="text-primary">*</span>
+                      {t('contact.message', 'Your Message')} <span className="text-primary">*</span>
                     </label>
                     <textarea
                       required
                       rows={3}
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      placeholder="Tell us about your event, party size, date preference, or inquiry details..."
+                      placeholder={t('contact.messagePlaceholder', 'Tell us about your event, party size, date preference, or inquiry details...')}
                       className="w-full p-4 rounded-xl bg-surface-container border border-outline/25 text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-zinc-600 resize-none leading-relaxed"
                     />
                   </div>
@@ -327,11 +329,11 @@ export const ContactDrawer: React.FC = () => {
                     {isSubmitting ? (
                       <>
                         <div className="w-4 h-4 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
-                        <span>Sending Message...</span>
+                        <span>{t('contact.submitting', 'Sending Message...')}</span>
                       </>
                     ) : (
                       <>
-                        <span>Submit Inquiry</span>
+                        <span>{t('contact.submit', 'Submit Inquiry')}</span>
                         <span className="material-symbols-outlined text-[16px]">send</span>
                       </>
                     )}

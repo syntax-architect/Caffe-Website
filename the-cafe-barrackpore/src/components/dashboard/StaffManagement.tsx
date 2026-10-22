@@ -250,11 +250,14 @@ export const StaffManagement: React.FC = () => {
           <div className="grid grid-cols-1 gap-3 md:hidden">
             {staffList.map((staff) => {
               const isCurrent = staff.id === currentProfile?.id;
-              const roleBadge = {
+              const roleBadgeMap: Record<string, string> = {
                 owner: 'bg-[#D4AF37]/15 text-[#D4AF37] border-[#D4AF37]/30',
                 manager: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+                cashier: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+                waiter: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
                 staff: 'bg-zinc-800 text-zinc-300 border-zinc-700',
-              }[staff.role];
+              };
+              const roleBadge = roleBadgeMap[staff.role] || roleBadgeMap.staff;
 
               return (
                 <div
@@ -334,11 +337,14 @@ export const StaffManagement: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-white/[0.04]">
                   {staffList.map((staff) => {
-                    const roleBadge = {
+                    const roleBadgeMap: Record<string, string> = {
                       owner: 'bg-[#D4AF37]/15 text-[#D4AF37] border-[#D4AF37]/30',
                       manager: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+                      cashier: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+                      waiter: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
                       staff: 'bg-zinc-800 text-zinc-300 border-zinc-700',
-                    }[staff.role];
+                    };
+                    const roleBadge = roleBadgeMap[staff.role] || roleBadgeMap.staff;
 
                     const isCurrent = staff.id === currentProfile?.id;
 

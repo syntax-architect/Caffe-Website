@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useI18n } from '../i18n';
 import { printCustomerReceipt } from '../utils/printReceipt';
 import { getGoogleReviewUrl } from '../utils/loyalty';
 
@@ -20,6 +21,7 @@ interface OrderStatusData {
 
 export const OrderSuccessPage: React.FC = () => {
   const { restaurantConfig, formatPrice } = useSiteConfig();
+  const { t } = useI18n();
 
   const [orderRef, setOrderRef] = useState<string>('');
   const [token, setToken] = useState<string>('');
@@ -232,6 +234,16 @@ export const OrderSuccessPage: React.FC = () => {
       total_amount: orderData.payment_amount ?? orderData.total ?? 0,
       payment_status: orderData.payment_status,
       payment_method: 'Online Verified',
+    }, undefined, {
+      taxId: restaurantConfig.tax?.taxId,
+      taxIdLabel: restaurantConfig.tax?.taxIdLabel,
+      taxRules: restaurantConfig.tax?.rules,
+      taxLabel: restaurantConfig.tax?.label,
+      taxRate: restaurantConfig.tax?.rate,
+      ratesAsOf: (restaurantConfig.tax as any)?.ratesAsOf || new Date().toISOString().split('T')[0],
+      businessName: restaurantConfig.businessName,
+      phone: restaurantConfig.contact?.phone,
+      address: [restaurantConfig.address?.line1, restaurantConfig.address?.city].filter(Boolean).join(', '),
     });
   };
 
@@ -256,7 +268,7 @@ export const OrderSuccessPage: React.FC = () => {
           className="text-xs font-mono text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] hover:border-white/[0.2]"
         >
           <span className="material-symbols-outlined text-sm">home</span>
-          Return to Menu
+          {t('orderSuccess.backHome', 'Return to Menu')}
         </a>
       </header>
 
@@ -266,7 +278,7 @@ export const OrderSuccessPage: React.FC = () => {
           <div className="text-center py-16 space-y-4">
             <div className="w-12 h-12 rounded-full border-2 border-stone-800 border-t-[#D4AF37] animate-spin mx-auto" />
             <p className="font-mono text-xs uppercase tracking-widest text-[#D4AF37]">
-              Reconciling Order Confirmation...
+              {t('orderSuccess.loadingOrder', 'Reconciling Order Confirmation...')}
             </p>
           </div>
         ) : isCancelled ? (
@@ -279,9 +291,9 @@ export const OrderSuccessPage: React.FC = () => {
               ✕
             </div>
             <div>
-              <h1 className="font-serif text-2xl font-bold text-white">Payment Cancelled</h1>
+              <h1 className="font-serif text-2xl font-bold text-white">{t('orderSuccess.cancelledTitle', 'Payment Cancelled')}</h1>
               <p className="text-xs text-zinc-400 mt-2 max-w-sm mx-auto">
-                Your checkout session was cancelled or dismissed. No charge has been made to your account.
+                {t('orderSuccess.cancelledSubtitle', 'Your checkout session was cancelled or dismissed. No charge has been made to your account.')}
               </p>
             </div>
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -289,7 +301,7 @@ export const OrderSuccessPage: React.FC = () => {
                 href="/"
                 className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#D4AF37] text-black text-xs font-mono uppercase font-bold tracking-wider hover:bg-[#E5C158] transition-colors"
               >
-                Return to Menu
+                {t('orderSuccess.backHome', 'Return to Menu')}
               </a>
             </div>
           </motion.div>
@@ -303,14 +315,14 @@ export const OrderSuccessPage: React.FC = () => {
               !
             </div>
             <div>
-              <h1 className="font-serif text-2xl font-bold text-white">Payment Declined</h1>
+              <h1 className="font-serif text-2xl font-bold text-white">{t('cart.paymentFailed', 'Payment Declined')}</h1>
               <p className="text-xs text-zinc-400 mt-2 max-w-sm mx-auto">
                 Your transaction could not be processed by the bank or gateway. Please try an alternative payment method or choose Pay at Counter.
               </p>
             </div>
             {orderRef && (
               <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] font-mono text-xs text-zinc-400">
-                Order Ref: <span className="text-white font-bold">{orderRef}</span>
+                {t('orderSuccess.orderRef', 'Order Ref')}: <span className="text-white font-bold">{orderRef}</span>
               </div>
             )}
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -318,7 +330,7 @@ export const OrderSuccessPage: React.FC = () => {
                 href="/"
                 className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#D4AF37] text-black text-xs font-mono uppercase font-bold tracking-wider hover:bg-[#E5C158] transition-colors"
               >
-                Try Again
+                {t('common.retry', 'Try Again')}
               </a>
             </div>
           </motion.div>
@@ -336,10 +348,10 @@ export const OrderSuccessPage: React.FC = () => {
             </div>
             <div>
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                Live Webhook Reconciliation
+                {t('cart.paymentProcessing', 'Live Webhook Reconciliation')}
               </span>
               <h1 className="font-serif text-2xl font-bold text-white mt-1">
-                Awaiting Gateway Settlement
+                {t('cart.paymentPending', 'Awaiting Gateway Settlement')}
               </h1>
               <p className="text-xs text-zinc-400 mt-2 max-w-sm mx-auto">
                 We received your authorization. Confirming payment settlement with your bank and registering your kitchen ticket...
@@ -347,7 +359,7 @@ export const OrderSuccessPage: React.FC = () => {
             </div>
             {orderRef && (
               <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.08] font-mono text-xs text-zinc-400 flex items-center justify-between">
-                <span>Order Reference:</span>
+                <span>{t('orderSuccess.orderRef', 'Order Reference')}:</span>
                 <span className="text-[#D4AF37] font-bold">{orderRef}</span>
               </div>
             )}
@@ -368,13 +380,13 @@ export const OrderSuccessPage: React.FC = () => {
               </div>
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-emerald-400 font-bold">
-                  Payment Verified · Order Placed
+                  {t('cart.paymentComplete', 'Payment Verified · Order Placed')}
                 </span>
                 <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white mt-1">
-                  Thank You for Dining With Us
+                  {t('orderSuccess.title', 'Thank You for Dining With Us')}
                 </h1>
                 <p className="text-xs text-zinc-400 mt-1.5">
-                  Your payment has cleared and your order ticket has been dispatched to the kitchen.
+                  {t('orderSuccess.subtitle', 'Your payment has cleared and your order ticket has been dispatched to the kitchen.')}
                 </p>
               </div>
             </div>
@@ -382,30 +394,61 @@ export const OrderSuccessPage: React.FC = () => {
             {/* Receipt Summary Card */}
             <div className="p-4 sm:p-5 rounded-2xl bg-black/40 border border-white/[0.08] space-y-3.5">
               <div className="flex items-center justify-between pb-3 border-b border-white/[0.06] text-xs">
-                <span className="font-mono text-zinc-400">Order Reference</span>
+                <span className="font-mono text-zinc-400">{t('orderSuccess.orderRef', 'Order Reference')}</span>
                 <span className="font-mono text-sm font-bold text-[#D4AF37]">{orderData?.order_ref}</span>
               </div>
 
               {orderData?.order_type && (
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-zinc-400">Dining Mode</span>
+                  <span className="font-mono text-zinc-400">{t('cart.deliveryType', 'Dining Mode')}</span>
                   <span className="font-mono text-zinc-200 capitalize">
                     {orderData.order_type === 'dine_in'
-                      ? `Dine-In ${orderData.table_number ? `(Table ${orderData.table_number})` : ''}`
-                      : 'Takeaway Package'}
+                      ? `${t('cart.dineIn', 'Dine-In')} ${orderData.table_number ? `(${t('cart.tableNumber', 'Table')} ${orderData.table_number})` : ''}`
+                      : t('cart.takeaway', 'Takeaway Package')}
                   </span>
                 </div>
               )}
 
               {orderData?.customer_name && (
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-zinc-400">Guest Name</span>
+                  <span className="font-mono text-zinc-400">{t('cart.name', 'Guest Name')}</span>
                   <span className="font-mono text-zinc-200">{orderData.customer_name}</span>
                 </div>
               )}
 
+              {/* Tax Details & Rates as of Date */}
+              {restaurantConfig.tax?.enabled && (
+                <div className="pt-2 border-t border-white/[0.04] space-y-1.5 text-xs">
+                  {restaurantConfig.tax.rules && restaurantConfig.tax.rules.length > 0 ? (
+                    restaurantConfig.tax.rules.map((rule, idx) => (
+                      <div key={idx} className="flex items-center justify-between font-mono text-zinc-400">
+                        <span>{rule.label} ({(rule.rate * 100).toFixed(rule.rate * 100 % 1 === 0 ? 0 : 2)}% {rule.mode === 'inclusive' ? 'incl.' : ''})</span>
+                        <span className="text-zinc-300">{t('common.applied', 'Applied')}</span>
+                      </div>
+                    ))
+                  ) : (restaurantConfig.tax.rate ?? 0) > 0 ? (
+                    <div className="flex items-center justify-between font-mono text-zinc-400">
+                      <span>{restaurantConfig.tax.label} ({((restaurantConfig.tax.rate ?? 0) * 100).toFixed(restaurantConfig.tax.rate % 1 === 0 ? 0 : 2)}% {restaurantConfig.tax.mode === 'inclusive' ? 'incl.' : ''})</span>
+                      <span className="text-zinc-300">{t('common.applied', 'Applied')}</span>
+                    </div>
+                  ) : null}
+
+                  {restaurantConfig.tax.taxId && (
+                    <div className="flex items-center justify-between font-mono text-[11px] text-zinc-400">
+                      <span>{restaurantConfig.tax.taxIdLabel || 'Tax ID'}</span>
+                      <span className="text-zinc-300">{restaurantConfig.tax.taxId}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between font-mono text-[10px] text-zinc-500">
+                    <span>{t('cart.taxSchedule', 'Tax Schedule')}</span>
+                    <span>Rates as of {restaurantConfig.tax.ratesAsOf || new Date().toISOString().split('T')[0]}</span>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-sm">
-                <span className="font-mono text-zinc-300">Total Settled</span>
+                <span className="font-mono text-zinc-300">{t('orderSuccess.total', 'Total Settled')}</span>
                 <span className="font-mono text-base font-bold text-emerald-400">
                   {formatPrice(orderData?.payment_amount ?? orderData?.total ?? 0, orderData?.currency)}
                 </span>
@@ -415,20 +458,20 @@ export const OrderSuccessPage: React.FC = () => {
             {/* Preparation Stepper */}
             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
               <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-bold block">
-                Order Live Status
+                {t('orderSuccess.status', 'Order Live Status')}
               </span>
               <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
                 <div className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
                   <div className="font-bold text-xs">✓ 1</div>
-                  <span>Received</span>
+                  <span>{t('staff.orders.pending', 'Received')}</span>
                 </div>
                 <div className="p-2 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37]">
                   <div className="font-bold text-xs animate-pulse">● 2</div>
-                  <span>Preparing</span>
+                  <span>{t('orderSuccess.prepTime', 'Preparing')}</span>
                 </div>
                 <div className="p-2 rounded-lg bg-zinc-900 border border-white/[0.04] text-zinc-500">
                   <div className="font-bold text-xs">○ 3</div>
-                  <span>Service</span>
+                  <span>{t('staff.kitchen.readyToServe', 'Service')}</span>
                 </div>
               </div>
             </div>
@@ -464,20 +507,20 @@ export const OrderSuccessPage: React.FC = () => {
                 className="flex-1 py-3 px-4 rounded-xl border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-xs font-mono text-zinc-200 font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-sm">print</span>
-                Print Receipt
+                {t('orderSuccess.printReceipt', 'Print Receipt')}
               </button>
               <a
                 href="/"
                 className="flex-1 py-3 px-4 rounded-xl bg-[#D4AF37] hover:bg-[#E5C158] text-black text-xs font-mono uppercase font-bold tracking-wider transition-colors flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-sm">restaurant</span>
-                Back to Menu
+                {t('orderSuccess.backHome', 'Back to Menu')}
               </a>
             </div>
           </motion.div>
         ) : (
           <div className="p-8 rounded-2xl bg-[#120F0D] border border-white/[0.08] text-center space-y-4">
-            <h2 className="text-lg font-bold text-white">Order Status</h2>
+            <h2 className="text-lg font-bold text-white">{t('orderSuccess.status', 'Order Status')}</h2>
             <p className="text-xs text-zinc-400">
               {errorMessage || 'Unable to retrieve order details. Please verify your reference at the counter.'}
             </p>
@@ -485,7 +528,7 @@ export const OrderSuccessPage: React.FC = () => {
               href="/"
               className="inline-block mt-4 px-6 py-2.5 rounded-xl bg-[#D4AF37] text-black text-xs font-mono font-bold"
             >
-              Return Home
+              {t('orderSuccess.backHome', 'Return Home')}
             </a>
           </div>
         )}
