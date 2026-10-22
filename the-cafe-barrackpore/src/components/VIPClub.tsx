@@ -370,14 +370,14 @@ export const VIPClub: React.FC = () => {
                           htmlFor="vip-guest-name"
                           className="block font-mono text-[10px] tracking-[0.2em] uppercase text-[#6B5A4E] mb-1.5"
                         >
-                          GUEST NAME
+                          {t('vip.guestName', 'GUEST NAME')}
                         </label>
                         <input
                           id="vip-guest-name"
                           type="text"
                           value={guestName}
                           onChange={(e) => setGuestName(e.target.value)}
-                          placeholder="Who's signing?"
+                          placeholder={t('vip.namePlaceholder', "Who's signing?")}
                           className="w-full bg-transparent border-b border-[#18110D]/40 py-2 text-sm text-[#18110D] placeholder-[#6B5A4E]/60 focus:outline-none focus:border-[#18110D]"
                         />
                       </div>
@@ -387,7 +387,7 @@ export const VIPClub: React.FC = () => {
                           htmlFor="vip-guest-email"
                           className="block font-mono text-[10px] tracking-[0.2em] uppercase text-[#6B5A4E] mb-1.5"
                         >
-                          PRIVATE EMAIL
+                          {t('vip.privateEmail', 'PRIVATE EMAIL')}
                         </label>
                         <input
                           id="vip-guest-email"
@@ -395,7 +395,7 @@ export const VIPClub: React.FC = () => {
                           required
                           value={contractEmail}
                           onChange={(e) => setContractEmail(e.target.value)}
-                          placeholder="Enter your private email"
+                          placeholder={t('vip.emailPlaceholder', 'Enter your private email')}
                           className="w-full bg-transparent border-b border-[#18110D]/40 py-2 text-sm text-[#18110D] placeholder-[#6B5A4E]/60 focus:outline-none focus:border-[#18110D]"
                         />
                       </div>
@@ -404,7 +404,7 @@ export const VIPClub: React.FC = () => {
                     {/* Valmora-Style Interest Pill Selector */}
                     <div>
                       <span className="block font-mono text-[10px] tracking-[0.2em] uppercase text-[#6B5A4E] mb-2">
-                        PREFERRED SANCTUARY SETTING
+                        {t('vip.preferredSanctuary', 'PREFERRED SANCTUARY SETTING')}
                       </span>
                       <div className="flex flex-wrap gap-2">
                         {SANCTUARY_PREFERENCES.map((item) => (
@@ -431,7 +431,7 @@ export const VIPClub: React.FC = () => {
                         <span className="underline decoration-dotted text-[#18110D] font-semibold mx-1">
                           {liveSignature}
                         </span>{' '}
-                        <span className="text-[10px] uppercase">signature</span>
+                        <span className="text-[10px] uppercase">{t('vip.signature', 'signature')}</span>
                       </div>
 
                       <button

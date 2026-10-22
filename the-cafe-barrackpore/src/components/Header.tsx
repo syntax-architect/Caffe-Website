@@ -419,7 +419,7 @@ export const Header: React.FC = React.memo(() => {
         {/* Intelligent Dynamic Sliding Navigation Bar */}
         <nav 
           className="hidden lg:flex items-center px-2 py-1.5 rounded-full bg-surface-container/75 backdrop-blur-xl border border-outline/25 shadow-[0_8px_24px_rgba(0,0,0,0.55)] relative"
-          aria-label="Chronological Website Navigation"
+          aria-label={t('a11y.navigation', 'Chronological Website Navigation')}
         >
           {/* Previous Window Slide Arrow (‹) */}
           <button
@@ -431,8 +431,8 @@ export const Header: React.FC = React.memo(() => {
                 ? 'text-primary hover:bg-surface-container-high hover:scale-110'
                 : 'text-on-surface/20 cursor-default pointer-events-none'
             }`}
-            aria-label="Previous sections"
-            title="Previous sections"
+            aria-label={t('common.previous', 'Previous sections')}
+            title={t('common.previous', 'Previous sections')}
           >
             <span className="material-symbols-outlined text-[18px]">chevron_left</span>
           </button>
@@ -477,8 +477,8 @@ export const Header: React.FC = React.memo(() => {
                 ? 'text-primary hover:bg-surface-container-high hover:scale-110'
                 : 'text-on-surface/20 cursor-default pointer-events-none'
             }`}
-            aria-label="Next sections"
-            title="Next sections"
+            aria-label={t('common.next', 'Next sections')}
+            title={t('common.next', 'Next sections')}
           >
             <span className="material-symbols-outlined text-[18px]">chevron_right</span>
           </button>
@@ -610,12 +610,12 @@ export const Header: React.FC = React.memo(() => {
                   </div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-sans font-semibold uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Open Now</span>
+                    <span>{t('header.openNow', 'Open Now')}</span>
                   </div>
                 </div>
 
                 {/* 7 Authentic Acts Navigation in Exact Chronological Order */}
-                <nav className="flex flex-col gap-1.5" aria-label="Mobile Navigation">
+                <nav className="flex flex-col gap-1.5" aria-label={t('a11y.navigation', 'Mobile Navigation')}>
                   {enabledOrderedSections.map((item, idx) => {
                     const itemSectionId = item.href.slice(1);
                     const isActive = activeSection === itemSectionId;

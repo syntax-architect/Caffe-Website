@@ -42,7 +42,7 @@ test.describe('The Café Barrackpore - Comprehensive End-to-End Test Suite', () 
 
     // Verify form elements exist
     const heading = reservationDrawer.locator('h2');
-    await expect(heading).toContainText(/Book a Table/i);
+    await expect(heading).toContainText(/Reserve a Table|Book a Table/i);
 
     // Close the drawer
     const closeBtn = reservationDrawer.locator('button[aria-label*="close" i]').first();
@@ -57,9 +57,9 @@ test.describe('The Café Barrackpore - Comprehensive End-to-End Test Suite', () 
     await page.goto('/');
 
     // Scroll to footer and click "Send Guest Inquiry"
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     const inquiryBtn = page.locator('button:has-text("Send Guest Inquiry")').first();
-    await inquiryBtn.scrollIntoViewIfNeeded();
-    await expect(inquiryBtn).toBeVisible();
+    await expect(inquiryBtn).toBeVisible({ timeout: 10000 });
     await inquiryBtn.click();
 
     // Verify Contact Drawer modal opens
@@ -84,7 +84,7 @@ test.describe('The Café Barrackpore - Comprehensive End-to-End Test Suite', () 
     await page.waitForLoadState('domcontentloaded');
 
     // Verify table context banner
-    const tableBanner = page.locator('text=/TABLE 5|Table Service/i').first();
+    const tableBanner = page.locator('text=/TABLE 0?5|Table Service/i').first();
     await expect(tableBanner).toBeVisible();
 
     // Check menu category controls

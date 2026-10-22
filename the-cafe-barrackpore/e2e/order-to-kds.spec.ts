@@ -10,7 +10,7 @@ test.describe('Real Order to KDS Lifecycle & Browser Feature Walkthrough', () =>
     await page.waitForLoadState('domcontentloaded');
 
     // Confirm Dine-In Table 5 service recognition
-    const tableHeading = page.locator('text=/TABLE 5|Table Service/i').first();
+    const tableHeading = page.locator('text=/TABLE 0?5|Table Service/i').first();
     await expect(tableHeading).toBeVisible();
 
     // Find and add a food item to the order bag

@@ -388,7 +388,7 @@ const QRContent: React.FC = () => {
         )}
 
         {/* Modern Food Photography Catalog Grid Menu */}
-        <section aria-label="Restaurant Menu" className="w-full">
+        <section aria-label={t('menu.title', 'Restaurant Menu')} className="w-full">
           <Menu isQrMode forcedVariant="catalog-grid" />
         </section>
       </main>
@@ -397,7 +397,7 @@ const QRContent: React.FC = () => {
       {cartCount > 0 && (
         <aside
           role="region"
-          aria-label="Order summary bar"
+          aria-label={t('qr.orderSummaryBar', 'Order summary bar')}
           className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-8 sm:bottom-8 sm:w-96 z-40 transition-all duration-300 animate-in slide-in-from-bottom"
         >
           <div className="p-0.5 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] shadow-[0_12px_45px_rgba(0,0,0,0.9)]">
@@ -441,7 +441,7 @@ const QRContent: React.FC = () => {
                 {t('contact.drawerTitle', 'Hospitality Concierge')} • {t('qr.tableLabel', 'Table')} {tableNumber}
               </h3>
               <p className="text-xs sm:text-sm text-stone-400 max-w-lg leading-relaxed font-sans font-light">
-                Need extra cutlery, customized spice levels, water refills, or chef recommendations? Our floor team is delighted to assist.
+                {t('qr.conciergeSubtitle', 'Need extra cutlery, customized spice levels, water refills, or chef recommendations? Our floor team is delighted to assist.')}
               </p>
             </div>
 
@@ -457,7 +457,7 @@ const QRContent: React.FC = () => {
                 }`}
               >
                 <span className="material-symbols-outlined text-base">{isStaffCalled ? 'check' : 'notifications_active'}</span>
-                <span>{isStaffCalled ? 'Floor Staff Alerted' : 'Call Floor Staff'}</span>
+                <span>{isStaffCalled ? t('qr.staffAlerted', 'Floor Staff Alerted') : t('qr.callStaff', 'Call Floor Staff')}</span>
               </button>
 
               <a
@@ -470,11 +470,11 @@ const QRContent: React.FC = () => {
             </div>
 
             <div className="w-full pt-4 mt-2 border-t border-white/[0.06] flex flex-wrap items-center justify-center gap-4 text-[11px] text-stone-500 font-mono">
-              <span>Wi-Fi: TheCafe_Guest</span>
+              <span>{t('qr.wifiGuest', 'Wi-Fi: TheCafe_Guest')}</span>
               <span>•</span>
-              <span>Zero-Wait Line Dispatch</span>
+              <span>{t('qr.zeroWaitDispatch', 'Zero-Wait Line Dispatch')}</span>
               <span>•</span>
-              <span>Cantonment, Barrackpore</span>
+              <span>{t('footer.cantonmentLocation', 'Cantonment, Barrackpore')}</span>
             </div>
           </div>
         </div>
@@ -486,7 +486,7 @@ const QRContent: React.FC = () => {
           {restaurantConfig.businessName}
         </p>
         <p className="text-zinc-500 text-[11px]">
-          {restaurantConfig.address.line1} • Handcrafted Culinary Sanctuary
+          {restaurantConfig.address.line1} • {t('qr.handcraftedSanctuary', 'Handcrafted Culinary Sanctuary')}
         </p>
         <div className="mt-2 flex items-center justify-center gap-3 text-[10px] text-zinc-600">
           <span>© {new Date().getFullYear()} {t('footer.allRightsReserved', 'All rights reserved')}</span>

@@ -301,10 +301,10 @@ export const Footer: React.FC = () => {
                     href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    aria-label="Direct WhatsApp Message"
+                    aria-label={t('footer.directWhatsApp', 'Direct WhatsApp Message')}
                   >
                     <span className="material-symbols-outlined text-base shrink-0">forum</span>
-                    <span className="whitespace-nowrap">WhatsApp</span>
+                    <span className="whitespace-nowrap">{t('common.whatsapp', 'WhatsApp')}</span>
                   </a>
                 ) : null}
               </div>

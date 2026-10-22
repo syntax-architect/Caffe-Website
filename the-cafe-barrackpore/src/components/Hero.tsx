@@ -197,7 +197,7 @@ export const Hero: React.FC = React.memo(() => {
   if (activeVariant === 'editorial-split') {
     return (
       <section 
-        aria-label="Hero"
+        aria-label={t('hero.title', 'Hero')}
         className="relative w-full min-h-[100dvh] bg-background text-on-surface overflow-hidden -mt-20 flex flex-col justify-between transition-colors duration-500 pt-28 sm:pt-32 lg:pt-36 pb-20 sm:pb-8"
       >
         {/* Ambient Subtle Glow */}
@@ -333,7 +333,7 @@ export const Hero: React.FC = React.memo(() => {
   if (activeVariant === 'minimal-centered') {
     return (
       <section 
-        aria-label="Hero"
+        aria-label={t('hero.title', 'Hero')}
         className="relative w-full min-h-[100dvh] bg-background text-on-surface overflow-hidden -mt-20 flex flex-col justify-between transition-colors duration-500 pt-28 sm:pt-36 pb-20 sm:pb-8"
       >
         {/* Soft Centered Ambient Glow */}
@@ -448,7 +448,7 @@ export const Hero: React.FC = React.memo(() => {
   // =========================================================================
   return (
     <section 
-      aria-label="Hero"
+      aria-label={t('hero.title', 'Hero')}
       className="relative w-full min-h-[100dvh] lg:h-[100dvh] bg-background text-on-surface overflow-hidden -mt-20 flex flex-col justify-between transition-colors duration-500"
     >
       {/* 1. CINEMATIC INTEGRATED BACKGROUND IMAGE (Right-bleed architectural composition with mask reveal & scale settle) */}
