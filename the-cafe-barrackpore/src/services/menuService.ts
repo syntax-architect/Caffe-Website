@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import type { MenuItem, MenuCategory, EditableMenuItemInput } from '../types/menu';
+import { setMenuItemAvailability } from './menuAvailabilityService';
 
 export { MENU_CATEGORIES_FALLBACK, MENU_ITEMS_FALLBACK } from '../data/menuFallbacks';
 import { MENU_CATEGORIES_FALLBACK, MENU_ITEMS_FALLBACK } from '../data/menuFallbacks';
@@ -37,6 +38,19 @@ export async function fetchMenuCategories(): Promise<MenuCategory[]> {
  */
 export async function fetchMenuItems(): Promise<MenuItem[]> {
   if (!isSupabaseConfigured || !supabase) {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('cafe_demo_menu_items');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            inMemoryMenuCache = parsed;
+          }
+        }
+      } catch {
+        // fallback
+      }
+    }
     return inMemoryMenuCache;
   }
 
@@ -138,6 +152,18 @@ export async function upsertMenuItem(
     updated_at: new Date().toISOString(),
   };
 
+  const notifyMenuUpdated = (savedItem: MenuItem) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('cafe_demo_menu_items', JSON.stringify(inMemoryMenuCache));
+        localStorage.setItem('cafe_menu_update_event', JSON.stringify({ item: savedItem, ts: Date.now() }));
+        window.dispatchEvent(new CustomEvent('cafe:menu-updated', { detail: savedItem }));
+      } catch (e) {
+        console.warn('[menuService] Local storage sync notice:', e);
+      }
+    }
+  };
+
   if (!isSupabaseConfigured || !supabase) {
     const formattedItem: MenuItem = {
       ...payload,
@@ -155,6 +181,7 @@ export async function upsertMenuItem(
     } else {
       inMemoryMenuCache.unshift(formattedItem);
     }
+    notifyMenuUpdated(formattedItem);
     return { success: true, item: formattedItem };
   }
 
@@ -190,6 +217,7 @@ export async function upsertMenuItem(
     } else {
       inMemoryMenuCache.unshift(saved);
     }
+    notifyMenuUpdated(saved);
 
     return { success: true, item: saved };
   } catch (err: any) {
@@ -209,6 +237,23 @@ export async function updateMenuItemAvailability(
   const cached = inMemoryMenuCache.find((i) => i.id === id);
   if (cached) {
     cached.available = available;
+  }
+
+  // Also sync to menuAvailabilityService so customer site & QR ordering react in real time
+  try {
+    await setMenuItemAvailability(id, available);
+  } catch (err) {
+    console.warn('[menuService] Error updating local availability map:', err);
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('cafe_demo_menu_items', JSON.stringify(inMemoryMenuCache));
+      localStorage.setItem('cafe_menu_update_event', JSON.stringify({ itemId: id, available, ts: Date.now() }));
+      window.dispatchEvent(new CustomEvent('cafe:menu-updated', { detail: { id, available } }));
+    } catch {
+      // ignore
+    }
   }
 
   if (!isSupabaseConfigured || !supabase) {

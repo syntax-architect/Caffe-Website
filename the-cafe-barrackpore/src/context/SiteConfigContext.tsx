@@ -658,9 +658,22 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
       }
     };
 
+    const handleStorageUpdated = (e: StorageEvent) => {
+      if (e.key === RESTAURANT_CONFIG_STORAGE_KEY && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          setRestaurantConfig(parsed);
+        } catch {
+          // ignore
+        }
+      }
+    };
+
     window.addEventListener(RESTAURANT_CONFIG_UPDATED_EVENT, handleConfigUpdated);
+    window.addEventListener('storage', handleStorageUpdated);
     return () => {
       window.removeEventListener(RESTAURANT_CONFIG_UPDATED_EVENT, handleConfigUpdated);
+      window.removeEventListener('storage', handleStorageUpdated);
     };
   }, []);
 
@@ -689,6 +702,10 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
       payments: {
         ...restaurantConfig.payments,
         ...(updates.payments || {}),
+      },
+      features: {
+        ...restaurantConfig.features,
+        ...(updates.features || {}),
       },
     };
 
@@ -732,6 +749,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
         payment_mode: merged.payments.mode,
         allow_pay_at_counter: merged.payments.allow_pay_at_counter ?? true,
         governing_law: merged.governingLaw || null,
+        features: merged.features,
       };
       const { updateRestaurantSettings } = await import('../services/dashboardService');
       await updateRestaurantSettings(settingsPayload);

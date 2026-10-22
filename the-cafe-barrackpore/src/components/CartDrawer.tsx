@@ -1621,27 +1621,27 @@ export const CartDrawer: React.FC = () => {
                   {/* Payment Summary Box */}
                   <div className="p-4 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/30 space-y-2.5">
                     <div className="flex justify-between items-center text-xs font-sans">
-                      <span className="text-on-surface/60">Payable Amount:</span>
+                      <span className="text-on-surface/60">{t('cart.payableAmount', 'Payable Amount:')}</span>
                       <span className="font-serif text-xl font-bold text-primary tabular-nums">
                         {formatPrice(totals.total)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-xs font-sans pt-2 border-t border-white/5">
-                      <span className="text-on-surface/60">Customer:</span>
+                      <span className="text-on-surface/60">{t('cart.customerLabel', 'Customer:')}</span>
                       <span className="text-on-surface font-medium">{customerName}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs font-sans">
-                      <span className="text-on-surface/60">Dining:</span>
+                      <span className="text-on-surface/60">{t('cart.diningLabel', 'Dining:')}</span>
                       <span className="text-primary font-mono text-[11px]">
                         {(isQrOrder && isQrValid && qrTable) || orderType === 'dine-in'
-                          ? `Table ${isQrOrder && isQrValid && qrTable ? qrTable : tableNumber}`
-                          : 'Takeaway'}
+                          ? `${t('cart.tableNumber', 'Table')} ${isQrOrder && isQrValid && qrTable ? qrTable : tableNumber}`
+                          : t('cart.takeaway', 'Takeaway')}
                       </span>
                     </div>
                   </div>
 
                   <p className="text-[11px] text-on-surface/50 text-center leading-relaxed">
-                    This order will be submitted to the kitchen display only after successful verification.
+                    {t('cart.kitchenNotice', 'This order will be submitted to the kitchen display only after successful verification.')}
                   </p>
                 </div>
 
@@ -1650,7 +1650,7 @@ export const CartDrawer: React.FC = () => {
                   {isVerifyingPayment && (
                     <div className="flex items-center justify-center gap-2.5 p-3 rounded-xl bg-primary/10 border border-primary/25 text-primary text-xs">
                       <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
-                      <span>Waiting for payment confirmation from bank...</span>
+                      <span>{t('cart.waitingConfirmation', 'Waiting for payment confirmation from bank...')}</span>
                     </div>
                   )}
 
@@ -1663,7 +1663,7 @@ export const CartDrawer: React.FC = () => {
                         className="w-full h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-bold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                       >
                         <span className="material-symbols-outlined text-base">verified_user</span>
-                        <span>{isVerifyingPayment ? 'Verifying Payment...' : `Complete Payment (${formatPrice(totals.total)}) [Dev]`}</span>
+                        <span>{isVerifyingPayment ? t('cart.verifyingPayment', 'Verifying Payment...') : `${t('cart.completePayment', 'Complete Payment')} (${formatPrice(totals.total)}) [Dev]`}</span>
                       </button>
 
                       <button
@@ -1672,7 +1672,7 @@ export const CartDrawer: React.FC = () => {
                         onClick={handleSimulateFailure}
                         className="w-full py-2.5 rounded-full border border-red-500/30 text-red-300 hover:bg-red-500/10 text-[11px] font-sans font-medium transition-colors cursor-pointer"
                       >
-                        Simulate Payment Decline (Test Failure Flow) [Dev]
+                        {t('cart.simulatePaymentDecline', 'Simulate Payment Decline (Test Failure Flow) [Dev]')}
                       </button>
                     </>
                   )}
@@ -1683,7 +1683,7 @@ export const CartDrawer: React.FC = () => {
                     onClick={() => setStep('review')}
                     className="w-full text-center text-xs text-on-surface/50 hover:text-on-surface transition-colors py-1 cursor-pointer"
                   >
-                    Cancel and Return to Review
+                    {t('cart.cancelReturnReview', 'Cancel and Return to Review')}
                   </button>
                 </div>
               </div>
@@ -1699,13 +1699,13 @@ export const CartDrawer: React.FC = () => {
 
                   <div>
                     <span className="font-sans text-[10px] uppercase tracking-widest text-red-400 font-bold">
-                      Payment Unsuccessful
+                      {t('cart.paymentUnsuccessful', 'Payment Unsuccessful')}
                     </span>
                     <h3 className="font-serif text-2xl text-on-surface font-normal mt-0.5">
-                      Transaction Declined
+                      {t('cart.transactionDeclined', 'Transaction Declined')}
                     </h3>
                     <p className="font-sans text-xs text-red-300/80 mt-2 bg-red-950/30 p-3 rounded-xl border border-red-900/40">
-                      {paymentFailureReason || 'The payment provider was unable to authorize the charge.'}
+                      {paymentFailureReason || t('cart.providerUnableAuth', 'The payment provider was unable to authorize the charge.')}
                     </p>
                   </div>
 
@@ -1713,10 +1713,10 @@ export const CartDrawer: React.FC = () => {
                   <div className="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 text-left text-xs space-y-1">
                     <div className="flex items-center gap-1.5 text-primary font-bold text-[11px]">
                       <span className="material-symbols-outlined text-sm">info</span>
-                      <span>Order Preserved</span>
+                      <span>{t('cart.orderPreserved', 'Order Preserved')}</span>
                     </div>
                     <p className="text-on-surface/70 text-[11px] leading-relaxed">
-                      Your order reference <span className="font-mono text-primary font-bold">{orderRef}</span> remains safely on file. Retrying will not create duplicate charges.
+                      {t('cart.orderRefPreservedNotice', 'Your order reference')} <span className="font-mono text-primary font-bold">{orderRef}</span> {t('cart.orderRefPreservedNoticeSuffix', 'remains safely on file. Retrying will not create duplicate charges.')}
                     </p>
                   </div>
                 </div>
@@ -1807,8 +1807,8 @@ export const CartDrawer: React.FC = () => {
                   <div className="w-full max-w-sm p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-center gap-2.5 text-left">
                     <span className="material-symbols-outlined text-amber-400 text-lg shrink-0">cloud_off</span>
                     <div>
-                      <p className="font-bold text-[11px] uppercase tracking-wider text-amber-300">Offline Ticket Queued</p>
-                      <p className="text-[10px] text-amber-200/80 mt-0.5">Your order is preserved locally and will sync to kitchen display automatically once network resumes.</p>
+                      <p className="font-bold text-[11px] uppercase tracking-wider text-amber-300">{t('cart.offlineTicketQueued', 'Offline Ticket Queued')}</p>
+                      <p className="text-[10px] text-amber-200/80 mt-0.5">{t('cart.offlineTicketDesc', 'Your order is preserved locally and will sync to kitchen display automatically once network resumes.')}</p>
                     </div>
                   </div>
                 )}
@@ -1820,11 +1820,11 @@ export const CartDrawer: React.FC = () => {
                       <div className="flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-sm text-[#D4AF37]">stars</span>
                         <span className="text-[10px] uppercase font-mono tracking-wider text-[#D4AF37] font-bold">
-                          Café Loyalty Card
+                          {t('cart.loyaltyCard', 'Café Loyalty Card')}
                         </span>
                       </div>
                       <span className="text-[10px] text-on-surface/60 font-mono">
-                        {loyaltyProfile.stamps} / 5 Stamps
+                        {loyaltyProfile.stamps} / 5 {t('cart.stamps', 'Stamps')}
                       </span>
                     </div>
 
@@ -1851,11 +1851,11 @@ export const CartDrawer: React.FC = () => {
 
                     {isMilestoneRewardUnlocked ? (
                       <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-[11px] text-emerald-200 text-center font-medium">
-                        🎉 Milestone Reached! Enjoy a complimentary beverage or dessert on your next order.
+                        {t('cart.milestoneReached', '🎉 Milestone Reached! Enjoy a complimentary beverage or dessert on your next order.')}
                       </div>
                     ) : (
                       <p className="text-[10px] text-on-surface/60 text-center font-sans">
-                        Collect 5 stamps to unlock a complimentary artisanal roast or house dessert!
+                        {t('cart.collectStamps', 'Collect 5 stamps to unlock a complimentary artisanal roast or house dessert!')}
                       </p>
                     )}
                   </div>
@@ -1872,10 +1872,10 @@ export const CartDrawer: React.FC = () => {
                     <span className="text-amber-400 text-lg">★★★★★</span>
                     <div>
                       <p className="text-xs font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
-                        Enjoyed your visit?
+                        {t('cart.enjoyedVisit', 'Enjoyed your visit?')}
                       </p>
                       <p className="text-[10px] text-on-surface/60">
-                        Help us grow with a 5-star Google review!
+                        {t('cart.googleReviewHelp', 'Help us grow with a 5-star Google review!')}
                       </p>
                     </div>
                   </div>
@@ -1895,7 +1895,7 @@ export const CartDrawer: React.FC = () => {
                     <span>{t('cart.whatsappConfirmation', 'Send Order Receipt to WhatsApp')}</span>
                   </button>
                   <p className="text-[10px] text-on-surface/50 text-center font-sans">
-                    Tap to send your order receipt to our WhatsApp desk for live updates.
+                    {t('cart.whatsappPrompt', 'Tap to send your order receipt to our WhatsApp desk for live updates.')}
                   </p>
                 </div>
 
@@ -1915,7 +1915,7 @@ export const CartDrawer: React.FC = () => {
                     className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-[#160E0A] border border-white/10 hover:border-emerald-500/30 transition-colors"
                   >
                     <span className="material-symbols-outlined text-lg text-emerald-400">chat</span>
-                    <span className="text-[9px] uppercase tracking-wider font-semibold text-on-surface/70">WhatsApp</span>
+                    <span className="text-[9px] uppercase tracking-wider font-semibold text-on-surface/70">{t('common.whatsapp', 'WhatsApp')}</span>
                   </a>
                   <a
                     href={clientDetails.googleMapsLink}
@@ -1954,8 +1954,8 @@ export const CartDrawer: React.FC = () => {
                         <span className="material-symbols-outlined text-base text-amber-400">star</span>
                       </div>
                       <div className="text-left">
-                        <p className="text-on-surface font-semibold">Enjoyed your experience?</p>
-                        <p className="text-on-surface/50 text-[10px] mt-0.5">Leave us a Google Review ★★★★★</p>
+                        <p className="text-on-surface font-semibold">{t('cart.enjoyedExperience', 'Enjoyed your experience?')}</p>
+                        <p className="text-on-surface/50 text-[10px] mt-0.5">{t('cart.leaveGoogleReview', 'Leave us a Google Review ★★★★★')}</p>
                       </div>
                     </div>
                     <span className="material-symbols-outlined text-sm text-primary group-hover:translate-x-0.5 transition-transform">arrow_forward</span>

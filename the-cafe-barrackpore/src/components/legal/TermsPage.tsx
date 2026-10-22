@@ -52,82 +52,82 @@ export const TermsPage: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
-        <Breadcrumbs items={[{ label: 'Legal', href: '/privacy' }, { label: t('legal.termsTitle', 'Terms of Service'), current: true }]} />
+        <Breadcrumbs items={[{ label: t('nav.legal', 'Legal'), href: '/privacy' }, { label: t('legal.termsTitle', 'Terms of Service'), current: true }]} />
         <div className="mb-12 border-b border-white/10 pb-8">
           <span className="font-mono text-xs uppercase tracking-widest text-[#D4AF37] mb-2 block">
-            Guest Agreement &amp; Dining Guidelines
+            {t('legal.termsGovernance', 'Guest Agreement & Dining Guidelines')}
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-white font-normal tracking-tight mb-4">
             {t('legal.termsTitle', 'Terms of Service')}
           </h1>
           <p className="text-zinc-400 text-sm font-light">
-            {t('legal.effectiveDate', 'Effective Date')}: October 2, 2026 · Governing Jurisdiction: {governingLaw}
+            {t('legal.effectiveDate', 'Effective Date')}: October 2, 2026 · {t('legal.governingJurisdiction', 'Governing Jurisdiction')}: {governingLaw}
           </p>
         </div>
 
         <div className="space-y-10 text-zinc-300 text-sm leading-relaxed font-light">
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">1. Agreement to Terms</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.terms.s1Title', '1. Agreement to Terms')}</h2>
             <p>
-              By accessing our website, placing an order via our digital Smart QR system, or booking a table reservation at {businessName}, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, please consult our staff directly for in-person hospitality.
+              {t('legal.terms.s1Body', `By accessing our website, placing an order via our digital Smart QR system, or booking a table reservation at ${businessName}, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, please consult our staff directly for in-person hospitality.`)}
             </p>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">2. Reservations &amp; Seating Policy</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.terms.s2Title', '2. Reservations & Seating Policy')}</h2>
             <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
-              <li><strong className="text-white">Grace Period:</strong> Reserved tables are held for up to 15 minutes past the scheduled booking time. Beyond this window, tables may be released to waiting walk-in guests.</li>
-              <li><strong className="text-white">Party Capacity:</strong> Bookings must accurately reflect the number of guests. Additional seating is subject to floor availability.</li>
-              <li><strong className="text-white">Cancellations:</strong> We appreciate at least 2 hours notice for cancellations to allow other dining guests the opportunity to book.</li>
+              <li><strong className="text-white">{t('legal.terms.gracePeriodLabel', 'Grace Period:')}</strong> {t('legal.terms.gracePeriodDesc', 'Reserved tables are held for up to 15 minutes past the scheduled booking time. Beyond this window, tables may be released to waiting walk-in guests.')}</li>
+              <li><strong className="text-white">{t('legal.terms.partyCapacityLabel', 'Party Capacity:')}</strong> {t('legal.terms.partyCapacityDesc', 'Bookings must accurately reflect the number of guests. Additional seating is subject to floor availability.')}</li>
+              <li><strong className="text-white">{t('legal.terms.cancellationsLabel', 'Cancellations:')}</strong> {t('legal.terms.cancellationsDesc', 'We appreciate at least 2 hours notice for cancellations to allow other dining guests the opportunity to book.')}</li>
             </ul>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">3. Smart QR Table Ordering &amp; Kitchen Dispatch</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.terms.s3Title', '3. Smart QR Table Ordering & Kitchen Dispatch')}</h2>
             <p>
-              When ordering via tabletop QR codes:
+              {t('legal.terms.s3Subtitle', 'When ordering via tabletop QR codes:')}
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
-              <li>Ensure the table number displayed on your screen corresponds with your physical table marker.</li>
-              <li>Once submitted, orders enter our Kitchen Display System (KDS) immediately for fresh preparation. Modifications or cancellations can only be made by requesting immediate staff assistance.</li>
-              <li>Items marked as "86'd" or "Sold Out" cannot be added to cart or fulfilled by the kitchen.</li>
+              <li>{t('legal.terms.qrStep1', 'Ensure the table number displayed on your screen corresponds with your physical table marker.')}</li>
+              <li>{t('legal.terms.qrStep2', 'Once submitted, orders enter our Kitchen Display System (KDS) immediately for fresh preparation. Modifications or cancellations can only be made by requesting immediate staff assistance.')}</li>
+              <li>{t('legal.terms.qrStep3', 'Items marked as "86\'d" or "Sold Out" cannot be added to cart or fulfilled by the kitchen.')}</li>
             </ul>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">4. Allergen Notice &amp; Dietary Advisory</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.terms.s4Title', '4. Allergen Notice & Dietary Advisory')}</h2>
             <p>
-              We take great pride in culinary craft and hygiene; however, our kitchen handles ingredients containing common allergens (including dairy, gluten, nuts, soy, seafood, and eggs). While we indicate dietary classifications (Veg, Non-Veg, Vegan) and allergen warnings on our menu:
+              {t('legal.terms.s4Body', 'We take great pride in culinary craft and hygiene; however, our kitchen handles ingredients containing common allergens (including dairy, gluten, nuts, soy, seafood, and eggs). While we indicate dietary classifications (Veg, Non-Veg, Vegan) and allergen warnings on our menu:')}
             </p>
             <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200/90 text-xs">
-              <strong className="block mb-1 text-amber-300 font-semibold uppercase tracking-wider">Crucial Allergen Disclaimer:</strong>
-              Cross-contact between ingredients may occur during peak kitchen hours. Guests with severe or life-threatening food allergies MUST inform the floor manager prior to placing an order. {businessName} cannot guarantee an environment 100% free of trace allergens.
+              <strong className="block mb-1 text-amber-300 font-semibold uppercase tracking-wider">{t('legal.terms.allergenDisclaimerTitle', 'Crucial Allergen Disclaimer:')}</strong>
+              {t('legal.terms.allergenDisclaimerBody', `Cross-contact between ingredients may occur during peak kitchen hours. Guests with severe or life-threatening food allergies MUST inform the floor manager prior to placing an order. ${businessName} cannot guarantee an environment 100% free of trace allergens.`)}
             </div>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">5. Pricing, Taxes &amp; Payment Settlement</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.terms.s5Title', '5. Pricing, Taxes & Payment Settlement')}</h2>
             <p>
-              All prices displayed on the digital menu are listed in {currency} or designated local currency and are subject to applicable {taxLabel} as mandated by law.
+              {t('legal.terms.s5Subtitle', `All prices displayed on the digital menu are listed in ${currency} or designated local currency and are subject to applicable ${taxLabel} as mandated by law.`)}
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
-              <li><strong className="text-white">Authoritative Pricing:</strong> All final bill amounts are computed authoritatively on our secure servers. Tampering with client-side totals is detected and rejected automatically.</li>
-              <li><strong className="text-white">Pay at Counter:</strong> If you select counter payment, payment must be settled at the billing desk prior to departure.</li>
-              <li><strong className="text-white">Online Transactions:</strong> Online transactions are verified by encrypted webhooks from our payment partners before orders are confirmed.</li>
+              <li><strong className="text-white">{t('legal.terms.authPricingLabel', 'Authoritative Pricing:')}</strong> {t('legal.terms.authPricingDesc', 'All final bill amounts are computed authoritatively on our secure servers. Tampering with client-side totals is detected and rejected automatically.')}</li>
+              <li><strong className="text-white">{t('legal.terms.payAtCounterLabel', 'Pay at Counter:')}</strong> {t('legal.terms.payAtCounterDesc', 'If you select counter payment, payment must be settled at the billing desk prior to departure.')}</li>
+              <li><strong className="text-white">{t('legal.terms.onlineTransLabel', 'Online Transactions:')}</strong> {t('legal.terms.onlineTransDesc', 'Online transactions are verified by encrypted webhooks from our payment partners before orders are confirmed.')}</li>
             </ul>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">6. Guest Conduct &amp; Safety</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.terms.s6Title', '6. Guest Conduct & Safety')}</h2>
             <p>
-              {businessName} strives to provide a warm, peaceful, and refined ambiance. We reserve the right to decline service or request any guest to leave if they exhibit abusive behavior towards staff or fellow guests, or fail to adhere to basic safety and hygiene protocols.
+              {t('legal.terms.s6Body', `${businessName} strives to provide a warm, peaceful, and refined ambiance. We reserve the right to decline service or request any guest to leave if they exhibit abusive behavior towards staff or fellow guests, or fail to adhere to basic safety and hygiene protocols.`)}
             </p>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">7. Governing Law</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.terms.s7Title', '7. Governing Law')}</h2>
             <p>
-              These terms are governed by and construed in accordance with the laws of {country}. Any disputes arising in connection with these terms shall be subject to the exclusive jurisdiction of the competent courts in {governingLaw}.
+              {t('legal.terms.s7Body', `These terms are governed by and construed in accordance with the laws of ${country}. Any disputes arising in connection with these terms shall be subject to the exclusive jurisdiction of the competent courts in ${governingLaw}.`)}
             </p>
           </section>
         </div>

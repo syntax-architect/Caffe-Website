@@ -67,6 +67,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
       <div ref={containerRef} className={`relative inline-block ${className}`}>
         <button
           type="button"
+          data-testid="language-switcher-trigger-footer"
           onClick={() => setIsOpen((prev) => !prev)}
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-high/60 border border-outline/30 hover:border-primary/50 text-on-surface hover:text-primary transition-all text-xs font-sans font-medium cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-haspopup="listbox"
@@ -104,6 +105,8 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                     <button
                       key={lang.code}
                       type="button"
+                      data-testid={`lang-option-${lang.code}`}
+                      data-lang-code={lang.code}
                       onClick={() => handleSelect(lang.code)}
                       className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors cursor-pointer ${
                         isSelected
@@ -182,6 +185,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         type="button"
+        data-testid="language-switcher-trigger"
         onClick={() => setIsOpen((prev) => !prev)}
         className={`flex items-center gap-1.5 h-11 px-3 sm:px-3.5 rounded-full border border-outline/20 bg-surface-container/80 hover:border-primary/50 hover:bg-surface-container-high text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-md min-w-[44px] min-h-[44px] justify-center ${
           variant === 'staff' ? 'h-9 px-2.5 text-xs bg-white/[0.04] border-white/[0.08]' : ''
@@ -224,6 +228,8 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                   <button
                     key={lang.code}
                     type="button"
+                    data-testid={`lang-option-${lang.code}`}
+                    data-lang-code={lang.code}
                     onClick={() => handleSelect(lang.code)}
                     className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors cursor-pointer ${
                       isSelected

@@ -47,10 +47,30 @@ export const ReservationsManagement: React.FC = () => {
         setIsLoading(false);
       }
     });
+
+    const handleNewReservation = () => {
+      if (isMounted) {
+        loadReservations();
+      }
+    };
+
+    const handleStorageSync = (e: StorageEvent) => {
+      if (e.key === 'cafe_latest_reservation_event' || e.key === 'cafe_demo_reservations') {
+        if (isMounted) {
+          loadReservations();
+        }
+      }
+    };
+
+    window.addEventListener('cafe:reservation-created', handleNewReservation);
+    window.addEventListener('storage', handleStorageSync);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('cafe:reservation-created', handleNewReservation);
+      window.removeEventListener('storage', handleStorageSync);
     };
-  }, [selectedView, selectedStatus, searchQuery]);
+  }, [selectedView, selectedStatus, searchQuery, loadReservations]);
 
   const handleStatusChange = async (resId: string, newStatus: ReservationStatus) => {
     setIsUpdating(true);

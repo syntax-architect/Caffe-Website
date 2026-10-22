@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- COMPLETE DATABASE INITIALIZATION SCRIPT
--- Runs all migrations (001 - 024) in proper dependency order.
+-- Runs all migrations (001 - 025) in proper dependency order.
 -- Copy and paste this ENTIRE script into Supabase Dashboard -> SQL Editor and click Run.
 -- ==============================================================================
 
@@ -1553,6 +1553,7 @@ CREATE OR REPLACE FUNCTION public.guard_order_payment_status_paid()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 BEGIN
     IF NEW.payment_status = 'paid' AND (TG_OP = 'INSERT' OR OLD.payment_status IS DISTINCT FROM 'paid') THEN
@@ -2348,6 +2349,7 @@ CREATE OR REPLACE FUNCTION public.guard_order_payment_status_paid()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 BEGIN
     IF NEW.payment_status = 'paid' AND (TG_OP = 'INSERT' OR OLD.payment_status IS DISTINCT FROM 'paid') THEN

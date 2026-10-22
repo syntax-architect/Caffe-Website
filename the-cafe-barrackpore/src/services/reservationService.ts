@@ -108,6 +108,34 @@ export const createReservation = async (
       '[reservationService] Supabase not configured. Operating in local demo mode with reference:',
       reservationRef
     );
+
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('cafe_demo_reservations');
+        const list = raw ? JSON.parse(raw) : [];
+        const newRes = {
+          id: `res-demo-${Date.now()}`,
+          reservation_ref: reservationRef,
+          customer_name: payload.customer_name.trim(),
+          customer_phone: normalizedPhone,
+          reservation_date: payload.reservation_date,
+          reservation_time: payload.reservation_time.trim(),
+          party_size: Math.floor(Number(payload.party_size)),
+          special_requests: payload.special_requests?.trim() || null,
+          status: 'pending',
+          source: 'website',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        list.unshift(newRes);
+        localStorage.setItem('cafe_demo_reservations', JSON.stringify(list));
+        localStorage.setItem('cafe_latest_reservation_event', JSON.stringify({ event: 'created', reservation: newRes, ts: Date.now() }));
+        window.dispatchEvent(new CustomEvent('cafe:reservation-created', { detail: newRes }));
+      } catch (err) {
+        console.warn('[reservationService] Demo reservation local storage failed:', err);
+      }
+    }
+
     return {
       success: true,
       reservationRef,

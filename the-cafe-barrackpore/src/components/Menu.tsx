@@ -180,29 +180,26 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
       }
     };
 
-    const isPublicPage = typeof window !== 'undefined' && !window.location.pathname.startsWith('/staff');
-    if (isPublicPage) {
-      // In public and QR modes, render instantly with static catalog, then sync dynamic catalog in idle background
-      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(() => {
-          if (isMounted) loadData();
-        }, { timeout: 2000 });
-      } else {
-        setTimeout(() => {
-          if (isMounted) loadData();
-        }, 100);
+    // Setup live menu update subscriptions and storage listeners across tabs
+    const handleStorageUpdate = (e: StorageEvent) => {
+      if (e.key === 'cafe_menu_update_event' || e.key === 'cafe_demo_menu_items') {
+        loadData();
       }
-      return () => {
-        isMounted = false;
-      };
-    }
+    };
+    const handleCustomUpdate = () => {
+      loadData();
+    };
 
-    // On staff management routes, load dynamic menu and subscribe to realtime updates
+    window.addEventListener('storage', handleStorageUpdate);
+    window.addEventListener('cafe:menu-updated', handleCustomUpdate);
+
     initDataAndRealtime();
 
     return () => {
       isMounted = false;
       unsubscribe();
+      window.removeEventListener('storage', handleStorageUpdate);
+      window.removeEventListener('cafe:menu-updated', handleCustomUpdate);
     };
   }, []);
 
@@ -810,7 +807,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                         <div className="my-4 p-3.5 rounded-2xl bg-surface-obsidian/80 border border-outline/20 flex flex-col gap-3 font-mono text-[10px] uppercase tracking-wider">
                           <div className="grid grid-cols-3 gap-2">
                             <div>
-                              <span className="text-on-surface/45 block text-[9px]">PREP TELEMETRY</span>
+                              <span className="text-on-surface/45 block text-[9px]">{t('menu.prepTelemetry', 'PREP TELEMETRY')}</span>
                               <span className="text-primary font-bold">
                                 {(() => {
                                   const cat = activeCategoryName.toLowerCase();
@@ -825,25 +822,25 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                               </span>
                             </div>
                             <div className="border-x border-outline/20 px-2">
-                              <span className="text-on-surface/45 block text-[9px]">CRAFT SCORE</span>
+                              <span className="text-on-surface/45 block text-[9px]">{t('menu.craftScore', 'CRAFT SCORE')}</span>
                               <span className="text-primary font-bold">99 / 100</span>
                             </div>
                             <div className="pl-1">
-                              <span className="text-on-surface/45 block text-[9px]">BATCH STATUS</span>
-                              <span className="text-emerald-400 font-semibold">FRESH PREP</span>
+                              <span className="text-on-surface/45 block text-[9px]">{t('menu.batchStatus', 'BATCH STATUS')}</span>
+                              <span className="text-emerald-400 font-semibold">{t('menu.freshPrep', 'FRESH PREP')}</span>
                             </div>
                           </div>
 
                           {/* Animated 3-Bar Mini Sensory Meter */}
                           <div className="pt-2 border-t border-outline/15 space-y-1.5">
                             <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-widest text-on-surface/60">
-                              <span>CHEF RATING</span>
-                              <span className="text-primary font-semibold">TRI-SPECTRUM</span>
+                              <span>{t('menu.chefRating', 'CHEF RATING')}</span>
+                              <span className="text-primary font-semibold">{t('menu.triSpectrum', 'TRI-SPECTRUM')}</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                               <div className="space-y-1">
                                 <div className="flex justify-between font-mono text-[9px] text-on-surface/70">
-                                  <span>CRAFT</span>
+                                  <span>{t('menu.craft', 'CRAFT')}</span>
                                   <span className="text-primary font-bold">99</span>
                                 </div>
                                 <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">
@@ -852,7 +849,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                               </div>
                               <div className="space-y-1">
                                 <div className="flex justify-between font-mono text-[9px] text-on-surface/70">
-                                  <span>AROMA</span>
+                                  <span>{t('menu.aroma', 'AROMA')}</span>
                                   <span className="text-primary font-bold">97</span>
                                 </div>
                                 <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">
@@ -861,7 +858,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                               </div>
                               <div className="space-y-1">
                                 <div className="flex justify-between font-mono text-[9px] text-on-surface/70">
-                                  <span>BALANCE</span>
+                                  <span>{t('menu.balance', 'BALANCE')}</span>
                                   <span className="text-primary font-bold">98</span>
                                 </div>
                                 <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">
@@ -877,7 +874,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                           <div className="mb-3 text-xs sm:text-[13px] font-sans text-on-surface/90 flex items-baseline gap-2">
                             <span className="text-[10px] uppercase tracking-wider text-primary font-semibold shrink-0 inline-flex items-center gap-1">
                               <span className="material-symbols-outlined text-[13px]">award_star</span>
-                              <span>Notes:</span>
+                              <span>{t('menu.notesLabel', 'Notes:')}</span>
                             </span>
                             <span className="font-serif italic">{activeSensoryMetadata.tastingNotes}</span>
                           </div>
@@ -893,10 +890,10 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
 
                         {/* Allergen Tags */}
                         {featuredItem.allergens && featuredItem.allergens.length > 0 && (
-                          <div className="flex items-center gap-1.5 flex-wrap mb-4" aria-label="Allergen warnings">
+                          <div className="flex items-center gap-1.5 flex-wrap mb-4" aria-label={t('menu.allergenWarnings', 'Allergen warnings')}>
                             <span className="text-[10px] text-amber-400/90 font-medium tracking-wider uppercase inline-flex items-center gap-0.5">
                               <span className="material-symbols-outlined text-[13px] text-amber-400">warning</span>
-                              <span>Allergens:</span>
+                              <span>{t('menu.allergensLabel', 'Allergens:')}</span>
                             </span>
                             {featuredItem.allergens.map((allergen) => (
                               <span
@@ -956,9 +953,9 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
               {displayedLedgerItems.length === 0 ? (
                 <div className="rounded-3xl bg-surface-container/30 border border-outline/25 p-8 sm:p-12 text-center flex flex-col items-center justify-center min-h-[260px] text-on-surface/70">
                   <span className="material-symbols-outlined text-4xl mb-3 text-primary/70 font-light">restaurant</span>
-                  <p className="font-serif text-xl text-on-surface">Artisanal Solo Spotlight</p>
+                  <p className="font-serif text-xl text-on-surface">{t('menu.artisanalSoloSpotlight', 'Artisanal Solo Spotlight')}</p>
                   <p className="font-sans text-xs sm:text-sm text-on-surface/60 mt-1.5 max-w-sm">
-                    This creation headlines the category. Additional pairings and seasonal recipes will be introduced soon.
+                    {t('menu.soloSpotlightDesc', 'This creation headlines the category. Additional pairings and seasonal recipes will be introduced soon.')}
                   </p>
                 </div>
               ) : (
@@ -1060,10 +1057,10 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                             )}
 
                             {item.allergens && item.allergens.length > 0 && (
-                              <div className="flex items-center gap-1.5 flex-wrap mt-1.5" aria-label="Allergen warnings">
+                              <div className="flex items-center gap-1.5 flex-wrap mt-1.5" aria-label={t('menu.allergenWarnings', 'Allergen warnings')}>
                                 <span className="text-[10px] text-amber-400/90 font-medium tracking-wider uppercase inline-flex items-center gap-0.5">
                                   <span className="material-symbols-outlined text-[12px] text-amber-400">warning</span>
-                                  <span>Allergens:</span>
+                                  <span>{t('menu.allergensLabel', 'Allergens:')}</span>
                                 </span>
                                 {item.allergens.map((allergen) => (
                                   <span
@@ -1161,10 +1158,10 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
 
                       {/* Allergen Tags */}
                       {item.allergens && item.allergens.length > 0 && (
-                        <div className="flex items-center gap-1.5 flex-wrap mt-2" aria-label="Allergen warnings">
+                        <div className="flex items-center gap-1.5 flex-wrap mt-2" aria-label={t('menu.allergenWarnings', 'Allergen warnings')}>
                           <span className="text-[10px] text-amber-400/90 font-medium tracking-wider uppercase inline-flex items-center gap-0.5">
                             <span className="material-symbols-outlined text-[13px] text-amber-400">warning</span>
-                            <span>Allergens:</span>
+                            <span>{t('menu.allergensLabel', 'Allergens:')}</span>
                           </span>
                           {item.allergens.map((allergen) => (
                             <span

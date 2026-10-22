@@ -33,7 +33,23 @@ function legacyToTaxConfig(opts?: TaxCalculationOptions): TaxConfiguration {
 
   let mappedRules = opts.rules;
   if (!mappedRules && opts.datedRules && opts.datedRules.length > 0) {
-    mappedRules = opts.datedRules.map((r) => ({
+    let candidateRules = opts.datedRules;
+    if (opts.country) {
+      const countryMatches = opts.datedRules.filter(
+        (r) => r.country.toUpperCase() === opts.country!.toUpperCase()
+      );
+      if (countryMatches.length > 0) {
+        if (opts.region && opts.region !== 'ALL') {
+          const regionMatches = countryMatches.filter(
+            (r) => r.region.toUpperCase() === opts.region!.toUpperCase()
+          );
+          candidateRules = regionMatches.length > 0 ? regionMatches : countryMatches.filter((r) => r.region.toUpperCase() === 'ALL');
+        } else {
+          candidateRules = countryMatches.filter((r) => r.region.toUpperCase() === 'ALL');
+        }
+      }
+    }
+    mappedRules = candidateRules.map((r) => ({
       label: r.rule_label,
       rate: r.rate,
       mode: r.mode,

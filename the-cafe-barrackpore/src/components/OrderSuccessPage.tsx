@@ -194,6 +194,34 @@ export const OrderSuccessPage: React.FC = () => {
     }
   }, [orderRef, token, isCancelled, fetchStatus]);
 
+  // Cross-tab storage and realtime event listeners
+  useEffect(() => {
+    if (!orderRef) return;
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'cafe_latest_order_event' || e.key === 'cafe_demo_orders') {
+        fetchStatus(orderRef, token);
+      }
+    };
+
+    const handleCustomEvent = (e: Event) => {
+      const custom = e as CustomEvent<any>;
+      if (!custom.detail?.orderRef || custom.detail.orderRef === orderRef) {
+        fetchStatus(orderRef, token);
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('cafe:order-status-changed', handleCustomEvent);
+    window.addEventListener('cafe:order-updated', handleCustomEvent);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('cafe:order-status-changed', handleCustomEvent);
+      window.removeEventListener('cafe:order-updated', handleCustomEvent);
+    };
+  }, [orderRef, token, fetchStatus]);
+
   // Polling fallback while payment status is pending (waiting for webhook reconciliation)
   useEffect(() => {
     if (!orderRef || isCancelled || !orderData) return;

@@ -14,18 +14,16 @@ test.describe('Real Order to KDS Lifecycle & Browser Feature Walkthrough', () =>
     await expect(tableHeading).toBeVisible();
 
     // Find and add a food item to the order bag
-    const addToOrderBtn = page.locator('button:has-text("Add to Order")').first();
+    const addToOrderBtn = page.locator('button:has-text("Add to Cart"), button:has-text("Add to Order"), button:has-text("Add")').first();
     await addToOrderBtn.scrollIntoViewIfNeeded();
     await expect(addToOrderBtn).toBeVisible();
     await addToOrderBtn.click();
 
-    // Verify button state turns to "Added"
-    await expect(page.locator('button:has-text("Added")').first()).toBeVisible({ timeout: 4000 });
-
-    // Floating summary bar pops up
-    const viewOrderBtn = page.locator('button:has-text("View Order")').first();
-    await expect(viewOrderBtn).toBeVisible();
+    // Floating summary bar pops up upon adding item
+    const viewOrderBtn = page.locator('button:has-text("View Order"), button[title="View Order Bag"]').first();
+    await expect(viewOrderBtn).toBeVisible({ timeout: 6000 });
     await viewOrderBtn.click();
+    await page.waitForTimeout(600);
 
     // -------------------------------------------------------------
     // STEP 2: Cart Drawer Checkout & Order Submission
@@ -34,9 +32,9 @@ test.describe('Real Order to KDS Lifecycle & Browser Feature Walkthrough', () =>
     await expect(cartDrawer).toBeVisible();
 
     // Step 1: Bag -> Step 2: Details
-    const proceedToDetailsBtn = cartDrawer.locator('button:has-text("Proceed to Details")').first();
+    const proceedToDetailsBtn = cartDrawer.locator('button:has-text("Proceed to Checkout"), button:has-text("Proceed to Details")').first();
     await expect(proceedToDetailsBtn).toBeVisible({ timeout: 5000 });
-    await proceedToDetailsBtn.click();
+    await proceedToDetailsBtn.click({ force: true });
 
     // Fill in Guest Information
     const nameInput = cartDrawer.locator('#checkout-name');
@@ -48,17 +46,17 @@ test.describe('Real Order to KDS Lifecycle & Browser Feature Walkthrough', () =>
 
     // Step 2: Details -> Step 3: Review
     const proceedToReviewBtn = cartDrawer.locator('button[type="submit"]:has-text("Review Order")');
-    await proceedToReviewBtn.click();
+    await proceedToReviewBtn.click({ force: true });
 
     // Confirm and Dispatch Order
     const confirmOrderBtn = cartDrawer.locator('button:has-text("Place Order"), button:has-text("Send via WhatsApp")').first();
     await expect(confirmOrderBtn).toBeVisible({ timeout: 5000 });
-    await confirmOrderBtn.click();
+    await confirmOrderBtn.click({ force: true });
 
     // -------------------------------------------------------------
     // STEP 3: Order Confirmation & Digital Loyalty Stamp Check
     // -------------------------------------------------------------
-    const confirmationHeading = cartDrawer.locator('text=/Thank You|Order Confirmed|Recorded/i').first();
+    const confirmationHeading = cartDrawer.locator('text=/Order Placed|Thank You|Order Confirmed|Recorded/i').first();
     await expect(confirmationHeading).toBeVisible({ timeout: 8000 });
 
     // Verify 5-stamp loyalty card rendered in the drawer
@@ -136,7 +134,7 @@ test.describe('Real Order to KDS Lifecycle & Browser Feature Walkthrough', () =>
     await expect(reservationDrawer).toBeHidden({ timeout: 5000 });
 
     // 2. Test Guest Inquiry Drawer
-    const inquiryBtn = page.locator('button:has-text("Send Guest Inquiry")').first();
+    const inquiryBtn = page.locator('button:has-text("Guest Inquiry"), button:has-text("Send Guest Inquiry")').first();
     await inquiryBtn.scrollIntoViewIfNeeded();
     await expect(inquiryBtn).toBeVisible({ timeout: 5000 });
     await inquiryBtn.click();

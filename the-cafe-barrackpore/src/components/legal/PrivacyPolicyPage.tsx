@@ -52,92 +52,92 @@ export const PrivacyPolicyPage: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
-        <Breadcrumbs items={[{ label: 'Legal', href: '/terms' }, { label: t('legal.privacyTitle', 'Privacy Policy'), current: true }]} />
+        <Breadcrumbs items={[{ label: t('nav.legal', 'Legal'), href: '/terms' }, { label: t('legal.privacyTitle', 'Privacy Policy'), current: true }]} />
         <div className="mb-12 border-b border-white/10 pb-8">
           <span className="font-mono text-xs uppercase tracking-widest text-[#D4AF37] mb-2 block">
-            Legal &amp; Data Governance
+            {t('legal.dataGovernance', 'Legal & Data Governance')}
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-white font-normal tracking-tight mb-4">
             {t('legal.privacyTitle', 'Privacy Policy')}
           </h1>
           <p className="text-zinc-400 text-sm font-light">
-            {t('legal.effectiveDate', 'Effective Date')}: October 2, 2026 · Last Updated: October 2026
+            {t('legal.effectiveDate', 'Effective Date')}: October 2, 2026 · {t('legal.lastUpdated', 'Last Updated')}: October 2026
           </p>
         </div>
 
         <div className="space-y-10 text-zinc-300 text-sm leading-relaxed font-light">
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">1. Introduction</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.privacy.s1Title', '1. Introduction')}</h2>
             <p>
-              {businessName} (“we”, “our”, or “us”) respects your privacy and is committed to protecting the personal data you share with us. This Privacy Policy explains how we collect, store, utilize, and protect your information when you visit our website, use our Smart QR table-ordering service, reserve a dining table, or engage with our guest concierge.
+              {t('legal.privacy.s1Body', `${businessName} (“we”, “our”, or “us”) respects your privacy and is committed to protecting the personal data you share with us. This Privacy Policy explains how we collect, store, utilize, and protect your information when you visit our website, use our Smart QR table-ordering service, reserve a dining table, or engage with our guest concierge.`)}
             </p>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">2. Information We Collect</h2>
-            <p>We only collect data that is strictly necessary to deliver culinary excellence and hospitality services:</p>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.privacy.s2Title', '2. Information We Collect')}</h2>
+            <p>{t('legal.privacy.s2Subtitle', 'We only collect data that is strictly necessary to deliver culinary excellence and hospitality services:')}</p>
             <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
-              <li><strong className="text-white">Guest Identity &amp; Contact:</strong> Full name, phone number, and optional special dietary notes when you book a table or place an order.</li>
-              <li><strong className="text-white">Dine-in Table Context:</strong> Table number identifiers decoded from authentic in-house QR codes to route orders to your physical seat.</li>
-              <li><strong className="text-white">Order &amp; Transaction Details:</strong> Item selections, quantities, timestamps, transaction totals, and payment status.</li>
-              <li><strong className="text-white">Technical &amp; Device Information:</strong> Browser type, approximate location (city level), and Cloudflare Turnstile verification tokens to prevent automated fraud and bot abuse.</li>
+              <li><strong className="text-white">{t('legal.privacy.guestIdentityLabel', 'Guest Identity & Contact:')}</strong> {t('legal.privacy.guestIdentityDesc', 'Full name, phone number, and optional special dietary notes when you book a table or place an order.')}</li>
+              <li><strong className="text-white">{t('legal.privacy.tableContextLabel', 'Dine-in Table Context:')}</strong> {t('legal.privacy.tableContextDesc', 'Table number identifiers decoded from authentic in-house QR codes to route orders to your physical seat.')}</li>
+              <li><strong className="text-white">{t('legal.privacy.orderTransLabel', 'Order & Transaction Details:')}</strong> {t('legal.privacy.orderTransDesc', 'Item selections, quantities, timestamps, transaction totals, and payment status.')}</li>
+              <li><strong className="text-white">{t('legal.privacy.techDeviceInfoLabel', 'Technical & Device Information:')}</strong> {t('legal.privacy.techDeviceInfoDesc', 'Browser type, approximate location (city level), and Cloudflare Turnstile verification tokens to prevent automated fraud and bot abuse.')}</li>
             </ul>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">3. How We Use Your Information</h2>
-            <p>Your information is used solely for operational hospitality purposes:</p>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.privacy.s3Title', '3. How We Use Your Information')}</h2>
+            <p>{t('legal.privacy.s3Subtitle', 'Your information is used solely for operational hospitality purposes:')}</p>
             <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
-              <li>Dispatching tickets to our kitchen display system for timely preparation.</li>
-              <li>Confirming table reservations and managing dining floor capacity.</li>
-              <li>Sending automated WhatsApp/SMS order status receipts and concierge updates upon request.</li>
-              <li>Preventing malicious bot submissions and unauthorized ordering via rate limiting.</li>
+              <li>{t('legal.privacy.use1', 'Dispatching tickets to our kitchen display system for timely preparation.')}</li>
+              <li>{t('legal.privacy.use2', 'Confirming table reservations and managing dining floor capacity.')}</li>
+              <li>{t('legal.privacy.use3', 'Sending automated WhatsApp/SMS order status receipts and concierge updates upon request.')}</li>
+              <li>{t('legal.privacy.use4', 'Preventing malicious bot submissions and unauthorized ordering via rate limiting.')}</li>
             </ul>
             <p className="text-zinc-400 font-medium">
-              We NEVER sell, rent, or trade your personal information to third-party advertisers or data brokers under any circumstances.
+              {t('legal.privacy.noSaleNotice', 'We NEVER sell, rent, or trade your personal information to third-party advertisers or data brokers under any circumstances.')}
             </p>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">4. Payment Security &amp; Financial Data</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.privacy.s4Title', '4. Payment Security & Financial Data')}</h2>
             <p>
-              All online payments are processed through PCI-DSS Level 1 certified gateways. {businessName} does not store, process, or have access to your raw credit card numbers, CVVs, or bank credentials. Payment authorization occurs over encrypted TLS connections directly with the certified provider.
+              {t('legal.privacy.s4Body', `All online payments are processed through PCI-DSS Level 1 certified gateways. ${businessName} does not store, process, or have access to your raw credit card numbers, CVVs, or bank credentials. Payment authorization occurs over encrypted TLS connections directly with the certified provider.`)}
             </p>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">5. Cookies &amp; Local Storage</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.privacy.s5Title', '5. Cookies & Local Storage')}</h2>
             <p>
-              We use minimal, privacy-centric cookies and browser local storage strictly for functional purposes:
+              {t('legal.privacy.s5Subtitle', 'We use minimal, privacy-centric cookies and browser local storage strictly for functional purposes:')}
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
-              <li><strong className="text-white">Essential Session Storage:</strong> Retaining your cart items during dining, remembering your table QR code, and preserving staff authentication tokens.</li>
-              <li><strong className="text-white">User Preferences:</strong> Storing your preferred language (i18n), dietary filter preference (e.g., Pure Veg Only), and cookie consent status.</li>
-              <li><strong className="text-white">Rate Limiting Tokens:</strong> Protecting reservation and ordering endpoints from repetitive denial-of-service spam.</li>
+              <li><strong className="text-white">{t('legal.privacy.cookieSessionLabel', 'Essential Session Storage:')}</strong> {t('legal.privacy.cookieSessionDesc', 'Retaining your cart items during dining, remembering your table QR code, and preserving staff authentication tokens.')}</li>
+              <li><strong className="text-white">{t('legal.privacy.cookiePrefLabel', 'User Preferences:')}</strong> {t('legal.privacy.cookiePrefDesc', 'Storing your preferred language (i18n), dietary filter preference (e.g., Pure Veg Only), and cookie consent status.')}</li>
+              <li><strong className="text-white">{t('legal.privacy.cookieRateLimitLabel', 'Rate Limiting Tokens:')}</strong> {t('legal.privacy.cookieRateLimitDesc', 'Protecting reservation and ordering endpoints from repetitive denial-of-service spam.')}</li>
             </ul>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">6. Data Retention &amp; Your Rights</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.privacy.s6Title', '6. Data Retention & Your Rights')}</h2>
             <p>
-              Order and reservation records are retained in compliance with applicable commercial hospitality regulations in {country}. You possess the right to:
+              {t('legal.privacy.s6Subtitle', `Order and reservation records are retained in compliance with applicable commercial hospitality regulations in ${country}. You possess the right to:`)}
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
-              <li>Request a copy of your personal data stored in our database.</li>
-              <li>Request correction or deletion of your historical guest contact details.</li>
-              <li>Opt out of any marketing or promotional concierge communications.</li>
+              <li>{t('legal.privacy.right1', 'Request a copy of your personal data stored in our database.')}</li>
+              <li>{t('legal.privacy.right2', 'Request correction or deletion of your historical guest contact details.')}</li>
+              <li>{t('legal.privacy.right3', 'Opt out of any marketing or promotional concierge communications.')}</li>
             </ul>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">7. Contact Our Privacy Concierge</h2>
+            <h2 className="font-serif text-xl sm:text-2xl text-white font-medium">{t('legal.privacy.s7Title', '7. Contact Our Privacy Concierge')}</h2>
             <p>
-              If you have any questions, concerns, or requests regarding this Privacy Policy or your data, please contact our management team:
+              {t('legal.privacy.s7Subtitle', 'If you have any questions, concerns, or requests regarding this Privacy Policy or your data, please contact our management team:')}
             </p>
             <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-1 font-mono text-xs">
-              <p><span className="text-[#D4AF37]">Location:</span> {fullAddress}</p>
-              <p><span className="text-[#D4AF37]">Email:</span> {contactEmail}</p>
-              {contactPhone && <p><span className="text-[#D4AF37]">Phone:</span> {contactPhone}</p>}
+              <p><span className="text-[#D4AF37]">{t('legal.privacy.locationLabel', 'Location:')}</span> {fullAddress}</p>
+              <p><span className="text-[#D4AF37]">{t('legal.privacy.emailLabel', 'Email:')}</span> {contactEmail}</p>
+              {contactPhone && <p><span className="text-[#D4AF37]">{t('legal.privacy.phoneLabel', 'Phone:')}</span> {contactPhone}</p>}
             </div>
           </section>
         </div>
