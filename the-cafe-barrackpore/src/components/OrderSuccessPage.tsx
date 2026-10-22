@@ -483,26 +483,90 @@ export const OrderSuccessPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Preparation Stepper */}
-            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-bold block">
-                {t('orderSuccess.status', 'Order Live Status')}
-              </span>
-              <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
-                <div className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
-                  <div className="font-bold text-xs">✓ 1</div>
-                  <span>{t('staff.orders.pending', 'Received')}</span>
+            {/* Dynamic Preparation Stepper */}
+            {(() => {
+              const currentStatus = orderData?.status || 'pending';
+              const isStep1Active = currentStatus === 'pending';
+              const isStep1Done = ['confirmed', 'preparing', 'ready', 'completed'].includes(currentStatus);
+              const isStep2Active = currentStatus === 'preparing' || currentStatus === 'confirmed';
+              const isStep2Done = ['ready', 'completed'].includes(currentStatus);
+              const isStep3Active = currentStatus === 'ready';
+              const isStep3Done = currentStatus === 'completed';
+
+              return (
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-bold block">
+                      {t('orderSuccess.status', 'Order Live Status')}
+                    </span>
+                    <span
+                      data-testid="order-status-badge"
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold border ${
+                        currentStatus === 'ready'
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse'
+                          : currentStatus === 'preparing'
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
+                          : currentStatus === 'completed'
+                          ? 'bg-emerald-950/50 text-emerald-400 border-emerald-500/30'
+                          : 'bg-zinc-800 text-zinc-300 border-zinc-700'
+                      }`}
+                    >
+                      {currentStatus}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
+                    {/* Step 1: Received */}
+                    <div
+                      data-testid="step-received"
+                      className={`p-2 rounded-lg border transition-all ${
+                        isStep1Done
+                          ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+                          : isStep1Active
+                          ? 'bg-[#D4AF37]/15 border-[#D4AF37]/40 text-[#D4AF37]'
+                          : 'bg-zinc-900 border-white/[0.04] text-zinc-500'
+                      }`}
+                    >
+                      <div className="font-bold text-xs">{isStep1Done ? '✓ 1' : '● 1'}</div>
+                      <span>{t('staff.orders.pending', 'Received')}</span>
+                    </div>
+
+                    {/* Step 2: Preparing */}
+                    <div
+                      data-testid="step-preparing"
+                      className={`p-2 rounded-lg border transition-all ${
+                        isStep2Done
+                          ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+                          : isStep2Active
+                          ? 'bg-[#D4AF37]/15 border-[#D4AF37]/40 text-[#D4AF37]'
+                          : 'bg-zinc-900 border-white/[0.04] text-zinc-500'
+                      }`}
+                    >
+                      <div className={`font-bold text-xs ${isStep2Active && !isStep2Done ? 'animate-pulse' : ''}`}>
+                        {isStep2Done ? '✓ 2' : isStep2Active ? '● 2' : '○ 2'}
+                      </div>
+                      <span>{t('orderSuccess.prepTime', 'Preparing')}</span>
+                    </div>
+
+                    {/* Step 3: Service / Ready */}
+                    <div
+                      data-testid="step-ready"
+                      className={`p-2 rounded-lg border transition-all ${
+                        isStep3Done
+                          ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+                          : isStep3Active
+                          ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.3)]'
+                          : 'bg-zinc-900 border-white/[0.04] text-zinc-500'
+                      }`}
+                    >
+                      <div className={`font-bold text-xs ${isStep3Active ? 'animate-pulse' : ''}`}>
+                        {isStep3Done ? '✓ 3' : isStep3Active ? '★ 3 Ready' : '○ 3'}
+                      </div>
+                      <span>{t('staff.kitchen.readyToServe', 'Ready / Serve')}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="p-2 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37]">
-                  <div className="font-bold text-xs animate-pulse">● 2</div>
-                  <span>{t('orderSuccess.prepTime', 'Preparing')}</span>
-                </div>
-                <div className="p-2 rounded-lg bg-zinc-900 border border-white/[0.04] text-zinc-500">
-                  <div className="font-bold text-xs">○ 3</div>
-                  <span>{t('staff.kitchen.readyToServe', 'Service')}</span>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* 1-Tap Google Review Prompt (Zero-Cost Customer Retention) */}
             <a
