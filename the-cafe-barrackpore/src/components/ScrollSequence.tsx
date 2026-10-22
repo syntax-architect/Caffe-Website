@@ -2,9 +2,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { useSiteConfig } from '../context/SiteConfigContext';
 
-const DESKTOP_FRAMES = 120;
-const MOBILE_FRAMES = 60;
-
 interface ExtractionActSpec {
   id: string;
   indexLabel: string;
@@ -115,13 +112,28 @@ export const ScrollSequence: React.FC = () => {
   const lastScrollSampleRef = useRef<{ y: number; t: number }>({ y: 0, t: 0 });
 
   const [progress, setProgress] = useState<number>(0);
-  const [frameCount, setFrameCount] = useState<number>(DESKTOP_FRAMES);
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+  const frameCount = isMobile ? 60 : 120;
   const [velocityLabel, setVelocityLabel] = useState<string>('1.0x');
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const dragStartRef = useRef<{ clientX: number; startProgress: number }>({
     clientX: 0,
     startProgress: 0,
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const drawFrameOnCanvas = useCallback((frameIndex: number) => {
     const canvas = canvasRef.current;
@@ -162,10 +174,8 @@ export const ScrollSequence: React.FC = () => {
     if (typeof window === 'undefined') return;
     if (prefersReducedMotion) return;
 
-    const isMobile = window.innerWidth < 768;
-    const total = isMobile ? MOBILE_FRAMES : DESKTOP_FRAMES;
+    const total = frameCount;
     const folder = isMobile ? '/frames-mobile' : '/frames';
-    setFrameCount(total);
 
     const loadedImages: HTMLImageElement[] = new Array(total);
     imagesRef.current = loadedImages;
@@ -318,7 +328,7 @@ export const ScrollSequence: React.FC = () => {
         }
       }
     };
-  }, [drawFrameOnCanvas, prefersReducedMotion]);
+  }, [drawFrameOnCanvas, prefersReducedMotion, isMobile, frameCount]);
 
   // Interactive Pointer Drag-to-Scrub (Valmora "DRAG TO REVEAL" tactile mechanic)
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -587,7 +597,7 @@ export const ScrollSequence: React.FC = () => {
                 </div>
 
                 {/* Display Headline */}
-                <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl text-on-surface font-normal tracking-tight leading-[1.06] drop-shadow-[0_14px_36px_rgba(0,0,0,0.9)]">
+                <h2 className="font-serif text-3xl sm:text-5xl lg:text-7xl text-on-surface font-normal tracking-tight leading-[1.06] drop-shadow-[0_14px_36px_rgba(0,0,0,0.9)]">
                   {act.titleBefore}
                   <span className="italic font-light text-primary">{act.titleHighlight}</span>
                   {act.titleAfter || ''}

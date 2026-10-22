@@ -342,10 +342,10 @@ export const Footer: React.FC = () => {
 
           <div className="text-center md:text-right font-mono">
             <span className="block text-[10px] tracking-[0.22em] uppercase text-primary">
-              2200K NOCTURNE · STRANGE ON PURPOSE
+              2200K NOCTURNE · CANTONMENT HERITAGE
             </span>
             <span className="text-xs sm:text-sm tracking-[0.22em] uppercase text-on-surface/40">
-              TEMPLATES · CRAFTED BY HAND
+              SMALL BATCH · CRAFTED BY HAND
             </span>
           </div>
         </div>

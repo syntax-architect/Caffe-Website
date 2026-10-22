@@ -126,6 +126,7 @@ export const defaultEngineConfig: RestaurantEngineConfig = {
     gallery: 'asymmetric-bento',
     specials: 'horizontal-platters',
     menu: 'sensory-ledger',
+    vipClub: 'editorial-dossier',
   },
   menu: {
     featuredItemId: 'special-chicken-on-a-bun',

@@ -74,13 +74,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [items]);
 
-  // Synchronize with external cart-cleared events (e.g. from OrderSuccessPage)
+  // Synchronize with external cart-cleared events and open-cart commands
   useEffect(() => {
     const handleCartCleared = () => {
       setItems([]);
     };
+    const handleOpenCart = () => {
+      setIsDrawerOpen(true);
+    };
     window.addEventListener('cafe:cart-cleared', handleCartCleared);
-    return () => window.removeEventListener('cafe:cart-cleared', handleCartCleared);
+    window.addEventListener('cafe:open-cart', handleOpenCart);
+    return () => {
+      window.removeEventListener('cafe:cart-cleared', handleCartCleared);
+      window.removeEventListener('cafe:open-cart', handleOpenCart);
+    };
   }, []);
 
   const addToCart = useCallback((item: MenuItem) => {

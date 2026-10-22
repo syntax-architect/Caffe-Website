@@ -826,7 +826,7 @@ export const CartDrawer: React.FC = () => {
                       else if (activeStep === 'review') setStep('details');
                       else setStep('cart');
                     }}
-                    className="w-8 h-8 rounded-full text-on-surface/70 hover:text-primary hover:bg-white/5 flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-11 h-11 min-w-[44px] min-h-[44px] sm:w-8 sm:h-8 sm:min-w-0 sm:min-h-0 rounded-full text-on-surface/70 hover:text-primary hover:bg-white/5 flex items-center justify-center transition-colors cursor-pointer"
                     aria-label={t('common.back', 'Back to previous step')}
                   >
                     <span className="material-symbols-outlined text-lg">arrow_back</span>
@@ -857,7 +857,7 @@ export const CartDrawer: React.FC = () => {
                   setIsDrawerOpen(false);
                   setStep('cart');
                 }}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-on-surface/60 hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer"
+                className="w-11 h-11 min-w-[44px] min-h-[44px] sm:w-8 sm:h-8 sm:min-w-0 sm:min-h-0 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-on-surface/60 hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer"
                 aria-label={t('a11y.closeCart', 'Close cart drawer')}
               >
                 <span className="material-symbols-outlined text-base">close</span>
@@ -1070,6 +1070,7 @@ export const CartDrawer: React.FC = () => {
                       </button>
                       <button
                         type="button"
+                        data-testid="proceed-to-details-btn"
                         disabled={restaurantConfig.isOrderingEnabled === false}
                         onClick={handleProceedToDetails}
                         className={`group relative flex-1 h-12 rounded-full font-semibold text-xs tracking-wider uppercase transition-all duration-300 flex items-center justify-between pl-6 pr-2 ${
@@ -1204,6 +1205,7 @@ export const CartDrawer: React.FC = () => {
                           </button>
                           <button
                             type="button"
+                            data-testid="order-type-takeaway"
                             onClick={() => {
                               setOrderType('takeaway');
                               if (errors.tableNumber) setErrors((prev) => ({ ...prev, tableNumber: '' }));
@@ -1298,6 +1300,7 @@ export const CartDrawer: React.FC = () => {
                   </button>
                   <button
                     type="submit"
+                    data-testid="review-order-btn"
                     className="group relative flex-1 h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-semibold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.28)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all duration-300 flex items-center justify-between pl-6 pr-2 cursor-pointer"
                   >
                     <span>{t('cart.reviewOrder', 'Review Order')}</span>
@@ -1576,6 +1579,7 @@ export const CartDrawer: React.FC = () => {
                   </button>
                   <button
                     type="button"
+                    data-testid="place-order-btn"
                     disabled={isSubmitting}
                     onClick={handleConfirmOrder}
                     className="group relative flex-1 h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-semibold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.28)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all duration-300 flex items-center justify-between pl-6 pr-2 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1658,6 +1662,7 @@ export const CartDrawer: React.FC = () => {
                     <>
                       <button
                         type="button"
+                        data-testid="complete-payment-dev-btn"
                         disabled={isVerifyingPayment}
                         onClick={handleAuthorizePayment}
                         className="w-full h-12 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] font-bold text-xs tracking-wider uppercase shadow-[0_4px_24px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"

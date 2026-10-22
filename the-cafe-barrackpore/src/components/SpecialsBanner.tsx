@@ -269,7 +269,7 @@ export const SpecialsBanner: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-primary font-semibold">
-                  FIRING TELEMETRY
+                  KITCHEN SPEC
                 </span>
                 <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">
                   {activeTelemetry.editionCode}
@@ -635,7 +635,7 @@ export const SpecialsBanner: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleAddCombo(combo)}
-                          className={`w-full h-10 px-5 rounded-full text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 cursor-pointer ${
+                          className={`w-full h-11 sm:h-10 min-h-[44px] sm:min-h-0 px-5 rounded-full text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 cursor-pointer ${
                             isJustAdded
                               ? 'bg-primary text-on-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.6)] scale-[1.02]'
                               : 'bg-primary hover:bg-primary-fixed text-on-primary shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)]'

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useCart } from '../context/CartContext';
 import { clientDetails } from '../config/client';
@@ -117,10 +117,6 @@ export const Header: React.FC = React.memo(() => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('');
 
-  // Intelligent sliding window state for desktop navbar (displays 5 chronological sections)
-  const WINDOW_SIZE = 5;
-  const [windowStart, setWindowStart] = useState(0);
-
   const businessName = restaurantConfig?.businessName || clientDetails.businessName;
   const shortName = restaurantConfig?.shortName || clientDetails.shortName;
   const phone = restaurantConfig?.contact?.phone || clientDetails.phone;
@@ -168,61 +164,6 @@ export const Header: React.FC = React.memo(() => {
       };
     });
   }, [sections, t]);
-
-  const totalSectionsCount = enabledOrderedSections.length;
-  const maxWindowStart = Math.max(0, totalSectionsCount - WINDOW_SIZE);
-
-  // Active section index in canonical sequence
-  const currentActiveIndex = useMemo(() => {
-    if (!activeSection) return -1;
-    return enabledOrderedSections.findIndex(
-      (item) => item.href.slice(1) === activeSection
-    );
-  }, [activeSection, enabledOrderedSections]);
-
-  // Dynamically slide the window forward and backward based on scroll position
-  useEffect(() => {
-    if (currentActiveIndex === -1) {
-      if (window.scrollY < 200) {
-        setWindowStart(0);
-      }
-      return;
-    }
-
-    setWindowStart((prevStart) => {
-      // If active section is before visible window, slide backward smoothly
-      if (currentActiveIndex < prevStart) {
-        return Math.max(0, currentActiveIndex);
-      }
-      // If active section is at or past the right edge, slide forward smoothly
-      if (currentActiveIndex >= prevStart + WINDOW_SIZE) {
-        return Math.min(maxWindowStart, currentActiveIndex - WINDOW_SIZE + 1);
-      }
-      // Smooth pre-reveal when approaching right boundary
-      if (currentActiveIndex === prevStart + WINDOW_SIZE - 1 && prevStart < maxWindowStart) {
-        return prevStart + 1;
-      }
-      // Smooth pre-reveal when approaching left boundary
-      if (currentActiveIndex === prevStart && prevStart > 0) {
-        return prevStart - 1;
-      }
-      return prevStart;
-    });
-  }, [currentActiveIndex, maxWindowStart, WINDOW_SIZE]);
-
-  // The 5 currently visible links in the sliding window
-  const visibleWindowSections = useMemo(() => {
-    return enabledOrderedSections.slice(windowStart, windowStart + WINDOW_SIZE);
-  }, [enabledOrderedSections, windowStart, WINDOW_SIZE]);
-
-  // Manual sliding navigation handlers (1 step per click)
-  const handleSlidePrev = useCallback(() => {
-    setWindowStart((prev) => Math.max(0, prev - 1));
-  }, []);
-
-  const handleSlideNext = useCallback(() => {
-    setWindowStart((prev) => Math.min(maxWindowStart, prev + 1));
-  }, [maxWindowStart]);
 
   // All anchor IDs to track with scroll-spy
   const activeSpySectionIds = useMemo(() => {
@@ -416,30 +357,13 @@ export const Header: React.FC = React.memo(() => {
           </div>
         </a>
         
-        {/* Intelligent Dynamic Sliding Navigation Bar */}
+        {/* Clean Desktop Navigation Bar */}
         <nav 
-          className="hidden lg:flex items-center px-2 py-1.5 rounded-full bg-surface-container/75 backdrop-blur-xl border border-outline/25 shadow-[0_8px_24px_rgba(0,0,0,0.55)] relative"
+          className="hidden lg:flex items-center px-3 py-1.5 rounded-full bg-surface-container/75 backdrop-blur-xl border border-outline/25 shadow-[0_8px_24px_rgba(0,0,0,0.55)] relative"
           aria-label={t('a11y.navigation', 'Chronological Website Navigation')}
         >
-          {/* Previous Window Slide Arrow (‹) */}
-          <button
-            type="button"
-            onClick={handleSlidePrev}
-            disabled={windowStart === 0}
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
-              windowStart > 0
-                ? 'text-primary hover:bg-surface-container-high hover:scale-110'
-                : 'text-on-surface/20 cursor-default pointer-events-none'
-            }`}
-            aria-label={t('common.previous', 'Previous sections')}
-            title={t('common.previous', 'Previous sections')}
-          >
-            <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-          </button>
-
-          {/* Dynamic 5-Link Window in Exact Canonical Narrative Order */}
-          <div className="flex items-center gap-1 xl:gap-1.5 px-1 overflow-hidden">
-            {visibleWindowSections.map((item) => {
+          <div className="flex items-center gap-1 xl:gap-1.5">
+            {enabledOrderedSections.map((item) => {
               const itemSecId = item.href.slice(1);
               const isActive = activeSection === itemSecId;
               return (
@@ -466,28 +390,6 @@ export const Header: React.FC = React.memo(() => {
               );
             })}
           </div>
-
-          {/* Next Window Slide Arrow (›) */}
-          <button
-            type="button"
-            onClick={handleSlideNext}
-            disabled={windowStart >= maxWindowStart}
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
-              windowStart < maxWindowStart
-                ? 'text-primary hover:bg-surface-container-high hover:scale-110'
-                : 'text-on-surface/20 cursor-default pointer-events-none'
-            }`}
-            aria-label={t('common.next', 'Next sections')}
-            title={t('common.next', 'Next sections')}
-          >
-            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-          </button>
-
-          {/* Subtle Act Progress Badge */}
-          <div className="h-4 w-px bg-outline/25 mx-1" />
-          <div className="px-2.5 py-0.5 rounded-full bg-surface-container-high/60 border border-outline/15 text-[10px] font-sans font-semibold tracking-wider text-primary/80 select-none">
-            {windowStart + 1}–{Math.min(totalSectionsCount, windowStart + WINDOW_SIZE)} <span className="text-on-surface/40">/ {totalSectionsCount}</span>
-          </div>
         </nav>
         
         {/* Right Actions & Tactile Controls */}
@@ -498,6 +400,7 @@ export const Header: React.FC = React.memo(() => {
           {/* Order Bag / Cart Button with Glow Badge */}
           {isCartEnabled && (
             <motion.button 
+              data-testid="header-cart-button"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsDrawerOpen(true)}

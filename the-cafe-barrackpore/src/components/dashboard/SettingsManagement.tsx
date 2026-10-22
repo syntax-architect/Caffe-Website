@@ -7,16 +7,60 @@ import { RESTAURANT_PRESETS, PRESET_REGIONS } from '../../config/restaurantPrese
 import { getCountryTaxProfile } from '../../config/taxProfiles';
 import { useNotification } from '../../hooks/useNotification';
 import { checkPaymentHealth, sendTestPayment, type PaymentHealthStatus } from '../../services/paymentService';
-import type { RestaurantSettings } from '../../types/dashboard';
+import type { RestaurantSettings, RestaurantFeatureFlags } from '../../types/dashboard';
+import { DEFAULT_FEATURE_FLAGS } from '../../types/dashboard';
 import { PrinterSettingsSection } from './PrinterSettingsSection';
+
+const FEATURE_METADATA: Record<keyof RestaurantFeatureFlags, { label: string; desc: string; icon: string }> = {
+  online_ordering: { label: 'Online Ordering', desc: 'Allows customers to order via the website', icon: 'shopping_cart' },
+  delivery: { label: 'Home Delivery', desc: 'Accept customer delivery addresses and delivery fees', icon: 'moped' },
+  takeaway: { label: 'Takeaway / Pickup', desc: 'Package orders for customer pickup at counter', icon: 'takeout_dining' },
+  qr_table_ordering: { label: 'QR Table Ordering', desc: 'Dine-in guests order directly from table QR codes', icon: 'qr_code_scanner' },
+  reservations: { label: 'Table Reservations', desc: 'Guest booking system and reservation roster', icon: 'event_seat' },
+  kds: { label: 'Kitchen Display System (KDS)', desc: 'Real-time kitchen order ticket display and bump screen', icon: 'soup_kitchen' },
+  pos: { label: 'POS Terminal', desc: 'Counter billing, table management, and order taking', icon: 'point_of_sale' },
+  running_table_bills: { label: 'Running Table Bills', desc: 'Keep open dining table tabs and add items incrementally', icon: 'receipt' },
+  split_bills: { label: 'Split Bills', desc: 'Split customer bills by seats or equal shares', icon: 'call_split' },
+  cash_drawer: { label: 'Cash Drawer & Shifts', desc: 'Track opening float, cash in/out, and Z-report balancing', icon: 'payments' },
+  kot_printing: { label: 'KOT & Thermal Printing', desc: 'Print 58mm/80mm kitchen tickets and guest receipts', icon: 'print' },
+  discounts: { label: 'Discounts & Happy Hours', desc: 'Promotional discount codes and scheduled discounts', icon: 'local_offer' },
+  tips: { label: 'Customer Tipping', desc: 'Accept server tips on checkout and bill settlement', icon: 'volunteer_activism' },
+  vip_club: { label: 'VIP Club', desc: 'Guest loyalty program and exclusive member perks', icon: 'workspace_premium' },
+  online_payments: { label: 'Online Card Payments', desc: 'Process Stripe & online payment gateways', icon: 'credit_card' },
+  specials_banner: { label: "Chef's Specials Banner", desc: 'Display curated chef specials on homepage', icon: 'stars' },
+  gallery: { label: 'Moments Photo Gallery', desc: 'Showcase ambiance and food gallery on website', icon: 'photo_library' },
+  language_switcher: { label: 'Multi-Language Switcher', desc: 'Support international language translation selector', icon: 'translate' },
+};
 
 export const SettingsManagement: React.FC = () => {
   const { user, isOwner } = useAuth();
   const { addNotification } = useNotification();
-  const { updateRestaurantConfig } = useSiteConfig();
+  const { restaurantConfig, updateRestaurantConfig } = useSiteConfig();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'features' | 'operations' | 'localization' | 'payments' | 'printers'>('all');
+
+  const [features, setFeatures] = useState<RestaurantFeatureFlags>(() => {
+    return restaurantConfig?.features || DEFAULT_FEATURE_FLAGS;
+  });
+
+  const handleToggleFeature = async (key: keyof RestaurantFeatureFlags) => {
+    if (!isOwner) return;
+    const nextVal = !features[key];
+    const updatedFeatures = { ...features, [key]: nextVal };
+    if (key === 'online_ordering') setIsOrderingEnabled(nextVal);
+    if (key === 'reservations') setIsBookingEnabled(nextVal);
+    if (key === 'online_payments') setPaymentsEnabled(nextVal);
+
+    setFeatures(updatedFeatures);
+    await updateRestaurantConfig({
+      features: updatedFeatures,
+      isOrderingEnabled: key === 'online_ordering' ? nextVal : isOrderingEnabled,
+      isTableBookingEnabled: key === 'reservations' ? nextVal : isBookingEnabled,
+    });
+    addNotification('info', `Feature Updated`, `${FEATURE_METADATA[key]?.label || key} is now ${nextVal ? 'ENABLED' : 'DISABLED'}.`);
+  };
 
   // Change Password State
   const [newPassword, setNewPassword] = useState('');
@@ -185,6 +229,10 @@ export const SettingsManagement: React.FC = () => {
 
         refreshPaymentHealth();
 
+        if (data.features) {
+          setFeatures({ ...DEFAULT_FEATURE_FLAGS, ...data.features });
+        }
+
         setIsLoading(false);
       })
       .catch((err) => {
@@ -297,6 +345,7 @@ export const SettingsManagement: React.FC = () => {
         owner_notification_email: ownerNotificationEmail.trim() || null,
         owner_notification_method: ownerNotificationMethod,
         low_stock_alert_threshold: parseInt(lowStockAlertThreshold, 10) || 5,
+        features: features,
       };
 
       const res = await updateRestaurantSettings(updated);
@@ -315,6 +364,7 @@ export const SettingsManagement: React.FC = () => {
           isOrderingEnabled: updated.is_ordering_enabled,
           isTableBookingEnabled: updated.is_table_booking_enabled,
           announcementBanner: updated.announcement_banner,
+          features: features,
           tax: {
             enabled: updated.tax_enabled ?? true,
             mode: updated.tax_mode || 'inclusive',
@@ -433,18 +483,180 @@ export const SettingsManagement: React.FC = () => {
         <div className="py-20 text-center text-zinc-500 font-mono text-xs">Loading operational manifest...</div>
       ) : (
         <form onSubmit={handleSave} className="space-y-8">
-          {/* SECTION 1: MASTER SERVICE TOGGLES */}
-          <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
-            <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                    Operational Gates
-                  </span>
-                  <h3 className="font-serif text-lg font-bold text-white mt-0.5">Master Service Switches</h3>
+          {/* SETTINGS SUBTABS (Direct navigation to Features, Localization, etc.) */}
+          <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setActiveTab('all')}
+              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                activeTab === 'all'
+                  ? 'bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20'
+                  : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
+              }`}
+            >
+              All Settings
+            </button>
+            <button
+              type="button"
+              data-testid="tab-features"
+              onClick={() => setActiveTab('features')}
+              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 ${
+                activeTab === 'features'
+                  ? 'bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20'
+                  : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">toggle_on</span>
+              <span>Features (18 Toggles)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('operations')}
+              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                activeTab === 'operations'
+                  ? 'bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20'
+                  : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
+              }`}
+            >
+              Operations
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('localization')}
+              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                activeTab === 'localization'
+                  ? 'bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20'
+                  : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
+              }`}
+            >
+              Localization & Tax
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('payments')}
+              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                activeTab === 'payments'
+                  ? 'bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20'
+                  : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
+              }`}
+            >
+              Payments
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('printers')}
+              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                activeTab === 'printers'
+                  ? 'bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20'
+                  : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
+              }`}
+            >
+              Thermal Printers
+            </button>
+          </div>
+
+          {/* SECTION: MODULAR FEATURE TOGGLES (18 CAPABILITIES) */}
+          {(activeTab === 'all' || activeTab === 'features') && (
+            <div id="features-section" className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
+              <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-white/[0.06]">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+                      Settings &gt; Features
+                    </span>
+                    <h3 className="font-serif text-lg font-bold text-white mt-0.5">
+                      Modular Feature Switchboard (18 Capabilities)
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-zinc-400 font-mono">
+                      {Object.values(features).filter(Boolean).length} / 18 Active
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono border border-emerald-500/20">
+                      Zero-Downtime Hot Toggle
+                    </span>
+                  </div>
                 </div>
-                <span className="text-xs text-zinc-500 font-mono">Immediate live effect</span>
+
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Toggle individual restaurant capabilities on or off with immediate cross-tab effect. When a feature is disabled, its navigation routes and customer buttons hide instantly, and open operations remain safely protected.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+                  {(Object.keys(FEATURE_METADATA) as Array<keyof RestaurantFeatureFlags>).map((key) => {
+                    const meta = FEATURE_METADATA[key];
+                    const isEnabled = features[key];
+                    return (
+                      <div
+                        key={key}
+                        data-testid={`feature-card-${key}`}
+                        onClick={() => handleToggleFeature(key)}
+                        className={`p-4 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
+                          isEnabled
+                            ? 'bg-[#181310] border-[#D4AF37]/30 hover:border-[#D4AF37]/60 shadow-[0_4px_16px_rgba(0,0,0,0.4)]'
+                            : 'bg-white/[0.015] border-white/[0.05] opacity-60 hover:opacity-90'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                              isEnabled
+                                ? 'bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30'
+                                : 'bg-zinc-800 text-zinc-500'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-lg">{meta.icon}</span>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold text-white tracking-wide">{meta.label}</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-400 mt-0.5 leading-snug">{meta.desc}</p>
+                          </div>
+                        </div>
+
+                        <div className="relative inline-flex items-center shrink-0 cursor-pointer pt-1">
+                          <input
+                            type="checkbox"
+                            data-testid={`feature-toggle-${key}`}
+                            checked={isEnabled}
+                            disabled={!isOwner}
+                            onChange={() => handleToggleFeature(key)}
+                            className="sr-only peer"
+                          />
+                          <div
+                            className={`w-9 h-5 rounded-full transition-colors relative ${
+                              isEnabled ? 'bg-[#D4AF37]' : 'bg-zinc-700'
+                            }`}
+                          >
+                            <div
+                              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                                isEnabled ? 'translate-x-4' : 'translate-x-0'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
+            </div>
+          )}
+
+          {/* SECTION 1: MASTER SERVICE TOGGLES */}
+          {(activeTab === 'all' || activeTab === 'operations') && (
+            <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
+              <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
+                      Operational Gates
+                    </span>
+                    <h3 className="font-serif text-lg font-bold text-white mt-0.5">Master Service Switches</h3>
+                  </div>
+                  <span className="text-xs text-zinc-500 font-mono">Immediate live effect</span>
+                </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 {/* Online Ordering Toggle */}
@@ -511,6 +723,7 @@ export const SettingsManagement: React.FC = () => {
               </div>
             </div>
           </div>
+          )}
 
           {/* SECTION 2: GLOBAL LOCALIZATION & COUNTRY PRESETS */}
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">

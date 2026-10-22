@@ -111,7 +111,7 @@ export const SIGNATURE_REEL_DISHES: SignatureDishItem[] = [
     category: 'WOOD-FIRED HEARTH',
     price: 210,
     diet: 'veg',
-    image: '/images/menu/margherita-pizza.webp',
+    image: '/images/components/comp_img_3.webp',
     tag: 'CHEF #08',
     accentNote: 'Sweet Garden Basil',
     craftTelemetry: 'NAPOLI CRAFT',

@@ -203,7 +203,7 @@ export const Gallery: React.FC = () => {
     : OPTICAL_SPECS[0];
 
   return (
-    <section className="w-full pt-16 sm:pt-18 lg:pt-20 pb-12 sm:pb-14 lg:pb-16 bg-background relative border-t border-outline/15 scroll-mt-28 overflow-hidden" id="gallery">
+    <section className="w-full pt-12 sm:pt-18 lg:pt-20 pb-10 sm:pb-14 lg:pb-16 bg-background relative border-t border-outline/15 scroll-mt-28 overflow-hidden" id="gallery">
       {/* Ambient Glow */}
       {engineConfig?.theme?.ambience?.meshGlow !== false && (
         <div 
@@ -262,7 +262,7 @@ export const Gallery: React.FC = () => {
                   type="button"
                   disabled={!canScrollLeft}
                   onClick={() => handleCarouselScroll('left')}
-                  className="w-10 h-10 rounded-full border border-outline/30 bg-surface-container/80 hover:bg-surface-elevated text-on-surface hover:text-primary transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md cursor-pointer active:scale-95"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] sm:w-10 sm:h-10 sm:min-w-0 sm:min-h-0 rounded-full border border-outline/30 bg-surface-container/80 hover:bg-surface-elevated text-on-surface hover:text-primary transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md cursor-pointer active:scale-95"
                   aria-label={t('gallery.prevPhoto', 'Previous photograph')}
                 >
                   <span className="material-symbols-outlined text-base">chevron_left</span>
@@ -271,7 +271,7 @@ export const Gallery: React.FC = () => {
                   type="button"
                   disabled={!canScrollRight}
                   onClick={() => handleCarouselScroll('right')}
-                  className="w-10 h-10 rounded-full border border-outline/30 bg-surface-container/80 hover:bg-surface-elevated text-on-surface hover:text-primary transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md cursor-pointer active:scale-95"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] sm:w-10 sm:h-10 sm:min-w-0 sm:min-h-0 rounded-full border border-outline/30 bg-surface-container/80 hover:bg-surface-elevated text-on-surface hover:text-primary transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md cursor-pointer active:scale-95"
                   aria-label={t('gallery.nextPhoto', 'Next photograph')}
                 >
                   <span className="material-symbols-outlined text-base">chevron_right</span>
@@ -587,7 +587,7 @@ export const Gallery: React.FC = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setSelectedPhoto(null)}
-                className="w-10 h-10 rounded-full bg-surface-container/80 hover:bg-surface-elevated border border-outline/30 flex items-center justify-center text-on-surface transition-colors cursor-pointer"
+                className="w-11 h-11 min-w-[44px] min-h-[44px] sm:w-10 sm:h-10 sm:min-w-0 sm:min-h-0 rounded-full bg-surface-container/80 hover:bg-surface-elevated border border-outline/30 flex items-center justify-center text-on-surface transition-colors cursor-pointer"
                 aria-label={t('gallery.closeLightbox', 'Close photograph lightbox')}
               >
                 <span className="material-symbols-outlined text-lg">close</span>

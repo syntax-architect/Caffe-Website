@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useI18n } from '../i18n';
 import { SectionReveal } from './SectionReveal';
 import { getAvifSource } from '../utils/image';
 import type { AmbienceItem } from '../services/siteContentService';
@@ -65,6 +66,7 @@ export const AboutVibe: React.FC = () => {
   const [isPaused, setIsPaused] = useState(false);
   const userInteractedRef = useRef(false);
   const { aboutVibe, engineConfig } = useSiteConfig();
+  const { t } = useI18n();
   const sectionRef = useRef<HTMLElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -192,7 +194,7 @@ export const AboutVibe: React.FC = () => {
     <section
       ref={sectionRef}
       id="about-and-vibe"
-      className="w-full pt-12 sm:pt-16 lg:pt-20 pb-16 sm:pb-20 lg:pb-24 bg-background relative border-t border-outline/15 scroll-mt-28"
+      className="w-full pt-12 sm:pt-16 lg:pt-20 pb-12 sm:pb-20 lg:pb-24 bg-background relative border-t border-outline/15 scroll-mt-28"
     >
       {/* 1. Ambient Warm Filament Lighting Flares */}
       {meshGlowActive && (
@@ -223,7 +225,7 @@ export const AboutVibe: React.FC = () => {
               <span className="font-sans text-[10px] sm:text-xs font-semibold uppercase tracking-[0.26em] text-primary/75 block mb-2">
                 {eyebrowText}
               </span>
-              <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-on-surface font-normal tracking-tight leading-[1.06]">
+              <h2 className="font-serif text-3xl sm:text-5xl lg:text-6xl xl:text-7xl text-on-surface font-normal tracking-tight leading-[1.06]">
                 {title.includes(titleItalic) ? (
                   <>
                     {title.split(titleItalic)[0]}
@@ -238,6 +240,50 @@ export const AboutVibe: React.FC = () => {
                 )}
               </h2>
             </div>
+
+            {/* Lounge Soundscape Audio Player with Live 12-Bar Waveform */}
+            {isAudioEnabled && (
+              <button
+                type="button"
+                onClick={toggleAudio}
+                aria-label={isPlaying ? `Pause ${audioTitle}` : `Play ${audioTitle}`}
+                className="inline-flex items-center gap-3 px-4 py-2.5 min-h-[44px] rounded-xl bg-surface-obsidian border border-primary/30 hover:border-primary hover:shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.25)] active:scale-[0.97] transition-all group cursor-pointer mt-1"
+              >
+                <span className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                  <span className="material-symbols-outlined text-sm">
+                    {isPlaying ? 'volume_up' : 'music_note'}
+                  </span>
+                </span>
+                <div className="text-left font-mono text-[10px] tracking-wider uppercase">
+                  <span className="block text-on-surface/55">{audioTitle}</span>
+                  <span className="text-primary font-semibold flex items-center gap-1.5">
+                    {soundscapeStatus === 'PLAYING' ? (
+                      <>
+                        <span>PLAYING</span>
+                        {/* Live 12-bar animated equalizer visualizer */}
+                        <span className="flex items-end gap-0.5 h-3">
+                          {[0.8, 0.4, 0.9, 0.6, 1.0, 0.5, 0.7, 0.3, 0.85, 0.65, 0.95, 0.45].map((h, i) => (
+                            <span
+                              key={i}
+                              className="w-0.5 bg-primary rounded-full animate-pulse"
+                              style={{
+                                height: `${Math.round(h * 12)}px`,
+                                animationDelay: `${i * 65}ms`,
+                                animationDuration: `${0.45 + (i % 4) * 0.15}s`,
+                              }}
+                            />
+                          ))}
+                        </span>
+                      </>
+                    ) : soundscapeStatus === 'AVAILABLE' ? (
+                      'AVAILABLE [LISTEN]'
+                    ) : (
+                      'UNAVAILABLE'
+                    )}
+                  </span>
+                </div>
+              </button>
+            )}
           </div>
 
           <div className="w-full lg:max-w-xl flex flex-col gap-5">
@@ -247,65 +293,19 @@ export const AboutVibe: React.FC = () => {
               </p>
             </div>
 
-            {/* Architectural Telemetry Spec Bar + Live Audio Equalizer Toggle */}
+            {/* Architectural Telemetry Spec Bar */}
             <div className="flex flex-col gap-4 pt-3 border-t border-outline/15">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-                  {chips.map((chip, idx) => (
-                    <div key={chip.label || idx} className="flex flex-col gap-0.5 px-3.5 py-2 rounded-xl bg-surface-elevated/40 border border-outline/15 min-w-[95px]">
-                      <span className="font-sans text-[9px] uppercase tracking-[0.22em] text-primary font-semibold">
-                        {chip.label}
-                      </span>
-                      <span className="font-serif text-sm sm:text-base text-on-surface">
-                        {chip.value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Lounge Soundscape Audio Player with Live 12-Bar Waveform */}
-                {isAudioEnabled && (
-                  <button
-                    type="button"
-                    onClick={toggleAudio}
-                    aria-label={isPlaying ? `Pause ${audioTitle}` : `Play ${audioTitle}`}
-                    className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl bg-surface-obsidian border border-primary/30 hover:border-primary hover:shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.25)] active:scale-[0.97] transition-all group cursor-pointer"
-                  >
-                    <span className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
-                      <span className="material-symbols-outlined text-sm">
-                        {isPlaying ? 'volume_up' : 'music_note'}
-                      </span>
+              <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                {chips.map((chip, idx) => (
+                  <div key={chip.label || idx} className="flex flex-col gap-0.5 px-3.5 py-2 rounded-xl bg-surface-elevated/40 border border-outline/15 min-w-[95px]">
+                    <span className="font-sans text-[9px] uppercase tracking-[0.22em] text-primary font-semibold">
+                      {chip.label}
                     </span>
-                    <div className="text-left font-mono text-[10px] tracking-wider uppercase">
-                      <span className="block text-on-surface/55">{audioTitle}</span>
-                      <span className="text-primary font-semibold flex items-center gap-1.5">
-                        {soundscapeStatus === 'PLAYING' ? (
-                          <>
-                            <span>PLAYING</span>
-                            {/* Live 12-bar animated equalizer visualizer */}
-                            <span className="flex items-end gap-0.5 h-3">
-                              {[0.8, 0.4, 0.9, 0.6, 1.0, 0.5, 0.7, 0.3, 0.85, 0.65, 0.95, 0.45].map((h, i) => (
-                                <span
-                                  key={i}
-                                  className="w-0.5 bg-primary rounded-full animate-pulse"
-                                  style={{
-                                    height: `${Math.round(h * 12)}px`,
-                                    animationDelay: `${i * 65}ms`,
-                                    animationDuration: `${0.45 + (i % 4) * 0.15}s`,
-                                  }}
-                                />
-                              ))}
-                            </span>
-                          </>
-                        ) : soundscapeStatus === 'AVAILABLE' ? (
-                          'AVAILABLE [LISTEN]'
-                        ) : (
-                          'UNAVAILABLE'
-                        )}
-                      </span>
-                    </div>
-                  </button>
-                )}
+                    <span className="font-serif text-sm sm:text-base text-on-surface">
+                      {chip.value}
+                    </span>
+                  </div>
+                ))}
               </div>
 
               {/* Architectural Telemetry Metrics */}
@@ -454,7 +454,7 @@ export const AboutVibe: React.FC = () => {
                         type="button"
                         aria-label="Previous Sanctuary Zone"
                         onClick={() => selectZone((activeHotspotIndex - 1 + safeItems.length) % safeItems.length)}
-                        className="w-8 h-8 rounded-full border border-outline/30 hover:border-primary/60 bg-surface-elevated/40 hover:bg-surface-elevated active:scale-95 flex items-center justify-center text-on-surface/70 hover:text-primary transition-all cursor-pointer"
+                        className="w-11 h-11 min-w-[44px] min-h-[44px] sm:w-8 sm:h-8 sm:min-w-0 sm:min-h-0 rounded-full border border-outline/30 hover:border-primary/60 bg-surface-elevated/40 hover:bg-surface-elevated active:scale-95 flex items-center justify-center text-on-surface/70 hover:text-primary transition-all cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-sm">chevron_left</span>
                       </button>
@@ -462,7 +462,7 @@ export const AboutVibe: React.FC = () => {
                         type="button"
                         aria-label="Next Sanctuary Zone"
                         onClick={() => selectZone((activeHotspotIndex + 1) % safeItems.length)}
-                        className="w-8 h-8 rounded-full border border-outline/30 hover:border-primary/60 bg-surface-elevated/40 hover:bg-surface-elevated active:scale-95 flex items-center justify-center text-on-surface/70 hover:text-primary transition-all cursor-pointer"
+                        className="w-11 h-11 min-w-[44px] min-h-[44px] sm:w-8 sm:h-8 sm:min-w-0 sm:min-h-0 rounded-full border border-outline/30 hover:border-primary/60 bg-surface-elevated/40 hover:bg-surface-elevated active:scale-95 flex items-center justify-center text-on-surface/70 hover:text-primary transition-all cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-sm">chevron_right</span>
                       </button>
@@ -484,7 +484,7 @@ export const AboutVibe: React.FC = () => {
                         {activeItem.eyebrow || `ZONE 0${activeHotspotIndex + 1} • SANCTUARY`}
                       </span>
                       <span className="font-mono text-[9px] tracking-wider uppercase px-2 py-0.5 rounded bg-surface-obsidian/90 text-primary/90 border border-primary/25 pointer-events-none">
-                        TELEMETRY LOCK
+                        {t('vibe.ambienceSpec', 'AMBIENCE SPEC')}
                       </span>
                     </div>
 
@@ -566,7 +566,7 @@ export const AboutVibe: React.FC = () => {
                         type="button"
                         aria-label={`Select Zone 0${idx + 1}: ${item.title}`}
                         onClick={() => selectZone(idx)}
-                        className="text-left group focus:outline-none cursor-pointer py-2 px-2 -mx-2 rounded-xl hover:bg-surface-elevated/30 transition-colors w-full"
+                        className="text-left group focus:outline-none cursor-pointer py-2 px-2 -mx-2 rounded-xl hover:bg-surface-elevated/30 transition-colors w-full min-h-[44px] flex flex-col justify-center"
                       >
                         <div className="h-[3px] w-full bg-outline/25 mb-2 overflow-hidden rounded-full relative">
                           <div

@@ -71,7 +71,7 @@ export const AppLayout: React.FC = () => {
     <div className="bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen">
       <AnnouncementBanner />
       <Header />
-      <main id="main-content" className="w-full pt-20">
+      <main id="main-content" className="w-full pt-20 pb-32 md:pb-0">
         {/* Ambient Golden Mesh Lighting - Isolated layer, zero repaint on scroll */}
         <div className="fixed inset-0 pointer-events-none -z-10 layer-isolated hidden sm:block" aria-hidden="true">
           <div className="absolute top-1/4 left-[-10%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-primary/5 blur-[80px] sm:blur-[140px] ambient-mesh-orb-1" />

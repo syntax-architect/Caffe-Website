@@ -6,7 +6,7 @@ export const clientDetails = {
   displayPhone: "084205 07105",
   whatsapp: "+918420507105",
   email: "contact@thecafe.com",
-  address: "Barrackpore Trunk Road, West Bengal",
+  address: "14, Riverside Road, Cantonment",
   googleMapsLink: "https://maps.app.goo.gl/6N1csn9kKtCY7By97",
   instagramLink: "https://www.instagram.com/the_cafe_barrackpore?stkn=dmxjN2xuZGhtbTMw",
   facebookLink: "#",
@@ -19,5 +19,5 @@ export const clientDetails = {
   staffDomain: "thecafebarrackpore.com",
   inquiryPrefix: "INQ-2026",
   conciergeWhatsAppGreeting: "Hello {businessName} Concierge! ☕",
-  location: { address: "Barrackpore Trunk Road, West Bengal", city: "Barrackpore" },
+  location: { address: "14, Riverside Road, Cantonment", city: "Barrackpore" },
 };

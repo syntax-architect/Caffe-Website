@@ -213,7 +213,7 @@ export const OurStory: React.FC = () => {
       ref={sectionRef}
       id="our-story"
       aria-label={t('story.title', 'Our Story and Philosophy')}
-      className="w-full py-16 sm:py-24 lg:py-28 bg-background relative border-t border-outline/15 scroll-mt-24"
+      className="w-full py-12 sm:py-24 lg:py-28 bg-background relative border-t border-outline/15 scroll-mt-24"
     >
       <div className="max-w-[1400px] mx-auto px-6 sm:px-12 relative z-10">
         
@@ -271,7 +271,7 @@ export const OurStory: React.FC = () => {
 
                 {/* Subtle Signature / Cantonment Philosophy Anchor */}
                 <div className="flex items-center gap-4 mt-6 pt-6 border-t border-outline/15 w-full font-mono text-[10px] tracking-[0.2em] uppercase text-on-surface/60">
-                  <span className="text-primary font-semibold">{t('story.actFive', 'ACT V')}</span>
+                  <span className="text-primary font-semibold">{t('story.actSix', 'ACT VI')}</span>
                   <span>•</span>
                   <span>{t('story.unrushedPursuit', 'THE PURSUIT OF UNRUSHED PERFECTION')}</span>
                 </div>
@@ -546,7 +546,7 @@ export const OurStory: React.FC = () => {
                     key={phase.id}
                     type="button"
                     onClick={() => setActivePhaseIdx(idx)}
-                    className={`px-3 sm:px-4 py-2 rounded-xl font-mono text-xs font-semibold tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                    className={`px-3 sm:px-4 py-2 min-h-[44px] sm:min-h-0 rounded-xl font-mono text-xs font-semibold tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                       idx === activePhaseIdx
                         ? 'bg-primary text-on-primary shadow-[0_0_16px_rgba(var(--color-primary-rgb),0.45)]'
                         : 'text-on-surface/60 hover:text-on-surface hover:bg-surface-elevated/40'

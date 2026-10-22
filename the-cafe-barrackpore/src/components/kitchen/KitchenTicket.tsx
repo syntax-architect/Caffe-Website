@@ -225,6 +225,7 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
         <div className="pt-3 border-t border-white/[0.08] flex items-center gap-2">
           <button
             type="button"
+            data-testid="kitchen-bump-btn"
             disabled={isMutating}
             onClick={() => {
               if (order.status === 'ready') {

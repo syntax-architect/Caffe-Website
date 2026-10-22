@@ -116,6 +116,7 @@ export type StoryVariant = 'interactive-chapters' | 'split-editorial' | 'timelin
 export type GalleryVariant = 'asymmetric-bento' | 'carousel-snap' | 'filmstrip' | 'masonry-grid';
 export type SpecialsVariant = 'horizontal-platters' | 'grid' | 'spotlight';
 export type MenuVariant = 'catalog-grid' | 'sensory-ledger';
+export type VIPClubVariant = 'editorial-dossier' | 'speakeasy-salon';
 
 export interface SectionLayoutVariants {
   hero?: HeroVariant;
@@ -123,6 +124,7 @@ export interface SectionLayoutVariants {
   gallery?: GalleryVariant;
   specials?: SpecialsVariant;
   menu?: MenuVariant;
+  vipClub?: VIPClubVariant;
 }
 
 /**

@@ -395,7 +395,7 @@ export async function checkPrintBridgeHealth(bridgeUrl = 'http://localhost:9123'
       return { online: true, version: data.bridgeVersion || '1.0.0' };
     }
     return { online: false, error: `Bridge returned HTTP ${res.status}` };
-  } catch (err: any) {
+  } catch {
     return {
       online: false,
       error: `Bridge unreachable at ${cleanUrl}. Run 'node scripts/print-bridge.mjs' on the POS host.`,

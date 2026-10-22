@@ -90,33 +90,39 @@ export const VIPClub: React.FC = () => {
     guestName.trim() ||
     (contractEmail.includes('@') ? contractEmail.split('@')[0] : '........................');
 
-  return (
-    <section
-      className="w-full pt-14 sm:pt-16 lg:pt-18 pb-0 bg-background border-t border-outline/15 relative scroll-mt-28 overflow-hidden"
-      id="vip-club"
-      aria-label={t('vip.sectionLabel', 'The Nocturnal Circle VIP Club')}
-    >
-      <div id="vip-section" className="absolute -top-28 pointer-events-none" />
+  const activeVariant: 'editorial-dossier' | 'speakeasy-salon' =
+    engineConfig?.variants?.vipClub ||
+    (vipClub as any)?.variant ||
+    'editorial-dossier';
 
-      {/* 1. Cinematic Ambient Backlighting */}
-      {engineConfig?.theme?.ambience?.meshGlow !== false && (
-        <>
-          <div
-            className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,_rgba(var(--color-primary-rgb),0.08),_transparent_75%)] pointer-events-none"
-            aria-hidden="true"
-          />
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-primary/5 blur-[160px] rounded-full pointer-events-none"
-            aria-hidden="true"
-          />
-        </>
-      )}
+  if (activeVariant === 'speakeasy-salon') {
+    return (
+      <section
+        className="w-full pt-14 sm:pt-16 lg:pt-18 pb-16 sm:pb-20 bg-background border-t border-outline/15 relative scroll-mt-28 overflow-hidden"
+        id="vip-club"
+        aria-label={t('vip.sectionLabel', 'The Nocturnal Circle VIP Club')}
+      >
+        <div id="vip-section" className="absolute -top-28 pointer-events-none" />
 
-      {/* PART 1: PRESTIGIOUS DOUBLE-BEZEL DARK VIP SHOWCASE */}
-      <div className="max-w-[1120px] mx-auto px-4 sm:px-6 relative z-10 pb-16 sm:pb-20">
-        <SectionReveal>
-          {/* Double-Bezel Gold Foil Master Shell with Machined Luxury Depth */}
-          <div className="group relative rounded-[2.5rem] p-1.5 sm:p-2 bg-gradient-to-b from-primary/55 via-primary-fixed-dim/30 to-primary/50 shadow-[0_35px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(var(--color-primary-rgb),0.18)] ring-1 ring-outline/25">
+        {/* 1. Cinematic Ambient Backlighting */}
+        {engineConfig?.theme?.ambience?.meshGlow !== false && (
+          <>
+            <div
+              className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,_rgba(var(--color-primary-rgb),0.08),_transparent_75%)] pointer-events-none"
+              aria-hidden="true"
+            />
+            <div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-primary/5 blur-[160px] rounded-full pointer-events-none"
+              aria-hidden="true"
+            />
+          </>
+        )}
+
+        {/* PRESTIGIOUS DOUBLE-BEZEL DARK VIP SHOWCASE */}
+        <div className="max-w-[1120px] mx-auto px-4 sm:px-6 relative z-10">
+          <SectionReveal>
+            {/* Double-Bezel Gold Foil Master Shell with Machined Luxury Depth */}
+            <div className="group relative rounded-[2.5rem] p-1.5 sm:p-2 bg-gradient-to-b from-primary/55 via-primary-fixed-dim/30 to-primary/50 shadow-[0_35px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(var(--color-primary-rgb),0.18)] ring-1 ring-outline/25">
             {/* Inner Core Enclosure with Integrated Photographic Speakeasy Atmosphere */}
             <div className="relative rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-surface-obsidian px-5 py-8 sm:px-12 sm:py-14 lg:px-16 lg:py-16 border border-primary/25 flex flex-col items-center text-center gap-6 sm:gap-7 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)]">
               {/* 2. PHOTOGRAPHIC CINEMATIC BACKGROUND IMAGE */}
@@ -293,11 +299,22 @@ export const VIPClub: React.FC = () => {
           </div>
         </SectionReveal>
       </div>
+    </section>
+  );
+}
 
-      {/* PART 2: VALMORA CURVED PARCHMENT CURTAIN LIFT + ODDBALL PHYSICAL DOSSIER */}
-      <div className="relative">
-        {/* Curved Warm Parchment SVG Curtain */}
-        <svg
+// DEFAULT VARIANT: VALMORA CURVED PARCHMENT CURTAIN LIFT + ODDBALL PHYSICAL DOSSIER
+return (
+  <section
+    className="w-full pt-0 pb-0 bg-background border-t border-outline/15 relative scroll-mt-28 overflow-hidden"
+    id="vip-club"
+    aria-label={t('vip.sectionLabel', 'The Nocturnal Circle VIP Club')}
+  >
+    <div id="vip-section" className="absolute -top-28 pointer-events-none" />
+
+    <div className="relative">
+      {/* Curved Warm Parchment SVG Curtain */}
+      <svg
           viewBox="0 0 1440 90"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"

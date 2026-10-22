@@ -232,7 +232,7 @@ export const ReservationDrawer: React.FC = () => {
               <button
                 onClick={() => setIsReservationOpen(false)}
                 aria-label={t('common.close', 'Close reservation drawer')}
-                className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-on-surface/70 hover:text-on-surface transition-colors cursor-pointer"
+                className="w-11 h-11 min-w-[44px] min-h-[44px] sm:w-9 sm:h-9 sm:min-w-0 sm:min-h-0 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-on-surface/70 hover:text-on-surface transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>

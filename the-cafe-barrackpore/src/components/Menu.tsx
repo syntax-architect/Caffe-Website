@@ -461,7 +461,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
   };
 
   return (
-    <section className={`w-full ${isQrMode ? 'pt-2 md:pt-4 pb-12' : 'pt-14 md:pt-20 pb-10 md:pb-12'} bg-background scroll-mt-28`} id="menu-section">
+    <section className={`w-full ${isQrMode ? 'pt-2 md:pt-4 pb-12' : 'pt-12 md:pt-20 pb-10 md:pb-12'} bg-background scroll-mt-28`} id="menu-section">
       <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-12 flex flex-col gap-6 md:gap-8 relative">
         {/* Floating Image (Desktop Only - Isolated RAF GPU Transform) */}
         {!isTouchDevice && <FloatingMenuPreview imageSrc={hoveredImage} />}
@@ -525,7 +525,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                 <button
                   type="button"
                   onClick={() => setIsCategoryPickerOpen(!isCategoryPickerOpen)}
-                  className="px-3 py-1.5 rounded-full bg-surface-container border border-primary/40 text-primary text-xs font-sans font-medium flex items-center gap-1.5 active:scale-95 shadow-sm hover:border-primary transition-all cursor-pointer"
+                  className="px-3 py-1.5 min-h-[44px] sm:min-h-0 rounded-full bg-surface-container border border-primary/40 text-primary text-xs font-sans font-medium flex items-center gap-1.5 active:scale-95 shadow-sm hover:border-primary transition-all cursor-pointer"
                   aria-label={t('menu.allCategories', 'View all categories')}
                   aria-expanded={isCategoryPickerOpen}
                 >
@@ -621,7 +621,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                         ref={(el) => { categoryBtnRefs.current[category.id] = el; }}
                         type="button"
                         onClick={() => handleSelectCategory(category.id)}
-                        className={`relative px-3.5 sm:px-4 py-2 rounded-full font-sans text-xs uppercase tracking-wider transition-colors duration-200 whitespace-nowrap cursor-pointer border flex items-center gap-1.5 active:scale-95 shrink-0 ${
+                        className={`relative px-3.5 sm:px-4 py-2 min-h-[44px] sm:min-h-0 rounded-full font-sans text-xs uppercase tracking-wider transition-colors duration-200 whitespace-nowrap cursor-pointer border flex items-center gap-1.5 active:scale-95 shrink-0 ${
                           isActive
                             ? 'bg-primary text-on-primary border-primary font-bold shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.35)]'
                             : 'bg-surface-container-low/80 text-on-surface-variant border-outline/20 hover:border-primary/40 hover:text-on-surface'
@@ -807,7 +807,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                         <div className="my-4 p-3.5 rounded-2xl bg-surface-obsidian/80 border border-outline/20 flex flex-col gap-3 font-mono text-[10px] uppercase tracking-wider">
                           <div className="grid grid-cols-3 gap-2">
                             <div>
-                              <span className="text-on-surface/45 block text-[9px]">{t('menu.prepTelemetry', 'PREP TELEMETRY')}</span>
+                              <span className="text-on-surface/45 block text-[9px]">{t('menu.culinaryNotes', 'CULINARY NOTES')}</span>
                               <span className="text-primary font-bold">
                                 {(() => {
                                   const cat = activeCategoryName.toLowerCase();
@@ -1023,7 +1023,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                               whileTap={{ scale: 0.94 }}
                               disabled={!canAdd}
                               type="button"
-                              className={`h-9 min-w-[64px] px-3.5 sm:h-7 sm:min-w-0 sm:px-3 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1 transition-all duration-200 shrink-0 ${
+                              className={`h-9 min-w-[64px] px-3.5 sm:h-7 min-h-[44px] sm:min-h-0 sm:min-w-0 sm:px-3 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1 transition-all duration-200 shrink-0 ${
                                 !canAdd
                                   ? 'bg-surface-elevated/40 border border-outline/20 text-on-surface-variant/40 cursor-not-allowed'
                                   : isJustAdded
@@ -1206,7 +1206,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                     <button
                       disabled={!canAdd}
                       type="button"
-                      className={`h-9 px-4 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 ${
+                      className={`h-11 sm:h-9 min-h-[44px] sm:min-h-0 px-4 rounded-full text-xs font-sans font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 ${
                         !canAdd
                           ? 'bg-surface-elevated/40 border border-outline/20 text-on-surface-variant/40 cursor-not-allowed'
                           : isJustAdded

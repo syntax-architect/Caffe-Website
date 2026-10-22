@@ -173,6 +173,49 @@
 }
 
 @media (max-width: 768px) {
+  :root {
+    /* Mobile-Specific Surface & Contrast Elevation: Deep black (#0A0807) elevated to rich espresso (#18110D) */
+    --color-background: 24 17 13;
+    --color-background-rgb: 24, 17, 13;
+    --color-background-hex: #18110D;
+
+    --color-surface: 24 17 13;
+    --color-surface-obsidian: 30 21 16;
+    --color-surface-container-lowest: 24 17 13;
+    --color-surface-container-low: 32 23 18;
+    --color-surface-container: 42 30 23;
+    --color-surface-container-high: 52 38 29;
+    --color-surface-container-highest: 62 46 36;
+    --color-surface-elevated: 52 38 29;
+
+    --color-outline: 140 115 95;
+    --color-outline-variant: 107 90 78;
+  }
+
+  body {
+    -webkit-font-smoothing: subpixel-antialiased;
+    -moz-osx-font-smoothing: auto;
+  }
+
+  /* Increase border opacities globally on mobile cards so structural boxes are clearly defined under phone glare */
+  [class*="border-outline/10"],
+  [class*="border-outline/15"],
+  [class*="border-outline/20"],
+  [class*="border-white/5"],
+  [class*="border-white/10"],
+  .\border-outline\/10,
+  .\border-outline\/15,
+  .\border-outline\/20,
+  .\border-white\/5,
+  .\border-white\/10 {
+    border-color: rgba(212, 175, 55, 0.25) !important;
+  }
+
+  .glass-panel {
+    border-color: rgba(212, 175, 55, 0.25) !important;
+    background-color: rgba(24, 17, 13, 0.92) !important;
+  }
+
   .hero-enter-eyebrow { animation-delay: 0.05s; }
   .hero-enter-headline-1 { animation-delay: 0.10s; }
   .hero-enter-headline-2 { animation-delay: 0.18s; }
