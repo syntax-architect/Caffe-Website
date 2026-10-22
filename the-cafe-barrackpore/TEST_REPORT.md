@@ -1,5 +1,5 @@
 # Comprehensive Strict QA Audit & Test Report
-**Execution Date:** 2026-10-22T15:51:27.217Z  
+**Execution Date:** 2026-10-22T15:55:31.566Z  
 **Target Environment:** Local Full-Stack Deployment (`http://localhost:5175`)  
 **Stripe Mode:** TEST MODE ONLY (Card `4242 4242 4242 4242`)  
 **Browsers & Contexts:** Chromium 3-Context Side-by-Side (Customer, Staff/Owner, Kitchen KDS) + Mobile Phone (390x844)
@@ -9,7 +9,7 @@
 ## Executive Summary
 | Total Flows | Passed | Failed | Success Rate |
 | :--- | :--- | :--- | :--- |
-| **11** | **10** | **1** | **91%** |
+| **11** | **11** | **0** | **100%** |
 
 ---
 
@@ -105,20 +105,12 @@
 
 ---
 
-### Flow 11: Chaos & Resilience Testing
-- **Status:** **FAIL** ❌
-- **Verification Details:** Failed chaos tests
-- **Error Trace:** `Error: locator.click: Element is outside of the viewport
-Call log:
-[2m  - waiting for locator('button:has-text("Proceed to Checkout"), button:has-text("Proceed to Details")').first()[22m
-[2m    - locator resolved to <button type="button" data-testid="proceed-to-details-btn" class="group relative flex-1 h-12 rounded-full font-semibold text-xs tracking-wider uppercase transition-all duration-300 flex items-center justify-between pl-6 pr-2 bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#C5A028] text-[#120B08] shadow-[0_4px_24px_rgba(212,175,55,0.28)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.45)] cursor-pointer">…</button>[22m
-[2m  - attempting click action[22m
-[2m    - scrolling into view if needed[22m
-[2m    - done scrolling[22m
-`
+### Flow 11: Chaos & Resilience Testing (Stress, Long Names, Emoji, Offline)
+- **Status:** **PASS** ✅
+- **Verification Details:** Verified empty cart checkout prevention, double-click payment idempotency, resilience against refresh and back navigation, proper rendering of 100+ char names with unicode emojis, and offline mode handling.
 
 - **Screenshot Evidence:**
-![Chaos & Resilience Testing](test-results/screenshots/step11_long_name_emoji.png)
+![Chaos & Resilience Testing (Stress, Long Names, Emoji, Offline)](test-results/screenshots/step11_long_name_emoji.png)
 
 ---
 

@@ -35,7 +35,8 @@ test.describe('The Café Barrackpore - Comprehensive End-to-End Test Suite', () 
     // Find and click the visible Reservation CTA (works across desktop header and mobile hero)
     const reserveBtn = page.locator('button:visible').filter({ hasText: /Reserve a Table|Book a Table/i }).first();
     await expect(reserveBtn).toBeVisible({ timeout: 10000 });
-    await reserveBtn.dispatchEvent('click');
+    await reserveBtn.scrollIntoViewIfNeeded();
+    await reserveBtn.click();
 
     // Verify Reservation drawer modal mounts
     const reservationDrawer = page.locator('[role="dialog"]').first();
@@ -48,7 +49,7 @@ test.describe('The Café Barrackpore - Comprehensive End-to-End Test Suite', () 
     // Close the drawer
     const closeBtn = reservationDrawer.locator('button[aria-label*="close" i]').first();
     await expect(closeBtn).toBeVisible();
-    await closeBtn.dispatchEvent('click');
+    await closeBtn.click();
 
     // Ensure drawer is dismissed
     await expect(reservationDrawer).toBeHidden({ timeout: 5000 });
@@ -60,8 +61,9 @@ test.describe('The Café Barrackpore - Comprehensive End-to-End Test Suite', () 
 
     // Trigger Guest Inquiry drawer
     const inquiryBtn = page.locator('button').filter({ hasText: /Guest Inquiry|Send Guest Inquiry/i }).first();
-    await expect(inquiryBtn).toBeAttached({ timeout: 10000 });
-    await inquiryBtn.dispatchEvent('click');
+    await inquiryBtn.scrollIntoViewIfNeeded();
+    await expect(inquiryBtn).toBeVisible({ timeout: 10000 });
+    await inquiryBtn.click();
 
     // Verify Contact Drawer modal opens
     const contactDrawer = page.locator('[role="dialog"]').first();
