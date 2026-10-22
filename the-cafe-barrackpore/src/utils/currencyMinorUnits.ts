@@ -124,3 +124,10 @@ export function fromMinorUnits(minorUnits: number, currency?: string): number {
 // Aliases for clear expressiveness across codebases
 export const amountToMinorUnits = toMinorUnits;
 export const minorUnitsToAmount = fromMinorUnits;
+export const toMajorUnits = fromMinorUnits;
+
+export function formatMinorUnits(minorUnits: number, currency: string = ''): string {
+  const major = fromMinorUnits(minorUnits, currency);
+  const decimals = getCurrencyDecimalDigits(currency);
+  return `${currency ? currency + ' ' : ''}${major.toFixed(decimals)}`;
+}

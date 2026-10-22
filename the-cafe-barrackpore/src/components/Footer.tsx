@@ -117,7 +117,7 @@ export const Footer: React.FC = () => {
                   onClick={() => setIsReservationOpen(true)}
                   className="w-full sm:w-auto h-10 px-6 rounded-full bg-primary hover:opacity-90 active:opacity-95 text-on-primary text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)] active:scale-95 cursor-pointer"
                 >
-                  <span>{restaurantConfig?.isTableBookingEnabled !== false ? 'Reserve a Table' : 'Walk-Ins Welcome'}</span>
+                  <span>{restaurantConfig?.isTableBookingEnabled !== false ? t('hero.bookTable', 'Reserve a Table') : t('reservation.walkInsWelcome', 'Walk-Ins Welcome')}</span>
                   <span className="material-symbols-outlined text-[16px]">table_restaurant</span>
                 </button>
               )}
@@ -128,7 +128,7 @@ export const Footer: React.FC = () => {
                   href="#menu-section" 
                   onClick={(e) => handleNav(e, 'menu-section')}
                 >
-                  <span>Explore Menu</span>
+                  <span>{t('hero.exploreMenu', 'Explore Menu')}</span>
                   <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
                 </a>
               )}
@@ -166,7 +166,7 @@ export const Footer: React.FC = () => {
                     href={instagramLink} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    aria-label="Instagram"
+                    aria-label={t('footer.followInstagram', 'Follow on Instagram')}
                   >
                     <IconInstagram />
                   </a>
@@ -177,7 +177,7 @@ export const Footer: React.FC = () => {
                     href={facebookLink} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    aria-label="Facebook"
+                    aria-label={t('footer.followFacebook', 'Follow on Facebook')}
                   >
                     <IconFacebook />
                   </a>
@@ -188,7 +188,7 @@ export const Footer: React.FC = () => {
                     href={googleMapsLink} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    aria-label="Google Maps Reviews"
+                    aria-label={t('footer.googleReviews', 'Google Maps Reviews')}
                   >
                     <IconGoogle />
                   </a>
@@ -199,7 +199,7 @@ export const Footer: React.FC = () => {
                     href={zomatoLink} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    aria-label="Zomato"
+                    aria-label={t('footer.zomato', 'Zomato')}
                   >
                     <IconZomato />
                   </a>
@@ -212,7 +212,7 @@ export const Footer: React.FC = () => {
           {visibleCurationLinks.length > 0 && (
             <div className="col-span-1 flex flex-col gap-3.5">
               <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold">
-                Cuisine &amp; Curations
+                {t('footer.cuisineCurations', 'Cuisine & Curations')}
               </h4>
               <div className="flex flex-col gap-2.5 text-xs font-sans">
                 {visibleCurationLinks.map((link) => (
@@ -235,14 +235,14 @@ export const Footer: React.FC = () => {
           {/* Col 3: Hours & Atmosphere */}
           <div className="col-span-1 flex flex-col gap-3.5">
             <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold">
-              Hours &amp; Atmosphere
+              {t('footer.hoursAtmosphere', 'Hours & Atmosphere')}
             </h4>
             <div className="flex flex-col gap-3 text-xs font-sans">
               <div className="flex items-start gap-2">
                 <span className="material-symbols-outlined text-primary text-base mt-0.5 shrink-0 font-light">schedule</span>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <p className="text-on-surface font-medium">Daily Service</p>
+                    <p className="text-on-surface font-medium">{t('footer.dailyService', 'Daily Service')}</p>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   </div>
                   <p className="text-on-surface/60 font-light mt-0.5 text-[11px] sm:text-xs">{openingHours}</p>
@@ -264,7 +264,7 @@ export const Footer: React.FC = () => {
           <div className="col-span-2 sm:col-span-2 lg:col-span-1 flex flex-col gap-3.5 p-4 sm:p-5 lg:p-0 rounded-2xl lg:rounded-none bg-surface-container/90 lg:bg-transparent border border-primary/20 lg:border-none shadow-md lg:shadow-none">
             <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold flex items-center gap-1.5">
               <span className="material-symbols-outlined text-primary text-base font-light">location_on</span>
-              <span>Visit &amp; Contact</span>
+              <span>{t('footer.visitContact', 'Visit & Contact')}</span>
             </h4>
             <div className="flex flex-col gap-3 text-xs font-sans">
               <div className="flex flex-col gap-1">
@@ -276,7 +276,7 @@ export const Footer: React.FC = () => {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-semibold uppercase tracking-wider mt-0.5"
                   >
-                    <span>Get Directions</span>
+                    <span>{t('contact.getDirections', 'Get Directions')}</span>
                     <span className="material-symbols-outlined text-xs">open_in_new</span>
                   </a>
                 )}

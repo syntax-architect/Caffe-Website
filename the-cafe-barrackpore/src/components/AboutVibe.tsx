@@ -355,7 +355,7 @@ export const AboutVibe: React.FC = () => {
                           src={getItemImage(item, idx)}
                           alt={getItemAlt(item, idx)}
                           className="w-full h-full object-cover brightness-[0.82] contrast-[1.06] transition-transform duration-1000 ease-out scale-100 group-hover/stage:scale-105"
-                          loading={idx === 0 ? 'eager' : 'lazy'}
+                          loading="lazy"
                           decoding="async"
                         />
                       </picture>

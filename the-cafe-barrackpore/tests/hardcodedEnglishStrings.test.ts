@@ -139,7 +139,7 @@ function scanFileForHardcodedStrings(filePath: string): HardcodedFinding[] {
     }
 
     // Skip lines that are pure TypeScript logic (no JSX)
-    if (trimmed.includes('setActiveFilmstripIndex') || trimmed.includes('for (') || trimmed.includes('while (')) {
+    if (trimmed.includes('setActiveFilmstripIndex') || trimmed.includes('for (') || trimmed.includes('while (') || trimmed.includes('window.innerWidth')) {
       continue;
     }
 

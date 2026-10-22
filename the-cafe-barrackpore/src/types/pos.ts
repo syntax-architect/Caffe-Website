@@ -3,6 +3,8 @@
  * Uses Integer Minor Units (Paise/Cents) for All Financial Math
  */
 
+import type { StaffRole } from './auth';
+
 export type POSOrderType = 'dine_in' | 'takeaway' | 'delivery';
 
 export type POSBillStatus = 'running' | 'printed' | 'paid' | 'voided' | 'transferred' | 'merged';
@@ -115,4 +117,21 @@ export interface POSTableMapItem {
   running_total_minor?: number;
   item_count: number;
   occupied_since?: string | null;
+}
+
+export function checkPermissions(role: StaffRole) {
+  const isOwner = role === 'owner';
+  const isManager = isOwner || role === 'manager';
+  const isCashier = isManager || role === 'cashier';
+  const isWaiter = isCashier || role === 'waiter';
+
+  return {
+    canOpenDrawer: isCashier,
+    canVoidWithoutPin: isManager,
+    canApplyDiscountWithoutPin: isManager,
+    canIssueRefund: isManager,
+    canCreateBill: isWaiter,
+    canSendKOT: isWaiter,
+    canCloseShift: isCashier,
+  };
 }

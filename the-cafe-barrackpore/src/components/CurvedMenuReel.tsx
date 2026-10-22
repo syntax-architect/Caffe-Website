@@ -269,9 +269,9 @@ export const CurvedMenuReel: React.FC = () => {
           </span>
         </div>
         <div className="font-mono text-[10px] tracking-widest uppercase text-on-surface/60 flex items-center gap-3">
-          <span className="hidden sm:inline">CYLINDRICAL PERSPECTIVE</span>
+          <span className="hidden sm:inline">{t('curvedReel.cylindricalPerspective', 'CYLINDRICAL PERSPECTIVE')}</span>
           <span>•</span>
-          <span className="text-primary/90 font-semibold">2200K AMBER</span>
+          <span className="text-primary/90 font-semibold">{t('curvedReel.amberWarmth', '2200K AMBER')}</span>
         </div>
       </div>
 
@@ -329,7 +329,7 @@ export const CurvedMenuReel: React.FC = () => {
           ref={containerRef}
           tabIndex={0}
           role="region"
-          aria-label="3D Cylindrical Signature Menu Reel"
+          aria-label={t('curvedReel.ariaLabel', '3D Cylindrical Signature Menu Reel')}
           aria-roledescription="carousel"
           onKeyDown={(e) => {
             if (e.key === 'ArrowLeft') {
@@ -550,13 +550,13 @@ export const CurvedMenuReel: React.FC = () => {
             {/* Sensory Tri-Spectrum Craft Strip */}
             <div className="mb-5 p-3 rounded-xl bg-surface-container-lowest/80 border border-outline/20 space-y-2 font-mono text-[9px] uppercase tracking-wider">
               <div className="flex justify-between text-on-surface/60">
-                <span>CHEF SENSORY CALIBRATION</span>
-                <span className="text-primary font-semibold">AUTHENTIC PROFILE</span>
+                <span>{t('curvedReel.chefSensory', 'CHEF SENSORY CALIBRATION')}</span>
+                <span className="text-primary font-semibold">{t('curvedReel.authenticProfile', 'AUTHENTIC PROFILE')}</span>
               </div>
               <div className="grid grid-cols-3 gap-2 pt-1 border-t border-outline/15">
                 <div>
                   <div className="flex justify-between text-on-surface/70 mb-1">
-                    <span>CRAFT</span>
+                    <span>{t('curvedReel.craft', 'CRAFT')}</span>
                     <span className="text-primary font-bold">99%</span>
                   </div>
                   <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">
@@ -565,7 +565,7 @@ export const CurvedMenuReel: React.FC = () => {
                 </div>
                 <div>
                   <div className="flex justify-between text-on-surface/70 mb-1">
-                    <span>AROMA</span>
+                    <span>{t('curvedReel.aroma', 'AROMA')}</span>
                     <span className="text-primary font-bold">97%</span>
                   </div>
                   <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">
@@ -574,7 +574,7 @@ export const CurvedMenuReel: React.FC = () => {
                 </div>
                 <div>
                   <div className="flex justify-between text-on-surface/70 mb-1">
-                    <span>BALANCE</span>
+                    <span>{t('curvedReel.balance', 'BALANCE')}</span>
                     <span className="text-primary font-bold">98%</span>
                   </div>
                   <div className="h-1 rounded-full bg-surface-container-highest overflow-hidden">

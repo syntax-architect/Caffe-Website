@@ -199,11 +199,14 @@ export async function createBillSplit(
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase.rpc('split_bill_atomic', {
-        p_order_ref: cleanRef,
+        p_bill_number: cleanRef,
         p_split_type: splitType,
         p_splits: partsInput.map((p, idx) => ({
           part_number: idx + 1,
           payer_label: p.payer_label || `Guest ${idx + 1}`,
+          amount_minor: toMinorUnits(p.amount),
+          subtotal_minor: toMinorUnits(p.subtotal || 0),
+          tax_amount_minor: toMinorUnits(p.tax_amount || 0),
           amount: roundToCents(p.amount),
           subtotal: roundToCents(p.subtotal || 0),
           tax_amount: roundToCents(p.tax_amount || 0),

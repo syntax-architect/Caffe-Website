@@ -433,7 +433,7 @@ export const Gallery: React.FC = () => {
                   width="1200"
                   height="800"
                   className="w-full h-full object-cover filter brightness-[0.95] contrast-[1.06] group-hover/showcase:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
-                  loading="eager"
+                  loading="lazy"
                   decoding="async"
                 />
             </div>

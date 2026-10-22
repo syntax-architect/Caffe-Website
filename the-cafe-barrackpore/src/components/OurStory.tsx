@@ -271,9 +271,9 @@ export const OurStory: React.FC = () => {
 
                 {/* Subtle Signature / Cantonment Philosophy Anchor */}
                 <div className="flex items-center gap-4 mt-6 pt-6 border-t border-outline/15 w-full font-mono text-[10px] tracking-[0.2em] uppercase text-on-surface/60">
-                  <span className="text-primary font-semibold">ACT V</span>
+                  <span className="text-primary font-semibold">{t('story.actFive', 'ACT V')}</span>
                   <span>•</span>
-                  <span>THE PURSUIT OF UNRUSHED PERFECTION</span>
+                  <span>{t('story.unrushedPursuit', 'THE PURSUIT OF UNRUSHED PERFECTION')}</span>
                 </div>
               </div>
 
@@ -290,7 +290,7 @@ export const OurStory: React.FC = () => {
                   <div className="flex items-center justify-between mb-4 pb-3 border-b border-outline/15">
                     <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-primary font-bold flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                      ARTISAN PROVENANCE
+                      {t('story.artisanProvenance', 'ARTISAN PROVENANCE')}
                     </span>
                     <span className="font-mono text-[9px] tracking-wider uppercase px-2 py-0.5 rounded bg-surface-obsidian text-primary/80 border border-primary/20">
                       48H · 4°C
@@ -300,10 +300,10 @@ export const OurStory: React.FC = () => {
                   {/* Title & Eyebrow */}
                   <div className="mb-4">
                     <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-on-surface-variant/70 block mb-1">
-                      SLOW FERMENTATION CRUST
+                      {t('story.slowFerment', 'SLOW FERMENTATION CRUST')}
                     </span>
                     <h4 className="font-serif text-xl sm:text-2xl text-on-surface tracking-tight leading-snug">
-                      Cold-Fermented <span className="italic font-light text-primary">Sourdough.</span>
+                      {t('story.coldFermented', 'Cold-Fermented')} <span className="italic font-light text-primary">{t('story.sourdough', 'Sourdough.')}</span>
                     </h4>
                   </div>
 
@@ -311,38 +311,38 @@ export const OurStory: React.FC = () => {
                   <div className="grid grid-cols-2 gap-2.5 mb-4">
                     <div className="p-3 rounded-xl bg-surface-elevated/40 border border-outline/15 flex flex-col">
                       <span className="font-mono text-[9px] uppercase tracking-wider text-primary font-semibold mb-0.5">
-                        PROOFING
+                        {t('story.proofing', 'PROOFING')}
                       </span>
                       <span className="font-serif text-base text-on-surface font-normal">
-                        48 Hours
+                        {t('story.hours48', '48 Hours')}
                       </span>
                       <span className="font-mono text-[9px] text-on-surface-variant/70">
-                        @ 4°C Chill
+                        {t('story.chill4c', '@ 4°C Chill')}
                       </span>
                     </div>
 
                     <div className="p-3 rounded-xl bg-surface-elevated/40 border border-outline/15 flex flex-col">
                       <span className="font-mono text-[9px] uppercase tracking-wider text-primary font-semibold mb-0.5">
-                        HEARTH
+                        {t('story.hearth', 'HEARTH')}
                       </span>
                       <span className="font-serif text-base text-on-surface font-normal">
                         450°C
                       </span>
                       <span className="font-mono text-[9px] text-on-surface-variant/70">
-                        Stone Fire
+                        {t('story.stoneFire', 'Stone Fire')}
                       </span>
                     </div>
                   </div>
 
                   {/* Narrative Craft Description */}
                   <p className="font-sans text-[13px] sm:text-sm text-on-surface-variant/85 leading-relaxed font-light mb-4">
-                    Every pizza dough ball cold-ferments for two full days to unlock complex natural aeration before blistering across our 450°C stone hearth.
+                    {t('story.fermentDesc', 'Every pizza dough ball cold-ferments for two full days to unlock complex natural aeration before blistering across our 450°C stone hearth.')}
                   </p>
 
                   {/* Bottom Craft Seal */}
                   <div className="pt-3 border-t border-outline/15 flex items-center justify-between font-mono text-[9px] uppercase tracking-widest text-on-surface/50">
-                    <span>ZERO RUSH · HAND-STRETCHED</span>
-                    <span className="text-primary font-semibold">AUTHENTIC</span>
+                    <span>{t('story.zeroRush', 'ZERO RUSH · HAND-STRETCHED')}</span>
+                    <span className="text-primary font-semibold">{t('story.authentic', 'AUTHENTIC')}</span>
                   </div>
                 </div>
               </div>
@@ -400,7 +400,7 @@ export const OurStory: React.FC = () => {
                           <img
                             src={ch.image}
                             alt={ch.imageAlt || ch.title}
-                            loading={idx === 0 ? 'eager' : 'lazy'}
+                            loading="lazy"
                             decoding="async"
                             className="w-full h-full object-cover brightness-[0.88] transition-transform duration-700 group-hover:scale-105"
                           />

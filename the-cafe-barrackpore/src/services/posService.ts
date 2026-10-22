@@ -213,6 +213,8 @@ export const createOrAppendKOT = async (params: {
   customerName?: string;
   customerPhone?: string;
   deliveryAddress?: string;
+  billNumber?: string;
+  idempotencyKey?: string;
   items: {
     id: string;
     name: string;
@@ -232,6 +234,8 @@ export const createOrAppendKOT = async (params: {
 }> => {
   const {
     billId,
+    billNumber,
+    idempotencyKey,
     orderType,
     tableNumber,
     customerName,
@@ -251,11 +255,14 @@ export const createOrAppendKOT = async (params: {
     };
   }
 
+  const kotIdempotencyKey = idempotencyKey || `kot_${billId || tableNumber || 'ctr'}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
   // 1. Supabase Connected Mode
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase.rpc('pos_create_or_append_kot', {
         p_bill_id: billId || null,
+        p_bill_number: billNumber || null,
         p_order_type: orderType,
         p_table_number: tableNumber || null,
         p_customer_name: customerName || null,
@@ -270,6 +277,7 @@ export const createOrAppendKOT = async (params: {
           notes: it.notes || '',
         })),
         p_special_instructions: specialInstructions || null,
+        p_idempotency_key: kotIdempotencyKey,
       });
 
       if (error) throw error;
@@ -324,6 +332,21 @@ export const createOrAppendKOT = async (params: {
 
   // 2. Demo / Offline Mode
   const demoBills = getDemoBills();
+
+  // Demo Idempotency Check: KOT sent exactly once
+  for (const b of demoBills) {
+    const existingBatch = (b.kot_batches || []).find(
+      (kb: any) => kb.idempotency_key === kotIdempotencyKey
+    );
+    if (existingBatch) {
+      return {
+        success: true,
+        bill: b,
+        kotBatch: existingBatch,
+      };
+    }
+  }
+
   let foundBill: POSBill | undefined;
 
   if (billId) {
@@ -382,6 +405,7 @@ export const createOrAppendKOT = async (params: {
     special_instructions: specialInstructions || null,
     created_at: nowIso,
   };
+  (newKotBatch as any).idempotency_key = kotIdempotencyKey;
 
   if (!activeBill.kot_batches) activeBill.kot_batches = [];
   activeBill.kot_batches.push(newKotBatch);
@@ -741,6 +765,36 @@ export const voidBillItem = async (params: {
 
   recalculateBillFinancials(bill);
   saveDemoBills(bills);
+
+  // Record in demo audit log
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const rawAudit = localStorage.getItem('cafe_demo_audit_log');
+      const audit = rawAudit ? JSON.parse(rawAudit) : [];
+      audit.unshift({
+        id: `audit_${Date.now()}`,
+        restaurant_id: 'the-cafe-barrackpore',
+        actor_id: 'pos',
+        actor_name: item.void_approved_by,
+        actor_role: managerPin ? 'manager' : 'staff',
+        action: 'POS_ITEM_VOIDED',
+        target_type: 'bill_items',
+        target_id: itemId,
+        details: {
+          bill_id: billId,
+          bill_number: bill.bill_number,
+          item_name: item.item_name,
+          quantity: item.quantity,
+          line_total: item.line_total,
+          reason: reason.trim(),
+        },
+        created_at: new Date().toISOString(),
+      });
+      localStorage.setItem('cafe_demo_audit_log', JSON.stringify(audit.slice(0, 100)));
+    } catch {
+      // ignore
+    }
+  }
 
   return { success: true };
 };

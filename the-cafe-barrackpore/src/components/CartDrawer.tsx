@@ -1240,7 +1240,7 @@ export const CartDrawer: React.FC = () => {
                               setTableNumber(e.target.value);
                               if (errors.tableNumber) setErrors((prev) => ({ ...prev, tableNumber: '' }));
                             }}
-                            placeholder="e.g. Table 04 or Booth 2"
+                            placeholder={t('cart.tablePlaceholder', 'e.g. Table 04 or Booth 2')}
                             className={`w-full bg-[#0D0705] border rounded-xl px-4 py-3 text-on-surface font-sans text-sm focus:outline-none transition-colors placeholder:text-white/20 ${
                               errors.tableNumber ? 'border-red-400 focus:border-red-400' : 'border-white/10 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40'
                             }`}
@@ -1408,7 +1408,7 @@ export const CartDrawer: React.FC = () => {
                   <div className="p-3.5 rounded-2xl bg-[#160E0A] border border-[#D4AF37]/20 flex flex-col gap-2">
                     <div className="flex items-center gap-1.5 text-primary text-[11px] font-sans font-semibold uppercase tracking-wider">
                       <span className="material-symbols-outlined text-sm">shield</span>
-                      <span>Security Verification</span>
+                      <span>{t('cart.securityVerification', 'Security Verification')}</span>
                     </div>
                     <TurnstileWidget action="order" onVerify={(token) => setCaptchaToken(token)} />
                   </div>
@@ -1468,7 +1468,7 @@ export const CartDrawer: React.FC = () => {
                                 setPromoCodeInput(e.target.value.toUpperCase());
                                 if (discountError) setDiscountError(null);
                               }}
-                              placeholder="e.g. WELCOME10"
+                              placeholder={t('cart.promoCodePlaceholder', 'e.g. WELCOME10')}
                               className="flex-1 bg-[#0D0705] border border-white/10 rounded-xl px-3 py-2 text-xs text-white uppercase font-mono tracking-wider focus:outline-none focus:border-[#D4AF37]"
                             />
                             <button
@@ -1545,7 +1545,7 @@ export const CartDrawer: React.FC = () => {
                     <div className="p-4 rounded-xl bg-error/10 border border-error/30 text-xs flex flex-col gap-2">
                       <div className="flex items-center gap-1.5 font-bold text-red-400">
                         <span className="material-symbols-outlined text-base">warning</span>
-                        <span>Notice</span>
+                        <span>{t('cart.notice', 'Notice')}</span>
                       </div>
                       <p className="text-on-surface/80 leading-relaxed font-sans">
                         {submissionError}
@@ -1555,7 +1555,7 @@ export const CartDrawer: React.FC = () => {
                         onClick={() => dispatchWhatsApp(orderRef || generateClientOrderRef(), false)}
                         className="text-left font-semibold text-primary underline hover:text-primary/80 transition-colors pt-1 cursor-pointer"
                       >
-                        Prefer WhatsApp? Send order directly via WhatsApp ➔
+                        {t('cart.preferWhatsapp', 'Prefer WhatsApp? Send order directly via WhatsApp')} ➔
                       </button>
                     </div>
                   )}

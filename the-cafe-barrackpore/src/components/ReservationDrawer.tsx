@@ -273,12 +273,12 @@ export const ReservationDrawer: React.FC = () => {
                     <span>{t('cart.whatsappConfirmation', 'Send Booking Details to WhatsApp')}</span>
                   </button>
                   <p className="text-[10px] text-on-surface/50 text-center font-sans">
-                    Need instant booking confirmation on your phone? Tap to message our reservation concierge.
+                    {t('reservation.instantConfirmHint', 'Need instant booking confirmation on your phone? Tap to message our reservation concierge.')}
                   </p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-[#160E0A] border border-white/10 w-full max-w-sm flex items-center justify-between text-xs font-sans">
-                  <span className="text-on-surface/60">Questions or amendments?</span>
+                  <span className="text-on-surface/60">{t('reservation.questionsAmendments', 'Questions or amendments?')}</span>
                   <a
                     href={`tel:${restaurantConfig.contact.phone}`}
                     className="text-primary font-semibold flex items-center gap-1 hover:underline"
@@ -308,9 +308,9 @@ export const ReservationDrawer: React.FC = () => {
                       <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3">
                         <span className="material-symbols-outlined text-amber-400 text-xl shrink-0 mt-0.5">event_busy</span>
                         <div>
-                          <p className="text-sm font-semibold text-white">Table Reservations Temporarily Paused</p>
+                          <p className="text-sm font-semibold text-white">{t('reservation.pausedTitle', 'Table Reservations Temporarily Paused')}</p>
                           <p className="text-xs text-on-surface/75 mt-1 leading-relaxed font-sans">
-                            Online bookings are currently paused. Walk-in guests are warmly welcomed on a first-come, first-served basis. For urgent queries, contact us at{' '}
+                            {t('reservation.pausedMessage', 'Online bookings are currently paused. Walk-in guests are warmly welcomed on a first-come, first-served basis. For urgent queries, contact us at')}{' '}
                             <a href={`tel:${restaurantConfig.contact.phone}`} className="text-primary underline font-medium">
                               {restaurantConfig.contact.displayPhone}
                             </a>.
@@ -466,7 +466,7 @@ export const ReservationDrawer: React.FC = () => {
                     <div className="p-4 mb-3 rounded-xl bg-error/10 border border-error/30 text-xs flex flex-col gap-2">
                       <div className="flex items-center gap-1.5 font-bold text-red-400">
                         <span className="material-symbols-outlined text-base">warning</span>
-                        <span>Registration Notice</span>
+                        <span>{t('reservation.notice', 'Registration Notice')}</span>
                       </div>
                       <p className="text-on-surface/80 leading-relaxed font-sans">
                         {submissionError}
@@ -476,7 +476,7 @@ export const ReservationDrawer: React.FC = () => {
                         onClick={() => dispatchWhatsApp(generateClientReservationRef(), false)}
                         className="text-left font-semibold text-primary underline hover:text-primary/80 transition-colors pt-1 cursor-pointer"
                       >
-                        Prefer WhatsApp? Continue directly with WhatsApp reservation ➔
+                        {t('reservation.preferWhatsapp', 'Prefer WhatsApp? Continue directly with WhatsApp reservation')} ➔
                       </button>
                     </div>
                   )}

@@ -198,7 +198,7 @@ export const ContactDrawer: React.FC = () => {
                     className="w-full h-12 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-all"
                   >
                     <span className="material-symbols-outlined text-lg">forum</span>
-                    <span>Continue via WhatsApp Concierge</span>
+                    <span>{t('contact.whatsappDirect', 'Continue via WhatsApp Concierge')}</span>
                   </button>
 
                   <button
@@ -303,17 +303,17 @@ export const ContactDrawer: React.FC = () => {
 
                   {/* Concierge Assurance */}
                   <div className="p-3.5 rounded-xl bg-surface-container-high/40 border border-outline-variant/15 text-zinc-400 text-xs leading-relaxed font-light">
-                    <span>Direct Concierge Desk: </span>
+                    <span>{t('contact.directDesk', 'Direct Concierge Desk:')} </span>
                     <a href={`tel:${conciergePhone}`} className="text-primary font-mono hover:underline">
                       {conciergePhone}
                     </a>
-                    <span> · We prioritize immediate hospitality responses within operational hours (11:00 AM – 11:30 PM).</span>
+                    <span> · {t('contact.priorityResponse', 'We prioritize immediate hospitality responses within operational hours (11:00 AM – 11:30 PM).')}</span>
                   </div>
 
                   {/* Security Verification (Cloudflare Turnstile) */}
                   <div className="flex flex-col gap-1.5 pt-1">
                     <label className="font-sans text-[11px] uppercase tracking-wider text-zinc-300 font-medium">
-                      Security Verification <span className="text-primary">*</span>
+                      {t('cart.securityVerification', 'Security Verification')} <span className="text-primary">*</span>
                     </label>
                     <TurnstileWidget action="contact" onVerify={(token) => setCaptchaToken(token)} />
                   </div>

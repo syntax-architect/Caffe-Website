@@ -32,17 +32,17 @@ const QRContent: React.FC = () => {
           <span className="material-symbols-outlined text-[#D4AF37] text-2xl">qr_code_scanner</span>
         </div>
         <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#D4AF37] mb-2">
-          Service Notice
+          {t('qr.serviceNotice', 'Service Notice')}
         </span>
-        <h2 className="text-xl font-serif font-bold text-white mb-2">QR Table Ordering Paused</h2>
+        <h2 className="text-xl font-serif font-bold text-white mb-2">{t('qr.tableOrderingPaused', 'QR Table Ordering Paused')}</h2>
         <p className="text-stone-400 text-xs max-w-sm mb-6 leading-relaxed">
-          Tabletop QR ordering is currently not active for this restaurant. Please contact your floor server to place your order.
+          {t('qr.tableOrderingPausedDesc', 'Tabletop QR ordering is currently not active for this restaurant. Please contact your floor server to place your order.')}
         </p>
         <a
           href="/"
           className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider transition-all"
         >
-          Return to Home
+          {t('orderSuccess.backHome', 'Return to Home')}
         </a>
       </div>
     );
@@ -120,7 +120,7 @@ const QRContent: React.FC = () => {
               </h2>
 
               <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed mb-8">
-                To explore our menu and dispatch orders directly from your seat, please point your smartphone camera at the table QR stand.
+                {t('qr.pointCameraDesc', 'To explore our menu and dispatch orders directly from your seat, please point your smartphone camera at the table QR stand.')}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 w-full">
@@ -129,14 +129,14 @@ const QRContent: React.FC = () => {
                   className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-6 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white border border-white/[0.08] font-semibold text-xs tracking-wider uppercase transition-colors"
                 >
                   <span className="material-symbols-outlined text-base">home</span>
-                  <span>Main Website</span>
+                  <span>{t('qr.mainWebsite', 'Main Website')}</span>
                 </a>
                 <a
                   href="/qr-generator"
                   className="inline-flex items-center justify-center gap-2 py-3 px-6 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95"
                 >
                   <span className="material-symbols-outlined text-base">print</span>
-                  <span>Staff Setup</span>
+                  <span>{t('qr.staffSetup', 'Staff Setup')}</span>
                 </a>
               </div>
             </div>
@@ -162,7 +162,7 @@ const QRContent: React.FC = () => {
             {restaurantConfig.businessName}
           </h1>
           <p className="text-zinc-500 text-xs font-mono tracking-wider uppercase mt-1">
-            Table Verification Protocol
+            {t('qr.tableVerification', 'Table Verification Protocol')}
           </p>
         </header>
 
@@ -174,11 +174,11 @@ const QRContent: React.FC = () => {
               </div>
 
               <h2 className="text-2xl font-serif font-semibold text-white mb-2">
-                Unrecognized Table QR
+                {t('qr.unrecognizedTable', 'Unrecognized Table QR')}
               </h2>
 
               <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed mb-8">
-                {validationError || 'The table QR code scanned is invalid or not recognized. Please scan the QR code located on your table again, or ask our staff for assistance.'}
+                {validationError || t('qr.unrecognizedTableDesc', 'The table QR code scanned is invalid or not recognized. Please scan the QR code located on your table again, or ask our staff for assistance.')}
               </p>
 
               <a
@@ -186,14 +186,14 @@ const QRContent: React.FC = () => {
                 className="w-full inline-flex items-center justify-center gap-2 py-3 px-8 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95"
               >
                 <span className="material-symbols-outlined text-base">arrow_back</span>
-                <span>Return to Website</span>
+                <span>{t('qr.returnToWebsite', 'Return to Website')}</span>
               </a>
             </div>
           </div>
         </main>
 
         <footer className="text-center text-zinc-600 text-xs py-4 border-t border-white/[0.06] font-mono">
-          {restaurantConfig.businessName} • Concierge Help Available
+          {restaurantConfig.businessName} • {t('qr.conciergeHelp', 'Concierge Help Available')}
         </footer>
       </div>
     );
@@ -321,8 +321,8 @@ const QRContent: React.FC = () => {
                     <span className="material-symbols-outlined text-base">bolt</span>
                   </div>
                   <div>
-                    <p className="text-white font-medium text-xs">Direct Line Tickets</p>
-                    <p className="text-stone-400 text-[10px]">Zero line waiting</p>
+                    <p className="text-white font-medium text-xs">{t('qr.directTickets', 'Direct Line Tickets')}</p>
+                    <p className="text-stone-400 text-[10px]">{t('qr.zeroWaiting', 'Zero line waiting')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-black/40 border border-white/[0.06] backdrop-blur-sm shadow-inner">
@@ -330,8 +330,8 @@ const QRContent: React.FC = () => {
                     <span className="material-symbols-outlined text-base">room_service</span>
                   </div>
                   <div>
-                    <p className="text-white font-medium text-xs">Floor Concierge</p>
-                    <p className="text-stone-400 text-[10px]">Attentive service on-call</p>
+                    <p className="text-white font-medium text-xs">{t('qr.floorConcierge', 'Floor Concierge')}</p>
+                    <p className="text-stone-400 text-[10px]">{t('qr.attentiveService', 'Attentive service on-call')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-black/40 border border-white/[0.06] backdrop-blur-sm shadow-inner">
@@ -339,8 +339,8 @@ const QRContent: React.FC = () => {
                     <span className="material-symbols-outlined text-base">payments</span>
                   </div>
                   <div>
-                    <p className="text-white font-medium text-xs">Flexible Checkout</p>
-                    <p className="text-stone-400 text-[10px]">Counter or instant online</p>
+                    <p className="text-white font-medium text-xs">{t('qr.flexibleCheckout', 'Flexible Checkout')}</p>
+                    <p className="text-stone-400 text-[10px]">{t('qr.instantOnline', 'Counter or instant online')}</p>
                   </div>
                 </div>
               </div>

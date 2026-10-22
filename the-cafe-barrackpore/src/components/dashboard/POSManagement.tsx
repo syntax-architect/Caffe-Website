@@ -399,6 +399,8 @@ export const POSManagement: React.FC = () => {
   // Punch KOT (Send Batch to Kitchen)
   // -------------------------------------------------------------
   const handlePunchKOT = async () => {
+    if (isPunchingKOT) return;
+
     if (draftItems.length === 0) {
       addNotification('warning', 'No Items', 'Please select at least one item before sending a KOT.');
       return;

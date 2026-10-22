@@ -369,13 +369,22 @@ export class EscPosBuilder {
   }
 
   /**
-   * Paper Cut command
-   * @param partial Whether to leave a small paper bridge tab (partial cut)
-   * @param feedLines Number of lines to feed before cutting (so text is clear of the print head)
+   * Cash Drawer Kick (alias using pin 2 or pin 5)
    */
-  cut(partial = false, feedLines = 4): this {
-    this.feed(feedLines);
-    if (partial) {
+  openDrawer(pin: 2 | 5 = 2): this {
+    return this.cashDrawerPulse(pin === 5 ? 1 : 0, 50, 100);
+  }
+
+  /**
+   * Paper Cut command
+   * @param partial Whether to leave a small paper bridge tab (partial cut) or 0 for partial
+   * @param feedLines Number of lines to feed before cutting
+   */
+  cut(partial: boolean | number = false, feedLines = 4): this {
+    const isPartial = partial === true || partial === 0 || partial === 66 || partial === 0x42;
+    const lines = typeof partial === 'number' && partial > 0 ? partial : (partial === 0 ? 0 : feedLines);
+    if (lines > 0) this.feed(lines);
+    if (isPartial) {
       this.buffer.push(GS, 0x56, 0x42, 0x00); // GS V 66 0 (partial cut)
     } else {
       this.buffer.push(GS, 0x56, 0x00); // GS V 0 (full cut)
@@ -398,6 +407,13 @@ export class EscPosBuilder {
    */
   build(): Uint8Array {
     return new Uint8Array(this.buffer);
+  }
+
+  /**
+   * Alias for build()
+   */
+  toUint8Array(): Uint8Array {
+    return this.build();
   }
 }
 

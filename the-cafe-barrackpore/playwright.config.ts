@@ -12,7 +12,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:5175',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -25,11 +25,18 @@ export default defineConfig({
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
     },
+    {
+      name: 'Tablet Chrome',
+      use: {
+        viewport: { width: 768, height: 1024 },
+        hasTouch: true,
+      },
+    },
   ],
   webServer: {
     command: 'npm run dev',
-    port: 5173,
-    reuseExistingServer: !process.env.CI,
+    url: 'http://localhost:5175',
+    reuseExistingServer: true,
     timeout: 60 * 1000,
   },
 });

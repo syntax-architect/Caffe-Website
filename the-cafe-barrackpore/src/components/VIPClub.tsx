@@ -94,7 +94,7 @@ export const VIPClub: React.FC = () => {
     <section
       className="w-full pt-14 sm:pt-16 lg:pt-18 pb-0 bg-background border-t border-outline/15 relative scroll-mt-28 overflow-hidden"
       id="vip-club"
-      aria-label="The Nocturnal Circle VIP Club"
+      aria-label={t('vip.sectionLabel', 'The Nocturnal Circle VIP Club')}
     >
       <div id="vip-section" className="absolute -top-28 pointer-events-none" />
 
@@ -179,7 +179,7 @@ export const VIPClub: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      Join the <span className="italic font-light text-primary">Nocturnal Circle</span>
+                      {t('vip.joinPrefix', 'Join the')} <span className="italic font-light text-primary">{t('vip.nocturnalCircle', 'Nocturnal Circle')}</span>
                     </>
                   )}
                 </h2>
@@ -254,7 +254,7 @@ export const VIPClub: React.FC = () => {
                           placeholder={placeholder}
                           required
                           className="w-full h-12 bg-surface-container-lowest/90 border border-outline/30 focus:border-primary ring-1 ring-transparent focus:ring-primary/50 rounded-full pl-12 pr-5 text-sm text-[#FAF6F0] placeholder:text-[#FAF6F0]/40 focus:outline-none transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] backdrop-blur-md"
-                          aria-label="Email address for VIP Club"
+                          aria-label={t('vip.emailAria', 'Email address for VIP Club')}
                         />
                       </div>
 
@@ -313,17 +313,16 @@ export const VIPClub: React.FC = () => {
             {/* Left 6 Cols: Valmora-Style High-Contrast Editorial Invitation */}
             <div className="lg:col-span-6 space-y-6">
               <span className="font-mono text-[11px] tracking-[0.25em] uppercase text-[#8C5A2B] font-bold block">
-                PRIVATE SANCTUARY LEDGER · CANTONMENT
+                {t('vip.privateLedger', 'PRIVATE SANCTUARY LEDGER · CANTONMENT')}
               </span>
 
               <h3 className="font-serif text-4xl sm:text-6xl tracking-tight leading-[1.03] text-[#18110D]">
-                THE SHEET COMES OFF <br />
-                <span className="italic font-light text-[#8C5A2B]">at dusk.</span>
+                {t('vip.sheetComesOff', 'THE SHEET COMES OFF')} <br />
+                <span className="italic font-light text-[#8C5A2B]">{t('vip.atDusk', 'at dusk.')}</span>
               </h3>
 
               <p className="font-sans text-base text-[#4A3B32] max-w-md leading-relaxed">
-                Unplugged acoustic sessions, 450°C wood-fired tastings, and sapphire velvet booths in
-                Cantonment. Tell us who you are and we will reserve your place on the ledger.
+                {t('vip.ledgerDesc', 'Unplugged acoustic sessions, 450°C wood-fired tastings, and sapphire velvet booths in Cantonment. Tell us who you are and we will reserve your place on the ledger.')}
               </p>
 
               <div className="pt-2 flex flex-wrap items-center gap-4">
@@ -332,7 +331,7 @@ export const VIPClub: React.FC = () => {
                   onClick={openReservation}
                   className="px-7 py-3.5 rounded-full bg-[#18110D] text-[#F4EFE6] font-mono text-xs tracking-[0.2em] uppercase hover:bg-[#8C5A2B] transition-colors inline-flex items-center gap-2 shadow-md active:scale-95"
                 >
-                  <span>Reserve a Table</span>
+                  <span>{t('hero.bookTable', 'Reserve a Table')}</span>
                   <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </button>
               </div>
