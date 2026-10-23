@@ -15,7 +15,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   className = '',
   onLanguageChange,
 }) => {
-  const { language, availableLanguages, setLanguage, meta, t } = useI18n();
+  const { language, availableLanguages, setLanguage, setStaffLanguage, meta, t } = useI18n();
   const { features } = useSiteConfig();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,13 +48,17 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
 
   const handleSelect = useCallback(
     (code: SupportedLanguage) => {
-      setLanguage(code);
+      if (variant === 'staff' || (typeof window !== 'undefined' && window.location.pathname.startsWith('/staff'))) {
+        setStaffLanguage(code);
+      } else {
+        setLanguage(code);
+      }
       setIsOpen(false);
       if (onLanguageChange) {
         onLanguageChange(code);
       }
     },
-    [setLanguage, onLanguageChange]
+    [setLanguage, setStaffLanguage, variant, onLanguageChange]
   );
 
   if (features?.language_switcher === false) {

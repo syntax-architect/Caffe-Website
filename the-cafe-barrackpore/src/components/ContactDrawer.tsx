@@ -307,6 +307,10 @@ export const ContactDrawer: React.FC = () => {
                     <a href={`tel:${conciergePhone}`} className="text-primary font-mono hover:underline">
                       {conciergePhone}
                     </a>
+                    <span> · </span>
+                    <a href={`mailto:${restaurantConfig?.contact?.email || clientDetails.email}`} className="text-primary font-mono hover:underline">
+                      {restaurantConfig?.contact?.email || clientDetails.email}
+                    </a>
                     <span> · {t('contact.priorityResponse', 'We prioritize immediate hospitality responses within operational hours (11:00 AM – 11:30 PM).')}</span>
                   </div>
 

@@ -32,6 +32,44 @@ const CUSTOMER_COMPONENTS = [
   'src/components/legal/TermsPage.tsx',
 ];
 
+// Extended Staff, KDS, POS, Cash Drawer, and Dashboard folders
+const STAFF_AND_DASHBOARD_COMPONENTS = [
+  // Staff Portal & Authentication
+  'src/components/staff/StaffLoginPage.tsx',
+  'src/components/staff/ResetPasswordPage.tsx',
+  'src/components/staff/StaffApp.tsx',
+  'src/components/staff/ProtectedRoute.tsx',
+  // Kitchen Display System (KDS)
+  'src/components/kitchen/KitchenDisplayApp.tsx',
+  'src/components/kitchen/KitchenTopBar.tsx',
+  'src/components/kitchen/KitchenColumn.tsx',
+  'src/components/kitchen/KitchenTicket.tsx',
+  'src/components/kitchen/KitchenEmptyState.tsx',
+  'src/components/kitchen/KitchenHistoryDrawer.tsx',
+  // Dashboard, POS & Operations
+  'src/components/dashboard/DashboardLayout.tsx',
+  'src/components/dashboard/DashboardOverview.tsx',
+  'src/components/dashboard/POSManagement.tsx',
+  'src/components/dashboard/CashDrawerManagement.tsx',
+  'src/components/dashboard/OrdersManagement.tsx',
+  'src/components/dashboard/TablesManagement.tsx',
+  'src/components/dashboard/MenuManagement.tsx',
+  'src/components/dashboard/ReservationsManagement.tsx',
+  'src/components/dashboard/CustomersManagement.tsx',
+  'src/components/dashboard/DiscountsManagement.tsx',
+  'src/components/dashboard/StaffManagement.tsx',
+  'src/components/dashboard/AuditLogManagement.tsx',
+  'src/components/dashboard/SettingsManagement.tsx',
+  'src/components/dashboard/ContentManagement.tsx',
+  'src/components/dashboard/BillSettlementModal.tsx',
+  'src/components/dashboard/PrinterSettingsSection.tsx',
+];
+
+const ALL_LOCALIZED_COMPONENTS = [
+  ...CUSTOMER_COMPONENTS,
+  ...STAFF_AND_DASHBOARD_COMPONENTS,
+];
+
 // Whitelist of technical identifiers, material symbols, brand constants, or punctuation
 const ALLOWED_LITERALS = new Set([
   'The Café',
@@ -99,6 +137,33 @@ const ALLOWED_LITERALS = new Set([
   'drag_handle',
   'more_vert',
   'tune',
+  'point_of_sale',
+  'event_seat',
+  'menu_book',
+  'auto_stories',
+  'contact_page',
+  'local_offer',
+  'group',
+  'power_off',
+  'dashboard',
+  'view_compact',
+  'view_comfortable',
+  'takeout_dining',
+  'notifications_active',
+  'pin',
+  'visibility',
+  'visibility_off',
+  'verified_user',
+  'check_circle',
+  'security_update_warning',
+  'notifications',
+  'refresh',
+  'download',
+  'upload',
+  'lock_reset',
+  'sync',
+  'logout',
+  'photo_size_select_actual',
 ]);
 
 interface HardcodedFinding {
@@ -210,7 +275,7 @@ async function runTests() {
   let totalFindings = 0;
   const componentReports: { file: string; pass: boolean; findings: HardcodedFinding[] }[] = [];
 
-  for (const comp of CUSTOMER_COMPONENTS) {
+  for (const comp of ALL_LOCALIZED_COMPONENTS) {
     const findings = scanFileForHardcodedStrings(comp);
     const pass = findings.length === 0;
     componentReports.push({ file: comp, pass, findings });
@@ -229,10 +294,10 @@ async function runTests() {
 
   console.log('\n---------------------------------------------------------');
   if (totalFindings > 0) {
-    console.error(`❌ AUDIT FAILED: ${totalFindings} hardcoded English strings detected across customer components!`);
+    console.error(`❌ AUDIT FAILED: ${totalFindings} hardcoded English strings detected across localized components!`);
     process.exit(1);
   } else {
-    console.log(`✔ AUDIT PASSED: All ${CUSTOMER_COMPONENTS.length} customer components are 100% localized via t()!`);
+    console.log(`✔ AUDIT PASSED: All ${ALL_LOCALIZED_COMPONENTS.length} customer, staff, kitchen & dashboard components are 100% localized via t()!`);
   }
 }
 

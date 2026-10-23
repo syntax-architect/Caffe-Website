@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchCustomers, updateCustomerConsent, exportCustomersCSV, downloadCSV } from '../../services/ownerService';
@@ -6,6 +7,7 @@ import { useNotification } from '../../hooks/useNotification';
 import { formatCurrency } from '../../utils/currency';
 
 export const CustomersManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { isOwner } = useAuth();
   const { addNotification } = useNotification();
   
@@ -74,7 +76,7 @@ export const CustomersManagement: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64 text-red-500 bg-[#120F0D]/95 border border-white/[0.04] p-6 rounded-[calc(2rem-0.25rem)]">
         <span className="material-symbols-outlined text-4xl mr-3">lock</span>
-        <h2 className="text-xl font-serif">Owner Access Required</h2>
+        <h2 className="text-xl font-serif">{t('staff.dashboard.owner_access_required', 'Owner Access Required')}</h2>
       </div>
     );
   }
@@ -90,7 +92,7 @@ export const CustomersManagement: React.FC = () => {
               {customers.length}
             </span>
           </h2>
-          <p className="text-stone-400 mt-2">Manage customer relationships and marketing preferences</p>
+          <p className="text-stone-400 mt-2">{t('staff.dashboard.manage_customer_relationships_', 'Manage customer relationships and marketing preferences')}</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -115,7 +117,7 @@ export const CustomersManagement: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name, phone, or email..."
+                placeholder={t('staff.dashboard.search_by_name_phone_or_email', 'Search by name, phone, or email...')}
                 className="w-full bg-[#1A1614] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-stone-500 focus:outline-none focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/50 transition-all"
               />
             </div>
@@ -151,27 +153,27 @@ export const CustomersManagement: React.FC = () => {
           {isLoading ? (
             <div className="p-12 text-center space-y-4">
               <span className="material-symbols-outlined text-4xl text-[#D4AF37] animate-spin">refresh</span>
-              <p className="text-stone-400">Loading customers...</p>
+              <p className="text-stone-400">{t('staff.dashboard.loading_customers', 'Loading customers...')}</p>
             </div>
           ) : customers.length === 0 ? (
             <div className="p-12 text-center space-y-4">
               <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
                 <span className="material-symbols-outlined text-3xl text-stone-500">group_off</span>
               </div>
-              <p className="text-stone-300 font-medium text-lg">No customers found</p>
-              <p className="text-stone-500 text-sm">Try adjusting your filters or search query.</p>
+              <p className="text-stone-300 font-medium text-lg">{t('staff.dashboard.no_customers_found', 'No customers found')}</p>
+              <p className="text-stone-500 text-sm">{t('staff.dashboard.try_adjusting_your_filters_or_', 'Try adjusting your filters or search query.')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-white/[0.04] text-stone-500 text-xs uppercase tracking-wider">
-                    <th className="p-4 font-medium">Name</th>
-                    <th className="p-4 font-medium">Contact</th>
-                    <th className="p-4 font-medium text-center">Orders</th>
-                    <th className="p-4 font-medium text-right">Total Spent</th>
-                    <th className="p-4 font-medium text-right">Last Order</th>
-                    <th className="p-4 font-medium text-center">Marketing</th>
+                    <th className="p-4 font-medium">{t('staff.dashboard.name', 'Name')}</th>
+                    <th className="p-4 font-medium">{t('staff.dashboard.contact', 'Contact')}</th>
+                    <th className="p-4 font-medium text-center">{t('staff.dashboard.orders', 'Orders')}</th>
+                    <th className="p-4 font-medium text-right">{t('staff.dashboard.total_spent', 'Total Spent')}</th>
+                    <th className="p-4 font-medium text-right">{t('staff.dashboard.last_order', 'Last Order')}</th>
+                    <th className="p-4 font-medium text-center">{t('staff.dashboard.marketing', 'Marketing')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04]">
@@ -236,7 +238,7 @@ export const CustomersManagement: React.FC = () => {
           />
           <div className="relative w-full max-w-md bg-[#160E0A] h-full shadow-2xl border-l border-white/10 flex flex-col animate-slideInRight">
             <div className="flex items-center justify-between p-6 border-b border-white/10 bg-[#120B08]">
-              <h3 className="text-xl font-serif text-[#D4AF37]">Customer Details</h3>
+              <h3 className="text-xl font-serif text-[#D4AF37]">{t('staff.dashboard.customer_details', 'Customer Details')}</h3>
               <button
                 onClick={() => setSelectedCustomer(null)}
                 className="p-2 text-stone-400 hover:text-white rounded-xl hover:bg-white/5 transition-colors"
@@ -273,27 +275,27 @@ export const CustomersManagement: React.FC = () => {
               {/* Stats */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-[#1A1614] p-4 rounded-xl border border-white/5">
-                  <div className="text-stone-500 text-sm mb-1">Total Orders</div>
+                  <div className="text-stone-500 text-sm mb-1">{t('staff.dashboard.total_orders', 'Total Orders')}</div>
                   <div className="text-2xl font-medium text-white">{selectedCustomer.order_count}</div>
                 </div>
                 <div className="bg-[#1A1614] p-4 rounded-xl border border-white/5">
-                  <div className="text-stone-500 text-sm mb-1">Total Spent</div>
+                  <div className="text-stone-500 text-sm mb-1">{t('staff.dashboard.total_spent', 'Total Spent')}</div>
                   <div className="text-2xl font-medium text-[#D4AF37]">{formatCurrency(selectedCustomer.total_spent)}</div>
                 </div>
               </div>
 
               {/* Order History Summary */}
               <div className="space-y-3">
-                <h5 className="text-sm font-medium text-stone-500 uppercase tracking-wider">History</h5>
+                <h5 className="text-sm font-medium text-stone-500 uppercase tracking-wider">{t('staff.dashboard.history', 'History')}</h5>
                 <div className="bg-[#1A1614] rounded-xl border border-white/5 divide-y divide-white/5">
                   <div className="p-4 flex justify-between items-center">
-                    <span className="text-stone-400">First Order</span>
+                    <span className="text-stone-400">{t('staff.dashboard.first_order', 'First Order')}</span>
                     <span className="text-white">
                       {selectedCustomer.first_order_at ? new Date(selectedCustomer.first_order_at).toLocaleDateString() : 'N/A'}
                     </span>
                   </div>
                   <div className="p-4 flex justify-between items-center">
-                    <span className="text-stone-400">Last Order</span>
+                    <span className="text-stone-400">{t('staff.dashboard.last_order', 'Last Order')}</span>
                     <span className="text-white">
                       {selectedCustomer.last_order_at ? new Date(selectedCustomer.last_order_at).toLocaleDateString() : 'N/A'}
                     </span>
@@ -303,11 +305,11 @@ export const CustomersManagement: React.FC = () => {
 
               {/* Marketing Preferences */}
               <div className="space-y-3">
-                <h5 className="text-sm font-medium text-stone-500 uppercase tracking-wider">Preferences</h5>
+                <h5 className="text-sm font-medium text-stone-500 uppercase tracking-wider">{t('staff.dashboard.preferences', 'Preferences')}</h5>
                 <div className="bg-[#1A1614] rounded-xl border border-white/5 p-4 flex items-center justify-between">
                   <div>
-                    <div className="text-white font-medium">Marketing Emails & SMS</div>
-                    <div className="text-sm text-stone-500 mt-0.5">Receive promotional content</div>
+                    <div className="text-white font-medium">{t('staff.dashboard.marketing_emails_sms', 'Marketing Emails & SMS')}</div>
+                    <div className="text-sm text-stone-500 mt-0.5">{t('staff.dashboard.receive_promotional_content', 'Receive promotional content')}</div>
                   </div>
                   <button
                     onClick={() => handleToggleConsent(selectedCustomer)}
@@ -326,12 +328,12 @@ export const CustomersManagement: React.FC = () => {
 
               {/* Notes */}
               <div className="space-y-3">
-                <h5 className="text-sm font-medium text-stone-500 uppercase tracking-wider">Internal Notes</h5>
+                <h5 className="text-sm font-medium text-stone-500 uppercase tracking-wider">{t('staff.dashboard.internal_notes', 'Internal Notes')}</h5>
                 <div className="bg-[#1A1614] rounded-xl border border-white/5 p-4">
                   {selectedCustomer.notes ? (
                     <p className="text-stone-300 text-sm whitespace-pre-wrap">{selectedCustomer.notes}</p>
                   ) : (
-                    <p className="text-stone-600 text-sm italic">No internal notes for this customer.</p>
+                    <p className="text-stone-600 text-sm italic">{t('staff.dashboard.no_internal_notes_for_this_cus', 'No internal notes for this customer.')}</p>
                   )}
                 </div>
               </div>

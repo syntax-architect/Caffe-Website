@@ -1,4 +1,4 @@
-# Client Onboarding Checklist: [AGENCY NAME] Hospitality Platform
+# Client Onboarding Checklist: Antigravity Hospitality Systems Platform
 
 Complete and sign off this checklist per restaurant. Keep the Café Barrackpore preset as the source demo; do not copy its private credentials or accidentally reuse its database, CMS dataset, domain, legal copy, or payment account.
 

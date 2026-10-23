@@ -35,7 +35,7 @@ function recordStep(stepNum, name, status, screenshotFile, details, error = null
 
 async function setStaffAuth(page, role = 'owner', name = 'Proprietor') {
   await page.evaluate(({ role, name }) => {
-    localStorage.setItem('cb_staff_auth', JSON.stringify({
+    const data = JSON.stringify({
       profile: {
         id: `staff-demo-${role}`,
         user_id: `demo-${role}-id`,
@@ -46,7 +46,9 @@ async function setStaffAuth(page, role = 'owner', name = 'Proprietor') {
         updated_at: new Date().toISOString(),
       },
       email: `${role}@thecafebarrackpore.com`,
-    }));
+    });
+    localStorage.setItem('cb_staff_auth', data);
+    sessionStorage.setItem('cb_staff_auth', data);
   }, { role, name });
 }
 
@@ -715,30 +717,37 @@ async function sleep(ms) {
     console.log('\n--- EXECUTING FLOW 10: Role-Based Access Control ---');
     try {
       // 10.1: Cashier Profile
+      await pageB.goto(BASE_URL + '/');
       await setStaffAuth(pageB, 'cashier', 'Demo Cashier');
       await pageB.goto(BASE_URL + '/staff/settings');
-      await sleep(600);
-      const cashierBlocked = await pageB.locator('text=/Operations Settings Restricted|Access Restricted|Restricted/i').first().isVisible();
+      await pageB.waitForLoadState('networkidle');
+      await sleep(1500);
+      const cashierBlocked = await pageB.locator('text=/Restricted/i').first().isVisible();
       const screenshot10Cashier = path.join(SCREENSHOT_DIR, 'step10_cashier_restricted.png');
       await pageB.screenshot({ path: screenshot10Cashier });
 
       // 10.2: Waiter Profile
+      await pageB.goto(BASE_URL + '/');
       await setStaffAuth(pageB, 'waiter', 'Demo Floor Waiter');
       await pageB.goto(BASE_URL + '/staff/audit');
-      await sleep(600);
-      const waiterBlocked = await pageB.locator('text=/Restricted|Access Restricted/i').first().isVisible();
+      await pageB.waitForLoadState('networkidle');
+      await sleep(1500);
+      const waiterBlocked = await pageB.locator('text=/Restricted/i').first().isVisible();
       const screenshot10Waiter = path.join(SCREENSHOT_DIR, 'step10_waiter_restricted.png');
       await pageB.screenshot({ path: screenshot10Waiter });
 
       // 10.3: Kitchen Profile
+      await pageB.goto(BASE_URL + '/');
       await setStaffAuth(pageB, 'kitchen', 'Demo Line Cook');
       await pageB.goto(BASE_URL + '/staff/staff');
-      await sleep(600);
-      const kitchenBlocked = await pageB.locator('text=/Staff Roster Restricted|Restricted/i').first().isVisible();
+      await pageB.waitForLoadState('networkidle');
+      await sleep(1500);
+      const kitchenBlocked = await pageB.locator('text=/Restricted/i').first().isVisible();
       const screenshot10Kitchen = path.join(SCREENSHOT_DIR, 'step10_kitchen_restricted.png');
       await pageB.screenshot({ path: screenshot10Kitchen });
 
       // Restore Owner Auth
+      await pageB.goto(BASE_URL + '/');
       await setStaffAuth(pageB, 'owner', 'Proprietor');
 
       if (cashierBlocked && waiterBlocked && kitchenBlocked) {

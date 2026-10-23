@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useStaffSessionTimeout } from '../../hooks/useStaffSessionTimeout';
@@ -22,6 +23,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   title,
   subtitle,
 }) => {
+  const { t } = useI18n(); void t;
   const { staffProfile, role, signOut, signOutEverywhere, isOwner, isManager } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotification();
   const { restaurantConfig, logoUrl, features } = useSiteConfig();
@@ -98,7 +100,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-stone-200 transition-colors"
-            aria-label="Toggle navigation menu"
+            aria-label={t('staff.dashboard.toggle_navigation_menu', 'Toggle navigation menu')}
           >
             <span className="material-symbols-outlined text-2xl">
               {isMobileMenuOpen ? 'close' : 'menu'}
@@ -115,15 +117,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Staff Language Selector */}
           <LanguageSwitcher variant="compact" />
-
           {/* Notification Bell */}
           <button
             type="button"
             onClick={() => setIsNotifOpen(!isNotifOpen)}
             className="relative p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-stone-200 transition-colors"
-            aria-label="Notifications"
+            aria-label={t('staff.dashboard.notifications', 'Notifications')}
           >
             <span className="material-symbols-outlined text-xl">notifications</span>
             {unreadCount > 0 && (
@@ -238,9 +238,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </div>
           </div>
 
-          <div className="mb-3">
-            <LanguageSwitcher variant="staff" className="w-full" />
-          </div>
 
           <div className="flex items-center gap-2">
             <button
@@ -286,7 +283,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-[#0A0807]/80 backdrop-blur-xl border-b border-white/[0.07] sticky top-0 z-20">
           <div>
             <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-stone-400 mb-0.5">
-              <span>Operations Terminal</span>
+              <span>{t('staff.dashboard.operations_terminal', 'Operations Terminal')}</span>
               <span>/</span>
               <span className="text-[#D4AF37] font-semibold">{title}</span>
             </div>
@@ -305,8 +302,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <span>{currentTime || 'Syncing clock...'}</span>
             </div>
 
-            {/* Staff Language Selector */}
-            <LanguageSwitcher variant="staff" />
 
             {/* Database & Service Status Indicator */}
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs">
@@ -326,7 +321,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 type="button"
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
                 className="relative p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-stone-200 hover:text-[#D4AF37] transition-colors"
-                aria-label="View notifications"
+                aria-label={t('staff.dashboard.view_notifications', 'View notifications')}
               >
                 <span className="material-symbols-outlined text-xl">notifications</span>
                 {unreadCount > 0 && (
@@ -342,7 +337,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-[#D4AF37] text-base">notifications</span>
-                      <p className="text-xs font-bold uppercase tracking-wider text-white">Notifications</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-white">{t('staff.dashboard.notifications', 'Notifications')}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -367,7 +362,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                     {notifications.length === 0 ? (
                       <div className="text-center py-8">
                         <span className="material-symbols-outlined text-2xl text-stone-600 mb-1">done_all</span>
-                        <p className="text-xs text-stone-400">All notifications caught up</p>
+                        <p className="text-xs text-stone-400">{t('staff.dashboard.all_notifications_caught_up', 'All notifications caught up')}</p>
                       </div>
                     ) : (
                       notifications.map((n) => (
@@ -410,7 +405,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             }`}
           >
             <span className="material-symbols-outlined text-xl">dashboard</span>
-            <span>Home</span>
+            <span>{t('staff.dashboard.home', 'Home')}</span>
           </button>
           <button
             type="button"
@@ -420,7 +415,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             }`}
           >
             <span className="material-symbols-outlined text-xl">soup_kitchen</span>
-            <span>KDS</span>
+            <span>{t('staff.dashboard.kds', 'KDS')}</span>
           </button>
           <button
             type="button"
@@ -430,7 +425,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             }`}
           >
             <span className="material-symbols-outlined text-xl">receipt_long</span>
-            <span>Orders</span>
+            <span>{t('staff.dashboard.orders', 'Orders')}</span>
           </button>
           <button
             type="button"
@@ -440,7 +435,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             }`}
           >
             <span className="material-symbols-outlined text-xl">event_seat</span>
-            <span>Tables</span>
+            <span>{t('staff.dashboard.tables', 'Tables')}</span>
           </button>
         </div>
       </div>

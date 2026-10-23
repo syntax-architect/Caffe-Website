@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
@@ -40,6 +41,7 @@ interface CartDraftItem {
 }
 
 export const POSManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { isOwner, isManager } = useAuth();
   const { addNotification } = useNotification();
   const { restaurantConfig } = useSiteConfig();
@@ -825,7 +827,7 @@ export const POSManagement: React.FC = () => {
                 }`}
               >
                 <span className="material-symbols-outlined text-base">table_restaurant</span>
-                <span>Floor & Table Map</span>
+                <span>{t('staff.pos.floor_table_map', 'Floor & Table Map')}</span>
               </button>
             )}
             <button
@@ -838,7 +840,7 @@ export const POSManagement: React.FC = () => {
               }`}
             >
               <span className="material-symbols-outlined text-base">point_of_sale</span>
-              <span>Counter Direct Bill</span>
+              <span>{t('staff.pos.counter_direct_bill', 'Counter Direct Bill')}</span>
             </button>
           </div>
 
@@ -989,14 +991,14 @@ export const POSManagement: React.FC = () => {
                                   </span>
                                 </div>
                                 <div className="text-[10px] text-stone-500 font-mono flex items-center justify-between">
-                                  <span>Open Bill</span>
-                                  <span className="text-amber-400">Tap to edit</span>
+                                  <span>{t('staff.pos.open_bill', 'Open Bill')}</span>
+                                  <span className="text-amber-400">{t('staff.pos.tap_to_edit', 'Tap to edit')}</span>
                                 </div>
                               </div>
                             ) : (
                               <div className="flex items-center justify-between text-xs text-stone-500">
                                 <span>{table.capacity} Seats</span>
-                                <span className="text-emerald-400 font-bold">+ New Bill</span>
+                                <span className="text-emerald-400 font-bold">{t('staff.pos.new_bill', '+ New Bill')}</span>
                               </div>
                             )}
                           </div>
@@ -1023,7 +1025,7 @@ export const POSManagement: React.FC = () => {
                     className="flex items-center gap-1.5 text-xs font-bold text-stone-300 hover:text-white"
                   >
                     <span className="material-symbols-outlined text-sm">arrow_back</span>
-                    <span>Floor Table Map</span>
+                    <span>{t('staff.pos.floor_table_map', 'Floor Table Map')}</span>
                   </button>
 
                   <div className="text-xs font-mono text-[#D4AF37]">
@@ -1043,7 +1045,7 @@ export const POSManagement: React.FC = () => {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search menu items, wood-fired pizza, coffee..."
+                      placeholder={t('staff.pos.search_menu_items_wood_fired_p', 'Search menu items, wood-fired pizza, coffee...')}
                       className="w-full pl-9 pr-8 py-2 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#D4AF37]"
                     />
                     {searchQuery && (
@@ -1140,7 +1142,7 @@ export const POSManagement: React.FC = () => {
                               className="px-2.5 py-1 rounded-lg bg-[#D4AF37] hover:bg-[#c29f2f] text-black font-bold text-xs transition-colors flex items-center gap-0.5"
                             >
                               <span className="material-symbols-outlined text-xs">add</span>
-                              <span>Add</span>
+                              <span>{t('staff.pos.add', 'Add')}</span>
                             </button>
                           </div>
                         </div>
@@ -1198,14 +1200,14 @@ export const POSManagement: React.FC = () => {
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Guest Name (optional)"
+                    placeholder={t('staff.pos.guest_name_optional', 'Guest Name (optional)')}
                     className="flex-1 px-2.5 py-1.5 rounded-lg bg-black/30 border border-white/10 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#D4AF37]"
                   />
                   <input
                     type="tel"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="Phone"
+                    placeholder={t('staff.pos.phone', 'Phone')}
                     className="w-32 px-2.5 py-1.5 rounded-lg bg-black/30 border border-white/10 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
@@ -1214,7 +1216,7 @@ export const POSManagement: React.FC = () => {
                     type="text"
                     value={deliveryAddress}
                     onChange={(e) => setDeliveryAddress(e.target.value)}
-                    placeholder="Full Delivery Address"
+                    placeholder={t('staff.pos.full_delivery_address', 'Full Delivery Address')}
                     className="w-full px-2.5 py-1.5 rounded-lg bg-black/30 border border-white/10 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#D4AF37]"
                   />
                 )}
@@ -1232,7 +1234,7 @@ export const POSManagement: React.FC = () => {
                     <span className="material-symbols-outlined text-sm text-emerald-400">check_circle</span>
                     <span>Kitchen Orders ({activeBill.items.filter((i) => !i.is_voided).length})</span>
                   </span>
-                  <span className="text-[10px] text-stone-500 uppercase tracking-wider">Fired Batches</span>
+                  <span className="text-[10px] text-stone-500 uppercase tracking-wider">{t('staff.pos.fired_batches', 'Fired Batches')}</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -1378,7 +1380,7 @@ export const POSManagement: React.FC = () => {
                     type="text"
                     value={specialInstructions}
                     onChange={(e) => setSpecialInstructions(e.target.value)}
-                    placeholder="KOT Special Note (e.g. serve drinks first)"
+                    placeholder={t('staff.pos.kot_special_note_e_g_serve_dri', 'KOT Special Note (e.g. serve drinks first)')}
                     className="w-full px-2.5 py-1.5 rounded-lg bg-black/30 border border-white/10 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#D4AF37]"
                   />
 
@@ -1394,7 +1396,7 @@ export const POSManagement: React.FC = () => {
                     ) : (
                       <>
                         <span className="material-symbols-outlined text-base">soup_kitchen</span>
-                        <span>Send KOT to Kitchen</span>
+                        <span>{t('staff.pos.send_kot_to_kitchen', 'Send KOT to Kitchen')}</span>
                       </>
                     )}
                   </button>
@@ -1430,7 +1432,7 @@ export const POSManagement: React.FC = () => {
                       type="text"
                       value={discountCodeInput}
                       onChange={(e) => setDiscountCodeInput(e.target.value)}
-                      placeholder="Coupon code"
+                      placeholder={t('staff.pos.coupon_code', 'Coupon code')}
                       className="flex-1 px-2.5 py-1.5 rounded-lg bg-black/40 border border-white/10 text-xs text-white uppercase placeholder-stone-500 focus:outline-none focus:border-[#D4AF37]"
                     />
                     <button
@@ -1456,13 +1458,13 @@ export const POSManagement: React.FC = () => {
             {/* Live Financial Breakdown */}
             <div className="space-y-1 text-xs font-mono pt-1 border-t border-white/5">
               <div className="flex justify-between text-stone-400">
-                <span>Subtotal</span>
+                <span>{t('staff.pos.subtotal', 'Subtotal')}</span>
                 <span>{currencySymbol}{liveTotals.subtotal}</span>
               </div>
 
               {liveTotals.discountAmount > 0 && (
                 <div className="flex justify-between text-emerald-400">
-                  <span>Discount</span>
+                  <span>{t('staff.pos.discount', 'Discount')}</span>
                   <span>-{currencySymbol}{liveTotals.discountAmount}</span>
                 </div>
               )}
@@ -1478,7 +1480,7 @@ export const POSManagement: React.FC = () => {
               ))}
 
               <div className="flex justify-between text-sm font-black text-white pt-1.5 border-t border-white/10">
-                <span>Grand Total</span>
+                <span>{t('staff.pos.grand_total', 'Grand Total')}</span>
                 <span className="text-[#F3C766] text-base">{currencySymbol}{liveTotals.grandTotal}</span>
               </div>
             </div>
@@ -1492,7 +1494,7 @@ export const POSManagement: React.FC = () => {
                 className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-stone-200 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base">print</span>
-                <span>Print Bill</span>
+                <span>{t('staff.pos.print_bill', 'Print Bill')}</span>
               </button>
 
               <button
@@ -1502,7 +1504,7 @@ export const POSManagement: React.FC = () => {
                 className="py-2.5 px-3 rounded-xl bg-[#D4AF37] hover:bg-[#c29f2f] text-black font-black text-xs transition-colors shadow-lg flex items-center justify-center gap-1.5 disabled:opacity-40 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base">payments</span>
-                <span>Settle & Pay</span>
+                <span>{t('staff.pos.settle_pay', 'Settle & Pay')}</span>
               </button>
             </div>
 
@@ -1560,7 +1562,7 @@ export const POSManagement: React.FC = () => {
 
             {/* Quantity */}
             <div className="flex items-center justify-between p-3 rounded-xl bg-black/30 border border-white/5">
-              <span className="text-xs font-semibold text-stone-300">Quantity</span>
+              <span className="text-xs font-semibold text-stone-300">{t('staff.pos.quantity', 'Quantity')}</span>
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -1584,7 +1586,7 @@ export const POSManagement: React.FC = () => {
 
             {/* Modifiers List */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-400">Available Modifiers</label>
+              <label className="text-xs font-bold text-stone-400">{t('staff.pos.available_modifiers', 'Available Modifiers')}</label>
               <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
                 {DEFAULT_MODIFIERS.map((mod) => {
                   const isChecked = customizerModifiers.some((m) => m.id === mod.id);
@@ -1611,12 +1613,12 @@ export const POSManagement: React.FC = () => {
 
             {/* Cooking Notes */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-stone-400">Kitchen Note</label>
+              <label className="text-xs font-bold text-stone-400">{t('staff.pos.kitchen_note', 'Kitchen Note')}</label>
               <input
                 type="text"
                 value={customizerNotes}
                 onChange={(e) => setCustomizerNotes(e.target.value)}
-                placeholder="e.g. less spicy, crisp base, extra hot..."
+                placeholder={t('staff.pos.e_g_less_spicy_crisp_base_extr', 'e.g. less spicy, crisp base, extra hot...')}
                 className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#D4AF37]"
               />
             </div>
@@ -1640,7 +1642,7 @@ export const POSManagement: React.FC = () => {
           <div className="w-full max-w-sm bg-[#16120E] border border-red-500/30 rounded-2xl p-5 shadow-2xl space-y-4">
             <div className="flex items-center gap-2 text-red-400">
               <span className="material-symbols-outlined text-2xl">warning</span>
-              <h3 className="text-base font-bold text-white">Void Item Authorization</h3>
+              <h3 className="text-base font-bold text-white">{t('staff.pos.void_item_authorization', 'Void Item Authorization')}</h3>
             </div>
 
             <div className="p-3 rounded-xl bg-black/40 border border-white/10 text-xs">
@@ -1652,17 +1654,17 @@ export const POSManagement: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-stone-300">Void Reason (Required)</label>
+              <label className="text-xs font-bold text-stone-300">{t('staff.pos.void_reason_required', 'Void Reason (Required)')}</label>
               <select
                 value={voidReason}
                 onChange={(e) => setVoidReason(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
               >
-                <option value="Guest changed mind">Guest changed mind</option>
-                <option value="Kitchen out of ingredients">Kitchen out of ingredients</option>
-                <option value="Wrong item keyed by cashier">Wrong item keyed by cashier</option>
-                <option value="Quality complaint / replacement">Quality complaint / replacement</option>
-                <option value="Other">Other (Custom text)</option>
+                <option value="Guest changed mind">{t('staff.pos.guest_changed_mind', 'Guest changed mind')}</option>
+                <option value="Kitchen out of ingredients">{t('staff.pos.kitchen_out_of_ingredients', 'Kitchen out of ingredients')}</option>
+                <option value="Wrong item keyed by cashier">{t('staff.pos.wrong_item_keyed_by_cashier', 'Wrong item keyed by cashier')}</option>
+                <option value="Quality complaint / replacement">{t('staff.pos.quality_complaint_replacement', 'Quality complaint / replacement')}</option>
+                <option value="Other">{t('staff.pos.other_custom_text', 'Other (Custom text)')}</option>
               </select>
 
               {voidReason === 'Other' && (
@@ -1670,7 +1672,7 @@ export const POSManagement: React.FC = () => {
                   type="text"
                   value={voidCustomReason}
                   onChange={(e) => setVoidCustomReason(e.target.value)}
-                  placeholder="Specify custom reason..."
+                  placeholder={t('staff.pos.specify_custom_reason', 'Specify custom reason...')}
                   className="w-full mt-1.5 px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 />
               )}
@@ -1685,7 +1687,7 @@ export const POSManagement: React.FC = () => {
                 maxLength={8}
                 value={voidManagerPin}
                 onChange={(e) => setVoidManagerPin(e.target.value)}
-                placeholder="Enter 4-digit PIN"
+                placeholder={t('staff.pos.enter_4_digit_pin', 'Enter 4-digit PIN')}
                 className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-sm font-mono text-center text-white tracking-widest focus:outline-none focus:border-red-500"
               />
             </div>
@@ -1762,12 +1764,12 @@ export const POSManagement: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-stone-300">Reason / Memo</label>
+              <label className="text-xs font-bold text-stone-300">{t('staff.pos.reason_memo', 'Reason / Memo')}</label>
               <input
                 type="text"
                 value={manualDiscountReason}
                 onChange={(e) => setManualDiscountReason(e.target.value)}
-                placeholder="e.g. VIP guest, service delay, owner friend"
+                placeholder={t('staff.pos.e_g_vip_guest_service_delay_ow', 'e.g. VIP guest, service delay, owner friend')}
                 className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
               />
             </div>
@@ -1781,7 +1783,7 @@ export const POSManagement: React.FC = () => {
                 maxLength={8}
                 value={manualDiscountPin}
                 onChange={(e) => setManualDiscountPin(e.target.value)}
-                placeholder="Enter 4-digit PIN"
+                placeholder={t('staff.pos.enter_4_digit_pin', 'Enter 4-digit PIN')}
                 className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-sm font-mono text-center text-white tracking-widest focus:outline-none focus:border-[#D4AF37]"
               />
             </div>
@@ -1818,7 +1820,7 @@ export const POSManagement: React.FC = () => {
             </h3>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-stone-300">Select Free Destination Table</label>
+              <label className="text-xs font-bold text-stone-300">{t('staff.pos.select_free_destination_table', 'Select Free Destination Table')}</label>
               {freeTables.length === 0 ? (
                 <div className="p-3 rounded-xl bg-red-950/20 text-red-300 text-xs">
                   No free tables available right now.
@@ -1829,7 +1831,7 @@ export const POSManagement: React.FC = () => {
                   onChange={(e) => setTransferTargetTable(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 >
-                  <option value="">-- Choose destination table --</option>
+                  <option value="">{t('staff.pos.choose_destination_table', '-- Choose destination table --')}</option>
                   {freeTables.map((t) => (
                     <option key={t.id} value={t.table_number}>
                       Table {t.table_number} ({t.capacity} seats{t.label ? ` - ${t.label}` : ''})
@@ -1876,7 +1878,7 @@ export const POSManagement: React.FC = () => {
             </p>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-stone-300">Select Target Table</label>
+              <label className="text-xs font-bold text-stone-300">{t('staff.pos.select_target_table', 'Select Target Table')}</label>
               {otherRunningBills.length === 0 ? (
                 <div className="p-3 rounded-xl bg-amber-950/20 text-amber-300 text-xs">
                   No other active tables to merge into.
@@ -1887,7 +1889,7 @@ export const POSManagement: React.FC = () => {
                   onChange={(e) => setMergeTargetBillId(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 >
-                  <option value="">-- Choose active table --</option>
+                  <option value="">{t('staff.pos.choose_active_table', '-- Choose active table --')}</option>
                   {otherRunningBills.map((b) => (
                     <option key={b.id} value={b.id}>
                       Table {b.table_number} (Current Total: {currencySymbol}{b.grand_total})
@@ -1930,13 +1932,13 @@ export const POSManagement: React.FC = () => {
             </h3>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-stone-300">Select Destination Table Bill</label>
+              <label className="text-xs font-bold text-stone-300">{t('staff.pos.select_destination_table_bill', 'Select Destination Table Bill')}</label>
               <select
                 value={moveTargetBillId}
                 onChange={(e) => setMoveTargetBillId(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
               >
-                <option value="">-- Choose target bill --</option>
+                <option value="">{t('staff.pos.choose_target_bill', '-- Choose target bill --')}</option>
                 {otherRunningBills.map((b) => (
                   <option key={b.id} value={b.id}>
                     Table {b.table_number} ({currencySymbol}{b.grand_total})
@@ -1946,7 +1948,7 @@ export const POSManagement: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-stone-300">Select Items to Move</label>
+              <label className="text-xs font-bold text-stone-300">{t('staff.pos.select_items_to_move', 'Select Items to Move')}</label>
               <div className="space-y-1.5 max-h-48 overflow-y-auto">
                 {(activeBill.items || [])
                   .filter((it) => !it.is_voided)
@@ -2040,7 +2042,7 @@ export const POSManagement: React.FC = () => {
 
             {/* Payment Method Selector */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-300">Payment Tender</label>
+              <label className="text-xs font-bold text-stone-300">{t('staff.pos.payment_tender', 'Payment Tender')}</label>
               <div className="grid grid-cols-4 gap-2">
                 {(['cash', 'upi', 'card', 'split'] as const)
                   .filter((m) => m !== 'split' || features?.split_bills !== false)
@@ -2074,7 +2076,7 @@ export const POSManagement: React.FC = () => {
             {paymentMethod === 'cash' && (
               <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-stone-300">Cash Received</label>
+                  <label className="text-xs font-bold text-stone-300">{t('staff.pos.cash_received', 'Cash Received')}</label>
                   <div className="flex gap-1">
                     {[500, 1000, 2000].map((amt) => (
                       <button
@@ -2100,13 +2102,13 @@ export const POSManagement: React.FC = () => {
                   type="number"
                   value={cashTendered}
                   onChange={(e) => setCashTendered(e.target.value)}
-                  placeholder="Enter cash received..."
+                  placeholder={t('staff.pos.enter_cash_received', 'Enter cash received...')}
                   className="w-full px-3 py-2 rounded-lg bg-black/60 border border-white/10 text-sm font-mono text-white focus:outline-none focus:border-[#D4AF37]"
                 />
 
                 {parseFloat(cashTendered) > 0 && (
                   <div className="flex items-center justify-between pt-1 border-t border-white/5 text-xs font-mono">
-                    <span className="text-stone-400">Change To Return:</span>
+                    <span className="text-stone-400">{t('staff.pos.change_to_return', 'Change To Return:')}</span>
                     <span className="text-base font-bold text-emerald-400">
                       {currencySymbol}{cashChangeDue}
                     </span>
@@ -2126,7 +2128,7 @@ export const POSManagement: React.FC = () => {
               ) : (
                 <>
                   <span className="material-symbols-outlined text-base">check_circle</span>
-                  <span>Confirm Payment & Print Receipt</span>
+                  <span>{t('staff.pos.confirm_payment_print_receipt', 'Confirm Payment & Print Receipt')}</span>
                 </>
               )}
             </button>

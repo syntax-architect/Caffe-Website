@@ -11,6 +11,7 @@ import type {
 } from '../types/dashboard';
 import { DEFAULT_FEATURE_FLAGS } from '../types/dashboard';
 import { clientDetails } from '../config/client';
+import { getLocaleForCountry } from '../utils/currency';
 
 /**
  * Fallback tables for local/demo mode or initial setup
@@ -45,13 +46,13 @@ const DEFAULT_SETTINGS: RestaurantSettings = {
   country: 'IN',
   currency: 'INR',
   currency_symbol: '₹',
-  locale: 'en-IN',
+  locale: getLocaleForCountry('IN', 'INR'),
   timezone: 'Asia/Kolkata',
   phone_country_code: '+91',
   tax_enabled: true,
   tax_mode: 'inclusive',
   tax_label: 'GST',
-  tax_rate: 0.05,
+  tax_rate: 0.00,
   dietary_system: 'india',
   primary_contact_method: 'whatsapp',
   email: 'contact@thecafe.com',
@@ -893,13 +894,13 @@ export const updateRestaurantSettings = async (
         country: settings.country || 'IN',
         currency: settings.currency || 'INR',
         currency_symbol: settings.currency_symbol || '₹',
-        locale: settings.locale || 'en-IN',
+        locale: settings.locale || getLocaleForCountry(settings.country, settings.currency),
         timezone: settings.timezone || 'Asia/Kolkata',
         phone_country_code: settings.phone_country_code || '+91',
         tax_enabled: settings.tax_enabled ?? true,
         tax_mode: settings.tax_mode || 'inclusive',
         tax_label: settings.tax_label || 'Tax',
-        tax_rate: settings.tax_rate ?? 0.05,
+        tax_rate: settings.tax_rate ?? 0.00,
         tax_rules: (settings as any).tax_rules || [],
         tax_id: settings.tax_id || null,
         tax_id_label: settings.tax_id_label || null,

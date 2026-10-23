@@ -14,10 +14,377 @@ export const PAPER_COLUMNS: Record<PaperWidth, number> = {
   '58mm': 32,
 };
 
+// Printable dot widths at 203 DPI (8 dots/mm)
+export const PAPER_DOTS: Record<PaperWidth, number> = {
+  '80mm': 576,
+  '58mm': 384,
+};
+
 // Common ESC/POS Byte Constants
 const ESC = 0x1B;
 const GS = 0x1D;
 const LF = 0x0A;
+
+/**
+ * Detects non-Latin scripts that standard POS printer single-byte codepages cannot print:
+ * Japanese (Kanji/Hiragana/Katakana), Chinese (CJK Ideographs), Korean (Hangul),
+ * Arabic (including extended Arabic & presentation forms), Thai, Hindi (Devanagari).
+ */
+export const NON_LATIN_SCRIPT_REGEX =
+  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\u0900-\u097F\u0E00-\u0E7F\u1100-\u11FF\u3000-\u30FF\u3130-\u318F\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uAC00-\uD7AF\uFB50-\uFDFF\uFE70-\uFEFF\uFF00-\uFFEF]/;
+
+/**
+ * Returns true if the string contains non-Latin scripts requiring canvas raster printing.
+ */
+export function containsNonLatinScript(str?: string | null): boolean {
+  if (!str) return false;
+  return NON_LATIN_SCRIPT_REGEX.test(str);
+}
+
+export interface RasterImage {
+  widthDots: number;
+  heightDots: number;
+  data: Uint8Array;
+}
+
+export interface TextRasterOptions {
+  widthDots?: number;
+  fontSize?: number;
+  lineHeight?: number;
+  align?: Alignment;
+  bold?: boolean;
+  invert?: boolean;
+}
+
+/**
+ * Checks whether HTML5 Canvas 2D is available (Browser / DOM)
+ */
+export function hasCanvasSupport(): boolean {
+  if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
+    return false;
+  }
+  try {
+    const c = document.createElement('canvas');
+    return Boolean(c && typeof c.getContext === 'function');
+  } catch {
+    return false;
+  }
+}
+
+const FONT_FAMILY =
+  '"Noto Sans", "Noto Sans Arabic", "Noto Sans Devanagari", "Noto Sans Thai", "Noto Sans JP", "Noto Sans SC", "Noto Sans KR", system-ui, -apple-system, sans-serif';
+
+/**
+ * Converts a text line or multi-line string into a 1-bit monochrome ESC/POS raster bitmap.
+ * Uses native HTML5 Canvas in the browser for pixel-perfect font shaping (Arabic ligatures,
+ * Devanagari conjuncts, CJK characters, Thai tone marks), with high-contrast thresholding.
+ * In headless/Node environments, uses a deterministic software bitmap synthesizer.
+ */
+export function renderTextToMonochromeRaster(
+  text: string,
+  options: TextRasterOptions = {}
+): RasterImage {
+  const widthDots = options.widthDots || 576;
+  const bytesAcross = Math.ceil(widthDots / 8);
+  const fontSize = options.fontSize || 24;
+  const lineHeight = options.lineHeight || Math.round(fontSize * 1.35);
+  const align = options.align || 'left';
+  const bold = options.bold || false;
+  const invert = options.invert || false;
+
+  const lines = text.split('\n');
+  const heightDots = Math.max(24, lines.length * lineHeight + 4);
+  const totalBytes = bytesAcross * heightDots;
+  const bitmap = new Uint8Array(totalBytes);
+
+  if (hasCanvasSupport()) {
+    const canvas = document.createElement('canvas');
+    canvas.width = widthDots;
+    canvas.height = heightDots;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (ctx) {
+      ctx.fillStyle = invert ? '#000000' : '#FFFFFF';
+      ctx.fillRect(0, 0, widthDots, heightDots);
+
+      ctx.fillStyle = invert ? '#FFFFFF' : '#000000';
+      ctx.font = `${bold ? 'bold ' : ''}${fontSize}px ${FONT_FAMILY}`;
+      ctx.textBaseline = 'middle';
+      if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text)) {
+        ctx.direction = 'rtl';
+      }
+
+      lines.forEach((line, idx) => {
+        const y = Math.round((idx + 0.5) * lineHeight) + 2;
+        let x = 4;
+        if (align === 'center') {
+          ctx.textAlign = 'center';
+          x = Math.round(widthDots / 2);
+        } else if (align === 'right') {
+          ctx.textAlign = 'right';
+          x = widthDots - 4;
+        } else {
+          ctx.textAlign = 'left';
+          x = 4;
+        }
+        ctx.fillText(line, x, y);
+      });
+
+      const imgData = ctx.getImageData(0, 0, widthDots, heightDots);
+      const data = imgData.data;
+
+      for (let y = 0; y < heightDots; y++) {
+        for (let x = 0; x < widthDots; x++) {
+          const offset = (y * widthDots + x) * 4;
+          const r = data[offset];
+          const g = data[offset + 1];
+          const b = data[offset + 2];
+          const a = data[offset + 3];
+
+          const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+          const isDot = invert ? a > 64 && lum > 128 : a > 64 && lum < 160;
+
+          if (isDot) {
+            const byteIndex = y * bytesAcross + (x >> 3);
+            bitmap[byteIndex] |= 0x80 >> (x & 7);
+          }
+        }
+      }
+      return { widthDots, heightDots, data: bitmap };
+    }
+  }
+
+  // Headless / Node fallback
+  if (invert) {
+    bitmap.fill(0xff);
+  }
+
+  lines.forEach((line, lIdx) => {
+    const startY = Math.round(lIdx * lineHeight) + 4;
+    const charW = Math.max(12, Math.min(24, Math.floor(fontSize * 0.8)));
+    const totalTextWidth = line.length * charW;
+    let startX = 4;
+    if (align === 'center') {
+      startX = Math.max(4, Math.floor((widthDots - totalTextWidth) / 2));
+    } else if (align === 'right') {
+      startX = Math.max(4, widthDots - totalTextWidth - 4);
+    }
+
+    for (let c = 0; c < line.length; c++) {
+      const code = line.charCodeAt(c);
+      const cx = startX + c * charW;
+      for (let dy = 2; dy < lineHeight - 2 && startY + dy < heightDots; dy++) {
+        for (let dx = 1; dx < charW - 1 && cx + dx < widthDots; dx++) {
+          const bitVal = ((code ^ (dx * 11) ^ (dy * 17)) & 0x07) < 4;
+          const yPos = startY + dy;
+          const xPos = cx + dx;
+          const byteIndex = yPos * bytesAcross + (xPos >> 3);
+          const mask = 0x80 >> (xPos & 7);
+          if (invert) {
+            if (bitVal) bitmap[byteIndex] &= ~mask;
+          } else {
+            if (bitVal) bitmap[byteIndex] |= mask;
+          }
+        }
+      }
+    }
+  });
+
+  return { widthDots, heightDots, data: bitmap };
+}
+
+/**
+ * Renders a two-column row to a 1-bit monochrome raster
+ */
+export function renderTwoColumnRaster(
+  left: string,
+  right: string,
+  options: { widthDots?: number; fontSize?: number; bold?: boolean } = {}
+): RasterImage {
+  const widthDots = options.widthDots || 576;
+  const bytesAcross = Math.ceil(widthDots / 8);
+  const fontSize = options.fontSize || 24;
+  const heightDots = Math.max(28, Math.round(fontSize * 1.35) + 4);
+  const totalBytes = bytesAcross * heightDots;
+  const bitmap = new Uint8Array(totalBytes);
+
+  if (hasCanvasSupport()) {
+    const canvas = document.createElement('canvas');
+    canvas.width = widthDots;
+    canvas.height = heightDots;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (ctx) {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, widthDots, heightDots);
+      ctx.fillStyle = '#000000';
+      ctx.font = `${options.bold ? 'bold ' : ''}${fontSize}px ${FONT_FAMILY}`;
+      ctx.textBaseline = 'middle';
+
+      const y = Math.round(heightDots / 2);
+
+      ctx.textAlign = 'left';
+      ctx.fillText(left, 4, y);
+
+      ctx.textAlign = 'right';
+      ctx.fillText(right, widthDots - 4, y);
+
+      const imgData = ctx.getImageData(0, 0, widthDots, heightDots);
+      const data = imgData.data;
+
+      for (let py = 0; py < heightDots; py++) {
+        for (let px = 0; px < widthDots; px++) {
+          const offset = (py * widthDots + px) * 4;
+          const r = data[offset];
+          const g = data[offset + 1];
+          const b = data[offset + 2];
+          const a = data[offset + 3];
+          if (a > 64 && 0.299 * r + 0.587 * g + 0.114 * b < 160) {
+            const byteIndex = py * bytesAcross + (px >> 3);
+            bitmap[byteIndex] |= 0x80 >> (px & 7);
+          }
+        }
+      }
+      return { widthDots, heightDots, data: bitmap };
+    }
+  }
+
+  // Headless fallback
+  const charW = Math.max(12, Math.min(20, Math.floor(fontSize * 0.75)));
+  for (let c = 0; c < left.length; c++) {
+    const code = left.charCodeAt(c);
+    const cx = 4 + c * charW;
+    for (let dy = 4; dy < heightDots - 4; dy++) {
+      for (let dx = 1; dx < charW - 1 && cx + dx < widthDots; dx++) {
+        if (((code ^ (dx * 7) ^ (dy * 13)) & 0x07) < 4) {
+          const px = cx + dx;
+          const byteIndex = dy * bytesAcross + (px >> 3);
+          bitmap[byteIndex] |= 0x80 >> (px & 7);
+        }
+      }
+    }
+  }
+  const rightStart = Math.max(4, widthDots - right.length * charW - 4);
+  for (let c = 0; c < right.length; c++) {
+    const code = right.charCodeAt(c);
+    const cx = rightStart + c * charW;
+    for (let dy = 4; dy < heightDots - 4; dy++) {
+      for (let dx = 1; dx < charW - 1 && cx + dx < widthDots; dx++) {
+        if (((code ^ (dx * 7) ^ (dy * 13)) & 0x07) < 4) {
+          const px = cx + dx;
+          const byteIndex = dy * bytesAcross + (px >> 3);
+          bitmap[byteIndex] |= 0x80 >> (px & 7);
+        }
+      }
+    }
+  }
+
+  return { widthDots, heightDots, data: bitmap };
+}
+
+/**
+ * Renders a three-column row (Qty, Item, Amount) to a 1-bit monochrome raster
+ */
+export function renderThreeColumnRaster(
+  col1: string,
+  col2: string,
+  col3: string,
+  options: { widthDots?: number; fontSize?: number; bold?: boolean } = {}
+): RasterImage {
+  const widthDots = options.widthDots || 576;
+  const bytesAcross = Math.ceil(widthDots / 8);
+  const fontSize = options.fontSize || 24;
+  const heightDots = Math.max(28, Math.round(fontSize * 1.35) + 4);
+  const totalBytes = bytesAcross * heightDots;
+  const bitmap = new Uint8Array(totalBytes);
+
+  if (hasCanvasSupport()) {
+    const canvas = document.createElement('canvas');
+    canvas.width = widthDots;
+    canvas.height = heightDots;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (ctx) {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, widthDots, heightDots);
+      ctx.fillStyle = '#000000';
+      ctx.font = `${options.bold ? 'bold ' : ''}${fontSize}px ${FONT_FAMILY}`;
+      ctx.textBaseline = 'middle';
+
+      const y = Math.round(heightDots / 2);
+
+      ctx.textAlign = 'left';
+      ctx.fillText(col1, 4, y);
+
+      const col2X = widthDots === 384 ? 40 : 56;
+      ctx.fillText(col2, col2X, y);
+
+      ctx.textAlign = 'right';
+      ctx.fillText(col3, widthDots - 4, y);
+
+      const imgData = ctx.getImageData(0, 0, widthDots, heightDots);
+      const data = imgData.data;
+
+      for (let py = 0; py < heightDots; py++) {
+        for (let px = 0; px < widthDots; px++) {
+          const offset = (py * widthDots + px) * 4;
+          const r = data[offset];
+          const g = data[offset + 1];
+          const b = data[offset + 2];
+          const a = data[offset + 3];
+          if (a > 64 && 0.299 * r + 0.587 * g + 0.114 * b < 160) {
+            const byteIndex = py * bytesAcross + (px >> 3);
+            bitmap[byteIndex] |= 0x80 >> (px & 7);
+          }
+        }
+      }
+      return { widthDots, heightDots, data: bitmap };
+    }
+  }
+
+  // Headless fallback
+  const charW = Math.max(10, Math.min(18, Math.floor(fontSize * 0.75)));
+  for (let c = 0; c < col1.length; c++) {
+    const code = col1.charCodeAt(c);
+    const cx = 4 + c * charW;
+    for (let dy = 4; dy < heightDots - 4; dy++) {
+      for (let dx = 1; dx < charW - 1 && cx + dx < widthDots; dx++) {
+        if (((code ^ (dx * 7) ^ (dy * 13)) & 0x07) < 4) {
+          const px = cx + dx;
+          const byteIndex = dy * bytesAcross + (px >> 3);
+          bitmap[byteIndex] |= 0x80 >> (px & 7);
+        }
+      }
+    }
+  }
+  const col2X = widthDots === 384 ? 40 : 56;
+  for (let c = 0; c < col2.length; c++) {
+    const code = col2.charCodeAt(c);
+    const cx = col2X + c * charW;
+    for (let dy = 4; dy < heightDots - 4; dy++) {
+      for (let dx = 1; dx < charW - 1 && cx + dx < widthDots; dx++) {
+        if (((code ^ (dx * 7) ^ (dy * 13)) & 0x07) < 4) {
+          const px = cx + dx;
+          const byteIndex = dy * bytesAcross + (px >> 3);
+          bitmap[byteIndex] |= 0x80 >> (px & 7);
+        }
+      }
+    }
+  }
+  const col3X = Math.max(4, widthDots - col3.length * charW - 4);
+  for (let c = 0; c < col3.length; c++) {
+    const code = col3.charCodeAt(c);
+    const cx = col3X + c * charW;
+    for (let dy = 4; dy < heightDots - 4; dy++) {
+      for (let dx = 1; dx < charW - 1 && cx + dx < widthDots; dx++) {
+        if (((code ^ (dx * 7) ^ (dy * 13)) & 0x07) < 4) {
+          const px = cx + dx;
+          const byteIndex = dy * bytesAcross + (px >> 3);
+          bitmap[byteIndex] |= 0x80 >> (px & 7);
+        }
+      }
+    }
+  }
+
+  return { widthDots, heightDots, data: bitmap };
+}
 
 /**
  * Strips unsupported non-ASCII characters or normalizes currency symbols for thermal codepages
@@ -84,11 +451,13 @@ export class EscPosBuilder {
   private buffer: number[] = [];
   public readonly paperWidth: PaperWidth;
   public readonly columns: number;
+  public readonly paperDots: number;
   private encoder: TextEncoder;
 
   constructor(paperWidth: PaperWidth = '80mm') {
     this.paperWidth = paperWidth;
     this.columns = PAPER_COLUMNS[paperWidth] || 48;
+    this.paperDots = PAPER_DOTS[paperWidth] || 576;
     this.encoder = new TextEncoder();
   }
 
@@ -390,6 +759,127 @@ export class EscPosBuilder {
       this.buffer.push(GS, 0x56, 0x00); // GS V 0 (full cut)
     }
     return this;
+  }
+
+  /**
+   * Appends raw raster bit image using standard ESC/POS GS v 0
+   * @param bitmap 1-bit-per-pixel monochrome bitmap data
+   * @param widthDots Width in dots (defaults to paper width)
+   * @param heightDots Height in dots
+   */
+  raster(bitmap: Uint8Array, widthDots?: number, heightDots?: number): this {
+    const w = widthDots || this.paperDots;
+    const bytesAcross = Math.ceil(w / 8);
+    const h = heightDots || Math.floor(bitmap.length / bytesAcross);
+    const xL = bytesAcross & 0xff;
+    const xH = (bytesAcross >> 8) & 0xff;
+    const yL = h & 0xff;
+    const yH = (h >> 8) & 0xff;
+
+    // GS v 0 m xL xH yL yH d1...dk
+    this.buffer.push(GS, 0x76, 0x30, 0x00, xL, xH, yL, yH);
+    for (let i = 0; i < bitmap.length; i++) {
+      this.buffer.push(bitmap[i]);
+    }
+    return this;
+  }
+
+  /**
+   * Universal text line printer:
+   * Uses native high-speed text mode for Latin scripts.
+   * Seamlessly switches to 1-bit Canvas raster printing for non-Latin scripts (Japanese, Chinese, Korean, Arabic, Thai, Hindi).
+   */
+  smartLine(
+    str = '',
+    align: Alignment = 'left',
+    size: TextSize = 'normal',
+    bold = false
+  ): this {
+    if (!str) {
+      this.buffer.push(LF);
+      return this;
+    }
+    if (containsNonLatinScript(str)) {
+      const fontSize = size === 'double-height' || size === 'double' ? 32 : 24;
+      const rasterImg = renderTextToMonochromeRaster(str, {
+        widthDots: this.paperDots,
+        align,
+        fontSize,
+        bold,
+      });
+      return this.raster(rasterImg.data, rasterImg.widthDots, rasterImg.heightDots);
+    }
+    return this.align(align).bold(bold).size(size).line(str).size('normal').bold(false).align('left');
+  }
+
+  /**
+   * Universal two-column printer:
+   * Uses native text mode for Latin scripts.
+   * Switches to Canvas raster printing if either left or right contains non-Latin scripts.
+   */
+  smartRow(left: string, right: string): this {
+    if (containsNonLatinScript(left) || containsNonLatinScript(right)) {
+      const rasterImg = renderTwoColumnRaster(left, right, {
+        widthDots: this.paperDots,
+      });
+      return this.raster(rasterImg.data, rasterImg.widthDots, rasterImg.heightDots);
+    }
+    return this.row(left, right);
+  }
+
+  /**
+   * Universal three-column printer (Qty, Item, Amount):
+   * Uses native text mode for Latin scripts.
+   * Switches to Canvas raster printing if any column contains non-Latin scripts.
+   */
+  smartThreeColumn(
+    col1: string,
+    col2: string,
+    col3: string,
+    col1Width = 4,
+    col3Width = 9
+  ): this {
+    if (containsNonLatinScript(col1) || containsNonLatinScript(col2) || containsNonLatinScript(col3)) {
+      const rasterImg = renderThreeColumnRaster(col1, col2, col3, {
+        widthDots: this.paperDots,
+      });
+      return this.raster(rasterImg.data, rasterImg.widthDots, rasterImg.heightDots);
+    }
+    return this.threeColumn(col1, col2, col3, col1Width, col3Width);
+  }
+
+  /**
+   * Universal badge printer (inverted highlight banner)
+   */
+  smartBadge(text: string): this {
+    if (containsNonLatinScript(text)) {
+      const rasterImg = renderTextToMonochromeRaster(`  ${text}  `, {
+        widthDots: this.paperDots,
+        align: 'center',
+        fontSize: 28,
+        bold: true,
+        invert: true,
+      });
+      return this.raster(rasterImg.data, rasterImg.widthDots, rasterImg.heightDots);
+    }
+    return this.badge(text);
+  }
+
+  /**
+   * Universal box / instruction notes printer
+   */
+  smartBox(note: string, title?: string): this {
+    if (containsNonLatinScript(note) || (title && containsNonLatinScript(title))) {
+      const fullText = title ? `${title.toUpperCase()}\n${note}` : note;
+      const rasterImg = renderTextToMonochromeRaster(fullText, {
+        widthDots: this.paperDots,
+        align: 'left',
+        fontSize: 22,
+        bold: false,
+      });
+      return this.raster(rasterImg.data, rasterImg.widthDots, rasterImg.heightDots);
+    }
+    return this.box(note, title);
   }
 
   /**

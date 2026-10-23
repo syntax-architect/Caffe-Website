@@ -38,6 +38,7 @@ import {
   createOrAppendKOT,
   voidBillItem,
   verifyManagerPinLocally,
+  setManagerPin,
   getDemoBills,
   saveDemoBills,
 } from '../src/services/posService';
@@ -254,8 +255,11 @@ async function runAuditTests() {
   // =========================================================================
   console.log('\n--- VECTOR 5: VOID & DISCOUNT PERMISSIONS & FORGED ROLE DEFENSE ---');
 
+  // Setup manager PIN
+  await setManagerPin('1234');
+
   // Verify manager PIN verification logic
-  assert.equal(verifyManagerPinLocally('1234'), true, 'Default 1234 PIN is valid');
+  assert.equal(verifyManagerPinLocally('1234'), true, 'Configured 1234 PIN is valid');
   assert.equal(verifyManagerPinLocally('9999'), false, 'Wrong PIN 9999 is rejected');
   assert.equal(verifyManagerPinLocally(''), false, 'Empty PIN is rejected');
 

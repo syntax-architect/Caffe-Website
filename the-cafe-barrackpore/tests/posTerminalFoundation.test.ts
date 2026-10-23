@@ -2,6 +2,7 @@ import assert from 'node:assert';
 import {
   recalculateBillFinancials,
   verifyManagerPinLocally,
+  setManagerPin,
   getManagerVoidLimit,
 } from '../src/services/posService';
 import { isKdsEligible } from '../src/services/kitchenService';
@@ -74,7 +75,8 @@ console.log('Test 1: Counter billing with modifiers and tax breakdown');
 // TEST 2: Discounts: Promotional & Manager-Approved Manual Discount
 // -------------------------------------------------------------
 console.log('Test 2: Promotional & manager manual discounts');
-{
+await (async () => {
+  await setManagerPin('1234');
   const billWithDiscount: POSBill = {
     id: 'bill-test-2',
     bill_number: 'B-2026-0002',
@@ -111,7 +113,7 @@ console.log('Test 2: Promotional & manager manual discounts');
   assert.strictEqual(verifyManagerPinLocally('1234'), true, 'Default manager PIN 1234 should verify');
   assert.strictEqual(verifyManagerPinLocally('9999'), false, 'Incorrect PIN should reject');
   console.log('✔ Test 2 passed: Percentage and flat discounts deduct properly with PIN validation.');
-}
+})();
 
 // -------------------------------------------------------------
 // TEST 3: Running Table Bills & Sequential KOT Batches

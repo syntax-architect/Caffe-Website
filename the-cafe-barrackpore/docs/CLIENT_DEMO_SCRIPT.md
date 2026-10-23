@@ -1,4 +1,4 @@
-# Five-Minute Client Demonstration Script: [AGENCY NAME] Premium Restaurant Experience
+# Five-Minute Client Demonstration Script: Antigravity Hospitality Systems Premium Restaurant Experience
 
 **Format:** High-impact, 5-minute interactive walkthrough for restaurant owners, general managers, and hospitality directors.  
 **Mode:** Local development fallback (`npm run dev`) or dedicated staging deployment.  

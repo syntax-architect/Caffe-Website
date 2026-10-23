@@ -348,7 +348,7 @@ DECLARE
     -- Restaurant settings configuration
     v_tax_enabled BOOLEAN := true;
     v_tax_mode TEXT := 'inclusive';
-    v_tax_rate NUMERIC := 0.0500;
+    v_tax_rate NUMERIC := 0.0000;
     v_currency TEXT := 'INR';
     
     -- Payment fields
@@ -471,7 +471,7 @@ BEGIN
     SELECT 
         COALESCE(rs.tax_enabled, true),
         COALESCE(rs.tax_mode, 'inclusive'),
-        COALESCE(rs.tax_rate, 0.0500),
+        COALESCE(rs.tax_rate, 0.0000),
         COALESCE(rs.currency, 'INR')
     INTO 
         v_tax_enabled,

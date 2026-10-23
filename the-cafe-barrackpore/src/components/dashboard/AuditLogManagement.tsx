@@ -1,8 +1,10 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
 import { clientDetails } from '../../config/client';
+import { getLocaleForCountry } from '../../utils/currency';
 
 interface AuditLogEntry {
   id: string;
@@ -19,6 +21,7 @@ interface AuditLogEntry {
 }
 
 export const AuditLogManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { isOwner, isManager } = useAuth();
   const { addNotification } = useNotification();
 
@@ -148,17 +151,17 @@ export const AuditLogManagement: React.FC = () => {
   const getActionBadge = (action: string) => {
     switch (action) {
       case 'staff_login':
-        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-blue-500/10 text-blue-300 border border-blue-500/30">LOGIN</span>;
+        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-blue-500/10 text-blue-300 border border-blue-500/30">{t('staff.dashboard.login', 'LOGIN')}</span>;
       case 'price_change':
-        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/30">PRICE MODIFIED</span>;
+        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/30">{t('staff.dashboard.price_modified', 'PRICE MODIFIED')}</span>;
       case 'role_change':
-        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-purple-500/10 text-purple-300 border border-purple-500/30">ROLE UPDATED</span>;
+        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-purple-500/10 text-purple-300 border border-purple-500/30">{t('staff.dashboard.role_updated', 'ROLE UPDATED')}</span>;
       case 'refund':
-        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-red-500/10 text-red-300 border border-red-500/30">REFUND</span>;
+        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-red-500/10 text-red-300 border border-red-500/30">{t('staff.dashboard.refund', 'REFUND')}</span>;
       case 'setting_change':
-        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">SETTINGS</span>;
+        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">{t('staff.dashboard.settings', 'SETTINGS')}</span>;
       case 'staff_logout_everywhere':
-        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-rose-500/10 text-rose-300 border border-rose-500/30">REVOKE ALL</span>;
+        return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-rose-500/10 text-rose-300 border border-rose-500/30">{t('staff.dashboard.revoke_all', 'REVOKE ALL')}</span>;
       default:
         return <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-stone-500/10 text-stone-300 border border-stone-500/30">{action.toUpperCase()}</span>;
     }
@@ -168,8 +171,8 @@ export const AuditLogManagement: React.FC = () => {
     return (
       <div className="p-8 text-center text-stone-400">
         <span className="material-symbols-outlined text-4xl text-amber-400 mb-2">lock</span>
-        <h2 className="text-lg font-serif text-white font-bold">Access Restricted</h2>
-        <p className="text-xs text-stone-400 mt-1">Audit logs are restricted strictly to Executive Owners and Floor Managers.</p>
+        <h2 className="text-lg font-serif text-white font-bold">{t('staff.dashboard.access_restricted', 'Access Restricted')}</h2>
+        <p className="text-xs text-stone-400 mt-1">{t('staff.dashboard.audit_logs_are_restricted_stri', 'Audit logs are restricted strictly to Executive Owners and Floor Managers.')}</p>
       </div>
     );
   }
@@ -187,7 +190,7 @@ export const AuditLogManagement: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search actors, targets, details..."
+              placeholder={t('staff.dashboard.search_actors_targets_details', 'Search actors, targets, details...')}
               className="w-full bg-[#080706] border border-white/[0.1] rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder:text-stone-600 focus:border-[#D4AF37] focus:outline-none"
             />
           </div>
@@ -197,13 +200,13 @@ export const AuditLogManagement: React.FC = () => {
             onChange={(e) => setFilterAction(e.target.value)}
             className="bg-[#080706] border border-white/[0.1] rounded-xl px-4 py-2 text-xs text-stone-300 focus:border-[#D4AF37] focus:outline-none"
           >
-            <option value="all">All Events</option>
-            <option value="staff_login">Staff Logins</option>
-            <option value="price_change">Price Changes</option>
-            <option value="role_change">Role Changes</option>
-            <option value="refund">Refunds</option>
-            <option value="setting_change">Setting Changes</option>
-            <option value="staff_logout_everywhere">Global Revocations</option>
+            <option value="all">{t('staff.dashboard.all_events', 'All Events')}</option>
+            <option value="staff_login">{t('staff.dashboard.staff_logins', 'Staff Logins')}</option>
+            <option value="price_change">{t('staff.dashboard.price_changes', 'Price Changes')}</option>
+            <option value="role_change">{t('staff.dashboard.role_changes', 'Role Changes')}</option>
+            <option value="refund">{t('staff.dashboard.refunds', 'Refunds')}</option>
+            <option value="setting_change">{t('staff.dashboard.setting_changes', 'Setting Changes')}</option>
+            <option value="staff_logout_everywhere">{t('staff.dashboard.global_revocations', 'Global Revocations')}</option>
           </select>
         </div>
 
@@ -215,7 +218,7 @@ export const AuditLogManagement: React.FC = () => {
           <span className={`material-symbols-outlined text-sm ${isLoading ? 'animate-spin' : ''}`}>
             refresh
           </span>
-          <span>Refresh</span>
+          <span>{t('staff.dashboard.refresh', 'Refresh')}</span>
         </button>
       </div>
 
@@ -225,12 +228,12 @@ export const AuditLogManagement: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead className="bg-black/30 border-b border-white/[0.06] text-stone-400 font-mono uppercase text-[10px] tracking-wider">
               <tr>
-                <th className="py-3.5 px-4 sm:px-6">Timestamp</th>
-                <th className="py-3.5 px-4">Event</th>
-                <th className="py-3.5 px-4">Actor</th>
-                <th className="py-3.5 px-4">Target</th>
-                <th className="py-3.5 px-4">Details Summary</th>
-                <th className="py-3.5 px-4 sm:px-6 text-right">Inspect</th>
+                <th className="py-3.5 px-4 sm:px-6">{t('staff.dashboard.timestamp', 'Timestamp')}</th>
+                <th className="py-3.5 px-4">{t('staff.dashboard.event', 'Event')}</th>
+                <th className="py-3.5 px-4">{t('staff.dashboard.actor', 'Actor')}</th>
+                <th className="py-3.5 px-4">{t('staff.dashboard.target', 'Target')}</th>
+                <th className="py-3.5 px-4">{t('staff.dashboard.details_summary', 'Details Summary')}</th>
+                <th className="py-3.5 px-4 sm:px-6 text-right">{t('staff.dashboard.inspect', 'Inspect')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04] text-stone-300">
@@ -238,21 +241,21 @@ export const AuditLogManagement: React.FC = () => {
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-stone-500">
                     <span className="material-symbols-outlined text-2xl animate-spin mb-2">progress_activity</span>
-                    <p>Loading security audit entries...</p>
+                    <p>{t('staff.dashboard.loading_security_audit_entries', 'Loading security audit entries...')}</p>
                   </td>
                 </tr>
               ) : filteredLogs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-stone-500">
                     <span className="material-symbols-outlined text-2xl mb-2">shield_lock</span>
-                    <p>No audit events match your search filters.</p>
+                    <p>{t('staff.dashboard.no_audit_events_match_your_sea', 'No audit events match your search filters.')}</p>
                   </td>
                 </tr>
               ) : (
                 filteredLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="py-3.5 px-4 sm:px-6 font-mono text-[11px] text-stone-400 whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleString('en-IN', {
+                      {new Date(log.created_at).toLocaleString(getLocaleForCountry(), {
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',
@@ -296,7 +299,7 @@ export const AuditLogManagement: React.FC = () => {
             <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#D4AF37]">shield</span>
-                <h3 className="font-serif text-base font-bold text-white">Audit Event Inspection</h3>
+                <h3 className="font-serif text-base font-bold text-white">{t('staff.dashboard.audit_event_inspection', 'Audit Event Inspection')}</h3>
               </div>
               <button
                 onClick={() => setSelectedLog(null)}
@@ -309,25 +312,25 @@ export const AuditLogManagement: React.FC = () => {
             <div className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-black/40 border border-white/[0.04]">
                 <div>
-                  <span className="text-stone-500 block text-[10px] uppercase font-mono">Event Type</span>
+                  <span className="text-stone-500 block text-[10px] uppercase font-mono">{t('staff.dashboard.event_type', 'Event Type')}</span>
                   <span className="font-bold text-white">{selectedLog.action}</span>
                 </div>
                 <div>
-                  <span className="text-stone-500 block text-[10px] uppercase font-mono">Actor</span>
+                  <span className="text-stone-500 block text-[10px] uppercase font-mono">{t('staff.dashboard.actor', 'Actor')}</span>
                   <span className="text-white">{selectedLog.actor_name} ({selectedLog.actor_role})</span>
                 </div>
                 <div>
-                  <span className="text-stone-500 block text-[10px] uppercase font-mono">Target</span>
+                  <span className="text-stone-500 block text-[10px] uppercase font-mono">{t('staff.dashboard.target', 'Target')}</span>
                   <span className="text-white font-mono">{selectedLog.target_type}: {selectedLog.target_id}</span>
                 </div>
                 <div>
-                  <span className="text-stone-500 block text-[10px] uppercase font-mono">Timestamp</span>
+                  <span className="text-stone-500 block text-[10px] uppercase font-mono">{t('staff.dashboard.timestamp', 'Timestamp')}</span>
                   <span className="text-white font-mono">{new Date(selectedLog.created_at).toISOString()}</span>
                 </div>
               </div>
 
               <div>
-                <span className="text-stone-400 block text-[10px] uppercase font-mono mb-1">Payload Details (JSON)</span>
+                <span className="text-stone-400 block text-[10px] uppercase font-mono mb-1">{t('staff.dashboard.payload_details_json', 'Payload Details (JSON)')}</span>
                 <pre className="p-3 rounded-xl bg-black/60 border border-white/[0.06] font-mono text-[11px] text-emerald-400 overflow-x-auto max-h-48">
                   {JSON.stringify(selectedLog.details, null, 2)}
                 </pre>

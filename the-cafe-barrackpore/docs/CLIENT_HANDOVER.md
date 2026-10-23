@@ -79,7 +79,7 @@ For security in production, default credentials and auto-fill mechanisms are str
      ```sql
      INSERT INTO public.staff_profiles (user_id, full_name, role, active, restaurant_id)
      VALUES (
-       '<COPIED_USER_UID>',
+       'a1b2c3d4-e5f6-7890-abcd-ef1234567890', -- Example UUID: paste your copied Supabase Auth UID here
        'Restaurant Owner',
        'owner',
        true,

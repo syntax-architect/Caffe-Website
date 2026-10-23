@@ -3,7 +3,7 @@ import type { User, Session } from '@supabase/supabase-js';
 /**
  * Allowed staff roles for The Café Barrackpore
  */
-export type StaffRole = 'owner' | 'manager' | 'cashier' | 'waiter' | 'staff';
+export type StaffRole = 'owner' | 'manager' | 'cashier' | 'waiter' | 'kitchen' | 'staff';
 
 /**
  * Profile record stored in public.staff_profiles

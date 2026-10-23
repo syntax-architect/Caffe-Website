@@ -1947,7 +1947,7 @@ export const CartDrawer: React.FC = () => {
                 </button>
 
                 {/* Google Review Link */}
-                {(clientDetails.googleReviewLink && clientDetails.googleReviewLink !== 'https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID') && (
+                {(clientDetails.googleReviewLink && !clientDetails.googleReviewLink.includes('YOUR_')) && (
                   <a
                     href={clientDetails.googleReviewLink}
                     target="_blank"

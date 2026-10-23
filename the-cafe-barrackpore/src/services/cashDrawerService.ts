@@ -7,7 +7,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { CashShift, CashDrawerTransaction, ZReportData } from '../types/billing';
 import { roundToCents } from '../utils/billSplitCalculations';
-import { toMinorUnits } from '../utils/currencyMinorUnits';
+import { toMinorUnits, toMajorUnits } from '../utils/currencyMinorUnits';
 import { clientDetails } from '../config/client';
 
 const SHIFTS_STORAGE_KEY = 'cafe_demo_cash_shifts';
@@ -258,6 +258,7 @@ export async function generateZReport(shiftId: string): Promise<ZReportData> {
       });
 
       if (!error && rpcData && rpcData.success) {
+        const cur = rpcData.currency || 'INR';
         return {
           restaurantName: clientDetails.businessName || 'The Cafe',
           shiftId: rpcData.shift_id,
@@ -266,13 +267,13 @@ export async function generateZReport(shiftId: string): Promise<ZReportData> {
           closedAt: rpcData.closed_at || new Date().toISOString(),
           openedByName: rpcData.opened_by_name,
           closedByName: rpcData.closed_by_name || 'Active Shift',
-          openingFloat: Number(rpcData.opening_float ?? (rpcData.opening_float_minor !== undefined ? rpcData.opening_float_minor / 100 : 0)),
+          openingFloat: Number(rpcData.opening_float ?? (rpcData.opening_float_minor !== undefined ? toMajorUnits(rpcData.opening_float_minor, cur) : 0)),
           tenderBreakdown: {
-            cash: Number(rpcData.tender_breakdown?.cash ?? (rpcData.cash_sales_minor !== undefined ? rpcData.cash_sales_minor / 100 : rpcData.cash_sales || 0)),
-            card: Number(rpcData.tender_breakdown?.card ?? (rpcData.card_sales_minor !== undefined ? rpcData.card_sales_minor / 100 : rpcData.card_sales || 0)),
-            upi: Number(rpcData.tender_breakdown?.upi ?? (rpcData.upi_sales_minor !== undefined ? rpcData.upi_sales_minor / 100 : rpcData.upi_sales || 0)),
+            cash: Number(rpcData.tender_breakdown?.cash ?? (rpcData.cash_sales_minor !== undefined ? toMajorUnits(rpcData.cash_sales_minor, cur) : rpcData.cash_sales || 0)),
+            card: Number(rpcData.tender_breakdown?.card ?? (rpcData.card_sales_minor !== undefined ? toMajorUnits(rpcData.card_sales_minor, cur) : rpcData.card_sales || 0)),
+            upi: Number(rpcData.tender_breakdown?.upi ?? (rpcData.upi_sales_minor !== undefined ? toMajorUnits(rpcData.upi_sales_minor, cur) : rpcData.upi_sales || 0)),
             stripe: Number(rpcData.tender_breakdown?.stripe || 0),
-            other: Number(rpcData.tender_breakdown?.other ?? (rpcData.other_sales_minor !== undefined ? rpcData.other_sales_minor / 100 : rpcData.other_sales || 0)),
+            other: Number(rpcData.tender_breakdown?.other ?? (rpcData.other_sales_minor !== undefined ? toMajorUnits(rpcData.other_sales_minor, cur) : rpcData.other_sales || 0)),
           },
           tenderCounts: {
             cash: Number(rpcData.tender_counts?.cash || 0),
@@ -281,20 +282,20 @@ export async function generateZReport(shiftId: string): Promise<ZReportData> {
             stripe: Number(rpcData.tender_counts?.stripe || 0),
             other: Number(rpcData.tender_counts?.other || 0),
           },
-          totalGrossSales: Number(rpcData.gross_sales ?? (rpcData.gross_sales_minor !== undefined ? rpcData.gross_sales_minor / 100 : 0)),
-          totalNetSales: Number(rpcData.net_sales ?? (rpcData.net_sales_minor !== undefined ? rpcData.net_sales_minor / 100 : 0)),
-          totalTaxes: Number(rpcData.total_taxes ?? (rpcData.total_taxes_minor !== undefined ? rpcData.total_taxes_minor / 100 : 0)),
-          totalTips: Number(rpcData.total_tips ?? (rpcData.total_tips_minor !== undefined ? rpcData.total_tips_minor / 100 : 0)),
-          totalDiscounts: Number(rpcData.total_discounts ?? (rpcData.total_discounts_minor !== undefined ? rpcData.total_discounts_minor / 100 : 0)),
-          totalRefunds: Number(rpcData.total_refunds ?? (rpcData.total_refunds_minor !== undefined ? rpcData.total_refunds_minor / 100 : 0)),
-          totalVoids: Number(rpcData.total_voids ?? (rpcData.total_voids_minor !== undefined ? rpcData.total_voids_minor / 100 : 0)),
-          cashInTotal: Number(rpcData.cash_in_total ?? (rpcData.cash_in_minor !== undefined ? rpcData.cash_in_minor / 100 : 0)),
-          cashOutTotal: Number(rpcData.cash_out_total ?? (rpcData.cash_out_minor !== undefined ? rpcData.cash_out_minor / 100 : 0)),
-          cashSales: Number(rpcData.cash_sales ?? (rpcData.cash_sales_minor !== undefined ? rpcData.cash_sales_minor / 100 : 0)),
-          cashRefunds: Number(rpcData.cash_refunds ?? (rpcData.cash_refunds_minor !== undefined ? rpcData.cash_refunds_minor / 100 : 0)),
-          expectedCashInDrawer: Number(rpcData.expected_cash ?? (rpcData.expected_cash_minor !== undefined ? rpcData.expected_cash_minor / 100 : 0)),
-          countedCashInDrawer: Number(rpcData.counted_cash ?? (rpcData.counted_cash_minor !== undefined ? rpcData.counted_cash_minor / 100 : rpcData.expected_cash ?? 0)),
-          variance: Number(rpcData.variance ?? (rpcData.variance_minor !== undefined ? rpcData.variance_minor / 100 : 0)),
+          totalGrossSales: Number(rpcData.gross_sales ?? (rpcData.gross_sales_minor !== undefined ? toMajorUnits(rpcData.gross_sales_minor, cur) : 0)),
+          totalNetSales: Number(rpcData.net_sales ?? (rpcData.net_sales_minor !== undefined ? toMajorUnits(rpcData.net_sales_minor, cur) : 0)),
+          totalTaxes: Number(rpcData.total_taxes ?? (rpcData.total_taxes_minor !== undefined ? toMajorUnits(rpcData.total_taxes_minor, cur) : 0)),
+          totalTips: Number(rpcData.total_tips ?? (rpcData.total_tips_minor !== undefined ? toMajorUnits(rpcData.total_tips_minor, cur) : 0)),
+          totalDiscounts: Number(rpcData.total_discounts ?? (rpcData.total_discounts_minor !== undefined ? toMajorUnits(rpcData.total_discounts_minor, cur) : 0)),
+          totalRefunds: Number(rpcData.total_refunds ?? (rpcData.total_refunds_minor !== undefined ? toMajorUnits(rpcData.total_refunds_minor, cur) : 0)),
+          totalVoids: Number(rpcData.total_voids ?? (rpcData.total_voids_minor !== undefined ? toMajorUnits(rpcData.total_voids_minor, cur) : 0)),
+          cashInTotal: Number(rpcData.cash_in_total ?? (rpcData.cash_in_minor !== undefined ? toMajorUnits(rpcData.cash_in_minor, cur) : 0)),
+          cashOutTotal: Number(rpcData.cash_out_total ?? (rpcData.cash_out_minor !== undefined ? toMajorUnits(rpcData.cash_out_minor, cur) : 0)),
+          cashSales: Number(rpcData.cash_sales ?? (rpcData.cash_sales_minor !== undefined ? toMajorUnits(rpcData.cash_sales_minor, cur) : 0)),
+          cashRefunds: Number(rpcData.cash_refunds ?? (rpcData.cash_refunds_minor !== undefined ? toMajorUnits(rpcData.cash_refunds_minor, cur) : 0)),
+          expectedCashInDrawer: Number(rpcData.expected_cash ?? (rpcData.expected_cash_minor !== undefined ? toMajorUnits(rpcData.expected_cash_minor, cur) : 0)),
+          countedCashInDrawer: Number(rpcData.counted_cash ?? (rpcData.counted_cash_minor !== undefined ? toMajorUnits(rpcData.counted_cash_minor, cur) : rpcData.expected_cash ?? 0)),
+          variance: Number(rpcData.variance ?? (rpcData.variance_minor !== undefined ? toMajorUnits(rpcData.variance_minor, cur) : 0)),
           totalTransactionCount: Number(rpcData.transaction_count ?? rpcData.tx_count ?? 0),
           generatedAt: new Date().toISOString(),
         };

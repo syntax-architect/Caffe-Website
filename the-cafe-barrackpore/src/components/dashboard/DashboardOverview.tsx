@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSiteConfig } from '../../context/SiteConfigContext';
@@ -211,6 +212,7 @@ interface DashboardOverviewProps {
 }
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate }) => {
+  const { t } = useI18n(); void t;
   const { staffProfile } = useAuth();
   const { restaurantConfig, formatPrice } = useSiteConfig();
   const [data, setData] = useState<DashboardOverviewData | null>(() => {
@@ -413,7 +415,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 className="group py-2.5 px-5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e4b955] text-[#120B08] font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center gap-2 shadow-[0_4px_20px_rgba(212,175,55,0.25)] active:scale-[0.98]"
               >
                 <span className="material-symbols-outlined text-base">soup_kitchen</span>
-                <span>Launch KDS</span>
+                <span>{t('staff.dashboard.launch_kds', 'Launch KDS')}</span>
                 <span className="w-4 h-4 rounded-full bg-black/15 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
                   <span className="material-symbols-outlined text-[10px]">arrow_forward</span>
                 </span>
@@ -425,7 +427,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
 
       {/* Simulated Telemetry Alert Banner */}
       {simulatePeakService && (
-        <section aria-label="Demo Simulation Active" className="p-1 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-500/40 shadow-lg animate-fadeIn">
+        <section aria-label={t('staff.dashboard.demo_simulation_active', 'Demo Simulation Active')} className="p-1 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-500/40 shadow-lg animate-fadeIn">
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#14100C]/90 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="w-3 h-3 rounded-full bg-amber-400 animate-ping shrink-0" />
@@ -455,7 +457,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
       )}
 
       {/* KPI Cards Grid - Double-Bezel Hardware Architecture */}
-      <section aria-label="Key Performance Indicators" className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <section aria-label={t('staff.dashboard.key_performance_indicators', 'Key Performance Indicators')} className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {/* KPI 1: Today's Orders / Daily Volume */}
         <div className="group p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
@@ -472,7 +474,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 {isLoading ? '...' : (simulatePeakService ? '48 Orders' : kpis.todayOrdersCount)}
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
-                <span className="text-emerald-400 font-medium">100% synced</span>
+                <span className="text-emerald-400 font-medium">{t('staff.dashboard.100_synced', '100% synced')}</span>
                 <span>• {simulatePeakService ? 'DEMO SIMULATION' : "Today's tickets"}</span>
               </div>
             </div>
@@ -502,7 +504,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 <span className="text-stone-300 font-mono text-[10px]">
                   {simulatePeakService ? 'DEMO SIMULATION' : 'Net of voids'}
                 </span>
-                <span>• Live revenue</span>
+                <span>{t('staff.dashboard.live_revenue', '• Live revenue')}</span>
               </div>
             </div>
           </div>
@@ -579,7 +581,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 <span className="text-stone-300 font-mono text-[10px]">
                   {simulatePeakService ? 'DEMO SIMULATION' : 'AOV'}
                 </span>
-                <span>• Today</span>
+                <span>{t('staff.dashboard.today', '• Today')}</span>
               </div>
             </div>
           </div>
@@ -604,7 +606,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 <span className="text-stone-300 font-mono text-[10px]">
                   {simulatePeakService ? 'DEMO SIMULATION' : 'Loyalty'}
                 </span>
-                <span>• Returning</span>
+                <span>{t('staff.dashboard.returning', '• Returning')}</span>
               </div>
             </div>
           </div>
@@ -613,11 +615,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
 
       {/* ---------------- NEW OWNER SECTIONS ---------------- */}
       {lowStockItems.length > 0 && (
-        <section aria-label="Stock Alerts" className="p-1 rounded-2xl bg-gradient-to-b from-red-500/[0.08] to-white/[0.02] border border-red-500/[0.15] shadow-lg">
+        <section aria-label={t('staff.dashboard.stock_alerts', 'Stock Alerts')} className="p-1 rounded-2xl bg-gradient-to-b from-red-500/[0.08] to-white/[0.02] border border-red-500/[0.15] shadow-lg">
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-red-500/[0.08] p-5">
             <div className="flex items-center gap-2 mb-3">
               <span className="material-symbols-outlined text-red-400 text-lg">inventory_2</span>
-              <h3 className="text-xs uppercase tracking-[0.16em] font-bold text-red-300">Low Stock Alerts</h3>
+              <h3 className="text-xs uppercase tracking-[0.16em] font-bold text-red-300">{t('staff.dashboard.low_stock_alerts', 'Low Stock Alerts')}</h3>
               <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 text-[10px] font-bold border border-red-500/30">{lowStockItems.length} items</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -625,7 +627,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 <div key={item.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                   <span className="text-xs text-white font-medium truncate">{item.name}</span>
                   {item.stock_count === 0 ? (
-                    <span className="px-2 py-0.5 rounded-full bg-red-500/25 text-red-300 text-[10px] font-bold border border-red-500/40">SOLD OUT</span>
+                    <span className="px-2 py-0.5 rounded-full bg-red-500/25 text-red-300 text-[10px] font-bold border border-red-500/40">{t('staff.dashboard.sold_out', 'SOLD OUT')}</span>
                   ) : (
                     <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/30">{item.stock_count} left</span>
                   )}
@@ -638,11 +640,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Selling Items */}
-        <section aria-label="Top Selling Items" className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-xl">
+        <section aria-label={t('staff.dashboard.top_selling_items', 'Top Selling Items')} className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-xl">
           <div className="rounded-[calc(2rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-6 h-full">
             <div className="flex items-center gap-2 mb-4">
               <span className="material-symbols-outlined text-[#D4AF37]">star</span>
-              <h3 className="font-serif text-lg font-bold text-white tracking-wide">Top Selling Items</h3>
+              <h3 className="font-serif text-lg font-bold text-white tracking-wide">{t('staff.dashboard.top_selling_items', 'Top Selling Items')}</h3>
               {simulatePeakService && (
                 <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-mono font-bold border border-amber-500/30">
                   DEMO SIMULATION
@@ -665,18 +667,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 </div>
               ))}
               {!simulatePeakService && (!analytics?.topSellingItems || analytics.topSellingItems.length === 0) && (
-                <div className="text-center py-6 text-stone-500 text-sm">No sales data available</div>
+                <div className="text-center py-6 text-stone-500 text-sm">{t('staff.dashboard.no_sales_data_available', 'No sales data available')}</div>
               )}
             </div>
           </div>
         </section>
 
         {/* Busiest / Peak Hours */}
-        <section aria-label="Busiest Hours" className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-xl">
+        <section aria-label={t('staff.dashboard.busiest_hours', 'Busiest Hours')} className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-xl">
           <div className="rounded-[calc(2rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-6 h-full flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <span className="material-symbols-outlined text-[#D4AF37]">bar_chart</span>
-              <h3 className="font-serif text-lg font-bold text-white tracking-wide">Peak Hours</h3>
+              <h3 className="font-serif text-lg font-bold text-white tracking-wide">{t('staff.dashboard.peak_hours', 'Peak Hours')}</h3>
               {simulatePeakService && (
                 <div className="ml-auto flex items-center gap-2">
                   <span className="text-[10px] font-mono text-[#D4AF37] font-semibold hidden sm:inline">
@@ -695,7 +697,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 const maxCount = Math.max(...hoursList.map((x) => x.order_count), 1);
                 return hoursList.map((h) => {
                   const heightPct = (h.order_count / maxCount) * 100;
-                  const isPeakHour = simulatePeakService && (h.hour >= 19 && h.hour <= 21);
+                  const isPeakHour = Boolean(simulatePeakService) && h.hour >= 19 && !(h.hour > 21);
                   return (
                     <div key={h.hour} className="flex-1 flex flex-col items-center gap-1">
                       <div
@@ -715,7 +717,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 });
               })()}
               {!simulatePeakService && (!analytics?.busiestHours || analytics.busiestHours.length === 0) && (
-                <div className="w-full text-center text-stone-500 text-sm mb-12">No hourly data available</div>
+                <div className="w-full text-center text-stone-500 text-sm mb-12">{t('staff.dashboard.no_hourly_data_available', 'No hourly data available')}</div>
               )}
             </div>
           </div>
@@ -723,7 +725,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
       </div>
 
       {/* Operational Quick Actions Dock */}
-      <section aria-label="Operations Quick Actions">
+      <section aria-label={t('staff.dashboard.operations_quick_actions', 'Operations Quick Actions')}>
         <div className="flex items-center justify-between mb-3 px-1">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
@@ -731,7 +733,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               Operations Control Dock
             </h3>
           </div>
-          <span className="text-[10px] text-stone-500 font-mono">1-CLICK DISPATCH</span>
+          <span className="text-[10px] text-stone-500 font-mono">{t('staff.dashboard.1_click_dispatch', '1-CLICK DISPATCH')}</span>
         </div>
 
         {/* Simulation Feedback Alert */}
@@ -766,10 +768,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             </div>
             <div>
               <p className="text-xs font-bold text-[#F3C766] flex items-center gap-1.5">
-                <span>POS Screen</span>
+                <span>{t('staff.dashboard.pos_screen', 'POS Screen')}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
               </p>
-              <p className="text-[10px] text-stone-400 mt-0.5">Counter & Tables</p>
+              <p className="text-[10px] text-stone-400 mt-0.5">{t('staff.dashboard.counter_tables', 'Counter & Tables')}</p>
             </div>
           </button>
 
@@ -784,10 +786,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             </div>
             <div>
               <p className="text-xs font-bold text-[#F3C766] flex items-center gap-1.5">
-                <span>Kitchen KDS</span>
+                <span>{t('staff.dashboard.kitchen_kds', 'Kitchen KDS')}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               </p>
-              <p className="text-[10px] text-stone-400 mt-0.5">Live cook screen</p>
+              <p className="text-[10px] text-stone-400 mt-0.5">{t('staff.dashboard.live_cook_screen', 'Live cook screen')}</p>
             </div>
           </button>
 
@@ -801,8 +803,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               <span className="material-symbols-outlined text-xl">receipt_long</span>
             </div>
             <div>
-              <p className="text-xs font-semibold text-white">Live Orders</p>
-              <p className="text-[10px] text-stone-400 mt-0.5">Manage tickets</p>
+              <p className="text-xs font-semibold text-white">{t('staff.dashboard.live_orders', 'Live Orders')}</p>
+              <p className="text-[10px] text-stone-400 mt-0.5">{t('staff.dashboard.manage_tickets', 'Manage tickets')}</p>
             </div>
           </button>
 
@@ -816,8 +818,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               <span className="material-symbols-outlined text-xl">event_seat</span>
             </div>
             <div>
-              <p className="text-xs font-semibold text-white">Table Booking</p>
-              <p className="text-[10px] text-stone-400 mt-0.5">Seating calendar</p>
+              <p className="text-xs font-semibold text-white">{t('staff.dashboard.table_booking', 'Table Booking')}</p>
+              <p className="text-[10px] text-stone-400 mt-0.5">{t('staff.dashboard.seating_calendar', 'Seating calendar')}</p>
             </div>
           </button>
 
@@ -831,8 +833,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               <span className="material-symbols-outlined text-xl">qr_code_2</span>
             </div>
             <div>
-              <p className="text-xs font-semibold text-white">Floor & QR</p>
-              <p className="text-[10px] text-stone-400 mt-0.5">Table tent cards</p>
+              <p className="text-xs font-semibold text-white">{t('staff.dashboard.floor_qr', 'Floor & QR')}</p>
+              <p className="text-[10px] text-stone-400 mt-0.5">{t('staff.dashboard.table_tent_cards', 'Table tent cards')}</p>
             </div>
           </button>
 
@@ -846,8 +848,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               <span className="material-symbols-outlined text-xl">menu_book</span>
             </div>
             <div>
-              <p className="text-xs font-semibold text-white">86'd Stock</p>
-              <p className="text-[10px] text-stone-400 mt-0.5">Item availability</p>
+              <p className="text-xs font-semibold text-white">{t('staff.dashboard.86_d_stock', '86\'d Stock')}</p>
+              <p className="text-[10px] text-stone-400 mt-0.5">{t('staff.dashboard.item_availability', 'Item availability')}</p>
             </div>
           </button>
 
@@ -866,10 +868,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             </div>
             <div>
               <p className="text-xs font-bold text-[#F3C766] flex items-center gap-1">
-                <span>Test Table 07</span>
+                <span>{t('staff.dashboard.test_table_07', 'Test Table 07')}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" />
               </p>
-              <p className="text-[10px] text-stone-400 mt-0.5">Fire order bell</p>
+              <p className="text-[10px] text-stone-400 mt-0.5">{t('staff.dashboard.fire_order_bell', 'Fire order bell')}</p>
             </div>
           </button>
         </div>
@@ -903,7 +905,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 onClick={() => onNavigate('/staff/orders')}
                 className="group text-xs font-semibold text-[#D4AF37] hover:text-[#F3C766] inline-flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                <span>Orders Center</span>
+                <span>{t('staff.dashboard.orders_center', 'Orders Center')}</span>
                 <span className="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">
                   arrow_forward
                 </span>
@@ -913,7 +915,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             {!simulatePeakService && isLoading ? (
               <div className="py-16 text-center text-stone-400 text-xs">
                 <span className="w-6 h-6 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin inline-block mb-3" />
-                <p>Loading live activity...</p>
+                <p>{t('staff.dashboard.loading_live_activity', 'Loading live activity...')}</p>
               </div>
             ) : (!simulatePeakService && (!data || data.recentOrders.length === 0)) ? (
               <div className="py-16 text-center text-stone-400 text-xs">
@@ -925,11 +927,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-white/[0.08] text-stone-400 text-[10px] font-mono uppercase tracking-wider">
-                      <th className="pb-3 font-semibold">Reference</th>
-                      <th className="pb-3 font-semibold">Guest</th>
-                      <th className="pb-3 font-semibold">Service Type</th>
-                      <th className="pb-3 font-semibold">Amount</th>
-                      <th className="pb-3 font-semibold text-right">Status</th>
+                      <th className="pb-3 font-semibold">{t('staff.dashboard.reference', 'Reference')}</th>
+                      <th className="pb-3 font-semibold">{t('staff.dashboard.guest', 'Guest')}</th>
+                      <th className="pb-3 font-semibold">{t('staff.dashboard.service_type', 'Service Type')}</th>
+                      <th className="pb-3 font-semibold">{t('staff.dashboard.amount', 'Amount')}</th>
+                      <th className="pb-3 font-semibold text-right">{t('staff.dashboard.status', 'Status')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.05]">
@@ -1012,7 +1014,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                   onClick={() => onNavigate('/staff/reservations')}
                   className="group text-xs font-semibold text-[#D4AF37] hover:text-[#F3C766] inline-flex items-center gap-1 transition-colors cursor-pointer"
                 >
-                  <span>All</span>
+                  <span>{t('staff.dashboard.all', 'All')}</span>
                   <span className="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">
                     arrow_forward
                   </span>
@@ -1022,7 +1024,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               {!simulatePeakService && isLoading ? (
                 <div className="py-16 text-center text-stone-400 text-xs">
                   <span className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin inline-block mb-2" />
-                  <p>Loading schedule...</p>
+                  <p>{t('staff.dashboard.loading_schedule', 'Loading schedule...')}</p>
                 </div>
               ) : (!simulatePeakService && (!data || data.todayReservations.length === 0)) ? (
                 <div className="py-16 text-center text-stone-400 text-xs">
@@ -1077,7 +1079,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 className="text-xs text-stone-400 hover:text-white inline-flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm text-[#D4AF37]">sync</span>
-                <span>Refresh Live Schedule</span>
+                <span>{t('staff.dashboard.refresh_live_schedule', 'Refresh Live Schedule')}</span>
               </button>
             </div>
           </div>

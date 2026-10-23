@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import { useSiteConfig } from '../../context/SiteConfigContext';
@@ -21,6 +22,7 @@ const TRANSLATION_LANGUAGES: SupportedLanguage[] = [
 ];
 
 export const MenuManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { addNotification } = useNotification();
   const { restaurantConfig, formatPrice } = useSiteConfig();
 
@@ -305,7 +307,7 @@ export const MenuManagement: React.FC = () => {
           className="relative group overflow-hidden px-5 py-3 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] text-[#070605] text-xs font-black tracking-wider uppercase shadow-[0_10px_30px_rgba(212,175,55,0.25)] hover:shadow-[0_15px_40px_rgba(212,175,55,0.4)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
         >
           <span className="material-symbols-outlined text-base font-bold">add</span>
-          <span>Add Menu Item</span>
+          <span>{t('staff.dashboard.add_menu_item', 'Add Menu Item')}</span>
         </button>
       </div>
 
@@ -313,25 +315,25 @@ export const MenuManagement: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Total Items</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">{t('staff.dashboard.total_items', 'Total Items')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-white mt-0.5">{items.length}</p>
           </div>
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">In Stock</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">{t('staff.dashboard.in_stock', 'In Stock')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-emerald-400 mt-0.5">{activeCount}</p>
           </div>
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-rose-400">86'd (Sold Out)</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-rose-400">{t('staff.dashboard.86_d_sold_out', '86\'d (Sold Out)')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-rose-400 mt-0.5">{outOfStockCount}</p>
           </div>
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">Categories</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">{t('staff.dashboard.categories', 'Categories')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-[#D4AF37] mt-0.5">
               {categories.length}
             </p>
@@ -346,7 +348,7 @@ export const MenuManagement: React.FC = () => {
             <span className="material-symbols-outlined text-lg">database</span>
           </div>
           <div>
-            <p className="font-serif font-bold text-white text-sm">Supabase Realtime Menu Catalog & Storage</p>
+            <p className="font-serif font-bold text-white text-sm">{t('staff.dashboard.supabase_realtime_menu_catalog', 'Supabase Realtime Menu Catalog & Storage')}</p>
             <p className="text-zinc-400 text-[11px] leading-relaxed mt-0.5">
               Catalog mutations and availability toggles write directly to postgres with Row Level Security. Connected guests and kitchen displays update automatically via Supabase Realtime without redeploying.
             </p>
@@ -363,7 +365,7 @@ export const MenuManagement: React.FC = () => {
           </span>
           <input
             type="text"
-            placeholder="Search dish by name, ingredients, or category..."
+            placeholder={t('staff.dashboard.search_dish_by_name_ingredient', 'Search dish by name, ingredients, or category...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#120F0D] border border-white/[0.08] focus:border-[#D4AF37] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#D4AF37] transition-all"
@@ -434,12 +436,12 @@ export const MenuManagement: React.FC = () => {
       {isLoading ? (
         <div className="p-12 text-center">
           <div className="w-8 h-8 rounded-full border-2 border-[#D4AF37] border-t-transparent animate-spin mx-auto mb-3" />
-          <p className="text-xs text-zinc-400 font-mono">Loading restaurant menu from database...</p>
+          <p className="text-xs text-zinc-400 font-mono">{t('staff.dashboard.loading_restaurant_menu_from_d', 'Loading restaurant menu from database...')}</p>
         </div>
       ) : filteredItems.length === 0 ? (
         <div className="p-12 rounded-3xl bg-[#120F0D] border border-white/[0.06] text-center">
           <span className="material-symbols-outlined text-4xl text-zinc-600 mb-2">restaurant_menu</span>
-          <p className="font-serif font-bold text-white text-base">No Menu Items Found</p>
+          <p className="font-serif font-bold text-white text-base">{t('staff.dashboard.no_menu_items_found', 'No Menu Items Found')}</p>
           <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
             {searchQuery
               ? `No dishes matched "${searchQuery}". Try a different keyword.`
@@ -452,14 +454,14 @@ export const MenuManagement: React.FC = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-white/[0.06] text-[10px] font-mono uppercase tracking-wider text-zinc-400 bg-white/[0.02]">
-                  <th className="py-3.5 px-6">Dish Details</th>
-                  <th className="py-3.5 px-4">Category</th>
-                  <th className="py-3.5 px-4">Tax Category</th>
-                  <th className="py-3.5 px-4">Diet</th>
-                  <th className="py-3.5 px-4">Price</th>
-                  <th className="py-3.5 px-4">Stock Inventory</th>
-                  <th className="py-3.5 px-4">Service Status</th>
-                  <th className="py-3.5 px-6 text-right">Actions</th>
+                  <th className="py-3.5 px-6">{t('staff.dashboard.dish_details', 'Dish Details')}</th>
+                  <th className="py-3.5 px-4">{t('staff.dashboard.category', 'Category')}</th>
+                  <th className="py-3.5 px-4">{t('staff.dashboard.tax_category', 'Tax Category')}</th>
+                  <th className="py-3.5 px-4">{t('staff.dashboard.diet', 'Diet')}</th>
+                  <th className="py-3.5 px-4">{t('staff.dashboard.price', 'Price')}</th>
+                  <th className="py-3.5 px-4">{t('staff.dashboard.stock_inventory', 'Stock Inventory')}</th>
+                  <th className="py-3.5 px-4">{t('staff.dashboard.service_status', 'Service Status')}</th>
+                  <th className="py-3.5 px-6 text-right">{t('staff.dashboard.actions', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04] text-xs">
@@ -551,7 +553,7 @@ export const MenuManagement: React.FC = () => {
 
                       <td className="py-4 px-4 font-mono text-[11px]">
                         {item.stock_count === null || item.stock_count === undefined ? (
-                          <span className="text-zinc-500 font-sans text-[10px]">Unlimited</span>
+                          <span className="text-zinc-500 font-sans text-[10px]">{t('staff.dashboard.unlimited', 'Unlimited')}</span>
                         ) : item.stock_count === 0 ? (
                           <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] font-bold">
                             SOLD OUT (0)
@@ -645,7 +647,7 @@ export const MenuManagement: React.FC = () => {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Signature Truffle Pizza"
+                    placeholder={t('staff.dashboard.e_g_signature_truffle_pizza', 'e.g. Signature Truffle Pizza')}
                     value={formName}
                     onChange={(e) => {
                       const newName = e.target.value;
@@ -716,15 +718,15 @@ export const MenuManagement: React.FC = () => {
                       }}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                     >
-                      <option value="food" className="bg-[#120F0D]">Food (Prepared Meals / Dishes)</option>
-                      <option value="hot_drink" className="bg-[#120F0D]">Hot Drink (Coffee, Tea, Chai)</option>
-                      <option value="soft_drink" className="bg-[#120F0D]">Soft Drink (Soda, Juice, Shake)</option>
-                      <option value="bottled_water" className="bg-[#120F0D]">Bottled Water (Mineral, Spring)</option>
-                      <option value="alcohol" className="bg-[#120F0D]">Alcohol (Beer, Wine, Spirits)</option>
-                      <option value="tobacco" className="bg-[#120F0D]">Tobacco (Cigars, Shisha)</option>
-                      <option value="packaged_goods" className="bg-[#120F0D]">Packaged Goods (Retail Snacks, Merch)</option>
-                      <option value="service" className="bg-[#120F0D]">Service (Delivery, Corkage)</option>
-                      <option value="exempt" className="bg-[#120F0D]">Exempt (Zero-Tax / Gift Cards)</option>
+                      <option value="food" className="bg-[#120F0D]">{t('staff.dashboard.food_prepared_meals_dishes', 'Food (Prepared Meals / Dishes)')}</option>
+                      <option value="hot_drink" className="bg-[#120F0D]">{t('staff.dashboard.hot_drink_coffee_tea_chai', 'Hot Drink (Coffee, Tea, Chai)')}</option>
+                      <option value="soft_drink" className="bg-[#120F0D]">{t('staff.dashboard.soft_drink_soda_juice_shake', 'Soft Drink (Soda, Juice, Shake)')}</option>
+                      <option value="bottled_water" className="bg-[#120F0D]">{t('staff.dashboard.bottled_water_mineral_spring', 'Bottled Water (Mineral, Spring)')}</option>
+                      <option value="alcohol" className="bg-[#120F0D]">{t('staff.dashboard.alcohol_beer_wine_spirits', 'Alcohol (Beer, Wine, Spirits)')}</option>
+                      <option value="tobacco" className="bg-[#120F0D]">{t('staff.dashboard.tobacco_cigars_shisha', 'Tobacco (Cigars, Shisha)')}</option>
+                      <option value="packaged_goods" className="bg-[#120F0D]">{t('staff.dashboard.packaged_goods_retail_snacks_m', 'Packaged Goods (Retail Snacks, Merch)')}</option>
+                      <option value="service" className="bg-[#120F0D]">{t('staff.dashboard.service_delivery_corkage', 'Service (Delivery, Corkage)')}</option>
+                      <option value="exempt" className="bg-[#120F0D]">{t('staff.dashboard.exempt_zero_tax_gift_cards', 'Exempt (Zero-Tax / Gift Cards)')}</option>
                     </select>
                   </div>
 
@@ -738,7 +740,7 @@ export const MenuManagement: React.FC = () => {
                       step={1}
                       value={formStockCount}
                       onChange={(e) => setFormStockCount(e.target.value)}
-                      placeholder="Unlimited"
+                      placeholder={t('staff.dashboard.unlimited', 'Unlimited')}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-[#D4AF37]"
                     />
                   </div>
@@ -771,7 +773,7 @@ export const MenuManagement: React.FC = () => {
                       </label>
                       <input
                         type="url"
-                        placeholder="Or enter public image URL..."
+                        placeholder={t('staff.dashboard.or_enter_public_image_url', 'Or enter public image URL...')}
                         value={formImageUrl}
                         onChange={(e) => setFormImageUrl(e.target.value)}
                         className="w-full bg-[#070605] border border-white/[0.08] rounded-lg px-3 py-1.5 text-[11px] text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-[#D4AF37]"
@@ -808,7 +810,7 @@ export const MenuManagement: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Bestseller, Chef Pick, Seasonal"
+                    placeholder={t('staff.dashboard.e_g_bestseller_chef_pick_seaso', 'e.g. Bestseller, Chef Pick, Seasonal')}
                     value={formTag}
                     onChange={(e) => setFormTag(e.target.value)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
@@ -846,7 +848,7 @@ export const MenuManagement: React.FC = () => {
                   </label>
                   <textarea
                     rows={3}
-                    placeholder="Describe flavor profiles, garnishes, and notes..."
+                    placeholder={t('staff.dashboard.describe_flavor_profiles_garni', 'Describe flavor profiles, garnishes, and notes...')}
                     value={formDescription}
                     onChange={(e) => setFormDescription(e.target.value)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] resize-none"
@@ -978,8 +980,8 @@ export const MenuManagement: React.FC = () => {
 
                 <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-between">
                   <div>
-                    <p className="font-bold text-white text-xs">Immediate Service Availability</p>
-                    <p className="text-[10px] text-zinc-400">Available to customers upon saving</p>
+                    <p className="font-bold text-white text-xs">{t('staff.dashboard.immediate_service_availability', 'Immediate Service Availability')}</p>
+                    <p className="text-[10px] text-zinc-400">{t('staff.dashboard.available_to_customers_upon_sa', 'Available to customers upon saving')}</p>
                   </div>
                   <input
                     type="checkbox"

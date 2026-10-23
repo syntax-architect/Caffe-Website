@@ -70,6 +70,67 @@ export function getCurrencyDecimals(currency = 'INR'): number {
   return 2;
 }
 
+export const COUNTRY_TO_LOCALE: Record<string, string> = {
+  IN: 'en-IN',
+  US: 'en-US',
+  GB: 'en-GB',
+  IE: 'en-IE',
+  JP: 'ja-JP',
+  KW: 'ar-KW',
+  AE: 'ar-AE',
+  SA: 'ar-SA',
+  KR: 'ko-KR',
+  CN: 'zh-CN',
+  DE: 'de-DE',
+  FR: 'fr-FR',
+  ES: 'es-ES',
+  IT: 'it-IT',
+  CA: 'en-CA',
+  AU: 'en-AU',
+  BR: 'pt-BR',
+  TH: 'th-TH',
+  TR: 'tr-TR',
+};
+
+export const CURRENCY_TO_LOCALE: Record<string, string> = {
+  INR: 'en-IN',
+  USD: 'en-US',
+  GBP: 'en-GB',
+  EUR: 'en-IE',
+  JPY: 'ja-JP',
+  KWD: 'ar-KW',
+  AED: 'ar-AE',
+  SAR: 'ar-SA',
+  KRW: 'ko-KR',
+  CNY: 'zh-CN',
+  CAD: 'en-CA',
+  AUD: 'en-AU',
+  BRL: 'pt-BR',
+  THB: 'th-TH',
+  TRY: 'tr-TR',
+};
+
+/**
+ * Derives the appropriate BCP 47 locale from the restaurant country or currency code.
+ * Eliminates silent en-IN hardcoding across international deployments.
+ */
+export function getLocaleForCountry(country?: string, fallbackCurrency?: string): string {
+  if (country) {
+    const c = country.trim().toUpperCase();
+    if (COUNTRY_TO_LOCALE[c]) return COUNTRY_TO_LOCALE[c];
+  }
+  if (fallbackCurrency) {
+    const cur = fallbackCurrency.trim().toUpperCase();
+    if (CURRENCY_TO_LOCALE[cur]) return CURRENCY_TO_LOCALE[cur];
+  }
+  const detected = ((globalThis as any).process?.env?.VITE_RESTAURANT_COUNTRY || (globalThis as any).process?.env?.VITE_CLIENT_COUNTRY)
+    || ((import.meta as any).env?.VITE_RESTAURANT_COUNTRY || (import.meta as any).env?.VITE_CLIENT_COUNTRY);
+  if (detected && COUNTRY_TO_LOCALE[detected.trim().toUpperCase()]) {
+    return COUNTRY_TO_LOCALE[detected.trim().toUpperCase()];
+  }
+  return 'en-US';
+}
+
 /**
  * Formats a monetary amount into a clean, localized string.
  * Examples:
@@ -81,13 +142,14 @@ export function getCurrencyDecimals(currency = 'INR'): number {
 export function formatCurrency(
   amount: number,
   currency = 'INR',
-  locale = 'en-IN',
+  locale?: string,
   options?: CurrencyFormatOptions
 ): string {
   const numericAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
   const currencyCode = (currency || 'INR').trim().toUpperCase();
   const minorUnits = getCurrencyDecimals(currencyCode);
   const isFractional = numericAmount % 1 !== 0;
+  const effectiveLocale = locale || getLocaleForCountry(undefined, currencyCode);
 
   // By default in India, whole-rupee prices on menus are written without trailing .00 (e.g. ₹620)
   // For 0-decimal currencies (JPY), minDigits is 0.
@@ -107,7 +169,7 @@ export function formatCurrency(
     : minorUnits;
 
   try {
-    let formatted = new Intl.NumberFormat(locale, {
+    let formatted = new Intl.NumberFormat(effectiveLocale, {
       style: 'currency',
       currency: currencyCode,
       minimumFractionDigits: minDigits,
@@ -127,7 +189,7 @@ export function formatCurrency(
     return formatted;
   } catch (err) {
     // Graceful fallback if an invalid currency or locale is supplied
-    console.warn(`[formatCurrency] Error formatting ${amount} with ${currencyCode}/${locale}:`, err);
+    console.warn(`[formatCurrency] Error formatting ${amount} with ${currencyCode}/${effectiveLocale}:`, err);
     return `${currencyCode} ${numericAmount.toFixed(minorUnits)}`;
   }
 }
@@ -135,10 +197,11 @@ export function formatCurrency(
 /**
  * Resolves the primary currency symbol for a given currency code.
  */
-export function getCurrencySymbol(currency = 'INR', locale = 'en-IN'): string {
+export function getCurrencySymbol(currency = 'INR', locale?: string): string {
   const currencyCode = (currency || 'INR').trim().toUpperCase();
+  const effectiveLocale = locale || getLocaleForCountry(undefined, currencyCode);
   try {
-    const parts = new Intl.NumberFormat(locale, {
+    const parts = new Intl.NumberFormat(effectiveLocale, {
       style: 'currency',
       currency: currencyCode,
       minimumFractionDigits: 0,

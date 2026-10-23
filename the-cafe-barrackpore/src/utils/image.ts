@@ -25,3 +25,39 @@ export function getAvifSource(src?: string | null): string | null {
   }
   return null;
 }
+
+/**
+ * Returns a responsive srcset string with mobile (480w), tablet (800w), and desktop (1200w) breakpoints.
+ */
+export function getResponsiveSrcSet(
+  src?: string | null,
+  format: 'avif' | 'webp' = 'avif'
+): string | null {
+  if (!src || typeof src !== 'string') return null;
+  if (
+    src.startsWith('http://') ||
+    src.startsWith('https://') ||
+    src.startsWith('data:') ||
+    src.startsWith('blob:')
+  ) {
+    return null;
+  }
+
+  const match = src.match(/(?:^|\/)(hero-cinematic|hero-bar|hero-bar-mobile|platter-tandoori|platter-chinese|platter-bowl)\.(?:jpe?g|webp|avif)$/i);
+  if (!match) {
+    const extMatch = src.match(/\.(webp|jpg|jpeg)$/i);
+    if (extMatch && format === 'avif') {
+      return src.replace(/\.(webp|jpg|jpeg)$/i, '.avif');
+    }
+    return null;
+  }
+
+  const baseName = match[1];
+  const dir = src.substring(0, src.lastIndexOf('/'));
+
+  if (baseName === 'hero-bar-mobile') {
+    return `${dir}/${baseName}-360w.${format} 360w, ${dir}/${baseName}-480w.${format} 480w, ${dir}/${baseName}.${format} 768w`;
+  }
+
+  return `${dir}/${baseName}-480w.${format} 480w, ${dir}/${baseName}-800w.${format} 800w, ${dir}/${baseName}.${format} 1200w`;
+}

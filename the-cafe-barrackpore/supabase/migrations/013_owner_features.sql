@@ -149,31 +149,39 @@ ALTER TABLE discount_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE happy_hour_schedules ENABLE ROW LEVEL SECURITY;
 
 -- Customers: staff can read, owners can update
+DROP POLICY IF EXISTS customers_select ON customers;
 CREATE POLICY customers_select ON customers FOR SELECT TO authenticated
     USING (EXISTS (SELECT 1 FROM staff_profiles WHERE user_id = auth.uid() AND active = true));
 
+DROP POLICY IF EXISTS customers_update ON customers;
 CREATE POLICY customers_update ON customers FOR UPDATE TO authenticated
     USING (EXISTS (SELECT 1 FROM staff_profiles WHERE user_id = auth.uid() AND role = 'owner' AND active = true));
 
 -- Discount codes: staff can read, owners/managers can manage
+DROP POLICY IF EXISTS discount_codes_select ON discount_codes;
 CREATE POLICY discount_codes_select ON discount_codes FOR SELECT TO authenticated
     USING (EXISTS (SELECT 1 FROM staff_profiles WHERE user_id = auth.uid() AND active = true));
 
+DROP POLICY IF EXISTS discount_codes_manage ON discount_codes;
 CREATE POLICY discount_codes_manage ON discount_codes FOR ALL TO authenticated
     USING (EXISTS (SELECT 1 FROM staff_profiles WHERE user_id = auth.uid() AND role IN ('owner', 'manager') AND active = true));
 
 -- Happy hour: staff can read, owners can manage
+DROP POLICY IF EXISTS happy_hour_select ON happy_hour_schedules;
 CREATE POLICY happy_hour_select ON happy_hour_schedules FOR SELECT TO authenticated
     USING (EXISTS (SELECT 1 FROM staff_profiles WHERE user_id = auth.uid() AND active = true));
 
 -- Public read for happy hour (customers need to see active schedules)
+DROP POLICY IF EXISTS happy_hour_public_read ON happy_hour_schedules;
 CREATE POLICY happy_hour_public_read ON happy_hour_schedules FOR SELECT TO anon
     USING (active = true);
 
+DROP POLICY IF EXISTS happy_hour_manage ON happy_hour_schedules;
 CREATE POLICY happy_hour_manage ON happy_hour_schedules FOR ALL TO authenticated
     USING (EXISTS (SELECT 1 FROM staff_profiles WHERE user_id = auth.uid() AND role = 'owner' AND active = true));
 
 -- Public read for active discount codes (for validation)
+DROP POLICY IF EXISTS discount_codes_public_validate ON discount_codes;
 CREATE POLICY discount_codes_public_validate ON discount_codes FOR SELECT TO anon
     USING (active = true AND (valid_until IS NULL OR valid_until > now()) AND (max_uses IS NULL OR used_count < max_uses));
 

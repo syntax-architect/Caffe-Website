@@ -15,9 +15,7 @@ import type {
   TenderType,
 } from '../types/billing';
 import { roundToCents, calculateCashChange } from '../utils/billSplitCalculations';
-
-const toMinorUnits = (val: number): number => Math.round((Number(val) || 0) * 100);
-const toMajorUnits = (val: number): number => (Number(val) || 0) / 100;
+import { toMinorUnits, toMajorUnits } from '../utils/currencyMinorUnits';
 
 const SPLITS_STORAGE_KEY = 'cafe_demo_bill_splits';
 const PAYMENTS_STORAGE_KEY = 'cafe_demo_payments_ledger';

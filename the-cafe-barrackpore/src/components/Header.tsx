@@ -331,8 +331,8 @@ export const Header: React.FC = React.memo(() => {
         
         {/* Brand Crest & Monogram */}
         <a 
-          className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 shrink-0" 
-          href="#" 
+          className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 shrink-0 cursor-pointer" 
+          href="/" 
           onClick={(e) => handleNavClick(e, 'root')}
         >
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-primary/35 bg-surface-container flex items-center justify-center transition-all duration-300 group-hover:border-primary group-hover:shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.3)] overflow-hidden shrink-0">

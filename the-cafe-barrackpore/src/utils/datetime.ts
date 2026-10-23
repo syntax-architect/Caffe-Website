@@ -3,6 +3,26 @@
  * Ensures all customer and kitchen time displays respect the configured restaurant timezone and locale.
  */
 
+import { getLocaleForCountry } from './currency';
+
+export function getRestaurantTimezone(country?: string): string {
+  if (country) {
+    const c = country.trim().toUpperCase();
+    if (c === 'US') return 'America/New_York';
+    if (c === 'GB') return 'Europe/London';
+    if (c === 'IE') return 'Europe/Dublin';
+    if (c === 'JP') return 'Asia/Tokyo';
+    if (c === 'KW') return 'Asia/Kuwait';
+    if (c === 'IN') return 'Asia/Kolkata';
+  }
+  const detected = ((globalThis as any).process?.env?.VITE_RESTAURANT_COUNTRY || (globalThis as any).process?.env?.VITE_CLIENT_COUNTRY)
+    || ((import.meta as any).env?.VITE_RESTAURANT_COUNTRY || (import.meta as any).env?.VITE_CLIENT_COUNTRY);
+  if (detected?.toUpperCase() === 'US') return 'America/New_York';
+  if (detected?.toUpperCase() === 'GB') return 'Europe/London';
+  if (detected?.toUpperCase() === 'IN') return 'Asia/Kolkata';
+  return 'UTC';
+}
+
 /**
  * Formats a date into a localized date string in the restaurant's timezone.
  * Examples:
@@ -11,28 +31,31 @@
  * - GB: 24 May 2026
  */
 function resolveLocaleAndTimeZone(
-  localeCandidate = 'en-IN',
-  timeZoneCandidate = 'Asia/Kolkata'
+  localeCandidate?: string,
+  timeZoneCandidate?: string
 ): { locale: string; timeZone: string } {
+  const defaultLocale = getLocaleForCountry();
+  const defaultTz = getRestaurantTimezone();
+
   // If the first argument contains a slash, it is a timezone identifier (e.g. 'Asia/Kolkata')
   if (typeof localeCandidate === 'string' && localeCandidate.includes('/')) {
     return {
       timeZone: localeCandidate,
       locale: typeof timeZoneCandidate === 'string' && !timeZoneCandidate.includes('/')
         ? timeZoneCandidate
-        : 'en-IN',
+        : defaultLocale,
     };
   }
   return {
-    locale: localeCandidate || 'en-IN',
-    timeZone: timeZoneCandidate || 'Asia/Kolkata',
+    locale: localeCandidate || defaultLocale,
+    timeZone: timeZoneCandidate || defaultTz,
   };
 }
 
 export function formatRestaurantDate(
   dateInput: string | number | Date,
-  locale = 'en-IN',
-  timeZone = 'Asia/Kolkata',
+  locale?: string,
+  timeZone?: string,
   options?: Intl.DateTimeFormatOptions
 ): string {
   try {
@@ -60,8 +83,8 @@ export function formatRestaurantDate(
  */
 export function formatRestaurantTime(
   dateInput: string | number | Date,
-  locale = 'en-IN',
-  timeZone = 'Asia/Kolkata',
+  locale?: string,
+  timeZone?: string,
   options?: Intl.DateTimeFormatOptions
 ): string {
   try {
@@ -87,8 +110,8 @@ export function formatRestaurantTime(
  */
 export function formatRestaurantDateTime(
   dateInput: string | number | Date,
-  locale = 'en-IN',
-  timeZone = 'Asia/Kolkata',
+  locale?: string,
+  timeZone?: string,
   options?: Intl.DateTimeFormatOptions
 ): string {
   try {

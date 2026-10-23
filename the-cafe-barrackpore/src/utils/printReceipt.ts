@@ -18,7 +18,7 @@ import {
 } from '../config/printerSettings';
 import { createEscPos, sanitizeThermalText } from './escpos';
 import { dispatchPrintJob, type PrintDispatchResult } from './printerTransports';
-import { getCurrencySymbol } from './currency';
+import { getCurrencySymbol, getLocaleForCountry } from './currency';
 
 export interface PrintReceiptOptions {
   currency?: string;
@@ -109,9 +109,10 @@ function formatCurrency(amount?: number | null, currency = 'INR'): string {
 /**
  * Formats a Date/Time stamp for thermal tickets
  */
-function formatTicketDateTime(isoDate?: string): string {
+function formatTicketDateTime(isoDate?: string, locale?: string): string {
   const d = isoDate ? new Date(isoDate) : new Date();
-  return d.toLocaleString('en-IN', {
+  const loc = locale || getLocaleForCountry((clientDetails as any).address?.country, (clientDetails as any).currency);
+  return d.toLocaleString(loc, {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -305,23 +306,19 @@ export function buildKotEscPos(
 
   // Header
   builder
-    .bold(true)
-    .text(restaurantName)
-    .feed(1)
-    .size('double-height')
-    .line(stationTitle)
-    .size('normal')
-    .badge(tableDisplay)
+    .smartLine(restaurantName, 'center', 'normal', true)
+    .smartLine(stationTitle, 'center', 'double-height', true)
+    .smartBadge(tableDisplay)
     .divider()
     .align('left');
 
   // Metadata
   builder
-    .row(`KOT Ref: ${order.order_ref}`, isDineIn ? 'Dine-In' : 'Takeaway')
-    .row(`Time: ${timestamp}`, `Guest: ${sanitizeThermalText(order.customer_name || 'Guest')}`);
+    .smartRow(`KOT Ref: ${order.order_ref}`, isDineIn ? 'Dine-In' : 'Takeaway')
+    .smartRow(`Time: ${timestamp}`, `Guest: ${order.customer_name || 'Guest'}`);
 
   if (options.stationName) {
-    builder.row('Station:', options.stationName);
+    builder.smartRow('Station:', options.stationName);
   }
 
   builder.doubleDivider();
@@ -329,7 +326,7 @@ export function buildKotEscPos(
   // Items
   for (const item of items) {
     const isNewMarker = item.isNew || item.isAdded || item.status === 'added' ? ' [NEW/ADDED]' : '';
-    builder.threeColumn(`${item.quantity}x`, `${item.item_name}${isNewMarker}`, '');
+    builder.smartThreeColumn(`${item.quantity}x`, `${item.item_name}${isNewMarker}`, '');
 
     if (item.selected_options && typeof item.selected_options === 'object') {
       const opts = Object.entries(item.selected_options)
@@ -337,7 +334,7 @@ export function buildKotEscPos(
         .map(([k, v]) => `${k}: ${v}`)
         .join(', ');
       if (opts) {
-        builder.line(`   * ${opts}`);
+        builder.smartLine(`   * ${opts}`);
       }
     }
   }
@@ -347,7 +344,7 @@ export function buildKotEscPos(
   // Special Instructions
   const specialRequests = order.special_requests || (order as any).notes;
   if (specialRequests && specialRequests.trim()) {
-    builder.box(specialRequests.trim(), 'Special Chef Note');
+    builder.smartBox(specialRequests.trim(), 'Special Chef Note');
   }
 
   // Footer & Item Count
@@ -355,7 +352,7 @@ export function buildKotEscPos(
   builder
     .align('center')
     .bold(true)
-    .line(`=== END OF KOT (${totalCount} TOTAL ITEMS) ===`)
+    .smartLine(`=== END OF KOT (${totalCount} TOTAL ITEMS) ===`, 'center', 'normal', true)
     .bold(false);
 
   if (isReprint) {
@@ -577,31 +574,25 @@ export function buildBillEscPos(
   const builder = createEscPos(paperWidth)
     .init()
     .align('center')
-    .bold(true)
-    .size('double-height')
-    .line(restaurantName)
-    .size('normal')
-    .bold(false);
+    .smartLine(restaurantName, 'center', 'double-height', true);
 
-  if (address) builder.line(address);
-  if (phone) builder.line(`Phone: ${phone}`);
-  if (options.taxId) builder.line(`${options.taxIdLabel || 'GSTIN'}: ${options.taxId}`);
+  if (address) builder.smartLine(address, 'center');
+  if (phone) builder.smartLine(`Phone: ${phone}`, 'center');
+  if (options.taxId) builder.smartLine(`${options.taxIdLabel || 'GSTIN'}: ${options.taxId}`, 'center');
 
   builder
     .feed(1)
-    .bold(true)
-    .line('TAX INVOICE / GUEST BILL')
-    .bold(false)
+    .smartLine('TAX INVOICE / GUEST BILL', 'center', 'normal', true)
     .divider()
     .align('left');
 
   // Metadata
   builder
-    .row(`Bill Ref: ${order.order_ref}`, isDineIn ? `Table ${order.table_number || '--'}` : 'Takeaway')
-    .row(`Date: ${timestamp}`, `Guest: ${sanitizeThermalText(order.customer_name || 'Guest')}`);
+    .smartRow(`Bill Ref: ${order.order_ref}`, isDineIn ? `Table ${order.table_number || '--'}` : 'Takeaway')
+    .smartRow(`Date: ${timestamp}`, `Guest: ${order.customer_name || 'Guest'}`);
 
   if (order.customer_phone) {
-    builder.line(`Phone: ${order.customer_phone}`);
+    builder.smartLine(`Phone: ${order.customer_phone}`);
   }
 
   builder.doubleDivider();
@@ -609,7 +600,7 @@ export function buildBillEscPos(
   // Columns header
   builder
     .bold(true)
-    .threeColumn('QTY', 'ITEM', 'AMOUNT')
+    .smartThreeColumn('QTY', 'ITEM', 'AMOUNT')
     .bold(false)
     .divider();
 
@@ -617,43 +608,43 @@ export function buildBillEscPos(
   for (const item of items) {
     const unitPrice = item.unit_price || 0;
     const lineTotal = item.line_total || (unitPrice * item.quantity);
-    builder.threeColumn(`${item.quantity}x`, item.item_name, `${currencySymbol}${lineTotal.toFixed(2)}`);
+    builder.smartThreeColumn(`${item.quantity}x`, item.item_name, `${currencySymbol}${lineTotal.toFixed(2)}`);
   }
 
   builder.divider();
 
   // Subtotal
-  builder.row('Subtotal', `${currencySymbol}${subtotal.toFixed(2)}`);
+  builder.smartRow('Subtotal', `${currencySymbol}${subtotal.toFixed(2)}`);
 
   // Discount
   if (discount > 0) {
     const discLabel = options.discountCode ? `Discount (${options.discountCode})` : 'Discount';
-    builder.row(discLabel, `-${currencySymbol}${discount.toFixed(2)}`);
+    builder.smartRow(discLabel, `-${currencySymbol}${discount.toFixed(2)}`);
   }
 
   // Tax Breakdown
   if (options.taxRules && options.taxRules.length > 0) {
     for (const rule of options.taxRules) {
       const amt = rule.amount !== undefined ? rule.amount : (subtotal * rule.rate);
-      builder.row(`${rule.label} (${(rule.rate * 100).toFixed(1)}%)`, `${currencySymbol}${amt.toFixed(2)}`);
+      builder.smartRow(`${rule.label} (${(rule.rate * 100).toFixed(1)}%)`, `${currencySymbol}${amt.toFixed(2)}`);
     }
   } else if (options.taxRate && options.taxRate > 0) {
     const taxAmt = (order as any).tax_amount ?? (order as any).tax ?? (subtotal * options.taxRate);
-    builder.row(`${options.taxLabel || 'Tax'} (${(options.taxRate * 100).toFixed(1)}%)`, `${currencySymbol}${taxAmt.toFixed(2)}`);
+    builder.smartRow(`${options.taxLabel || 'Tax'} (${(options.taxRate * 100).toFixed(1)}%)`, `${currencySymbol}${taxAmt.toFixed(2)}`);
   }
 
   if (options.ratesAsOf) {
-    builder.row('Rates as of', options.ratesAsOf);
+    builder.smartRow('Rates as of', options.ratesAsOf);
   }
 
   // Service Charge
   if (serviceCharge > 0) {
-    builder.row(options.serviceChargeLabel || 'Service Charge', `${currencySymbol}${serviceCharge.toFixed(2)}`);
+    builder.smartRow(options.serviceChargeLabel || 'Service Charge', `${currencySymbol}${serviceCharge.toFixed(2)}`);
   }
 
   // Tips
   if (tipAmount > 0) {
-    builder.row('Staff Gratuity / Tip', `${currencySymbol}${tipAmount.toFixed(2)}`);
+    builder.smartRow('Staff Gratuity / Tip', `${currencySymbol}${tipAmount.toFixed(2)}`);
   }
 
   builder.doubleDivider();
@@ -662,16 +653,16 @@ export function buildBillEscPos(
   builder
     .size('double-height')
     .bold(true)
-    .row('TOTAL DUE', `${currencySymbol}${total.toFixed(2)}`)
+    .smartRow('TOTAL DUE', `${currencySymbol}${total.toFixed(2)}`)
     .size('normal')
     .bold(false)
     .divider();
 
   // Settlement Details
-  builder.row('Status:', paymentStatusDisplay);
+  builder.smartRow('Status:', paymentStatusDisplay);
   const orderAny = order as any;
   if (orderAny.payment_provider) {
-    builder.row('Method:', String(orderAny.payment_provider).toUpperCase());
+    builder.smartRow('Method:', String(orderAny.payment_provider).toUpperCase());
   }
 
   // QR Code Generation
@@ -689,9 +680,9 @@ export function buildBillEscPos(
   // Footer
   builder
     .align('center')
-    .line('Thank you for dining with us!')
-    .line('Please visit us again.')
-    .line(`Visit: https://${website}`)
+    .smartLine('Thank you for dining with us!', 'center')
+    .smartLine('Please visit us again.', 'center')
+    .smartLine(`Visit: https://${website}`, 'center')
     .feed(1);
 
   // Cash Drawer Kick Pulse (if cash settlement enabled and payment is counter/cash)

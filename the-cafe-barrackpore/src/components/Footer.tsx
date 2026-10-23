@@ -36,6 +36,7 @@ export const Footer: React.FC = () => {
   const phone = restaurantConfig?.contact?.phone || clientDetails.phone;
   const displayPhone = restaurantConfig?.contact?.displayPhone || clientDetails.displayPhone;
   const whatsapp = restaurantConfig?.contact?.whatsapp || clientDetails.whatsapp;
+  const email = restaurantConfig?.contact?.email || clientDetails.email;
   const openingHours = restaurantConfig?.openingTime && restaurantConfig?.closingTime
     ? `${restaurantConfig.openingTime} – ${restaurantConfig.closingTime}`
     : '11:00 AM – 11:00 PM';
@@ -307,6 +308,17 @@ export const Footer: React.FC = () => {
                     <span className="whitespace-nowrap">{t('common.whatsapp', 'WhatsApp')}</span>
                   </a>
                 ) : null}
+
+                {email ? (
+                  <a 
+                    className="h-10 px-3.5 rounded-full bg-surface-container-high border border-outline/20 hover:border-primary/50 text-on-surface/90 hover:text-on-surface transition-all font-medium inline-flex items-center justify-center gap-2 active:scale-95 text-xs min-w-0" 
+                    href={`mailto:${email}`}
+                    aria-label={`Email ${email}`}
+                  >
+                    <span className="material-symbols-outlined text-base text-primary shrink-0">mail</span>
+                    <span className="whitespace-nowrap font-mono">{email}</span>
+                  </a>
+                ) : null}
               </div>
 
               {/* Guest Concierge & Inquiry Form Trigger */}
@@ -368,7 +380,7 @@ export const Footer: React.FC = () => {
             <a className="hover:text-primary transition-colors text-on-surface/80" href="/terms">
               {t('footer.termsOfService', 'Terms of Service')}
             </a>
-            <a className="hover:text-primary transition-colors text-on-surface/80" href="#" onClick={(e) => handleDummy(e, t('footer.hygieneStandards', 'Hygiene Standards'), hygieneMsg)}>
+            <a className="hover:text-primary transition-colors text-on-surface/80 cursor-pointer" href="#hygiene" onClick={(e) => handleDummy(e, t('footer.hygieneStandards', 'Hygiene Standards'), hygieneMsg)}>
               {t('footer.hygieneStandards', 'Hygiene & Safety')}
             </a>
             {showStaffPortalLink && (

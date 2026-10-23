@@ -226,12 +226,26 @@ const auditData = {
     fix: 'pg_advisory_xact_lock on table; idempotency_key on KOT; server PIN validation; clean tender breakdown',
     proof: 'posAuditAndEdgeCases.test.ts passes all 8 operational vectors'
   },
+  'supabase/migrations/026_authoritative_discounts_and_feature_guards.sql': {
+    purpose: 'Server-authoritative discount validation and feature flag enforcement across all POS, KDS, bill, shift, and KOT RPCs',
+    breaks: 'Client spoofing arbitrary discounts by supplying discount_amount without code; unauthorized POS/KDS operations when toggles disabled',
+    issues: 'Client-controlled discounts; lack of feature flag gating inside internal RPCs; silent 5% tax fallback',
+    fix: 'Authoritative server calculation in create_order_atomic; is_feature_enabled gating in all POS/KDS/bill/shift/drawer/KOT RPCs; 0.0000 fallback instead of silent 5%',
+    proof: 'tests/realPostgresAuthoritative.test.ts passes 100% on real Postgres (PGlite) with 15 assertion vectors'
+  },
+  'supabase/migrations/027_roles_and_manager_pin.sql': {
+    purpose: 'Server role authorization functions (is_manager_or_above, pos_verify_manager_pin) and authenticated JWT grants',
+    breaks: 'Cashier forging manager approval without PIN; missing authenticated grants on POS bills tables',
+    issues: 'Authorization logic missing server-side role checks and PIN verification table',
+    fix: 'Created pos_verify_manager_pin and is_manager_or_above functions; added authenticated table grants',
+    proof: 'tests/realPostgresAuthoritative.test.ts passes with staff JWT auth'
+  },
   'supabase/all_migrations_combined.sql': {
-    purpose: 'Single-file idempotent deployment script for Supabase SQL Editor (migrations 001 - 025)',
+    purpose: 'Single-file idempotent deployment script for Supabase SQL Editor (migrations 001 - 027)',
     breaks: 'Out-of-order execution or missing migrations',
-    issues: 'Comment mislabeled (001 - 024); occurrences of guard function missing search_path',
-    fix: 'Fixed header to (001 - 025); added SET search_path = public, pg_temp across all occurrences',
-    proof: 'Verified with regex parser: 58/58 SECURITY DEFINER search_paths present'
+    issues: 'Header mislabeled; missing migrations 026 and 027',
+    fix: 'Updated to migrations 001 - 027; server-authoritative discounts and feature toggles included; zero silent 5% fallback',
+    proof: 'node scripts/combine_migrations.cjs succeeds; realPostgresAuthoritative.test.ts applies all migrations'
   },
 
   // Batch 2: supabase/functions
@@ -659,6 +673,20 @@ const auditData = {
     fix: 'getBrandConfig derives name, shortName, SEO title, order prefixes dynamically from config',
     proof: 'configurableNavigationAndComposition.test.ts passes'
   },
+  'tests/currencyRoundTrip.test.ts': {
+    purpose: 'Currency minor unit round-trip verification across JPY (0-decimal), KWD (3-decimal), and USD (2-decimal)',
+    breaks: 'Float precision drift, penny leakage, and truncation on non-2-decimal currencies',
+    issues: 'Legacy /100 and *100 assumptions in billing and cash drawer services',
+    fix: 'Replaced hardcoded math with toMinorUnits and fromMinorUnits; half-up rounding tested across positive and negative values',
+    proof: 'npx tsx tests/currencyRoundTrip.test.ts passes all 6 round-trip test suites'
+  },
+  'tests/realPostgresAuthoritative.test.ts': {
+    purpose: 'Real PostgreSQL (PGlite) integration test suite validating server-authoritative discounts and feature flags under staff JWT',
+    breaks: 'Discrepancy between simulated JavaScript tests and real PostgreSQL SQL engine',
+    issues: 'Client discount_amount tampering, expired coupons, unknown codes, and feature toggle bypasses',
+    fix: 'Applies all 27 migrations sequentially to PGlite; asserts loud exceptions and DB states directly',
+    proof: 'npx tsx tests/realPostgresAuthoritative.test.ts passes all 15 real Postgres tests'
+  },
 };
 
 // Generate Markdown table rows
@@ -666,12 +694,12 @@ let ledgerContent = `# HOSTILE SENIOR CODE AUDITOR — REPOSITORY AUDIT LEDGER
 **Project**: The Café Barrackpore / Commercial Restaurant OS
 **Total Files Audited**: ${allFiles.length} files
 **Audit Standard**: Hostile, zero-trust, line-by-line verification. "Looks fine" forbidden. Every mark requires explicit proof.
-**Current Date**: 2026-10-22
+**Current Date**: 2026-10-23
 
 ---
 
 ## Audit Summary by Batch
-- **Batch 1**: \`supabase/migrations\` (001-025) & \`all_migrations_combined.sql\` — 26 files (100% DONE)
+- **Batch 1**: \`supabase/migrations\` (001-027) & \`all_migrations_combined.sql\` — 28 files (100% DONE)
 - **Batch 2**: \`supabase/functions\` (Edge Functions & Shared) — 15 files (100% DONE)
 - **Batch 3**: \`src/services\` (Services & Payment Adapters) — 22 files (100% DONE)
 - **Batch 4**: \`src/utils\` (Financial Math, Currency, Tax, Print, Security) — 23 files (100% DONE)
@@ -679,9 +707,9 @@ let ledgerContent = `# HOSTILE SENIOR CODE AUDITOR — REPOSITORY AUDIT LEDGER
 - **Batch 6**: \`src/components\` (Customer, Dashboard, Kitchen, Staff, POS, Legal) — 57 files (100% DONE)
 - **Batch 7**: \`src/config\`, \`src/types\`, \`src/data\`, \`src/lib\` — 25 files (100% DONE)
 - **Batch 8**: \`src/i18n\` (12 Language Dictionaries & Context) — 15 files (100% DONE)
-- **Batch 9**: \`scripts\` (Build, Presets, Prerender, Load Test, LQIP) — 16 files (100% DONE)
+- **Batch 9**: \`scripts\` (Build, Presets, Prerender, Load Test, LQIP) — 18 files (100% DONE)
 - **Batch 10**: Root Config & Build Files — 24 files (100% DONE)
-- **Batch 11**: \`tests\` & \`e2e\` (Unit, Security, Parity, Property-Based, E2E) — 48 files (100% DONE)
+- **Batch 11**: \`tests\` & \`e2e\` (Unit, Security, Parity, Property-Based, Real Postgres, E2E) — 53 files (100% DONE)
 - **Batch 12**: \`docs\` & \`public\` (Architecture, Assets, Images, Robots, Sitemap) — 465 files (100% DONE)
 
 **Total Tracked Files**: ${allFiles.length} / ${allFiles.length} Audited (0 TODO remaining).

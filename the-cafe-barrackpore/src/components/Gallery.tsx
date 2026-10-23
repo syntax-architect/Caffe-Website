@@ -7,6 +7,7 @@ import { SectionReveal } from './SectionReveal';
 import { getAvifSource } from '../utils/image';
 import { DEFAULT_GALLERY_ITEMS, type GalleryItem } from '../services/siteContentService';
 import type { GalleryVariant } from '../types/restaurantEngine';
+import { GoogleReviewsCard } from './GoogleReviewsCard';
 
 interface GalleryPhoto {
   src: string;
@@ -228,11 +229,16 @@ export const Gallery: React.FC = () => {
           </p>
         </SectionReveal>
 
+        {/* Built-in Google Reviews Card replacing third-party Elfsight placeholder */}
         {hasElfsight ? (
-          <div className="w-full">
+          <div className="w-full mb-8">
             <div className={`elfsight-app-${clientDetails.elfsightId}`} data-elfsight-app-lazy></div>
           </div>
-        ) : items.length === 0 ? (
+        ) : (
+          <GoogleReviewsCard className="mb-10" />
+        )}
+
+        {items.length === 0 ? (
           /* Graceful Empty State */
           <div className="py-20 text-center max-w-md mx-auto text-on-surface/60 flex flex-col items-center">
             <span className="material-symbols-outlined text-4xl text-primary/50 mb-3">photo_library</span>

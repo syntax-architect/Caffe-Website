@@ -76,7 +76,7 @@ DECLARE
     v_subtotal_minor INTEGER := 0;
     v_tax_minor INTEGER := 0;
     v_grand_total_minor INTEGER := 0;
-    v_tax_rate NUMERIC := 0.0500;
+    v_tax_rate NUMERIC := 0.0000;
     v_existing_bill RECORD;
     v_existing_kot RECORD;
 BEGIN
@@ -273,7 +273,7 @@ BEGIN
     FROM public.bill_items
     WHERE bill_id = v_bill_id AND is_voided = false;
 
-    SELECT COALESCE(tax_rate, 0.0500) INTO v_tax_rate
+    SELECT COALESCE(tax_rate, 0.0000) INTO v_tax_rate
     FROM public.restaurant_settings
     ORDER BY (id = 'current') DESC LIMIT 1;
 
@@ -326,7 +326,7 @@ DECLARE
     v_subtotal_minor INTEGER := 0;
     v_tax_minor INTEGER := 0;
     v_grand_total_minor INTEGER := 0;
-    v_tax_rate NUMERIC := 0.0500;
+    v_tax_rate NUMERIC := 0.0000;
 BEGIN
     v_tenant_id := COALESCE(public.get_auth_restaurant_id(), 'the-cafe-barrackpore');
 
@@ -390,7 +390,7 @@ BEGIN
     FROM public.bill_items
     WHERE bill_id = v_bill.id AND is_voided = false;
 
-    SELECT COALESCE(tax_rate, 0.0500) INTO v_tax_rate
+    SELECT COALESCE(tax_rate, 0.0000) INTO v_tax_rate
     FROM public.restaurant_settings
     ORDER BY (id = 'current') DESC LIMIT 1;
 

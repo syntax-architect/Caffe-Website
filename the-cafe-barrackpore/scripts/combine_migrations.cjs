@@ -26,12 +26,15 @@ const files = [
   '021_pos_billing_shifts_and_drawer.sql',
   '022_restaurant_feature_toggles.sql',
   '023_dated_tax_registry.sql',
-  '024_financial_parity_tax_and_money_logic.sql'
+  '024_financial_parity_tax_and_money_logic.sql',
+  '025_pos_audit_and_hardening.sql',
+  '026_authoritative_discounts_and_feature_guards.sql',
+  '027_roles_and_manager_pin.sql'
 ];
 
 let combined = `-- ==============================================================================
 -- COMPLETE DATABASE INITIALIZATION SCRIPT
--- Runs all migrations (001 - 024) in proper dependency order.
+-- Runs all migrations (001 - 026) in proper dependency order.
 -- Copy and paste this ENTIRE script into Supabase Dashboard -> SQL Editor and click Run.
 -- ==============================================================================
 

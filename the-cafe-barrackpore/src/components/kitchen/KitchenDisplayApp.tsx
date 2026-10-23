@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useKitchenOrders } from '../../hooks/useKitchenOrders';
@@ -13,7 +14,8 @@ interface KitchenDisplayAppProps {
 }
 
 export const KitchenDisplayApp: React.FC<KitchenDisplayAppProps> = ({ onExit }) => {
-  const { user, staffProfile, role } = useAuth();
+  const { t } = useI18n(); void t;
+    const { user, staffProfile, role } = useAuth();
   const {
     newOrders,
     preparingOrders,
@@ -112,7 +114,7 @@ export const KitchenDisplayApp: React.FC<KitchenDisplayAppProps> = ({ onExit }) 
           className="bg-[#D4AF37] text-[#120c08] px-4 py-2 flex items-center justify-between text-xs font-bold tracking-wider uppercase shadow-[0_0_24px_rgba(212,175,55,0.45)] animate-pulse"
         >
           <div className="flex items-center gap-2">
-            <span>⚡ NEW ORDER RECEIVED:</span>
+            <span>{t('staff.kitchen.newTickets', '⚡ NEW ORDER RECEIVED:')}</span>
             <span className="font-mono text-sm underline">#{newOrderAlert.ref}</span>
             {newOrderAlert.table && (
               <span className="bg-[#120c08] text-[#D4AF37] px-2 py-0.5 rounded font-mono">
@@ -137,7 +139,7 @@ export const KitchenDisplayApp: React.FC<KitchenDisplayAppProps> = ({ onExit }) 
           className="bg-amber-950 border-b border-amber-600/40 text-amber-200 px-4 py-2 flex items-center justify-between text-xs"
         >
           <div className="flex items-center gap-2">
-            <span className="text-amber-400 font-bold">⚠️ Warning:</span>
+            <span className="text-amber-400 font-bold">{t('common.warning', '⚠️ Warning:')}</span>
             <span>{actionError}</span>
           </div>
           <button

@@ -102,9 +102,9 @@ serve(async (req: Request) => {
       );
     }
 
-    if (!['owner', 'manager', 'staff'].includes(rawRole)) {
+    if (!['owner', 'manager', 'cashier', 'waiter', 'kitchen', 'staff'].includes(rawRole)) {
       return new Response(
-        JSON.stringify({ error: 'Invalid role. Must be owner, manager, or staff.' }),
+        JSON.stringify({ error: 'Invalid role. Must be owner, manager, cashier, waiter, kitchen, or staff.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

@@ -1,8 +1,8 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect } from 'react';
 import type { KitchenConnectionStatus, KitchenFilter } from '../../services/kitchenService';
 import { unlockAudioContext, playKitchenOrderBell } from '../../services/soundService';
 import { useSiteConfig } from '../../context/SiteConfigContext';
-import { LanguageSwitcher } from '../LanguageSwitcher';
 
 interface KitchenTopBarProps {
   connectionStatus: KitchenConnectionStatus;
@@ -23,6 +23,7 @@ interface KitchenTopBarProps {
 }
 
 export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
+
   connectionStatus,
   soundEnabled,
   onToggleSound,
@@ -39,6 +40,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
   onRefresh,
   onSimulateTestOrder,
 }) => {
+  const { t } = useI18n(); void t;
   const { logoUrl } = useSiteConfig();
   const [currentTime, setCurrentTime] = useState<string>('');
   const [currentDate, setCurrentDate] = useState<string>('');
@@ -97,14 +99,14 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
         return (
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 text-[11px] font-mono font-bold shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>KITCHEN LIVE</span>
+            <span>{t('staff.kitchen.title', 'KITCHEN LIVE')}</span>
           </div>
         );
       case 'reconnecting':
         return (
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/80 text-amber-300 border border-amber-500/40 text-[11px] font-mono font-bold">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-            <span>SYNCING...</span>
+            <span>{t('common.loading', 'SYNCING...')}</span>
           </div>
         );
       case 'offline':
@@ -116,7 +118,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
             title="Tap to reconnect"
           >
             <span className="w-2 h-2 rounded-full bg-red-500" />
-            <span>OFFLINE (RETRY)</span>
+            <span>{t('common.retry', 'OFFLINE (RETRY)')}</span>
           </button>
         );
     }
@@ -135,7 +137,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
           <span className="material-symbols-outlined text-base text-[#D4AF37] group-hover:-translate-x-0.5 transition-transform">
             arrow_back
           </span>
-          <span className="hidden sm:inline">Management</span>
+          <span className="hidden sm:inline">{t('staff.dashboard.title', 'Management')}</span>
         </button>
 
         <div className="flex items-center gap-2 pl-1 border-l border-white/[0.08]">
@@ -185,7 +187,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
           }`}
         >
           <span className="material-symbols-outlined text-xs">restaurant</span>
-          <span>Dine-In</span>
+          <span>{t('cart.dineIn', 'Dine-In')}</span>
         </button>
         <button
           type="button"
@@ -197,7 +199,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
           }`}
         >
           <span className="material-symbols-outlined text-xs">takeout_dining</span>
-          <span>Takeaway</span>
+          <span>{t('cart.takeaway', 'Takeaway')}</span>
         </button>
       </div>
 
@@ -205,10 +207,10 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
       <div className="flex items-center gap-3">
         {/* Ticket Volume Badge */}
         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-          <span className="text-[10px] font-mono uppercase text-stone-400">Active</span>
+          <span className="text-[10px] font-mono uppercase text-stone-400">{t('staff.kitchen.inProgress', 'Active')}</span>
           <span className="font-mono font-bold text-sm text-[#F3C766]">{totalActive}</span>
           <span className="text-stone-600">|</span>
-          <span className="text-[10px] font-mono uppercase text-stone-400">Done</span>
+          <span className="text-[10px] font-mono uppercase text-stone-400">{t('staff.kitchen.readyToServe', 'Done')}</span>
           <span className="font-mono font-bold text-sm text-emerald-400">{completedCount}</span>
         </div>
 
@@ -247,7 +249,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
           }}
           className="p-2 rounded-xl bg-white/[0.04] hover:bg-[#D4AF37]/15 border border-white/[0.08] hover:border-[#D4AF37]/40 text-stone-300 hover:text-[#F3C766] transition-all cursor-pointer"
           title="Sound Check: Test brass kitchen bell ring"
-          aria-label="Test kitchen chime"
+          aria-label={t('staff.kitchen.test_kitchen_chime', 'Test kitchen chime')}
         >
           <span className="material-symbols-outlined text-lg">notifications_active</span>
         </button>
@@ -261,7 +263,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
             title="Simulate incoming Table 07 order for dinner rush testing"
           >
             <span className="material-symbols-outlined text-sm">bolt</span>
-            <span>+ Test Order</span>
+            <span>{t('staff.kitchen.test_order', '+ Test Order')}</span>
           </button>
         )}
 
@@ -277,8 +279,6 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
           </span>
         </button>
 
-        {/* Staff Language Selector */}
-        <LanguageSwitcher variant="staff" />
 
         {/* Fullscreen Toggle */}
         <button

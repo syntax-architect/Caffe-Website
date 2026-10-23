@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { fetchRestaurantTables, saveRestaurantTable, toggleTableActive } from '../../services/dashboardService';
@@ -9,6 +10,7 @@ import { useSiteConfig } from '../../context/SiteConfigContext';
 import { clientDetails } from '../../config/client';
 
 export const TablesManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { addNotification } = useNotification();
   const { restaurantConfig } = useSiteConfig();
   const businessName = restaurantConfig?.businessName || clientDetails.businessName || 'Restaurant Service';
@@ -170,7 +172,7 @@ export const TablesManagement: React.FC = () => {
           className="relative group overflow-hidden px-5 py-3 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] text-[#070605] text-xs font-black tracking-wider uppercase shadow-[0_10px_30px_rgba(212,175,55,0.25)] hover:shadow-[0_15px_40px_rgba(212,175,55,0.4)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
         >
           <span className="material-symbols-outlined text-base font-bold">add</span>
-          <span>Add Dining Table</span>
+          <span>{t('staff.tables.add_dining_table', 'Add Dining Table')}</span>
         </button>
       </div>
 
@@ -178,13 +180,13 @@ export const TablesManagement: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Total Tables</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">{t('staff.tables.total_tables', 'Total Tables')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-white mt-0.5">{tables.length}</p>
           </div>
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">Active Service</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">{t('staff.tables.active_service', 'Active Service')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-emerald-400 mt-0.5">
               {tables.filter((t) => t.active).length}
             </p>
@@ -192,7 +194,7 @@ export const TablesManagement: React.FC = () => {
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Total Seating</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">{t('staff.tables.total_seating', 'Total Seating')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-white mt-0.5">
               {tables.reduce((sum, t) => sum + (t.capacity || 0), 0)} covers
             </p>
@@ -200,8 +202,8 @@ export const TablesManagement: React.FC = () => {
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">QR Dispatch</p>
-            <p className="text-xl sm:text-2xl font-serif font-bold text-[#D4AF37] mt-0.5">100% Ready</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">{t('staff.tables.qr_dispatch', 'QR Dispatch')}</p>
+            <p className="text-xl sm:text-2xl font-serif font-bold text-[#D4AF37] mt-0.5">{t('staff.tables.100_ready', '100% Ready')}</p>
           </div>
         </div>
       </div>
@@ -219,7 +221,7 @@ export const TablesManagement: React.FC = () => {
             <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-zinc-500 mb-4">
               <span className="material-symbols-outlined text-3xl">qr_code_2</span>
             </div>
-            <h3 className="text-lg font-serif font-bold text-white">No dining tables configured</h3>
+            <h3 className="text-lg font-serif font-bold text-white">{t('staff.tables.no_dining_tables_configured', 'No dining tables configured')}</h3>
             <p className="text-xs text-zinc-400 mt-1 max-w-sm">
               Initialize your dining room layout by clicking "Add Dining Table" above.
             </p>
@@ -253,7 +255,7 @@ export const TablesManagement: React.FC = () => {
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[10px] font-mono tracking-widest uppercase text-zinc-400">TABLE</span>
+                        <span className="text-[10px] font-mono tracking-widest uppercase text-zinc-400">{t('staff.tables.table', 'TABLE')}</span>
                         <span className="text-2xl sm:text-3xl font-serif font-black text-white tracking-tight group-hover:text-[#D4AF37] transition-colors">
                           {table.table_number}
                         </span>
@@ -304,7 +306,7 @@ export const TablesManagement: React.FC = () => {
                       />
                       <div className="mt-2 flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase text-zinc-800 group-hover:text-black">
                         <span className="material-symbols-outlined text-xs">print</span>
-                        <span>Print Table Stand</span>
+                        <span>{t('staff.tables.print_table_stand', 'Print Table Stand')}</span>
                       </div>
                     </div>
                   </div>
@@ -317,7 +319,7 @@ export const TablesManagement: React.FC = () => {
                       rel="noopener noreferrer"
                       className="text-[#D4AF37] hover:text-[#F3C766] font-mono font-semibold inline-flex items-center gap-1 text-[11px] transition-colors"
                     >
-                      <span>Launch Preview</span>
+                      <span>{t('staff.tables.launch_preview', 'Launch Preview')}</span>
                       <span className="material-symbols-outlined text-xs">open_in_new</span>
                     </a>
 
@@ -350,7 +352,7 @@ export const TablesManagement: React.FC = () => {
               type="button"
               onClick={() => setActiveQrTable(null)}
               className="absolute top-4 right-4 p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white border border-white/[0.08] transition-colors print:hidden cursor-pointer"
-              aria-label="Close QR view"
+              aria-label={t('staff.tables.close_qr_view', 'Close QR view')}
             >
               <span className="material-symbols-outlined text-base leading-none">close</span>
             </button>
@@ -390,7 +392,7 @@ export const TablesManagement: React.FC = () => {
                 />
               </div>
 
-              <p className="text-xs font-bold text-white print:text-black">Scan with camera to order</p>
+              <p className="text-xs font-bold text-white print:text-black">{t('staff.tables.scan_with_camera_to_order', 'Scan with camera to order')}</p>
               <p className="text-[10px] text-zinc-400 print:text-zinc-600 mt-0.5">
                 Browse menu & dispatch directly to kitchen
               </p>
@@ -409,7 +411,7 @@ export const TablesManagement: React.FC = () => {
                   className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs tracking-wider uppercase hover:shadow-[0_10px_25px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm font-bold">print</span>
-                  <span>Print Table Stand</span>
+                  <span>{t('staff.tables.print_table_stand', 'Print Table Stand')}</span>
                 </button>
 
                 <button
@@ -491,7 +493,7 @@ export const TablesManagement: React.FC = () => {
                     onChange={(e) => setTableNumberInput(e.target.value)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-base text-white font-mono font-bold focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all"
                   />
-                  <p className="text-[10px] text-zinc-400 mt-1">Customers access this table via QR code or direct link.</p>
+                  <p className="text-[10px] text-zinc-400 mt-1">{t('staff.tables.customers_access_this_table_vi', 'Customers access this table via QR code or direct link.')}</p>
                 </div>
 
                 <div>
@@ -500,7 +502,7 @@ export const TablesManagement: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Riverside Window Table, Balcony 2"
+                    placeholder={t('staff.tables.e_g_riverside_window_table_bal', 'e.g. Riverside Window Table, Balcony 2')}
                     value={tableLabelInput}
                     onChange={(e) => setTableLabelInput(e.target.value)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all"

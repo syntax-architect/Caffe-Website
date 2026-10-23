@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchOrders, fetchOrderItems, updateOrderStatus } from '../../services/dashboardService';
 import { useNotification } from '../../hooks/useNotification';
@@ -20,6 +21,7 @@ interface OrderItemRecord {
 }
 
 export const OrdersManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { isOwner } = useAuth();
   const { addNotification } = useNotification();
   const { restaurantConfig, formatTime } = useSiteConfig();
@@ -236,7 +238,7 @@ export const OrdersManagement: React.FC = () => {
             </span>
             <input
               type="text"
-              placeholder="Search reference, guest name, phone, or table..."
+              placeholder={t('staff.orders.search_reference_guest_name_ph', 'Search reference, guest name, phone, or table...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl pl-10 pr-20 py-2.5 text-xs text-white placeholder:text-stone-500 focus:outline-none transition-all"
@@ -260,9 +262,9 @@ export const OrdersManagement: React.FC = () => {
                 onChange={(e) => setSelectedType(e.target.value)}
                 className="bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] rounded-xl px-3.5 py-2.5 text-xs text-stone-200 focus:outline-none appearance-none pr-8 cursor-pointer"
               >
-                <option value="all">All Service Types</option>
-                <option value="dine_in">Dine-in (Table)</option>
-                <option value="takeaway">Takeaway Counter</option>
+                <option value="all">{t('staff.orders.all_service_types', 'All Service Types')}</option>
+                <option value="dine_in">{t('staff.orders.dine_in_table', 'Dine-in (Table)')}</option>
+                <option value="takeaway">{t('staff.orders.takeaway_counter', 'Takeaway Counter')}</option>
               </select>
               <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none text-base">
                 arrow_drop_down
@@ -277,7 +279,7 @@ export const OrdersManagement: React.FC = () => {
                 title="Simulate incoming dinner service order from Table 07"
               >
                 <span className="material-symbols-outlined text-sm">bolt</span>
-                <span className="hidden sm:inline">+ Table 07 Order</span>
+                <span className="hidden sm:inline">{t('staff.orders.table_07_order', '+ Table 07 Order')}</span>
               </button>
             )}
 
@@ -327,14 +329,14 @@ export const OrdersManagement: React.FC = () => {
           {isLoading ? (
             <div className="py-24 text-center text-stone-400 text-xs">
               <span className="w-6 h-6 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin inline-block mb-3" />
-              <p>Fetching active tickets...</p>
+              <p>{t('staff.orders.fetching_active_tickets', 'Fetching active tickets...')}</p>
             </div>
           ) : orders.length === 0 ? (
             <div className="py-24 text-center text-stone-400 text-xs flex flex-col items-center">
               <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.07] flex items-center justify-center text-stone-600 mb-3">
                 <span className="material-symbols-outlined text-3xl">receipt_long</span>
               </div>
-              <p className="font-serif font-bold text-base text-white">No Matching Orders Found</p>
+              <p className="font-serif font-bold text-base text-white">{t('staff.orders.no_matching_orders_found', 'No Matching Orders Found')}</p>
               <p className="text-xs text-stone-500 mt-1 max-w-sm">
                 No orders match the selected filters. Change filter options or submit a new test ticket.
               </p>
@@ -346,15 +348,15 @@ export const OrdersManagement: React.FC = () => {
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-white/[0.08] bg-white/[0.02] text-stone-400 text-[10px] font-mono uppercase tracking-wider">
-                      <th className="py-3.5 px-6 font-semibold">Reference</th>
-                      <th className="py-3.5 px-4 font-semibold">Guest</th>
-                      <th className="py-3.5 px-4 font-semibold">Service</th>
-                      <th className="py-3.5 px-4 font-semibold">Time</th>
-                      <th className="py-3.5 px-4 font-semibold">Amount</th>
-                      <th className="py-3.5 px-4 font-semibold">Payment</th>
-                      <th className="py-3.5 px-4 font-semibold">Channel</th>
-                      <th className="py-3.5 px-4 font-semibold">Status</th>
-                      <th className="py-3.5 px-6 text-right font-semibold">Action</th>
+                      <th className="py-3.5 px-6 font-semibold">{t('staff.orders.reference', 'Reference')}</th>
+                      <th className="py-3.5 px-4 font-semibold">{t('staff.orders.guest', 'Guest')}</th>
+                      <th className="py-3.5 px-4 font-semibold">{t('staff.orders.service', 'Service')}</th>
+                      <th className="py-3.5 px-4 font-semibold">{t('staff.orders.time', 'Time')}</th>
+                      <th className="py-3.5 px-4 font-semibold">{t('staff.orders.amount', 'Amount')}</th>
+                      <th className="py-3.5 px-4 font-semibold">{t('staff.orders.payment', 'Payment')}</th>
+                      <th className="py-3.5 px-4 font-semibold">{t('staff.orders.channel', 'Channel')}</th>
+                      <th className="py-3.5 px-4 font-semibold">{t('staff.orders.status', 'Status')}</th>
+                      <th className="py-3.5 px-6 text-right font-semibold">{t('staff.orders.action', 'Action')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.04]">
@@ -380,7 +382,7 @@ export const OrdersManagement: React.FC = () => {
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.05] text-stone-300 font-mono text-[11px]">
                               <span className="material-symbols-outlined text-[13px]">takeout_dining</span>
-                              <span>Takeaway</span>
+                              <span>{t('staff.orders.takeaway', 'Takeaway')}</span>
                             </span>
                           )}
                         </td>
@@ -505,7 +507,7 @@ export const OrdersManagement: React.FC = () => {
                   type="button"
                   onClick={() => setActiveOrder(null)}
                   className="w-9 h-9 rounded-full bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-stone-400 hover:text-white transition-colors cursor-pointer"
-                  aria-label="Close drawer"
+                  aria-label={t('staff.orders.close_drawer', 'Close drawer')}
                 >
                   <span className="material-symbols-outlined text-lg">close</span>
                 </button>
@@ -770,12 +772,12 @@ export const OrdersManagement: React.FC = () => {
                 </div>
                 <div className="space-y-1 text-xs text-stone-300">
                   <div className="flex justify-between">
-                    <span className="text-stone-400">Gateway Provider:</span>
+                    <span className="text-stone-400">{t('staff.orders.gateway_provider', 'Gateway Provider:')}</span>
                     <span className="font-mono capitalize text-white">{activeOrder.payment_provider || 'Counter / Cash'}</span>
                   </div>
                   {activeOrder.payment_reference && (
                     <div className="flex justify-between">
-                      <span className="text-stone-400">Payment ID:</span>
+                      <span className="text-stone-400">{t('staff.orders.payment_id', 'Payment ID:')}</span>
                       <span className="font-mono text-[#F3C766] truncate max-w-[200px]" title={activeOrder.payment_reference}>
                         {activeOrder.payment_reference}
                       </span>
@@ -783,8 +785,8 @@ export const OrdersManagement: React.FC = () => {
                   )}
                   {activeOrder.payment_status === 'refunded' && (
                     <div className="flex justify-between text-purple-400 font-mono text-[11px] pt-1">
-                      <span>Refund Status:</span>
-                      <span>Full Refund Processed</span>
+                      <span>{t('staff.orders.refund_status', 'Refund Status:')}</span>
+                      <span>{t('staff.orders.full_refund_processed', 'Full Refund Processed')}</span>
                     </div>
                   )}
                 </div>
@@ -823,9 +825,9 @@ export const OrdersManagement: React.FC = () => {
                   Order Line Items
                 </h4>
                 {isLoadingItems ? (
-                  <p className="text-xs text-stone-500 py-4 text-center">Loading items...</p>
+                  <p className="text-xs text-stone-500 py-4 text-center">{t('staff.orders.loading_items', 'Loading items...')}</p>
                 ) : activeOrderItems.length === 0 ? (
-                  <p className="text-xs text-stone-500 py-4 text-center">No item details recorded.</p>
+                  <p className="text-xs text-stone-500 py-4 text-center">{t('staff.orders.no_item_details_recorded', 'No item details recorded.')}</p>
                 ) : (
                   <div className="divide-y divide-white/[0.05] rounded-xl bg-white/[0.02] border border-white/[0.06] p-3">
                     {activeOrderItems.map((item) => (
@@ -852,7 +854,7 @@ export const OrdersManagement: React.FC = () => {
               {/* Financial Totals */}
               <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.07] space-y-1.5 text-xs">
                 <div className="flex justify-between text-stone-400">
-                  <span>Subtotal</span>
+                  <span>{t('staff.orders.subtotal', 'Subtotal')}</span>
                   <span className="font-mono">
                     {formatCurrency(
                       activeOrder.subtotal,
@@ -862,7 +864,7 @@ export const OrdersManagement: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between text-base font-bold text-white pt-2 border-t border-white/[0.06]">
-                  <span>Total Due</span>
+                  <span>{t('staff.orders.total_due', 'Total Due')}</span>
                   <span className="text-[#F3C766] font-mono font-serif text-lg">
                     {formatCurrency(
                       activeOrder.total,
@@ -883,7 +885,7 @@ export const OrdersManagement: React.FC = () => {
                 className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md"
               >
                 <span className="material-symbols-outlined text-base">chat</span>
-                <span>WhatsApp Guest</span>
+                <span>{t('staff.orders.whatsapp_guest', 'WhatsApp Guest')}</span>
               </a>
 
               <button
@@ -893,7 +895,7 @@ export const OrdersManagement: React.FC = () => {
                 title="Print Kitchen Ticket"
               >
                 <span className="material-symbols-outlined text-base">print</span>
-                <span>Print</span>
+                <span>{t('staff.orders.print', 'Print')}</span>
               </button>
 
               <button
@@ -915,7 +917,7 @@ export const OrdersManagement: React.FC = () => {
             <div className="flex items-center gap-3 text-rose-400">
               <span className="material-symbols-outlined text-2xl">currency_exchange</span>
               <div>
-                <h3 className="font-serif font-bold text-white text-base">Issue Order Refund</h3>
+                <h3 className="font-serif font-bold text-white text-base">{t('staff.orders.issue_order_refund', 'Issue Order Refund')}</h3>
                 <p className="text-xs text-stone-400 font-mono">Order #{activeOrder.order_ref}</p>
               </div>
             </div>
@@ -937,11 +939,11 @@ export const OrdersManagement: React.FC = () => {
                 onChange={(e) => setRefundReason(e.target.value)}
                 className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
               >
-                <option value="requested_by_customer" className="bg-[#120F0D]">Customer Requested Cancellation</option>
-                <option value="kitchen_delay_void" className="bg-[#120F0D]">Kitchen Out of Stock / Order Voided</option>
-                <option value="duplicate_charge" className="bg-[#120F0D]">Accidental Duplicate Charge</option>
-                <option value="quality_issue" className="bg-[#120F0D]">Guest Experience / Resolution</option>
-                <option value="other" className="bg-[#120F0D]">Staff Discretion</option>
+                <option value="requested_by_customer" className="bg-[#120F0D]">{t('staff.orders.customer_requested_cancellatio', 'Customer Requested Cancellation')}</option>
+                <option value="kitchen_delay_void" className="bg-[#120F0D]">{t('staff.orders.kitchen_out_of_stock_order_voi', 'Kitchen Out of Stock / Order Voided')}</option>
+                <option value="duplicate_charge" className="bg-[#120F0D]">{t('staff.orders.accidental_duplicate_charge', 'Accidental Duplicate Charge')}</option>
+                <option value="quality_issue" className="bg-[#120F0D]">{t('staff.orders.guest_experience_resolution', 'Guest Experience / Resolution')}</option>
+                <option value="other" className="bg-[#120F0D]">{t('staff.orders.staff_discretion', 'Staff Discretion')}</option>
               </select>
             </div>
 

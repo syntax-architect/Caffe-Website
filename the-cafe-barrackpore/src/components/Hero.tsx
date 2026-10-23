@@ -4,7 +4,7 @@ import { smoothScrollTo } from '../utils/scroll';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { useI18n } from '../i18n';
-import { getAvifSource } from '../utils/image';
+import { getAvifSource, getResponsiveSrcSet } from '../utils/image';
 import type { HeroVariant } from '../types/restaurantEngine';
 
 interface HeroActionsProps {
@@ -266,13 +266,34 @@ export const Hero: React.FC = React.memo(() => {
                 <div className="relative aspect-[4/5] sm:aspect-[16/11] lg:aspect-[4/5] w-full rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-surface-container-lowest">
                   <picture>
                     {heroMobileAvifSrc && (
-                      <source media="(max-width: 768px)" srcSet={heroMobileAvifSrc} type="image/avif" />
+                      <source
+                        media="(max-width: 768px)"
+                        srcSet={getResponsiveSrcSet(heroMobileSrc, 'avif') || heroMobileAvifSrc}
+                        sizes="(max-width: 768px) 100vw, 500px"
+                        type="image/avif"
+                      />
                     )}
                     {heroMobileSrc && (
-                      <source media="(max-width: 768px)" srcSet={heroMobileSrc} type="image/webp" />
+                      <source
+                        media="(max-width: 768px)"
+                        srcSet={getResponsiveSrcSet(heroMobileSrc, 'webp') || heroMobileSrc}
+                        sizes="(max-width: 768px) 100vw, 500px"
+                        type="image/webp"
+                      />
                     )}
                     {heroAvifSrc && (
-                      <source srcSet={heroAvifSrc} type="image/avif" />
+                      <source
+                        srcSet={getResponsiveSrcSet(heroImageSrc, 'avif') || heroAvifSrc}
+                        sizes="(max-width: 1024px) 100vw, 800px"
+                        type="image/avif"
+                      />
+                    )}
+                    {heroImageSrc.endsWith('.jpg') && !heroImageSrc.startsWith('http') && (
+                      <source
+                        srcSet={getResponsiveSrcSet(heroImageSrc, 'webp') || heroImageSrc.replace(/\.jpg$/, '.webp')}
+                        sizes="(max-width: 1024px) 100vw, 800px"
+                        type="image/webp"
+                      />
                     )}
                     <img
                       src={heroImageSrc}
@@ -395,8 +416,35 @@ export const Hero: React.FC = React.memo(() => {
           <div className="w-full max-w-[940px] mx-auto mt-8 sm:mt-12 p-2 rounded-[2.5rem] bg-gradient-to-b from-surface-container/60 via-surface-container/20 to-transparent border border-outline/20 shadow-2xl overflow-hidden group">
             <div className="relative aspect-[21/9] sm:aspect-[21/9] max-h-[340px] w-full rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-surface-container-lowest">
               <picture>
+                {heroMobileAvifSrc && (
+                  <source
+                    media="(max-width: 768px)"
+                    srcSet={getResponsiveSrcSet(heroMobileSrc, 'avif') || heroMobileAvifSrc}
+                    sizes="(max-width: 768px) 100vw, 768px"
+                    type="image/avif"
+                  />
+                )}
                 {heroMobileSrc && (
-                  <source media="(max-width: 768px)" srcSet={heroMobileSrc} type="image/webp" />
+                  <source
+                    media="(max-width: 768px)"
+                    srcSet={getResponsiveSrcSet(heroMobileSrc, 'webp') || heroMobileSrc}
+                    sizes="(max-width: 768px) 100vw, 768px"
+                    type="image/webp"
+                  />
+                )}
+                {heroAvifSrc && (
+                  <source
+                    srcSet={getResponsiveSrcSet(heroImageSrc, 'avif') || heroAvifSrc}
+                    sizes="(max-width: 1024px) 100vw, 940px"
+                    type="image/avif"
+                  />
+                )}
+                {heroImageSrc.endsWith('.jpg') && !heroImageSrc.startsWith('http') && (
+                  <source
+                    srcSet={getResponsiveSrcSet(heroImageSrc, 'webp') || heroImageSrc.replace(/\.jpg$/, '.webp')}
+                    sizes="(max-width: 1024px) 100vw, 940px"
+                    type="image/webp"
+                  />
                 )}
                 <img
                   src={heroImageSrc}
@@ -461,16 +509,38 @@ export const Hero: React.FC = React.memo(() => {
         >
           <picture>
             {heroMobileAvifSrc && (
-              <source media="(max-width: 768px)" srcSet={heroMobileAvifSrc} type="image/avif" width="768" height="1376" />
+              <source
+                media="(max-width: 768px)"
+                srcSet={getResponsiveSrcSet(heroMobileSrc, 'avif') || heroMobileAvifSrc}
+                sizes="(max-width: 768px) 100vw, 768px"
+                type="image/avif"
+                width="768"
+                height="1376"
+              />
             )}
             {heroMobileSrc && (
-              <source media="(max-width: 768px)" srcSet={heroMobileSrc} type="image/webp" width="768" height="1376" />
+              <source
+                media="(max-width: 768px)"
+                srcSet={getResponsiveSrcSet(heroMobileSrc, 'webp') || heroMobileSrc}
+                sizes="(max-width: 768px) 100vw, 768px"
+                type="image/webp"
+                width="768"
+                height="1376"
+              />
             )}
             {heroAvifSrc && (
-              <source srcSet={heroAvifSrc} type="image/avif" />
+              <source
+                srcSet={getResponsiveSrcSet(heroImageSrc, 'avif') || heroAvifSrc}
+                sizes="(max-width: 1024px) 100vw, 1376px"
+                type="image/avif"
+              />
             )}
             {heroImageSrc.endsWith('.jpg') && !heroImageSrc.startsWith('http') && (
-              <source srcSet={heroImageSrc.replace(/\.jpg$/, '.webp')} type="image/webp" />
+              <source
+                srcSet={getResponsiveSrcSet(heroImageSrc, 'webp') || heroImageSrc.replace(/\.jpg$/, '.webp')}
+                sizes="(max-width: 1024px) 100vw, 1376px"
+                type="image/webp"
+              />
             )}
             <img
               src={heroImageSrc}

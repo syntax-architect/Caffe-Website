@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSiteConfig, type ImageAsset } from '../../context/SiteConfigContext';
 import { useNotification } from '../../hooks/useNotification';
@@ -27,7 +28,9 @@ export const ImageSpecGuide: React.FC<ImageSpecGuideProps> = ({
   maxFileSize,
   recommendedFormats,
   framingAdvice,
-}) => (
+}) => {
+  const { t } = useI18n();
+  return (
   <div className="p-4 rounded-2xl bg-gradient-to-br from-[#1A1612] via-[#0E0C0A] to-[#070605] border border-[#D4AF37]/25 shadow-lg space-y-2.5">
     <div className="flex items-center justify-between flex-wrap gap-2">
       <div className="flex items-center gap-2">
@@ -43,30 +46,32 @@ export const ImageSpecGuide: React.FC<ImageSpecGuideProps> = ({
 
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-left pt-1">
       <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.05]">
-        <p className="text-[9px] uppercase font-mono text-zinc-400">Resolution</p>
+        <p className="text-[9px] uppercase font-mono text-zinc-400">{t('staff.dashboard.resolution', 'Resolution')}</p>
         <p className="text-xs font-bold text-white mt-0.5">{recommendedResolution}</p>
       </div>
       <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.05]">
-        <p className="text-[9px] uppercase font-mono text-zinc-400">Aspect Ratio</p>
+        <p className="text-[9px] uppercase font-mono text-zinc-400">{t('staff.dashboard.aspect_ratio', 'Aspect Ratio')}</p>
         <p className="text-xs font-bold text-[#D4AF37] mt-0.5">{aspectRatio}</p>
       </div>
       <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.05]">
-        <p className="text-[9px] uppercase font-mono text-zinc-400">Max File Size</p>
+        <p className="text-[9px] uppercase font-mono text-zinc-400">{t('staff.dashboard.max_file_size', 'Max File Size')}</p>
         <p className="text-xs font-bold text-emerald-400 mt-0.5">{maxFileSize}</p>
       </div>
       <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.05]">
-        <p className="text-[9px] uppercase font-mono text-zinc-400">Formats</p>
+        <p className="text-[9px] uppercase font-mono text-zinc-400">{t('staff.dashboard.formats', 'Formats')}</p>
         <p className="text-xs font-bold text-sky-400 mt-0.5">{recommendedFormats}</p>
       </div>
     </div>
 
     <p className="text-[11px] text-zinc-400 leading-relaxed font-sans pt-0.5">
-      💡 <strong className="text-zinc-200">Composition Tip:</strong> {framingAdvice}
+      💡 <strong className="text-zinc-200">{t('staff.dashboard.composition_tip', 'Composition Tip:')}</strong> {framingAdvice}
     </p>
   </div>
-);
+  );
+};
 
 export const ContentManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const siteConfig = useSiteConfig();
   const { addNotification } = useNotification();
   const currencySymbol = siteConfig.restaurantConfig.currencySymbol || '₹';
@@ -424,7 +429,7 @@ export const ContentManagement: React.FC = () => {
               Unsaved changes in this section
             </span>
           ) : (
-            <span className="text-zinc-500 font-mono text-[11px]">All changes synced to Supabase</span>
+            <span className="text-zinc-500 font-mono text-[11px]">{t('staff.dashboard.all_changes_synced_to_supabase', 'All changes synced to Supabase')}</span>
           )}
         </div>
 
@@ -446,12 +451,12 @@ export const ContentManagement: React.FC = () => {
           {isSaving ? (
             <>
               <span className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-              <span>Saving...</span>
+              <span>{t('staff.dashboard.saving', 'Saving...')}</span>
             </>
           ) : isSaved ? (
             <>
               <span className="material-symbols-outlined text-base">check_circle</span>
-              <span>Saved Live</span>
+              <span>{t('staff.dashboard.saved_live', 'Saved Live')}</span>
             </>
           ) : (
             <>
@@ -489,7 +494,7 @@ export const ContentManagement: React.FC = () => {
           rel="noopener noreferrer"
           className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer shrink-0"
         >
-          <span>Preview Live Website</span>
+          <span>{t('staff.dashboard.preview_live_website', 'Preview Live Website')}</span>
           <span className="material-symbols-outlined text-sm">open_in_new</span>
         </a>
       </div>
@@ -537,8 +542,8 @@ export const ContentManagement: React.FC = () => {
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Above the Fold</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">Hero Cinematic Photography &amp; Typography</h3>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.above_the_fold', 'Above the Fold')}</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.hero_cinematic_photography_amp', 'Hero Cinematic Photography &amp; Typography')}</h3>
               </div>
 
               {/* ASSET SPECIFICATION GUIDE */}
@@ -575,7 +580,7 @@ export const ContentManagement: React.FC = () => {
                       <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
                         <label className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1.5">
                           <span className="material-symbols-outlined text-sm">cloud_upload</span>
-                          <span>Upload File...</span>
+                          <span>{t('staff.dashboard.upload_file', 'Upload File...')}</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -585,7 +590,7 @@ export const ContentManagement: React.FC = () => {
                         </label>
                         <input
                           type="url"
-                          placeholder="Or enter public image URL..."
+                          placeholder={t('staff.dashboard.or_enter_public_image_url', 'Or enter public image URL...')}
                           value={heroImage}
                           onChange={(e) => {
                             setHeroImage(e.target.value);
@@ -653,8 +658,8 @@ export const ContentManagement: React.FC = () => {
                   <div className="p-3.5 rounded-xl bg-black/40 border border-[#D4AF37]/20 flex items-center gap-3">
                     <span className="material-symbols-outlined text-[#D4AF37] text-xl">visibility</span>
                     <div className="text-[11px] leading-tight">
-                      <p className="font-bold text-white">Above-The-Fold Showcase</p>
-                      <p className="text-zinc-400 text-[10px] mt-0.5">Greets all arriving diners on desktop, tablet, and mobile displays</p>
+                      <p className="font-bold text-white">{t('staff.dashboard.above_the_fold_showcase', 'Above-The-Fold Showcase')}</p>
+                      <p className="text-zinc-400 text-[10px] mt-0.5">{t('staff.dashboard.greets_all_arriving_diners_on_', 'Greets all arriving diners on desktop, tablet, and mobile displays')}</p>
                     </div>
                   </div>
                 </div>
@@ -672,8 +677,8 @@ export const ContentManagement: React.FC = () => {
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Hospitality Philosophy</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">Our Story &amp; Heritage Sanctuary</h3>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.hospitality_philosophy', 'Hospitality Philosophy')}</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.our_story_amp_heritage_sanctua', 'Our Story &amp; Heritage Sanctuary')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
                   Manage the flagship narrative and each of the 3 interactive sticky story chapters.
                 </p>
@@ -744,7 +749,7 @@ export const ContentManagement: React.FC = () => {
                   <div>
                     <h4 className="text-sm font-bold text-white flex items-center gap-2">
                       <span className="material-symbols-outlined text-[#D4AF37] text-lg">auto_stories</span>
-                      <span>The 3 Interactive Story Chapters</span>
+                      <span>{t('staff.dashboard.the_3_interactive_story_chapte', 'The 3 Interactive Story Chapters')}</span>
                     </h4>
                     <p className="text-[11px] text-zinc-400 mt-0.5">
                       Each chapter has its own dedicated high-resolution photo, badge, headline, and narrative.
@@ -796,7 +801,7 @@ export const ContentManagement: React.FC = () => {
                           <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
                             <label className="px-3.5 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-sm">cloud_upload</span>
-                              <span>Upload Photo</span>
+                              <span>{t('staff.dashboard.upload_photo', 'Upload Photo')}</span>
                               <input
                                 type="file"
                                 accept="image/*"
@@ -812,7 +817,7 @@ export const ContentManagement: React.FC = () => {
                             </label>
                             <input
                               type="url"
-                              placeholder="Or enter image URL..."
+                              placeholder={t('staff.dashboard.or_enter_image_url', 'Or enter image URL...')}
                               value={chapter.image}
                               onChange={(e) => {
                                 const next = [...storyChapters];
@@ -948,8 +953,8 @@ export const ContentManagement: React.FC = () => {
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Experiential Spaces</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">Atmosphere &amp; Vibe Photo Cards</h3>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.experiential_spaces', 'Experiential Spaces')}</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.atmosphere_amp_vibe_photo_card', 'Atmosphere &amp; Vibe Photo Cards')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
                   The 4 signature architectural feature cards rendered in the "About &amp; Vibe" section.
                 </p>
@@ -999,7 +1004,7 @@ export const ContentManagement: React.FC = () => {
                     <div className="flex flex-col gap-2 pt-1">
                       <div className="flex items-center gap-2">
                         <label className="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0">
-                          <span>Replace Photo</span>
+                          <span>{t('staff.dashboard.replace_photo', 'Replace Photo')}</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -1015,7 +1020,7 @@ export const ContentManagement: React.FC = () => {
                         </label>
                         <input
                           type="url"
-                          placeholder="Or image URL..."
+                          placeholder={t('staff.dashboard.or_image_url', 'Or image URL...')}
                           value={img.src}
                           onChange={(e) => {
                             const next = [...vibeImages];
@@ -1043,8 +1048,8 @@ export const ContentManagement: React.FC = () => {
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Curated Group Feasts</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">Special Banquet &amp; Hangout Platters</h3>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.curated_group_feasts', 'Curated Group Feasts')}</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.special_banquet_amp_hangout_pl', 'Special Banquet &amp; Hangout Platters')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
                   Shareable signature group platters displayed on the homepage specials banner.
                 </p>
@@ -1116,7 +1121,7 @@ export const ContentManagement: React.FC = () => {
 
                         <div className="space-y-2.5">
                           <div>
-                            <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">Dish Name</label>
+                            <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">{t('staff.dashboard.dish_name', 'Dish Name')}</label>
                             <input
                               type="text"
                               value={combo.name}
@@ -1132,7 +1137,7 @@ export const ContentManagement: React.FC = () => {
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">Badge Text</label>
+                              <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">{t('staff.dashboard.badge_text', 'Badge Text')}</label>
                               <input
                                 type="text"
                                 value={combo.badge}
@@ -1167,7 +1172,7 @@ export const ContentManagement: React.FC = () => {
                       <div className="pt-2 border-t border-white/[0.06] space-y-2">
                         <label className="w-full py-2 px-3 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5">
                           <span className="material-symbols-outlined text-sm">cloud_upload</span>
-                          <span>Replace Platter Photo</span>
+                          <span>{t('staff.dashboard.replace_platter_photo', 'Replace Platter Photo')}</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -1183,7 +1188,7 @@ export const ContentManagement: React.FC = () => {
                         </label>
                         <input
                           type="url"
-                          placeholder="Or enter image URL..."
+                          placeholder={t('staff.dashboard.or_enter_image_url', 'Or enter image URL...')}
                           value={combo.image}
                           onChange={(e) => {
                             const next = [...specialCombos];
@@ -1211,8 +1216,8 @@ export const ContentManagement: React.FC = () => {
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Visual World</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">Ambiance &amp; Interior Gallery</h3>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.visual_world', 'Visual World')}</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.ambiance_amp_interior_gallery', 'Ambiance &amp; Interior Gallery')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
                   High-resolution photo slots rendered in the interactive customer ambiance carousel.
                 </p>
@@ -1261,7 +1266,7 @@ export const ContentManagement: React.FC = () => {
 
                     <div className="flex items-center gap-2 pt-1">
                       <label className="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0">
-                        <span>Replace Photo</span>
+                        <span>{t('staff.dashboard.replace_photo', 'Replace Photo')}</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -1277,7 +1282,7 @@ export const ContentManagement: React.FC = () => {
                       </label>
                       <input
                         type="url"
-                        placeholder="Or enter image URL..."
+                        placeholder={t('staff.dashboard.or_enter_image_url', 'Or enter image URL...')}
                         value={img.src}
                         onChange={(e) => {
                           const next = [...galleryImages];
@@ -1304,8 +1309,8 @@ export const ContentManagement: React.FC = () => {
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Private Salon</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">VIP Club &amp; Speakeasy Sanctuary</h3>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.private_salon', 'Private Salon')}</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.vip_club_amp_speakeasy_sanctua', 'VIP Club &amp; Speakeasy Sanctuary')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
                   The exclusive speakeasy salon showcase photo displayed on the homepage.
                 </p>
@@ -1346,7 +1351,7 @@ export const ContentManagement: React.FC = () => {
                       <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
                         <label className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer shrink-0 inline-flex items-center gap-2">
                           <span className="material-symbols-outlined text-base">cloud_upload</span>
-                          <span>Upload New Photo...</span>
+                          <span>{t('staff.dashboard.upload_new_photo', 'Upload New Photo...')}</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -1356,7 +1361,7 @@ export const ContentManagement: React.FC = () => {
                         </label>
                         <input
                           type="url"
-                          placeholder="Or enter public image URL..."
+                          placeholder={t('staff.dashboard.or_enter_public_image_url', 'Or enter public image URL...')}
                           value={vipImage}
                           onChange={(e) => {
                             setVipImage(e.target.value);
@@ -1424,8 +1429,8 @@ export const ContentManagement: React.FC = () => {
                   <div className="p-4 rounded-2xl bg-black/40 border border-[#D4AF37]/20 flex items-center gap-3">
                     <span className="material-symbols-outlined text-[#D4AF37] text-2xl">hotel_class</span>
                     <div className="text-[11px] leading-tight">
-                      <p className="font-bold text-white">Homepage Speakeasy Showcase</p>
-                      <p className="text-zinc-400 text-[10px] mt-1">Renders in the VIP Private Salon section with direct reservation inquiry hooks</p>
+                      <p className="font-bold text-white">{t('staff.dashboard.homepage_speakeasy_showcase', 'Homepage Speakeasy Showcase')}</p>
+                      <p className="text-zinc-400 text-[10px] mt-1">{t('staff.dashboard.renders_in_the_vip_private_sal', 'Renders in the VIP Private Salon section with direct reservation inquiry hooks')}</p>
                     </div>
                   </div>
                 </div>
@@ -1443,8 +1448,8 @@ export const ContentManagement: React.FC = () => {
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">Identity &amp; Crest</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">Brand Logo &amp; Official Insignia</h3>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.identity_amp_crest', 'Identity &amp; Crest')}</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.brand_logo_amp_official_insign', 'Brand Logo &amp; Official Insignia')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
                   Synchronized across the header bar, footer directory, staff login, table QR codes, invoice receipts, and kitchen display.
                 </p>
@@ -1472,14 +1477,14 @@ export const ContentManagement: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white">Active Brand Insignia</p>
-                      <p className="text-[10px] text-zinc-400 mt-0.5">High-contrast vector crest</p>
+                      <p className="text-xs font-bold text-white">{t('staff.dashboard.active_brand_insignia', 'Active Brand Insignia')}</p>
+                      <p className="text-[10px] text-zinc-400 mt-0.5">{t('staff.dashboard.high_contrast_vector_crest', 'High-contrast vector crest')}</p>
                     </div>
 
                     <div className="w-full space-y-2 pt-2 border-t border-white/[0.06]">
                       <label className="w-full py-2.5 px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white border border-white/[0.08] transition-colors cursor-pointer inline-flex items-center justify-center gap-2">
                         <span className="material-symbols-outlined text-sm">cloud_upload</span>
-                        <span>Choose Logo File...</span>
+                        <span>{t('staff.dashboard.choose_logo_file', 'Choose Logo File...')}</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -1489,7 +1494,7 @@ export const ContentManagement: React.FC = () => {
                       </label>
                       <input
                         type="url"
-                        placeholder="Or enter public logo URL..."
+                        placeholder={t('staff.dashboard.or_enter_public_logo_url', 'Or enter public logo URL...')}
                         value={brandLogo}
                         onChange={(e) => {
                           setBrandLogo(e.target.value);
@@ -1522,7 +1527,7 @@ export const ContentManagement: React.FC = () => {
                   <div className="p-4 rounded-2xl bg-black/40 border border-[#D4AF37]/20 space-y-3">
                     <div className="flex items-center gap-2 text-xs font-bold text-white">
                       <span className="material-symbols-outlined text-[#D4AF37] text-base">sync</span>
-                      <span>Real-time Multi-Surface Synchronization</span>
+                      <span>{t('staff.dashboard.real_time_multi_surface_synchr', 'Real-time Multi-Surface Synchronization')}</span>
                     </div>
                     <p className="text-[11px] text-zinc-400 leading-relaxed">
                       Updating this insignia dynamically synchronizes across all operations touchpoints without requiring redeployment:
@@ -1530,27 +1535,27 @@ export const ContentManagement: React.FC = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-[10px] font-mono">
                       <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        <span>Public Header</span>
+                        <span>{t('staff.dashboard.public_header', 'Public Header')}</span>
                       </div>
                       <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        <span>Footer Crest</span>
+                        <span>{t('staff.dashboard.footer_crest', 'Footer Crest')}</span>
                       </div>
                       <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        <span>Staff Terminal</span>
+                        <span>{t('staff.dashboard.staff_terminal', 'Staff Terminal')}</span>
                       </div>
                       <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        <span>Table QR Cards</span>
+                        <span>{t('staff.dashboard.table_qr_cards', 'Table QR Cards')}</span>
                       </div>
                       <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        <span>Guest Invoices</span>
+                        <span>{t('staff.dashboard.guest_invoices', 'Guest Invoices')}</span>
                       </div>
                       <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        <span>Kitchen Display</span>
+                        <span>{t('staff.dashboard.kitchen_display', 'Kitchen Display')}</span>
                       </div>
                     </div>
                   </div>

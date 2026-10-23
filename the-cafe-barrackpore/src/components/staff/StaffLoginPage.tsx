@@ -4,8 +4,10 @@ import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { isStaffAccountLocked, recordStaffLoginFailure, resetStaffLoginFailures } from '../../utils/security';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { clientDetails } from '../../config/client';
+import { useI18n } from '../../i18n';
 
 export const StaffLoginPage: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { logoUrl } = useSiteConfig();
   const { signIn, verifyMfaCode, isMfaAwaiting, isLoading, isAuthenticated, isActiveStaff } = useAuth();
 
@@ -195,7 +197,7 @@ export const StaffLoginPage: React.FC = () => {
           <span className="w-5 h-5 rounded-full bg-white/[0.08] flex items-center justify-center text-stone-400 group-hover:text-[#D4AF37] group-hover:-translate-x-0.5 transition-transform">
             <span className="material-symbols-outlined text-[13px]">arrow_back</span>
           </span>
-          <span>Back to Dining Room</span>
+          <span>{t('notFound.backToDining', 'Back to Dining Room')}</span>
         </a>
 
         <div className="flex items-center gap-2">
@@ -204,7 +206,7 @@ export const StaffLoginPage: React.FC = () => {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#D4AF37] px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/25">
-            Operations Terminal
+            {t('staff.login.operationsTerminal', 'Operations Terminal')}
           </span>
         </div>
       </header>
@@ -252,7 +254,7 @@ export const StaffLoginPage: React.FC = () => {
                   timer
                 </span>
                 <div className="flex-1">
-                  <p className="font-semibold text-amber-300">Terminal Temporarily Locked</p>
+                  <p className="font-semibold text-amber-300">{t('staff.login.terminal_temporarily_locked', 'Terminal Temporarily Locked')}</p>
                   <p className="text-amber-200/90 text-[11px] mt-0.5">
                     Repeated login failures recorded. Terminal unlocked in{' '}
                     <strong className="text-white font-mono">{Math.floor(lockoutRemaining / 60)}m {lockoutRemaining % 60}s</strong>.
@@ -271,7 +273,7 @@ export const StaffLoginPage: React.FC = () => {
                   error
                 </span>
                 <div className="flex-1">
-                  <p className="font-semibold text-red-300">Sign In Issue</p>
+                  <p className="font-semibold text-red-300">{t('staff.login.sign_in_issue', 'Sign In Issue')}</p>
                   <p className="text-red-200/90 text-[11px] mt-0.5">{errorMessage}</p>
                 </div>
               </div>
@@ -289,7 +291,7 @@ export const StaffLoginPage: React.FC = () => {
                       security_update_warning
                     </span>
                     <div className="flex-1">
-                      <p className="font-semibold text-red-300">2FA Challenge Error</p>
+                      <p className="font-semibold text-red-300">{t('staff.login.2fa_challenge_error', '2FA Challenge Error')}</p>
                       <p className="text-red-200/90 text-[11px] mt-0.5">{mfaError}</p>
                     </div>
                   </div>
@@ -335,11 +337,11 @@ export const StaffLoginPage: React.FC = () => {
                   {isMfaSubmitting ? (
                     <>
                       <span className="w-4 h-4 border-2 border-[#120B08] border-t-transparent rounded-full animate-spin" />
-                      <span>Verifying TOTP...</span>
+                      <span>{t('staff.login.verifying_totp', 'Verifying TOTP...')}</span>
                     </>
                   ) : (
                     <>
-                      <span>Verify & Enter Terminal</span>
+                      <span>{t('staff.login.verify_enter_terminal', 'Verify & Enter Terminal')}</span>
                       <span className="w-6 h-6 rounded-full bg-black/15 flex items-center justify-center group-hover:translate-x-1 transition-transform">
                         <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                       </span>
@@ -367,7 +369,7 @@ export const StaffLoginPage: React.FC = () => {
                       check_circle
                     </span>
                     <div className="flex-1">
-                      <p className="font-semibold text-emerald-300">Reset Email Dispatched</p>
+                      <p className="font-semibold text-emerald-300">{t('staff.login.reset_email_dispatched', 'Reset Email Dispatched')}</p>
                       <p className="text-emerald-200/90 text-[11px] mt-0.5">{resetSuccessMessage}</p>
                     </div>
                   </div>
@@ -382,7 +384,7 @@ export const StaffLoginPage: React.FC = () => {
                       error
                     </span>
                     <div className="flex-1">
-                      <p className="font-semibold text-red-300">Recovery Error</p>
+                      <p className="font-semibold text-red-300">{t('staff.login.recovery_error', 'Recovery Error')}</p>
                       <p className="text-red-200/90 text-[11px] mt-0.5">{resetErrorMessage}</p>
                     </div>
                   </div>
@@ -421,11 +423,11 @@ export const StaffLoginPage: React.FC = () => {
                   {isResetSubmitting ? (
                     <>
                       <span className="w-4 h-4 border-2 border-[#120B08] border-t-transparent rounded-full animate-spin" />
-                      <span>Sending Instructions...</span>
+                      <span>{t('staff.login.sending_instructions', 'Sending Instructions...')}</span>
                     </>
                   ) : (
                     <>
-                      <span>Send Password Reset Link</span>
+                      <span>{t('staff.login.send_password_reset_link', 'Send Password Reset Link')}</span>
                       <span className="w-6 h-6 rounded-full bg-black/15 flex items-center justify-center group-hover:translate-x-1 transition-transform">
                         <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                       </span>
@@ -524,11 +526,11 @@ export const StaffLoginPage: React.FC = () => {
                   {isSubmitting ? (
                     <>
                       <span className="w-4 h-4 border-2 border-[#120B08] border-t-transparent rounded-full animate-spin" />
-                      <span>Authenticating Terminal...</span>
+                      <span>{t('staff.login.authenticating_terminal', 'Authenticating Terminal...')}</span>
                     </>
                   ) : (
                     <>
-                      <span>Enter Operations Terminal</span>
+                      <span>{t('staff.login.enter_operations_terminal', 'Enter Operations Terminal')}</span>
                       <span className="w-6 h-6 rounded-full bg-black/15 flex items-center justify-center group-hover:translate-x-1 transition-transform">
                         <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                       </span>
@@ -542,9 +544,9 @@ export const StaffLoginPage: React.FC = () => {
             <div className="mt-8 pt-6 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-stone-500">
               <span className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-sm text-emerald-400">shield</span>
-                <span>Protected by Supabase RBAC & 2FA</span>
+                <span>{t('staff.login.protected_by_supabase_rbac_2fa', 'Protected by Supabase RBAC & 2FA')}</span>
               </span>
-              <span className="font-mono text-[10px]">TLS 1.3 / EAL2</span>
+              <span className="font-mono text-[10px]">{t('staff.login.tls_1_3_eal2', 'TLS 1.3 / EAL2')}</span>
             </div>
           </div>
         </div>

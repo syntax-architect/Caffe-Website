@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React from 'react';
 import type { KitchenOrder } from '../../services/kitchenService';
 
@@ -10,12 +11,14 @@ interface KitchenHistoryDrawerProps {
 }
 
 export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
+
   isOpen,
   onClose,
   completedOrders,
   onRecall,
   isMutatingId,
 }) => {
+  const { t } = useI18n(); void t;
   if (!isOpen) return null;
 
   const formatCompletionTime = (isoString: string) => {
@@ -60,7 +63,7 @@ export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
             type="button"
             onClick={onClose}
             className="p-2 text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/[0.06] transition-colors cursor-pointer"
-            aria-label="Close completed orders drawer"
+            aria-label={t('staff.kitchen.close_completed_orders_drawer', 'Close completed orders drawer')}
           >
             <span className="material-symbols-outlined text-base">close</span>
           </button>
@@ -136,7 +139,7 @@ export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
                         title="Recall this ticket back into the Ready column"
                       >
                         <span className="material-symbols-outlined text-sm">history</span>
-                        <span>Recall to Ready</span>
+                        <span>{t('staff.kitchen.recallTicket', 'Recall to Ready')}</span>
                       </button>
                     </div>
                   </div>
@@ -146,7 +149,7 @@ export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
           ) : (
             <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-zinc-500">
               <span className="material-symbols-outlined text-4xl mb-2 text-zinc-600">receipt_long</span>
-              <p className="font-serif font-bold text-sm text-white">No recently completed tickets</p>
+              <p className="font-serif font-bold text-sm text-white">{t('staff.kitchen.title', 'No recently completed tickets')}</p>
               <p className="text-xs text-zinc-500 mt-1 max-w-[220px]">
                 Orders punched as completed will archive here for quick kitchen recall.
               </p>

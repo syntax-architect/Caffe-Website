@@ -13,6 +13,11 @@ import base64
 try:
     from PIL import Image, ImageFilter
     HAS_PIL = True
+    try:
+        import pillow_heif
+        pillow_heif.register_heif_opener()
+    except Exception:
+        pass
 except ImportError:
     HAS_PIL = False
 

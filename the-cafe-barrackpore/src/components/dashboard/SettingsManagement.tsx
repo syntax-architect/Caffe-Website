@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
@@ -10,6 +11,7 @@ import { checkPaymentHealth, sendTestPayment, type PaymentHealthStatus } from '.
 import type { RestaurantSettings, RestaurantFeatureFlags } from '../../types/dashboard';
 import { DEFAULT_FEATURE_FLAGS } from '../../types/dashboard';
 import { PrinterSettingsSection } from './PrinterSettingsSection';
+import { getLocaleForCountry } from '../../utils/currency';
 
 const FEATURE_METADATA: Record<keyof RestaurantFeatureFlags, { label: string; desc: string; icon: string }> = {
   online_ordering: { label: 'Online Ordering', desc: 'Allows customers to order via the website', icon: 'shopping_cart' },
@@ -33,6 +35,7 @@ const FEATURE_METADATA: Record<keyof RestaurantFeatureFlags, { label: string; de
 };
 
 export const SettingsManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { user, isOwner } = useAuth();
   const { addNotification } = useNotification();
   const { restaurantConfig, updateRestaurantConfig } = useSiteConfig();
@@ -82,13 +85,13 @@ export const SettingsManagement: React.FC = () => {
   const [country, setCountry] = useState('IN');
   const [currency, setCurrency] = useState('INR');
   const [currencySymbol, setCurrencySymbol] = useState('₹');
-  const [locale, setLocale] = useState('en-IN');
+  const [locale, setLocale] = useState(() => getLocaleForCountry('IN', 'INR'));
   const [timezone, setTimezone] = useState('Asia/Kolkata');
   const [phoneCountryCode, setPhoneCountryCode] = useState('+91');
   const [taxEnabled, setTaxEnabled] = useState(true);
   const [taxMode, setTaxMode] = useState<'inclusive' | 'exclusive'>('inclusive');
   const [taxLabel, setTaxLabel] = useState('GST');
-  const [taxRatePercent, setTaxRatePercent] = useState('5.0');
+  const [taxRatePercent, setTaxRatePercent] = useState('0.0');
   const [dietarySystem, setDietarySystem] = useState<'india' | 'international'>('india');
   const [primaryContactMethod, setPrimaryContactMethod] = useState<'whatsapp' | 'phone' | 'email'>('whatsapp');
   const [email, setEmail] = useState('');
@@ -200,13 +203,13 @@ export const SettingsManagement: React.FC = () => {
         setCountry(data.country || 'IN');
         setCurrency(data.currency || 'INR');
         setCurrencySymbol(data.currency_symbol || '₹');
-        setLocale(data.locale || 'en-IN');
+        setLocale(data.locale || getLocaleForCountry(data.country, data.currency));
         setTimezone(data.timezone || 'Asia/Kolkata');
         setPhoneCountryCode(data.phone_country_code || '+91');
         setTaxEnabled(data.tax_enabled ?? true);
         setTaxMode(data.tax_mode || 'inclusive');
         setTaxLabel(data.tax_label || 'GST');
-        setTaxRatePercent(((data.tax_rate ?? 0.05) * 100).toString());
+        setTaxRatePercent(((data.tax_rate ?? 0.0) * 100).toString());
         setDietarySystem(data.dietary_system || 'india');
         setPrimaryContactMethod(data.primary_contact_method || 'whatsapp');
         setEmail(data.email || '');
@@ -474,13 +477,13 @@ export const SettingsManagement: React.FC = () => {
         {isOwner && (
           <div className="px-3.5 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-mono font-bold flex items-center gap-2">
             <span className="material-symbols-outlined text-sm">verified_user</span>
-            <span>Proprietor Authorized</span>
+            <span>{t('staff.dashboard.proprietor_authorized', 'Proprietor Authorized')}</span>
           </div>
         )}
       </div>
 
       {isLoading ? (
-        <div className="py-20 text-center text-zinc-500 font-mono text-xs">Loading operational manifest...</div>
+        <div className="py-20 text-center text-zinc-500 font-mono text-xs">{t('staff.dashboard.loading_operational_manifest', 'Loading operational manifest...')}</div>
       ) : (
         <form onSubmit={handleSave} className="space-y-8">
           {/* SETTINGS SUBTABS (Direct navigation to Features, Localization, etc.) */}
@@ -507,7 +510,7 @@ export const SettingsManagement: React.FC = () => {
               }`}
             >
               <span className="material-symbols-outlined text-sm">toggle_on</span>
-              <span>Features (18 Toggles)</span>
+              <span>{t('staff.dashboard.features_18_toggles', 'Features (18 Toggles)')}</span>
             </button>
             <button
               type="button"
@@ -653,9 +656,9 @@ export const SettingsManagement: React.FC = () => {
                     <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
                       Operational Gates
                     </span>
-                    <h3 className="font-serif text-lg font-bold text-white mt-0.5">Master Service Switches</h3>
+                    <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.master_service_switches', 'Master Service Switches')}</h3>
                   </div>
-                  <span className="text-xs text-zinc-500 font-mono">Immediate live effect</span>
+                  <span className="text-xs text-zinc-500 font-mono">{t('staff.dashboard.immediate_live_effect', 'Immediate live effect')}</span>
                 </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
@@ -675,7 +678,7 @@ export const SettingsManagement: React.FC = () => {
                       }`}
                     />
                     <div>
-                      <p className="text-sm font-bold text-white">Online Ordering (QR & Web)</p>
+                      <p className="text-sm font-bold text-white">{t('staff.dashboard.online_ordering_qr_web', 'Online Ordering (QR & Web)')}</p>
                       <p className="text-[11px] text-zinc-400 mt-0.5">
                         {isOrderingEnabled ? 'Accepting guest orders actively' : 'Ordering paused across portal'}
                       </p>
@@ -706,7 +709,7 @@ export const SettingsManagement: React.FC = () => {
                       }`}
                     />
                     <div>
-                      <p className="text-sm font-bold text-white">Table Reservations</p>
+                      <p className="text-sm font-bold text-white">{t('staff.dashboard.table_reservations', 'Table Reservations')}</p>
                       <p className="text-[11px] text-zinc-400 mt-0.5">
                         {isBookingEnabled ? 'Accepting booking requests' : 'Reservations closed for rush hour'}
                       </p>
@@ -747,7 +750,7 @@ export const SettingsManagement: React.FC = () => {
                     className="px-3.5 py-2 rounded-xl bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer self-start sm:self-auto"
                   >
                     <span className="material-symbols-outlined text-sm">tune</span>
-                    <span>+ Custom Country Setup Wizard</span>
+                    <span>{t('staff.dashboard.custom_country_setup_wizard', '+ Custom Country Setup Wizard')}</span>
                   </button>
                 )}
               </div>
@@ -894,11 +897,11 @@ export const SettingsManagement: React.FC = () => {
               <div className="pt-6 border-t border-white/[0.06] space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-bold text-white text-sm">Tax Engine & Calculation Rules</h4>
-                    <p className="text-[11px] text-zinc-400">Apply inclusive VAT/GST or checkout sales tax addition.</p>
+                    <h4 className="font-bold text-white text-sm">{t('staff.dashboard.tax_engine_calculation_rules', 'Tax Engine & Calculation Rules')}</h4>
+                    <p className="text-[11px] text-zinc-400">{t('staff.dashboard.apply_inclusive_vat_gst_or_che', 'Apply inclusive VAT/GST or checkout sales tax addition.')}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <label htmlFor="tax-active-toggle" className="text-xs text-zinc-400 font-mono">Tax Active</label>
+                    <label htmlFor="tax-active-toggle" className="text-xs text-zinc-400 font-mono">{t('staff.dashboard.tax_active', 'Tax Active')}</label>
                     <input
                       id="tax-active-toggle"
                       type="checkbox"
@@ -921,8 +924,8 @@ export const SettingsManagement: React.FC = () => {
                       onChange={(e) => setTaxMode(e.target.value as 'inclusive' | 'exclusive')}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                     >
-                      <option value="inclusive" className="bg-[#120F0D]">Inclusive (Prices already include tax)</option>
-                      <option value="exclusive" className="bg-[#120F0D]">Exclusive (Added at guest checkout)</option>
+                      <option value="inclusive" className="bg-[#120F0D]">{t('staff.dashboard.inclusive_prices_already_inclu', 'Inclusive (Prices already include tax)')}</option>
+                      <option value="exclusive" className="bg-[#120F0D]">{t('staff.dashboard.exclusive_added_at_guest_check', 'Exclusive (Added at guest checkout)')}</option>
                     </select>
                   </div>
 
@@ -935,7 +938,7 @@ export const SettingsManagement: React.FC = () => {
                       value={taxLabel}
                       disabled={!isOwner}
                       onChange={(e) => setTaxLabel(e.target.value)}
-                      placeholder="GST, VAT, Sales Tax"
+                      placeholder={t('staff.dashboard.gst_vat_sales_tax', 'GST, VAT, Sales Tax')}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                     />
                   </div>
@@ -964,7 +967,7 @@ export const SettingsManagement: React.FC = () => {
                     <div className="flex items-start gap-2">
                       <span className="text-amber-400 text-xs mt-0.5">⚖</span>
                       <div>
-                        <p className="text-[10px] font-mono uppercase tracking-wider text-amber-400/80 font-bold mb-1">Tax Advisory</p>
+                        <p className="text-[10px] font-mono uppercase tracking-wider text-amber-400/80 font-bold mb-1">{t('staff.dashboard.tax_advisory', 'Tax Advisory')}</p>
                         <p className="text-[11px] text-amber-200/70 leading-relaxed">{taxLegalNote}</p>
                       </div>
                     </div>
@@ -976,7 +979,7 @@ export const SettingsManagement: React.FC = () => {
               <div className="pt-6 border-t border-white/[0.06] space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-bold text-white text-sm">Service Charge</h4>
+                    <h4 className="font-bold text-white text-sm">{t('staff.dashboard.service_charge', 'Service Charge')}</h4>
                     <p className="text-[10px] text-zinc-500 mt-0.5">
                       Common in Singapore (10%), UAE (10%), France (15%), Thailand (10%)
                     </p>
@@ -1006,7 +1009,7 @@ export const SettingsManagement: React.FC = () => {
                         value={serviceChargeLabel}
                         disabled={!isOwner}
                         onChange={(e) => setServiceChargeLabel(e.target.value)}
-                        placeholder="Service Charge"
+                        placeholder={t('staff.dashboard.service_charge', 'Service Charge')}
                         className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                       />
                     </div>
@@ -1035,7 +1038,7 @@ export const SettingsManagement: React.FC = () => {
                           onChange={(e) => setServiceChargeTaxable(e.target.checked)}
                           className="w-4 h-4 rounded accent-[#D4AF37] cursor-pointer"
                         />
-                        <span className="text-xs text-zinc-300">Taxable (tax applies on service charge)</span>
+                        <span className="text-xs text-zinc-300">{t('staff.dashboard.taxable_tax_applies_on_service', 'Taxable (tax applies on service charge)')}</span>
                       </label>
                     </div>
                   </div>
@@ -1044,7 +1047,7 @@ export const SettingsManagement: React.FC = () => {
 
               {/* Dietary & Concierge Preferences */}
               <div className="pt-6 border-t border-white/[0.06] space-y-4">
-                <h4 className="font-bold text-white text-sm">Dietary Presentation & Guest Channel</h4>
+                <h4 className="font-bold text-white text-sm">{t('staff.dashboard.dietary_presentation_guest_cha', 'Dietary Presentation & Guest Channel')}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
@@ -1056,8 +1059,8 @@ export const SettingsManagement: React.FC = () => {
                       onChange={(e) => setDietarySystem(e.target.value as 'india' | 'international')}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                     >
-                      <option value="india" className="bg-[#120F0D]">Indian Standard (FSSAI Veg/Non-Veg Dot Symbols)</option>
-                      <option value="international" className="bg-[#120F0D]">International Standard (Vegan & Dietary Badges)</option>
+                      <option value="india" className="bg-[#120F0D]">{t('staff.dashboard.indian_standard_fssai_veg_non_', 'Indian Standard (FSSAI Veg/Non-Veg Dot Symbols)')}</option>
+                      <option value="international" className="bg-[#120F0D]">{t('staff.dashboard.international_standard_vegan_d', 'International Standard (Vegan & Dietary Badges)')}</option>
                     </select>
                   </div>
 
@@ -1071,9 +1074,9 @@ export const SettingsManagement: React.FC = () => {
                       onChange={(e) => setPrimaryContactMethod(e.target.value as 'whatsapp' | 'phone' | 'email')}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                     >
-                      <option value="whatsapp" className="bg-[#120F0D]">WhatsApp Concierge (Instant Chat Dispatch)</option>
-                      <option value="phone" className="bg-[#120F0D]">Voice Phone Hotline (Telephone Dispatch)</option>
-                      <option value="email" className="bg-[#120F0D]">Email Concierge (Formal Confirmations)</option>
+                      <option value="whatsapp" className="bg-[#120F0D]">{t('staff.dashboard.whatsapp_concierge_instant_cha', 'WhatsApp Concierge (Instant Chat Dispatch)')}</option>
+                      <option value="phone" className="bg-[#120F0D]">{t('staff.dashboard.voice_phone_hotline_telephone_', 'Voice Phone Hotline (Telephone Dispatch)')}</option>
+                      <option value="email" className="bg-[#120F0D]">{t('staff.dashboard.email_concierge_formal_confirm', 'Email Concierge (Formal Confirmations)')}</option>
                     </select>
                   </div>
                 </div>
@@ -1121,7 +1124,7 @@ export const SettingsManagement: React.FC = () => {
               <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Gateway Status:</span>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">{t('staff.dashboard.gateway_status', 'Gateway Status:')}</span>
                     {paymentProvider === 'none' ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-zinc-800 text-zinc-400 border border-zinc-700">
                         <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
@@ -1178,19 +1181,19 @@ export const SettingsManagement: React.FC = () => {
                 {paymentProvider === 'razorpay' && (
                   <div className="pt-2 border-t border-white/[0.04] grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-mono">
                     <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
-                      <span className="text-zinc-400">RAZORPAY_KEY_ID:</span>
+                      <span className="text-zinc-400">{t('staff.dashboard.razorpay_key_id', 'RAZORPAY_KEY_ID:')}</span>
                       <span className={healthStatus?.providers.razorpay.hasKeyId ? 'text-emerald-400' : 'text-rose-400'}>
                         {healthStatus?.providers.razorpay.hasKeyId ? '✓ Configured' : '✗ Missing'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
-                      <span className="text-zinc-400">RAZORPAY_KEY_SECRET:</span>
+                      <span className="text-zinc-400">{t('staff.dashboard.razorpay_key_secret', 'RAZORPAY_KEY_SECRET:')}</span>
                       <span className={healthStatus?.providers.razorpay.hasKeySecret ? 'text-emerald-400' : 'text-rose-400'}>
                         {healthStatus?.providers.razorpay.hasKeySecret ? '✓ Configured' : '✗ Missing'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
-                      <span className="text-zinc-400">WEBHOOK_SECRET:</span>
+                      <span className="text-zinc-400">{t('staff.dashboard.webhook_secret', 'WEBHOOK_SECRET:')}</span>
                       <span className={healthStatus?.providers.razorpay.hasWebhookSecret ? 'text-emerald-400' : 'text-amber-400'}>
                         {healthStatus?.providers.razorpay.hasWebhookSecret ? '✓ Configured' : '○ Optional'}
                       </span>
@@ -1201,13 +1204,13 @@ export const SettingsManagement: React.FC = () => {
                 {paymentProvider === 'stripe' && (
                   <div className="pt-2 border-t border-white/[0.04] grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
                     <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
-                      <span className="text-zinc-400">STRIPE_SECRET_KEY:</span>
+                      <span className="text-zinc-400">{t('staff.dashboard.stripe_secret_key', 'STRIPE_SECRET_KEY:')}</span>
                       <span className={healthStatus?.providers.stripe.hasSecretKey ? 'text-emerald-400' : 'text-rose-400'}>
                         {healthStatus?.providers.stripe.hasSecretKey ? '✓ Configured' : '✗ Missing'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
-                      <span className="text-zinc-400">STRIPE_WEBHOOK_SECRET:</span>
+                      <span className="text-zinc-400">{t('staff.dashboard.stripe_webhook_secret', 'STRIPE_WEBHOOK_SECRET:')}</span>
                       <span className={healthStatus?.providers.stripe.hasWebhookSecret ? 'text-emerald-400' : 'text-amber-400'}>
                         {healthStatus?.providers.stripe.hasWebhookSecret ? '✓ Configured' : '○ Optional'}
                       </span>
@@ -1262,7 +1265,7 @@ export const SettingsManagement: React.FC = () => {
               {/* Allow Pay At Counter Toggle */}
               <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/[0.08]">
                 <div>
-                  <h4 className="font-bold text-white text-sm">Allow Pay at Counter</h4>
+                  <h4 className="font-bold text-white text-sm">{t('staff.dashboard.allow_pay_at_counter', 'Allow Pay at Counter')}</h4>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
                     Permits guests to settle with cash or card at the counter/table, and provides a recovery option if an online payment fails.
                   </p>
@@ -1287,9 +1290,9 @@ export const SettingsManagement: React.FC = () => {
                   onChange={(e) => setPaymentMode(e.target.value as 'disabled' | 'online' | 'optional')}
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 >
-                  <option value="disabled" className="bg-[#120F0D]">Disabled (Pay at counter / manual verification only)</option>
-                  <option value="online" className="bg-[#120F0D]">Online Required (Customer must complete digital payment)</option>
-                  <option value="optional" className="bg-[#120F0D]">Optional (Customer chooses Pay Online or Pay at Counter)</option>
+                  <option value="disabled" className="bg-[#120F0D]">{t('staff.dashboard.disabled_pay_at_counter_manual', 'Disabled (Pay at counter / manual verification only)')}</option>
+                  <option value="online" className="bg-[#120F0D]">{t('staff.dashboard.online_required_customer_must_', 'Online Required (Customer must complete digital payment)')}</option>
+                  <option value="optional" className="bg-[#120F0D]">{t('staff.dashboard.optional_customer_chooses_pay_', 'Optional (Customer chooses Pay Online or Pay at Counter)')}</option>
                 </select>
                 <p className="text-[11px] text-zinc-500 mt-1.5">
                   In optional mode, customers can pay via UPI/Card immediately or pay the server at the counter/table upon delivery.
@@ -1304,7 +1307,7 @@ export const SettingsManagement: React.FC = () => {
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
                 Premises & Hours
               </span>
-              <h3 className="font-serif text-lg font-bold text-white">Operational Hours & Location</h3>
+              <h3 className="font-serif text-lg font-bold text-white">{t('staff.dashboard.operational_hours_location', 'Operational Hours & Location')}</h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div>
@@ -1383,7 +1386,7 @@ export const SettingsManagement: React.FC = () => {
                     value={city}
                     disabled={!isOwner}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="e.g. Barrackpore, London, New York"
+                    placeholder={t('staff.dashboard.e_g_barrackpore_london_new_yor', 'e.g. Barrackpore, London, New York')}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
@@ -1397,7 +1400,7 @@ export const SettingsManagement: React.FC = () => {
                     value={stateRegion}
                     disabled={!isOwner}
                     onChange={(e) => setStateRegion(e.target.value)}
-                    placeholder="e.g. West Bengal, NY, Ontario"
+                    placeholder={t('staff.dashboard.e_g_west_bengal_ny_ontario', 'e.g. West Bengal, NY, Ontario')}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
@@ -1424,7 +1427,7 @@ export const SettingsManagement: React.FC = () => {
                     value={email}
                     disabled={!isOwner}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. concierge@thecafe.com"
+                    placeholder={t('staff.dashboard.e_g_concierge_thecafe_com', 'e.g. concierge@thecafe.com')}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
@@ -1438,7 +1441,7 @@ export const SettingsManagement: React.FC = () => {
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
                 Customer Notice
               </span>
-              <h3 className="font-serif text-lg font-bold text-white">Top Announcement Banner</h3>
+              <h3 className="font-serif text-lg font-bold text-white">{t('staff.dashboard.top_announcement_banner', 'Top Announcement Banner')}</h3>
               <p className="text-xs text-zinc-400">
                 Display a priority announcement at the very top of the customer website.
               </p>
@@ -1448,7 +1451,7 @@ export const SettingsManagement: React.FC = () => {
                 value={banner}
                 disabled={!isOwner}
                 onChange={(e) => setBanner(e.target.value)}
-                placeholder="e.g. Special weekend degustation menu featuring artisanal wood-fired sourdough pizzas."
+                placeholder={t('staff.dashboard.e_g_special_weekend_degustatio', 'e.g. Special weekend degustation menu featuring artisanal wood-fired sourdough pizzas.')}
                 className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] resize-none"
               />
             </div>
@@ -1481,12 +1484,12 @@ export const SettingsManagement: React.FC = () => {
                     onChange={(e) => setOwnerNotificationMethod(e.target.value as any)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] cursor-pointer"
                   >
-                    <option value="none">Disabled (No daily digest)</option>
-                    <option value="email">Email Only</option>
-                    <option value="whatsapp">WhatsApp Only</option>
-                    <option value="both">Both WhatsApp & Email</option>
+                    <option value="none">{t('staff.dashboard.disabled_no_daily_digest', 'Disabled (No daily digest)')}</option>
+                    <option value="email">{t('staff.dashboard.email_only', 'Email Only')}</option>
+                    <option value="whatsapp">{t('staff.dashboard.whatsapp_only', 'WhatsApp Only')}</option>
+                    <option value="both">{t('staff.dashboard.both_whatsapp_email', 'Both WhatsApp & Email')}</option>
                   </select>
-                  <p className="text-[10px] text-zinc-500 mt-1">Dispatches daily at closing time with gross revenue, tickets, and top items.</p>
+                  <p className="text-[10px] text-zinc-500 mt-1">{t('staff.dashboard.dispatches_daily_at_closing_ti', 'Dispatches daily at closing time with gross revenue, tickets, and top items.')}</p>
                 </div>
 
                 {/* Low Stock Alert Threshold */}
@@ -1505,9 +1508,9 @@ export const SettingsManagement: React.FC = () => {
                       placeholder="5"
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                     />
-                    <span className="absolute right-3 top-2.5 text-[10px] font-mono text-zinc-500">units</span>
+                    <span className="absolute right-3 top-2.5 text-[10px] font-mono text-zinc-500">{t('staff.dashboard.units', 'units')}</span>
                   </div>
-                  <p className="text-[10px] text-zinc-500 mt-1">Items at or below this count appear in dashboard stock alerts.</p>
+                  <p className="text-[10px] text-zinc-500 mt-1">{t('staff.dashboard.items_at_or_below_this_count_a', 'Items at or below this count appear in dashboard stock alerts.')}</p>
                 </div>
 
                 {/* Owner WhatsApp Phone */}
@@ -1523,7 +1526,7 @@ export const SettingsManagement: React.FC = () => {
                     placeholder="+918420507105"
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                   />
-                  <p className="text-[10px] text-zinc-500 mt-1">Target mobile number for automated WhatsApp sales digests.</p>
+                  <p className="text-[10px] text-zinc-500 mt-1">{t('staff.dashboard.target_mobile_number_for_autom', 'Target mobile number for automated WhatsApp sales digests.')}</p>
                 </div>
 
                 {/* Owner Notification Email */}
@@ -1536,10 +1539,10 @@ export const SettingsManagement: React.FC = () => {
                     value={ownerNotificationEmail}
                     disabled={!isOwner}
                     onChange={(e) => setOwnerNotificationEmail(e.target.value)}
-                    placeholder="owner@thecafe.com"
+                    placeholder={t('staff.dashboard.owner_thecafe_com', 'owner@thecafe.com')}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                   />
-                  <p className="text-[10px] text-zinc-500 mt-1">Target email inbox for daily sales summary attachments.</p>
+                  <p className="text-[10px] text-zinc-500 mt-1">{t('staff.dashboard.target_email_inbox_for_daily_s', 'Target email inbox for daily sales summary attachments.')}</p>
                 </div>
               </div>
 
@@ -1547,7 +1550,7 @@ export const SettingsManagement: React.FC = () => {
               <div className="pt-2 border-t border-white/[0.06]">
                 <label className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-sm text-amber-400">star</span>
-                  <span>Google Review Link (Customer Post-Order Prompt)</span>
+                  <span>{t('staff.dashboard.google_review_link_customer_po', 'Google Review Link (Customer Post-Order Prompt)')}</span>
                 </label>
                 <input
                   type="url"
@@ -1575,7 +1578,7 @@ export const SettingsManagement: React.FC = () => {
                   <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
                     Security Credentials
                   </span>
-                  <h3 className="font-serif text-lg font-bold text-white mt-0.5">Change Staff Password</h3>
+                  <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.change_staff_password', 'Change Staff Password')}</h3>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-stone-400 font-mono">
                   <span className="material-symbols-outlined text-sm text-emerald-400">shield</span>
@@ -1597,7 +1600,7 @@ export const SettingsManagement: React.FC = () => {
                       type={showNewPassword ? 'text' : 'password'}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Minimum 6 characters"
+                      placeholder={t('staff.dashboard.minimum_6_characters', 'Minimum 6 characters')}
                       disabled={isUpdatingPassword}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] font-mono"
                     />
@@ -1622,7 +1625,7 @@ export const SettingsManagement: React.FC = () => {
                     type={showNewPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter new password"
+                    placeholder={t('staff.dashboard.re_enter_new_password', 'Re-enter new password')}
                     disabled={isUpdatingPassword}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] font-mono"
                   />
@@ -1639,12 +1642,12 @@ export const SettingsManagement: React.FC = () => {
                   {isUpdatingPassword ? (
                     <>
                       <span className="w-3.5 h-3.5 border-2 border-[#070605] border-t-transparent rounded-full animate-spin" />
-                      <span>Updating...</span>
+                      <span>{t('staff.dashboard.updating', 'Updating...')}</span>
                     </>
                   ) : (
                     <>
                       <span className="material-symbols-outlined text-sm">lock_reset</span>
-                      <span>Update Password</span>
+                      <span>{t('staff.dashboard.update_password', 'Update Password')}</span>
                     </>
                   )}
                 </button>
@@ -1726,7 +1729,7 @@ export const SettingsManagement: React.FC = () => {
                   type="text"
                   value={customCountryName}
                   onChange={(e) => setCustomCountryName(e.target.value)}
-                  placeholder="e.g. Brazil, Argentina, Iceland"
+                  placeholder={t('staff.dashboard.e_g_brazil_argentina_iceland', 'e.g. Brazil, Argentina, Iceland')}
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
@@ -1740,7 +1743,7 @@ export const SettingsManagement: React.FC = () => {
                   maxLength={3}
                   value={customCurrency}
                   onChange={(e) => setCustomCurrency(e.target.value.toUpperCase())}
-                  placeholder="e.g. BRL, ARS, ISK"
+                  placeholder={t('staff.dashboard.e_g_brl_ars_isk', 'e.g. BRL, ARS, ISK')}
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
@@ -1762,9 +1765,9 @@ export const SettingsManagement: React.FC = () => {
                     onChange={(e) => setCustomCurrencyDecimals(e.target.value)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                   >
-                    <option value="0">0 decimals</option>
-                    <option value="2">2 decimals</option>
-                    <option value="3">3 decimals</option>
+                    <option value="0">{t('staff.dashboard.0_decimals', '0 decimals')}</option>
+                    <option value="2">{t('staff.dashboard.2_decimals', '2 decimals')}</option>
+                    <option value="3">{t('staff.dashboard.3_decimals', '3 decimals')}</option>
                   </select>
                 </div>
               </div>
@@ -1794,8 +1797,8 @@ export const SettingsManagement: React.FC = () => {
                   onChange={(e) => setCustomTaxMode(e.target.value as 'inclusive' | 'exclusive')}
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 >
-                  <option value="inclusive">Inclusive (Prices include tax)</option>
-                  <option value="exclusive">Exclusive (Added at checkout)</option>
+                  <option value="inclusive">{t('staff.dashboard.inclusive_prices_include_tax', 'Inclusive (Prices include tax)')}</option>
+                  <option value="exclusive">{t('staff.dashboard.exclusive_added_at_checkout', 'Exclusive (Added at checkout)')}</option>
                 </select>
               </div>
 
@@ -1810,7 +1813,7 @@ export const SettingsManagement: React.FC = () => {
                   max="100"
                   value={customFoodRate}
                   onChange={(e) => setCustomFoodRate(e.target.value)}
-                  placeholder="e.g. 7.0 or leave empty"
+                  placeholder={t('staff.dashboard.e_g_7_0_or_leave_empty', 'e.g. 7.0 or leave empty')}
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
@@ -1826,7 +1829,7 @@ export const SettingsManagement: React.FC = () => {
                   max="100"
                   value={customAlcoholRate}
                   onChange={(e) => setCustomAlcoholRate(e.target.value)}
-                  placeholder="e.g. 23.0 or leave empty"
+                  placeholder={t('staff.dashboard.e_g_23_0_or_leave_empty', 'e.g. 23.0 or leave empty')}
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
@@ -1839,7 +1842,7 @@ export const SettingsManagement: React.FC = () => {
                   type="text"
                   value={customTaxLabel}
                   onChange={(e) => setCustomTaxLabel(e.target.value)}
-                  placeholder="VAT, IVA, GST, Sales Tax"
+                  placeholder={t('staff.dashboard.vat_iva_gst_sales_tax', 'VAT, IVA, GST, Sales Tax')}
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
@@ -1853,14 +1856,14 @@ export const SettingsManagement: React.FC = () => {
                     type="text"
                     value={customTaxIdLabel}
                     onChange={(e) => setCustomTaxIdLabel(e.target.value)}
-                    placeholder="e.g. CNPJ, RFC, NIF"
+                    placeholder={t('staff.dashboard.e_g_cnpj_rfc_nif', 'e.g. CNPJ, RFC, NIF')}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                   />
                   <input
                     type="text"
                     value={customTaxIdFormat}
                     onChange={(e) => setCustomTaxIdFormat(e.target.value)}
-                    placeholder="e.g. XX.XXX.XXX/XXXX-XX"
+                    placeholder={t('staff.dashboard.e_g_xx_xxx_xxx_xxxx_xx', 'e.g. XX.XXX.XXX/XXXX-XX')}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
@@ -1890,7 +1893,7 @@ export const SettingsManagement: React.FC = () => {
                     onChange={(e) => setCustomServiceChargeTaxable(e.target.checked)}
                     className="w-4 h-4 rounded accent-[#D4AF37] cursor-pointer"
                   />
-                  <span className="text-xs text-zinc-300">Service charge is taxable</span>
+                  <span className="text-xs text-zinc-300">{t('staff.dashboard.service_charge_is_taxable', 'Service charge is taxable')}</span>
                 </label>
               </div>
             </div>
@@ -1911,14 +1914,14 @@ export const SettingsManagement: React.FC = () => {
                   type="text"
                   value={customAccountantName}
                   onChange={(e) => setCustomAccountantName(e.target.value)}
-                  placeholder="Accountant full name or firm"
+                  placeholder={t('staff.dashboard.accountant_full_name_or_firm', 'Accountant full name or firm')}
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 />
                 <input
                   type="text"
                   value={customAccountantLicense}
                   onChange={(e) => setCustomAccountantLicense(e.target.value)}
-                  placeholder="CPA / CA license or registration #"
+                  placeholder={t('staff.dashboard.cpa_ca_license_or_registration', 'CPA / CA license or registration #')}
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>

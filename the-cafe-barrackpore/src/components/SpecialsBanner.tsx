@@ -6,7 +6,7 @@ import { useSiteConfig } from '../context/SiteConfigContext';
 import { useMenuAvailability } from '../hooks/useMenuAvailability';
 import { formatCurrency } from '../utils/currency';
 import { SectionReveal } from './SectionReveal';
-import { getAvifSource } from '../utils/image';
+import { getAvifSource, getResponsiveSrcSet } from '../utils/image';
 import type { SpecialCombo, SpecialBadge } from '../services/siteContentService';
 import type { SpecialsVariant } from '../types/restaurantEngine';
 import {
@@ -309,7 +309,18 @@ export const SpecialsBanner: React.FC = () => {
                   <div className="lg:col-span-7 relative w-full aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto min-h-[220px] max-h-[320px] sm:max-h-none lg:min-h-[440px] bg-surface-container-lowest overflow-hidden">
                     <picture className="absolute inset-0 w-full h-full">
                       {getAvifSource(masterPlatter.image) && (
-                        <source srcSet={getAvifSource(masterPlatter.image)!} type="image/avif" />
+                        <source
+                          srcSet={getResponsiveSrcSet(masterPlatter.image, 'avif') || getAvifSource(masterPlatter.image)!}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 800px"
+                          type="image/avif"
+                        />
+                      )}
+                      {getResponsiveSrcSet(masterPlatter.image, 'webp') && (
+                        <source
+                          srcSet={getResponsiveSrcSet(masterPlatter.image, 'webp')!}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 800px"
+                          type="image/webp"
+                        />
                       )}
                       <img
                         src={masterPlatter.image}
@@ -443,7 +454,18 @@ export const SpecialsBanner: React.FC = () => {
                     <div className="w-full sm:w-5/12 relative aspect-[16/10] sm:aspect-auto min-h-[190px] max-h-[240px] sm:max-h-none sm:min-h-[220px] bg-surface-container-lowest overflow-hidden shrink-0">
                       <picture className="absolute inset-0 w-full h-full">
                         {getAvifSource(combo.image) && (
-                          <source srcSet={getAvifSource(combo.image)!} type="image/avif" />
+                          <source
+                            srcSet={getResponsiveSrcSet(combo.image, 'avif') || getAvifSource(combo.image)!}
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 40vw, 400px"
+                            type="image/avif"
+                          />
+                        )}
+                        {getResponsiveSrcSet(combo.image, 'webp') && (
+                          <source
+                            srcSet={getResponsiveSrcSet(combo.image, 'webp')!}
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 40vw, 400px"
+                            type="image/webp"
+                          />
                         )}
                         <img
                           src={combo.image}
@@ -565,7 +587,18 @@ export const SpecialsBanner: React.FC = () => {
                     <div className="relative aspect-[16/11] w-full min-h-[190px] max-h-[250px] md:max-h-none overflow-hidden bg-surface-container-lowest">
                       <picture className="absolute inset-0 w-full h-full">
                         {getAvifSource(combo.image) && (
-                          <source srcSet={getAvifSource(combo.image)!} type="image/avif" />
+                          <source
+                            srcSet={getResponsiveSrcSet(combo.image, 'avif') || getAvifSource(combo.image)!}
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 500px"
+                            type="image/avif"
+                          />
+                        )}
+                        {getResponsiveSrcSet(combo.image, 'webp') && (
+                          <source
+                            srcSet={getResponsiveSrcSet(combo.image, 'webp')!}
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 500px"
+                            type="image/webp"
+                          />
                         )}
                         <img
                           src={combo.image}

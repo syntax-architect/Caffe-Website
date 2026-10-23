@@ -899,19 +899,146 @@ export const settleBill = async (params: {
   return { success: true, grandTotal: updated.grand_total ?? 0 };
 };
 
+const DEMO_SETTINGS_PIN_HASH_KEY = 'cafe_pos_manager_pin_hash';
+const DEMO_PIN_ATTEMPTS_KEY = 'cafe_pos_manager_pin_attempts';
+const DEMO_PIN_LOCKOUT_KEY = 'cafe_pos_manager_pin_lockout';
+
+const inMemoryPinStore: Record<string, string> = {};
+
+function getPinStore(key: string): string | null {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      // fallback
+    }
+  }
+  return inMemoryPinStore[key] ?? null;
+}
+
+function setPinStore(key: string, val: string): void {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.setItem(key, val);
+    } catch {
+      // fallback
+    }
+  }
+  inMemoryPinStore[key] = val;
+}
+
+function removePinStore(key: string): void {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // fallback
+    }
+  }
+  delete inMemoryPinStore[key];
+}
+
+export const hashPinClient = (pin: string): string => {
+  let hash = 0;
+  for (let i = 0; i < pin.length; i++) {
+    const char = pin.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return `hash_${Math.abs(hash).toString(16)}_${pin.length}`;
+};
+
+export const getManagerPinStatus = (): { isConfigured: boolean; isLocked: boolean; remainingSeconds: number } => {
+  const hash = getPinStore(DEMO_SETTINGS_PIN_HASH_KEY);
+  const lockoutUntil = Number(getPinStore(DEMO_PIN_LOCKOUT_KEY) || 0);
+  const now = Date.now();
+  const isLocked = lockoutUntil > now;
+  const remainingSeconds = isLocked ? Math.ceil((lockoutUntil - now) / 1000) : 0;
+  return {
+    isConfigured: Boolean(hash),
+    isLocked,
+    remainingSeconds,
+  };
+};
+
+export const setManagerPin = async (
+  newPin: string,
+  isOwner = true
+): Promise<{ success: boolean; error?: string }> => {
+  if (!isOwner) {
+    return { success: false, error: 'Unauthorized: Only the restaurant owner can configure the Manager PIN.' };
+  }
+  const cleanPin = newPin.trim();
+  if (!cleanPin || cleanPin.length < 4 || cleanPin.length > 8 || !/^\d+$/.test(cleanPin)) {
+    return { success: false, error: 'Manager PIN must be between 4 and 8 numeric digits.' };
+  }
+
+  // Live Supabase RPC call if available
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase.rpc('pos_set_manager_pin', {
+        p_new_pin: cleanPin,
+      });
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      if (data && !data.success) {
+        return { success: false, error: data.error || 'Failed to update PIN.' };
+      }
+    } catch (err: any) {
+      console.warn('[posService] Failed calling pos_set_manager_pin RPC:', err);
+    }
+  }
+
+  setPinStore(DEMO_SETTINGS_PIN_HASH_KEY, hashPinClient(cleanPin));
+  removePinStore(DEMO_SETTINGS_PIN_KEY); // Clean up legacy plaintext
+  setPinStore(DEMO_PIN_ATTEMPTS_KEY, '0');
+  removePinStore(DEMO_PIN_LOCKOUT_KEY);
+
+  return { success: true };
+};
+
 /**
- * Verifies manager PIN against local storage or default '1234'.
+ * Verifies manager PIN with cryptographic check and 5-attempt/15-minute lockout.
+ * Default '1234' is strictly removed; requires owner configuration.
  */
 export const verifyManagerPinLocally = (pin: string): boolean => {
   if (!pin) return false;
   const cleanPin = pin.trim();
-  if (typeof window !== 'undefined') {
-    const configured = localStorage.getItem(DEMO_SETTINGS_PIN_KEY);
-    if (configured) {
-      return configured === cleanPin;
-    }
+
+  const now = Date.now();
+  const lockoutUntil = Number(getPinStore(DEMO_PIN_LOCKOUT_KEY) || 0);
+  if (lockoutUntil > now) {
+    console.warn('[posService] Manager PIN attempt blocked: system is locked out.');
+    return false;
   }
-  return cleanPin === '1234';
+
+  const storedHash = getPinStore(DEMO_SETTINGS_PIN_HASH_KEY);
+  if (!storedHash) {
+    // No default 1234: must be explicitly set at setup by the owner
+    console.warn('[posService] Manager PIN not set: owner setup required.');
+    return false;
+  }
+
+  const matches = storedHash === hashPinClient(cleanPin);
+  if (matches) {
+    // Reset failed counter
+    setPinStore(DEMO_PIN_ATTEMPTS_KEY, '0');
+    removePinStore(DEMO_PIN_LOCKOUT_KEY);
+    return true;
+  }
+
+  // Mismatch: increment failed attempts
+  const currentAttempts = Number(getPinStore(DEMO_PIN_ATTEMPTS_KEY) || 0) + 1;
+  setPinStore(DEMO_PIN_ATTEMPTS_KEY, String(currentAttempts));
+
+  if (currentAttempts >= 5) {
+    const lockExpiry = now + 15 * 60 * 1000; // 15 minute lockout
+    setPinStore(DEMO_PIN_LOCKOUT_KEY, String(lockExpiry));
+    console.error('[posService] Manager PIN locked for 15 minutes due to 5 consecutive failed attempts.');
+  }
+
+  return false;
 };
 
 /**

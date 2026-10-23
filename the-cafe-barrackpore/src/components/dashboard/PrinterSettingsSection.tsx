@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect } from 'react';
 import {
   getStationPrinterSettings,
@@ -13,6 +14,7 @@ import { connectWebUsbPrinter, connectWebSerialPrinter, checkPrintBridgeHealth }
 import { useNotification } from '../../hooks/useNotification';
 
 export const PrinterSettingsSection: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { addNotification } = useNotification();
   const [config, setConfig] = useState<StationPrinterConfig>(() => getStationPrinterSettings());
   const [capabilities, setCapabilities] = useState<BrowserPrinterCapabilities>(() => detectPrinterCapabilities());
@@ -196,8 +198,8 @@ export const PrinterSettingsSection: React.FC = () => {
                   Apple iOS / iPadOS Safari Compatibility Note:
                 </strong>
                 Apple WebKit does not support WebUSB or Web Serial. For iPad/iPhone POS terminals, please use{' '}
-                <strong className="text-white">Browser Print</strong> (AirPrint / CUPS) or the{' '}
-                <strong className="text-white">Local LAN Print Bridge</strong> running on a Mac/PC/Raspberry Pi on port 9100.
+                <strong className="text-white">{t('staff.dashboard.browser_print', 'Browser Print')}</strong> (AirPrint / CUPS) or the{' '}
+                <strong className="text-white">{t('staff.dashboard.local_lan_print_bridge', 'Local LAN Print Bridge')}</strong> running on a Mac/PC/Raspberry Pi on port 9100.
               </div>
             </div>
           )}
@@ -217,8 +219,8 @@ export const PrinterSettingsSection: React.FC = () => {
                 <span className="material-symbols-outlined text-base">receipt_long</span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">Receipt &amp; Customer Bill Printer</h4>
-                <p className="text-[11px] text-zinc-400">Prints guest checks, tax invoices, GST breakdowns &amp; UPI QR.</p>
+                <h4 className="text-sm font-bold text-white">{t('staff.dashboard.receipt_amp_customer_bill_prin', 'Receipt &amp; Customer Bill Printer')}</h4>
+                <p className="text-[11px] text-zinc-400">{t('staff.dashboard.prints_guest_checks_tax_invoic', 'Prints guest checks, tax invoices, GST breakdowns &amp; UPI QR.')}</p>
               </div>
             </div>
 
@@ -262,10 +264,10 @@ export const PrinterSettingsSection: React.FC = () => {
                 }
                 className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
               >
-                <option value="browser">Browser Print (CSS @page — Universal)</option>
-                <option value="webusb">Direct WebUSB (Chrome / Edge)</option>
-                <option value="webserial">Direct Web Serial (RS232 / USB-COM)</option>
-                <option value="network">LAN Network Bridge (Port 9100 RAW)</option>
+                <option value="browser">{t('staff.dashboard.browser_print_css_page_univers', 'Browser Print (CSS @page — Universal)')}</option>
+                <option value="webusb">{t('staff.dashboard.direct_webusb_chrome_edge', 'Direct WebUSB (Chrome / Edge)')}</option>
+                <option value="webserial">{t('staff.dashboard.direct_web_serial_rs232_usb_co', 'Direct Web Serial (RS232 / USB-COM)')}</option>
+                <option value="network">{t('staff.dashboard.lan_network_bridge_port_9100_r', 'LAN Network Bridge (Port 9100 RAW)')}</option>
               </select>
             </div>
 
@@ -284,8 +286,8 @@ export const PrinterSettingsSection: React.FC = () => {
                 }
                 className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
               >
-                <option value="80mm">80mm Roll (Standard POS — 48 Cols)</option>
-                <option value="58mm">58mm Roll (Compact / Mobile — 32 Cols)</option>
+                <option value="80mm">{t('staff.dashboard.80mm_roll_standard_pos_48_cols', '80mm Roll (Standard POS — 48 Cols)')}</option>
+                <option value="58mm">{t('staff.dashboard.58mm_roll_compact_mobile_32_co', '58mm Roll (Compact / Mobile — 32 Cols)')}</option>
               </select>
             </div>
 
@@ -345,10 +347,10 @@ export const PrinterSettingsSection: React.FC = () => {
                     }
                     className="flex-1 bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37]"
                   >
-                    <option value={9600}>9600 bps</option>
-                    <option value={19200}>19200 bps</option>
-                    <option value={38400}>38400 bps</option>
-                    <option value={115200}>115200 bps</option>
+                    <option value={9600}>{t('staff.dashboard.9600_bps', '9600 bps')}</option>
+                    <option value={19200}>{t('staff.dashboard.19200_bps', '19200 bps')}</option>
+                    <option value={38400}>{t('staff.dashboard.38400_bps', '38400 bps')}</option>
+                    <option value={115200}>{t('staff.dashboard.115200_bps', '115200 bps')}</option>
                   </select>
                   <button
                     type="button"
@@ -393,7 +395,7 @@ export const PrinterSettingsSection: React.FC = () => {
                 }
                 className="w-4 h-4 rounded bg-[#070605] border-white/20 text-[#D4AF37] focus:ring-0"
               />
-              <span>Auto-cut roll after receipt</span>
+              <span>{t('staff.dashboard.auto_cut_roll_after_receipt', 'Auto-cut roll after receipt')}</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -408,11 +410,11 @@ export const PrinterSettingsSection: React.FC = () => {
                 }
                 className="w-4 h-4 rounded bg-[#070605] border-white/20 text-[#D4AF37] focus:ring-0"
               />
-              <span>Kick cash drawer on cash settlement</span>
+              <span>{t('staff.dashboard.kick_cash_drawer_on_cash_settl', 'Kick cash drawer on cash settlement')}</span>
             </label>
 
             <div className="flex items-center gap-2">
-              <span className="text-zinc-500 text-[11px]">Drawer Pin:</span>
+              <span className="text-zinc-500 text-[11px]">{t('staff.dashboard.drawer_pin', 'Drawer Pin:')}</span>
               <select
                 value={config.receipt.cashDrawerPin || 0}
                 onChange={(e) =>
@@ -423,8 +425,8 @@ export const PrinterSettingsSection: React.FC = () => {
                 }
                 className="bg-[#070605] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono"
               >
-                <option value={0}>Pin 2 (Standard)</option>
-                <option value={1}>Pin 5 (Alternative)</option>
+                <option value={0}>{t('staff.dashboard.pin_2_standard', 'Pin 2 (Standard)')}</option>
+                <option value={1}>{t('staff.dashboard.pin_5_alternative', 'Pin 5 (Alternative)')}</option>
               </select>
             </div>
           </div>
@@ -438,8 +440,8 @@ export const PrinterSettingsSection: React.FC = () => {
                 <span className="material-symbols-outlined text-base">soup_kitchen</span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">Kitchen KOT Printer</h4>
-                <p className="text-[11px] text-zinc-400">Prints food tickets, cook instructions, item modifications &amp; timers.</p>
+                <h4 className="text-sm font-bold text-white">{t('staff.dashboard.kitchen_kot_printer', 'Kitchen KOT Printer')}</h4>
+                <p className="text-[11px] text-zinc-400">{t('staff.dashboard.prints_food_tickets_cook_instr', 'Prints food tickets, cook instructions, item modifications &amp; timers.')}</p>
               </div>
             </div>
 
@@ -471,10 +473,10 @@ export const PrinterSettingsSection: React.FC = () => {
                 }
                 className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
               >
-                <option value="browser">Browser Print (Universal Fallback)</option>
-                <option value="webusb">Direct WebUSB (Chrome / Edge)</option>
-                <option value="webserial">Direct Web Serial</option>
-                <option value="network">LAN Network Bridge (Port 9100 RAW)</option>
+                <option value="browser">{t('staff.dashboard.browser_print_universal_fallba', 'Browser Print (Universal Fallback)')}</option>
+                <option value="webusb">{t('staff.dashboard.direct_webusb_chrome_edge', 'Direct WebUSB (Chrome / Edge)')}</option>
+                <option value="webserial">{t('staff.dashboard.direct_web_serial', 'Direct Web Serial')}</option>
+                <option value="network">{t('staff.dashboard.lan_network_bridge_port_9100_r', 'LAN Network Bridge (Port 9100 RAW)')}</option>
               </select>
             </div>
 
@@ -492,8 +494,8 @@ export const PrinterSettingsSection: React.FC = () => {
                 }
                 className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
               >
-                <option value="80mm">80mm Roll (Wide / Line Cook — 48 Cols)</option>
-                <option value="58mm">58mm Roll (Compact — 32 Cols)</option>
+                <option value="80mm">{t('staff.dashboard.80mm_roll_wide_line_cook_48_co', '80mm Roll (Wide / Line Cook — 48 Cols)')}</option>
+                <option value="58mm">{t('staff.dashboard.58mm_roll_compact_32_cols', '58mm Roll (Compact — 32 Cols)')}</option>
               </select>
             </div>
 
@@ -545,8 +547,8 @@ export const PrinterSettingsSection: React.FC = () => {
                 <span className="material-symbols-outlined text-base">local_cafe</span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">Bar &amp; Sips Beverage Printer</h4>
-                <p className="text-[11px] text-zinc-400">Routes drink orders, espresso bar tickets &amp; mocktails to a separate station.</p>
+                <h4 className="text-sm font-bold text-white">{t('staff.dashboard.bar_amp_sips_beverage_printer', 'Bar &amp; Sips Beverage Printer')}</h4>
+                <p className="text-[11px] text-zinc-400">{t('staff.dashboard.routes_drink_orders_espresso_b', 'Routes drink orders, espresso bar tickets &amp; mocktails to a separate station.')}</p>
               </div>
             </div>
 
@@ -563,7 +565,7 @@ export const PrinterSettingsSection: React.FC = () => {
                   }
                   className="w-4 h-4 rounded bg-[#070605] border-white/20 text-[#D4AF37] focus:ring-0"
                 />
-                <span>Enable Bar Station</span>
+                <span>{t('staff.dashboard.enable_bar_station', 'Enable Bar Station')}</span>
               </label>
 
               {config.bar.enabled && (
@@ -596,10 +598,10 @@ export const PrinterSettingsSection: React.FC = () => {
                   }
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 >
-                  <option value="browser">Browser Print (Universal Fallback)</option>
-                  <option value="webusb">Direct WebUSB (Chrome / Edge)</option>
-                  <option value="webserial">Direct Web Serial</option>
-                  <option value="network">LAN Network Bridge (Port 9100 RAW)</option>
+                  <option value="browser">{t('staff.dashboard.browser_print_universal_fallba', 'Browser Print (Universal Fallback)')}</option>
+                  <option value="webusb">{t('staff.dashboard.direct_webusb_chrome_edge', 'Direct WebUSB (Chrome / Edge)')}</option>
+                  <option value="webserial">{t('staff.dashboard.direct_web_serial', 'Direct Web Serial')}</option>
+                  <option value="network">{t('staff.dashboard.lan_network_bridge_port_9100_r', 'LAN Network Bridge (Port 9100 RAW)')}</option>
                 </select>
               </div>
 
@@ -617,8 +619,8 @@ export const PrinterSettingsSection: React.FC = () => {
                   }
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 >
-                  <option value="58mm">58mm Roll (Compact Bar Slip)</option>
-                  <option value="80mm">80mm Roll (Standard)</option>
+                  <option value="58mm">{t('staff.dashboard.58mm_roll_compact_bar_slip', '58mm Roll (Compact Bar Slip)')}</option>
+                  <option value="80mm">{t('staff.dashboard.80mm_roll_standard', '80mm Roll (Standard)')}</option>
                 </select>
               </div>
 

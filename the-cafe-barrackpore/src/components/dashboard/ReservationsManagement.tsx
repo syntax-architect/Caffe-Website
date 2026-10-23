@@ -1,11 +1,14 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchReservations, updateReservationStatus } from '../../services/dashboardService';
 import { useNotification } from '../../hooks/useNotification';
 import type { ReservationRecord, ReservationStatus } from '../../types/reservation';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { clientDetails } from '../../config/client';
+import { getLocaleForCountry } from '../../utils/currency';
 
 export const ReservationsManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { addNotification } = useNotification();
   const { restaurantConfig } = useSiteConfig();
   const businessName = restaurantConfig?.businessName || clientDetails.businessName || 'our restaurant';
@@ -178,7 +181,7 @@ export const ReservationsManagement: React.FC = () => {
           className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer"
         >
           <span className="material-symbols-outlined text-base">refresh</span>
-          <span>Refresh Bookings</span>
+          <span>{t('staff.dashboard.refresh_bookings', 'Refresh Bookings')}</span>
         </button>
       </div>
 
@@ -186,25 +189,25 @@ export const ReservationsManagement: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-amber-400">Pending Review</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-amber-400">{t('staff.dashboard.pending_review', 'Pending Review')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-amber-400 mt-0.5">{pendingCount}</p>
           </div>
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-sky-400">Confirmed</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-sky-400">{t('staff.dashboard.confirmed', 'Confirmed')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-sky-400 mt-0.5">{confirmedCount}</p>
           </div>
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">Seated Now</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">{t('staff.dashboard.seated_now', 'Seated Now')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-emerald-400 mt-0.5">{seatedCount}</p>
           </div>
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">Expected Covers</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">{t('staff.dashboard.expected_covers', 'Expected Covers')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-[#D4AF37] mt-0.5">{totalGuests} guests</p>
           </div>
         </div>
@@ -219,7 +222,7 @@ export const ReservationsManagement: React.FC = () => {
           </span>
           <input
             type="text"
-            placeholder="Search by ref, guest name, or phone..."
+            placeholder={t('staff.dashboard.search_by_ref_guest_name_or_ph', 'Search by ref, guest name, or phone...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#120F0D] border border-white/[0.08] rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all"
@@ -274,13 +277,13 @@ export const ReservationsManagement: React.FC = () => {
 
       {/* RESERVATIONS DATA DISPLAY */}
       {isLoading ? (
-        <div className="py-20 text-center text-zinc-500 font-mono text-xs">Loading reservation ledger...</div>
+        <div className="py-20 text-center text-zinc-500 font-mono text-xs">{t('staff.dashboard.loading_reservation_ledger', 'Loading reservation ledger...')}</div>
       ) : reservations.length === 0 ? (
         <div className="p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="py-20 text-center rounded-[calc(2rem-0.375rem)] bg-[#120F0D] flex flex-col items-center">
             <span className="material-symbols-outlined text-4xl mb-2 text-zinc-600">event_seat</span>
-            <p className="font-serif font-bold text-base text-white">No reservations found</p>
-            <p className="text-xs text-zinc-500 mt-1">No booking records match the selected view and filter criteria.</p>
+            <p className="font-serif font-bold text-base text-white">{t('staff.dashboard.no_reservations_found', 'No reservations found')}</p>
+            <p className="text-xs text-zinc-500 mt-1">{t('staff.dashboard.no_booking_records_match_the_s', 'No booking records match the selected view and filter criteria.')}</p>
           </div>
         </div>
       ) : (
@@ -332,13 +335,13 @@ export const ReservationsManagement: React.FC = () => {
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06] bg-white/[0.02] text-zinc-400 text-[10px] font-mono uppercase tracking-[0.16em]">
-                    <th className="py-4 px-6 font-bold">Booking Ref</th>
-                    <th className="py-4 px-4 font-bold">Guest Profile</th>
-                    <th className="py-4 px-4 font-bold">Schedule</th>
-                    <th className="py-4 px-4 font-bold">Covers</th>
-                    <th className="py-4 px-4 font-bold">Special Notes</th>
-                    <th className="py-4 px-4 font-bold">Status</th>
-                    <th className="py-4 px-6 text-right font-bold">Actions</th>
+                    <th className="py-4 px-6 font-bold">{t('staff.dashboard.booking_ref', 'Booking Ref')}</th>
+                    <th className="py-4 px-4 font-bold">{t('staff.dashboard.guest_profile', 'Guest Profile')}</th>
+                    <th className="py-4 px-4 font-bold">{t('staff.dashboard.schedule', 'Schedule')}</th>
+                    <th className="py-4 px-4 font-bold">{t('staff.dashboard.covers', 'Covers')}</th>
+                    <th className="py-4 px-4 font-bold">{t('staff.dashboard.special_notes', 'Special Notes')}</th>
+                    <th className="py-4 px-4 font-bold">{t('staff.dashboard.status', 'Status')}</th>
+                    <th className="py-4 px-6 text-right font-bold">{t('staff.dashboard.actions', 'Actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04]">
@@ -425,7 +428,7 @@ export const ReservationsManagement: React.FC = () => {
                   type="button"
                   onClick={() => setActiveRes(null)}
                   className="p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                  aria-label="Close drawer"
+                  aria-label={t('staff.dashboard.close_drawer', 'Close drawer')}
                 >
                   <span className="material-symbols-outlined text-lg">close</span>
                 </button>
@@ -434,7 +437,7 @@ export const ReservationsManagement: React.FC = () => {
               {/* Status & Quick Action Card */}
               <div className="p-4 rounded-2xl bg-[#120F0D] border border-white/[0.08] mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-mono uppercase tracking-wider text-zinc-400">Current Status</span>
+                  <span className="text-xs font-mono uppercase tracking-wider text-zinc-400">{t('staff.dashboard.current_status', 'Current Status')}</span>
                   {(() => {
                     const badge = getStatusBadge(activeRes.status);
                     return (
@@ -539,21 +542,21 @@ export const ReservationsManagement: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/[0.06] text-xs">
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Date</span>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{t('staff.dashboard.date', 'Date')}</span>
                     <p className="font-bold text-white mt-0.5">{activeRes.reservation_date}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Time Slot</span>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{t('staff.dashboard.time_slot', 'Time Slot')}</span>
                     <p className="font-mono font-bold text-[#D4AF37] mt-0.5">{activeRes.reservation_time}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Party Size</span>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{t('staff.dashboard.party_size', 'Party Size')}</span>
                     <p className="font-bold text-white mt-0.5">{activeRes.party_size} guests</p>
                   </div>
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Booked On</span>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{t('staff.dashboard.booked_on', 'Booked On')}</span>
                     <p className="font-mono text-zinc-300 mt-0.5">
-                      {new Date(activeRes.created_at).toLocaleDateString('en-IN', {
+                      {new Date(activeRes.created_at).toLocaleDateString(restaurantConfig?.locale || getLocaleForCountry(restaurantConfig?.country), {
                         day: 'numeric',
                         month: 'short',
                       })}
@@ -582,7 +585,7 @@ export const ReservationsManagement: React.FC = () => {
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs uppercase tracking-wider hover:shadow-[0_10px_25px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base font-bold">send</span>
-                <span>Send WhatsApp Confirmation</span>
+                <span>{t('staff.dashboard.send_whatsapp_confirmation', 'Send WhatsApp Confirmation')}</span>
               </button>
             </div>
           </div>

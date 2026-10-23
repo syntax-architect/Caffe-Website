@@ -274,9 +274,9 @@ BEGIN
       tr.effective_from DESC
     LIMIT 1;
 
-    -- Fallback if no specific rule matched
+    -- Fallback if no specific rule matched: return zero rate instead of silent 5% assumption
     IF NOT FOUND THEN
-        RETURN QUERY SELECT 'Standard Tax'::VARCHAR, 0.0500::NUMERIC, 'inclusive'::VARCHAR, 'verified'::VARCHAR;
+        RETURN QUERY SELECT 'Zero Rate / Exempt'::VARCHAR, 0.0000::NUMERIC, 'inclusive'::VARCHAR, 'verified'::VARCHAR;
     END IF;
 END;
 $$;

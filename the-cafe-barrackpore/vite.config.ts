@@ -1,9 +1,20 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
+function canonicalConfigPlugin() {
+  const domain = 'thecafebarrackpore.com';
+  const origin = `https://${domain}`.replace(/\/+$/, '');
+  return {
+    name: 'canonical-config-plugin',
+    transformIndexHtml(html: string) {
+      return html.replace(/https:\/\/thecafebarrackpore\.com/g, origin);
+    }
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), canonicalConfigPlugin()],
   server: {
     port: 5175,
     headers: {

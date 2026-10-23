@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React from 'react';
 import type { KitchenOrder } from '../../services/kitchenService';
 import { KitchenTicket } from './KitchenTicket';
@@ -15,6 +16,7 @@ interface KitchenColumnProps {
 }
 
 export const KitchenColumn: React.FC<KitchenColumnProps> = ({
+
   id,
   title,
   count,
@@ -25,6 +27,7 @@ export const KitchenColumn: React.FC<KitchenColumnProps> = ({
   isMutatingId,
   density = 'comfortable',
 }) => {
+  const { t } = useI18n(); void t;
   // Column color theme
   const getHeaderTheme = () => {
     switch (id) {

@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React from 'react';
 import { playKitchenChime, unlockAudioContext } from '../../services/kitchenService';
 
@@ -8,10 +9,12 @@ interface KitchenEmptyStateProps {
 }
 
 export const KitchenEmptyState: React.FC<KitchenEmptyStateProps> = ({
+
   onRefresh,
   soundEnabled,
   onToggleSound,
 }) => {
+  const { t } = useI18n(); void t;
   const handleTestChime = async () => {
     await unlockAudioContext();
     playKitchenChime();
@@ -45,7 +48,7 @@ export const KitchenEmptyState: React.FC<KitchenEmptyStateProps> = ({
               className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-mono font-bold text-[#D4AF37] border border-[#D4AF37]/30 transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-105"
             >
               <span className="material-symbols-outlined text-base">notifications_active</span>
-              <span>Test Audio Chime</span>
+              <span>{t('staff.kitchen.soundOn', 'Test Audio Chime')}</span>
             </button>
 
             {onToggleSound && !soundEnabled && (
@@ -55,7 +58,7 @@ export const KitchenEmptyState: React.FC<KitchenEmptyStateProps> = ({
                 className="px-4 py-2.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/60 text-xs font-mono font-bold text-emerald-300 border border-emerald-500/40 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base">volume_up</span>
-                <span>Enable Sound Alert</span>
+                <span>{t('staff.kitchen.soundOn', 'Enable Sound Alert')}</span>
               </button>
             )}
 
@@ -66,14 +69,14 @@ export const KitchenEmptyState: React.FC<KitchenEmptyStateProps> = ({
                 className="px-4 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] text-xs font-mono font-bold text-zinc-400 hover:text-white border border-white/[0.06] transition-colors cursor-pointer flex items-center gap-2"
               >
                 <span className="material-symbols-outlined text-base">sync</span>
-                <span>Check Dispatch</span>
+                <span>{t('staff.kitchen.title', 'Check Dispatch')}</span>
               </button>
             )}
           </div>
 
           <div className="mt-8 flex items-center gap-2 text-[10px] text-zinc-500 font-mono pt-4 border-t border-white/[0.06] w-full justify-center">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Real-time optical ticket sync active • 0 latency</span>
+            <span>{t('staff.kitchen.title', 'Real-time optical ticket sync active • 0 latency')}</span>
           </div>
         </div>
       </div>

@@ -17,6 +17,40 @@ import { formatCurrency as baseFormatCurrency, type CurrencyFormatOptions } from
 import { formatRestaurantDate, formatRestaurantTime, formatRestaurantDateTime } from '../utils/datetime';
 
 const I18N_STORAGE_KEY = 'cafe_language';
+export const STAFF_LANGUAGE_STORAGE_PREFIX = 'cafe_staff_language';
+
+export function getStoredStaffLanguage(userId?: string | null): SupportedLanguage | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    if (userId) {
+      const userStored = localStorage.getItem(`${STAFF_LANGUAGE_STORAGE_PREFIX}_${userId}`);
+      if (userStored && userStored in LANGUAGE_META) {
+        return userStored as SupportedLanguage;
+      }
+    }
+    const generalStored = localStorage.getItem(STAFF_LANGUAGE_STORAGE_PREFIX);
+    if (generalStored && generalStored in LANGUAGE_META) {
+      return generalStored as SupportedLanguage;
+    }
+  } catch {
+    // Ignore
+  }
+  return null;
+}
+
+export function getActiveStaffUserId(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('cb_staff_auth') || sessionStorage.getItem('cb_staff_auth');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.profile?.user_id) return parsed.profile.user_id;
+    }
+  } catch {
+    // Ignore
+  }
+  return null;
+}
 
 export const LANGUAGE_LOCALE_MAP: Record<SupportedLanguage, string> = {
   en: 'en-US',
@@ -86,6 +120,8 @@ export interface I18nContextType {
   t: (key: string, fallback?: string) => string;
   /** Switch to a different language */
   setLanguage: (lang: SupportedLanguage) => void;
+  /** Switch to a different staff language (persists per staff user) */
+  setStaffLanguage: (lang: SupportedLanguage, userId?: string | null) => void;
   /** Format a number according to the active locale */
   formatNumber: (amount: number, options?: Intl.NumberFormatOptions) => string;
   /** Format a currency according to the active locale */
@@ -107,6 +143,7 @@ const defaultContext: I18nContextType = {
   availableLanguages: Object.values(LANGUAGE_META),
   t: (key: string, fallback?: string) => getNestedValue(en, key) || fallback || key,
   setLanguage: () => {},
+  setStaffLanguage: () => {},
   formatNumber: (amount: number) => String(amount),
   formatCurrency: (amount: number, currency = 'INR') => `${currency} ${amount}`,
   formatDate: (date: Date | string | number) => String(date),
@@ -123,6 +160,14 @@ export const I18nProvider: React.FC<{ children: ReactNode; defaultLanguage?: Sup
   const [language, setLanguageState] = useState<SupportedLanguage>(() => {
     if (typeof window === 'undefined') return defaultLanguage || 'en';
     try {
+      const isStaff = window.location.pathname.startsWith('/staff');
+      if (isStaff) {
+        const activeUserId = getActiveStaffUserId();
+        const staffLang = getStoredStaffLanguage(activeUserId);
+        if (staffLang && staffLang in LANGUAGE_META) {
+          return staffLang;
+        }
+      }
       const stored = localStorage.getItem(I18N_STORAGE_KEY);
       if (stored && stored in LANGUAGE_META) {
         return stored as SupportedLanguage;
@@ -197,11 +242,34 @@ export const I18nProvider: React.FC<{ children: ReactNode; defaultLanguage?: Sup
     [translations]
   );
 
+  const setStaffLanguage = useCallback((lang: SupportedLanguage, userId?: string | null) => {
+    setLanguageState(lang);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(I18N_STORAGE_KEY, lang);
+        localStorage.setItem(STAFF_LANGUAGE_STORAGE_PREFIX, lang);
+        const targetUserId = userId || getActiveStaffUserId();
+        if (targetUserId) {
+          localStorage.setItem(`${STAFF_LANGUAGE_STORAGE_PREFIX}_${targetUserId}`, lang);
+        }
+      } catch {
+        // Ignore
+      }
+    }
+  }, []);
+
   const setLanguage = useCallback((lang: SupportedLanguage) => {
     setLanguageState(lang);
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(I18N_STORAGE_KEY, lang);
+        if (window.location.pathname.startsWith('/staff')) {
+          localStorage.setItem(STAFF_LANGUAGE_STORAGE_PREFIX, lang);
+          const activeUserId = getActiveStaffUserId();
+          if (activeUserId) {
+            localStorage.setItem(`${STAFF_LANGUAGE_STORAGE_PREFIX}_${activeUserId}`, lang);
+          }
+        }
       } catch {
         // Ignore
       }
@@ -260,6 +328,7 @@ export const I18nProvider: React.FC<{ children: ReactNode; defaultLanguage?: Sup
         availableLanguages: Object.values(LANGUAGE_META),
         t,
         setLanguage,
+        setStaffLanguage,
         formatNumber,
         formatCurrency,
         formatDate,

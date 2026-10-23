@@ -481,7 +481,7 @@ DECLARE
     v_subtotal_minor INTEGER := 0;
     v_tax_minor INTEGER := 0;
     v_grand_total_minor INTEGER := 0;
-    v_tax_rate NUMERIC := 0.0500;
+    v_tax_rate NUMERIC := 0.0000;
     v_restaurant_id TEXT := 'the-cafe-barrackpore';
     v_existing_bill RECORD;
 BEGIN
@@ -635,7 +635,7 @@ BEGIN
     WHERE bill_id = v_bill_id AND is_voided = false;
 
     -- Fetch tax rate from settings
-    SELECT COALESCE(tax_rate, 0.0500) INTO v_tax_rate
+    SELECT COALESCE(tax_rate, 0.0000) INTO v_tax_rate
     FROM public.restaurant_settings
     ORDER BY (id = 'current') DESC LIMIT 1;
 
@@ -686,7 +686,7 @@ DECLARE
     v_subtotal_minor INTEGER := 0;
     v_tax_minor INTEGER := 0;
     v_grand_total_minor INTEGER := 0;
-    v_tax_rate NUMERIC := 0.0500;
+    v_tax_rate NUMERIC := 0.0000;
 BEGIN
     IF p_void_reason IS NULL OR length(trim(p_void_reason)) < 3 THEN
         RETURN jsonb_build_object('success', false, 'error', 'A valid void reason (min 3 chars) is required');
@@ -738,7 +738,7 @@ BEGIN
     FROM public.bill_items
     WHERE bill_id = v_bill.id AND is_voided = false;
 
-    SELECT COALESCE(tax_rate, 0.0500) INTO v_tax_rate
+    SELECT COALESCE(tax_rate, 0.0000) INTO v_tax_rate
     FROM public.restaurant_settings
     ORDER BY (id = 'current') DESC LIMIT 1;
 
@@ -1488,8 +1488,8 @@ DECLARE
     v_primary_bill RECORD;
     v_secondary_bill RECORD;
     v_new_subtotal_minor INTEGER := 0;
-    v_new_tax_minor INTEGER := 0;
-    v_tax_rate NUMERIC := 0.0500;
+    v_tax_minor INTEGER := 0;
+    v_tax_rate NUMERIC := 0.0000;
 BEGIN
     SELECT * INTO v_primary_bill FROM public.bills 
     WHERE table_number = trim(p_primary_table) AND status IN ('running', 'printed') 
@@ -1526,7 +1526,7 @@ BEGIN
     FROM public.bill_items
     WHERE bill_id = v_primary_bill.id AND is_voided = false;
 
-    SELECT COALESCE(tax_rate, 0.0500) INTO v_tax_rate
+    SELECT COALESCE(tax_rate, 0.0000) INTO v_tax_rate
     FROM public.restaurant_settings
     ORDER BY (id = 'current') DESC LIMIT 1;
 

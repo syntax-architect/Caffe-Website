@@ -6,6 +6,7 @@
   ],
   "scripts": {
     "install:all": "npm install --workspace=the-cafe-barrackpore",
+    "rebrand:check": "npm run rebrand:check --workspace=the-cafe-barrackpore",
     "dev": "npm run dev --workspace=the-cafe-barrackpore",
     "build": "npm run build --workspace=the-cafe-barrackpore",
     "lint": "npm run lint --workspace=the-cafe-barrackpore",

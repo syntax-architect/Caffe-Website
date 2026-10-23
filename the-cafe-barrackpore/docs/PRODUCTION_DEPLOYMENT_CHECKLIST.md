@@ -1,4 +1,4 @@
-# Production Deployment Checklist: [AGENCY NAME] Hospitality Platform
+# Production Deployment Checklist: Antigravity Hospitality Systems Platform
 
 **Scope:** Production infrastructure provisioning, build verification, migration deployment, Edge Function configuration, domain cutover, and post-launch smoke testing.
 

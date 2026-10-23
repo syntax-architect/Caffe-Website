@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { validateStrongPassword } from '../../utils/security';
@@ -5,6 +6,7 @@ import { useSiteConfig } from '../../context/SiteConfigContext';
 import { clientDetails } from '../../config/client';
 
 export const ResetPasswordPage: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { restaurantConfig } = useSiteConfig();
   const businessName = restaurantConfig?.businessName || clientDetails.businessName || 'Operations Terminal';
   const address = restaurantConfig?.address?.line1 || clientDetails.location?.address || '';
@@ -86,7 +88,7 @@ export const ResetPasswordPage: React.FC = () => {
           <span className="w-5 h-5 rounded-full bg-white/[0.08] flex items-center justify-center text-stone-400 group-hover:text-[#D4AF37] group-hover:-translate-x-0.5 transition-transform">
             <span className="material-symbols-outlined text-[13px]">arrow_back</span>
           </span>
-          <span>Back to Staff Login</span>
+          <span>{t('staff.login.returnToLogin', 'Back to Staff Login')}</span>
         </a>
 
         <div className="flex items-center gap-2">
@@ -130,7 +132,7 @@ export const ResetPasswordPage: React.FC = () => {
                   <span className="material-symbols-outlined text-3xl text-emerald-400 mb-2 block">
                     check_circle
                   </span>
-                  <p className="font-bold text-sm text-emerald-100">Password Updated Successfully</p>
+                  <p className="font-bold text-sm text-emerald-100">{t('staff.dashboard.password_updated_successfully', 'Password Updated Successfully')}</p>
                   <p className="text-xs text-emerald-200/90 mt-1">
                     Your password has been securely updated. You can now log in to the operations terminal.
                   </p>
@@ -140,7 +142,7 @@ export const ResetPasswordPage: React.FC = () => {
                   href="/staff/login"
                   className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#120B08] font-bold text-sm tracking-wider uppercase transition-all shadow-[0_4px_24px_rgba(212,175,55,0.3)] hover:brightness-105 active:scale-[0.98]"
                 >
-                  <span>Proceed to Staff Login</span>
+                  <span>{t('staff.login.signIn', 'Proceed to Staff Login')}</span>
                   <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </a>
               </div>
@@ -155,7 +157,7 @@ export const ResetPasswordPage: React.FC = () => {
                       error
                     </span>
                     <div className="flex-1">
-                      <p className="font-semibold text-red-300">Update Failed</p>
+                      <p className="font-semibold text-red-300">{t('staff.dashboard.update_failed', 'Update Failed')}</p>
                       <p className="text-red-200/90 text-[11px] mt-0.5">{errorMessage}</p>
                     </div>
                   </div>
@@ -178,7 +180,7 @@ export const ResetPasswordPage: React.FC = () => {
                       required
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Minimum 6 characters"
+                      placeholder={t('staff.dashboard.minimum_6_characters', 'Minimum 6 characters')}
                       disabled={isSubmitting}
                       className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl pl-10 pr-11 py-3 text-sm text-white placeholder:text-stone-600 focus:outline-none transition-all disabled:opacity-50 font-mono"
                     />
@@ -212,7 +214,7 @@ export const ResetPasswordPage: React.FC = () => {
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Re-enter your new password"
+                      placeholder={t('staff.login.passwordPlaceholder', 'Re-enter your new password')}
                       disabled={isSubmitting}
                       className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl pl-10 pr-11 py-3 text-sm text-white placeholder:text-stone-600 focus:outline-none transition-all disabled:opacity-50 font-mono"
                     />
@@ -227,11 +229,11 @@ export const ResetPasswordPage: React.FC = () => {
                   {isSubmitting ? (
                     <>
                       <span className="w-4 h-4 border-2 border-[#120B08] border-t-transparent rounded-full animate-spin" />
-                      <span>Updating Credentials...</span>
+                      <span>{t('staff.dashboard.updating_credentials', 'Updating Credentials...')}</span>
                     </>
                   ) : (
                     <>
-                      <span>Save New Password</span>
+                      <span>{t('staff.dashboard.save_new_password', 'Save New Password')}</span>
                       <span className="w-6 h-6 rounded-full bg-black/15 flex items-center justify-center group-hover:translate-x-1 transition-transform">
                         <span className="material-symbols-outlined text-sm">arrow_forward</span>
                       </span>
@@ -244,9 +246,9 @@ export const ResetPasswordPage: React.FC = () => {
             <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-stone-500">
               <span className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[13px] text-emerald-500">lock</span>
-                <span>256-bit TLS Enforced</span>
+                <span>{t('staff.dashboard.256_bit_tls_enforced', '256-bit TLS Enforced')}</span>
               </span>
-              <span>Encrypted via Supabase Auth</span>
+              <span>{t('staff.dashboard.encrypted_via_supabase_auth', 'Encrypted via Supabase Auth')}</span>
             </div>
           </div>
         </div>

@@ -123,7 +123,7 @@ Follow these 10 steps to provision a new client's database:
    - In **SQL Editor**, link the user as active owner:
      ```sql
      INSERT INTO public.staff_profiles (user_id, full_name, role, active)
-     VALUES ('<COPIED_USER_UID>', 'Restaurant Owner', 'owner', true);
+     VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Restaurant Owner', 'owner', true); -- Replace with copied User UID
      ```
 
 7. **Seed Restaurant Settings**:

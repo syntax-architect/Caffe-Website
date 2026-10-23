@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect } from 'react';
 import type { OrderRecord } from '../../types/order';
 import type {
@@ -47,6 +48,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
   onClose,
   onOrderUpdated,
 }) => {
+  const { t } = useI18n(); void t;
   const { user, role, isOwner, isManager } = useAuth();
   const { addNotification } = useNotification();
   const { restaurantConfig } = useSiteConfig();
@@ -485,7 +487,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                                     PAID ({part.tender_type})
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] font-mono text-amber-400">DUE</span>
+                                  <span className="text-[10px] font-mono text-amber-400">{t('staff.dashboard.due', 'DUE')}</span>
                                 )}
                               </div>
                               <div className="text-sm font-mono font-bold text-white">
@@ -537,7 +539,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Amount Due / Paying */}
                       <div>
-                        <label className="text-xs text-stone-400 block mb-1">Amount to Pay</label>
+                        <label className="text-xs text-stone-400 block mb-1">{t('staff.dashboard.amount_to_pay', 'Amount to Pay')}</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-mono">
                             {currencySymbol}
@@ -554,7 +556,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
 
                       {/* Optional Tip Input */}
                       <div>
-                        <label className="text-xs text-stone-400 block mb-1">Tip Amount (Optional)</label>
+                        <label className="text-xs text-stone-400 block mb-1">{t('staff.dashboard.tip_amount_optional', 'Tip Amount (Optional)')}</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-mono">
                             {currencySymbol}
@@ -575,7 +577,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                     {tenderType === 'cash' && (
                       <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-3">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-stone-300">Total Charge (Bill + Tip):</span>
+                          <span className="text-stone-300">{t('staff.dashboard.total_charge_bill_tip', 'Total Charge (Bill + Tip):')}</span>
                           <span className="font-mono font-bold text-white text-sm">
                             {formatCurrency(totalChargeWithTip, currency)}
                           </span>
@@ -624,7 +626,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          placeholder="e.g. AUTH-981244 or Terminal Ref #"
+                          placeholder={t('staff.dashboard.e_g_auth_981244_or_terminal_re', 'e.g. AUTH-981244 or Terminal Ref #')}
                           value={paymentReference}
                           onChange={(e) => setPaymentReference(e.target.value)}
                           className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none"
@@ -640,7 +642,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          placeholder="e.g. UPI-1294801824 or UTR #"
+                          placeholder={t('staff.dashboard.e_g_upi_1294801824_or_utr', 'e.g. UPI-1294801824 or UTR #')}
                           value={paymentReference}
                           onChange={(e) => setPaymentReference(e.target.value)}
                           className="w-full bg-[#080706] border border-white/[0.1] focus:border-[#D4AF37] rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none"
@@ -651,7 +653,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                     {/* Stripe Online Link */}
                     {tenderType === 'stripe' && (
                       <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-xs text-indigo-200">
-                        <span className="font-bold block mb-1">Online Stripe Link</span>
+                        <span className="font-bold block mb-1">{t('staff.dashboard.online_stripe_link', 'Online Stripe Link')}</span>
                         <p>
                           Generates an encrypted checkout session for guest to pay via card/Apple Pay on their own device.
                         </p>
@@ -661,7 +663,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                     {/* Idempotency Token indicator */}
                     <div className="flex items-center justify-between text-[10px] text-stone-500 font-mono">
                       <span>Idempotency Key: {currentIdempotencyKey}</span>
-                      <span>Double-Tap Protected</span>
+                      <span>{t('staff.dashboard.double_tap_protected', 'Double-Tap Protected')}</span>
                     </div>
                   </div>
 
@@ -976,7 +978,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                   {!isOwner && !isManager ? (
                     <div className="p-6 rounded-2xl bg-rose-950/30 border border-rose-500/30 text-center space-y-2">
                       <span className="material-symbols-outlined text-3xl text-rose-400">shield_lock</span>
-                      <h4 className="font-bold text-sm text-white">Manager Authorization Required</h4>
+                      <h4 className="font-bold text-sm text-white">{t('staff.dashboard.manager_authorization_required', 'Manager Authorization Required')}</h4>
                       <p className="text-xs text-rose-200">
                         Refunds and post-payment voiding require Manager or Owner role credentials. Standard staff cannot perform cancellations after settlement.
                       </p>
@@ -989,22 +991,22 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                       </div>
 
                       <div>
-                        <label className="text-xs text-stone-300 block mb-1">Cancellation / Refund Reason</label>
+                        <label className="text-xs text-stone-300 block mb-1">{t('staff.dashboard.cancellation_refund_reason', 'Cancellation / Refund Reason')}</label>
                         <select
                           value={refundReason}
                           onChange={(e) => setRefundReason(e.target.value)}
                           className="w-full bg-[#080706] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
                         >
-                          <option value="Guest requested bill cancellation">Guest requested bill cancellation</option>
-                          <option value="Billing / amount discrepancy corrected">Billing / amount discrepancy corrected</option>
-                          <option value="Kitchen quality issue / remake refused">Kitchen quality issue / remake refused</option>
-                          <option value="Duplicate charge accidental tender">Duplicate charge accidental tender</option>
-                          <option value="Other manager authorized refund">Other manager authorized refund</option>
+                          <option value="Guest requested bill cancellation">{t('staff.dashboard.guest_requested_bill_cancellat', 'Guest requested bill cancellation')}</option>
+                          <option value="Billing / amount discrepancy corrected">{t('staff.dashboard.billing_amount_discrepancy_cor', 'Billing / amount discrepancy corrected')}</option>
+                          <option value="Kitchen quality issue / remake refused">{t('staff.dashboard.kitchen_quality_issue_remake_r', 'Kitchen quality issue / remake refused')}</option>
+                          <option value="Duplicate charge accidental tender">{t('staff.dashboard.duplicate_charge_accidental_te', 'Duplicate charge accidental tender')}</option>
+                          <option value="Other manager authorized refund">{t('staff.dashboard.other_manager_authorized_refun', 'Other manager authorized refund')}</option>
                         </select>
                       </div>
 
                       <div>
-                        <label className="text-xs text-stone-300 block mb-1">Refund Amount</label>
+                        <label className="text-xs text-stone-300 block mb-1">{t('staff.dashboard.refund_amount', 'Refund Amount')}</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-mono">
                             {currencySymbol}
@@ -1020,8 +1022,8 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                       </div>
 
                       <div className="p-3 rounded-lg bg-black/40 text-[11px] text-stone-400 space-y-1">
-                        <div>• This operation will write an immutable record to the security audit trail.</div>
-                        <div>• If cash settlement, a cash refund transaction is recorded in the active shift drawer.</div>
+                        <div>{t('staff.dashboard.this_operation_will_write_an_i', '• This operation will write an immutable record to the security audit trail.')}</div>
+                        <div>{t('staff.dashboard.if_cash_settlement_a_cash_refu', '• If cash settlement, a cash refund transaction is recorded in the active shift drawer.')}</div>
                       </div>
 
                       <button

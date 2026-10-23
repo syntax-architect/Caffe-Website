@@ -422,7 +422,7 @@ BEGIN
         IF v_tax_rules IS NULL OR jsonb_typeof(v_tax_rules) <> 'array' OR jsonb_array_length(v_tax_rules) = 0 THEN
             v_tax_rules := jsonb_build_array(jsonb_build_object(
                 'label', COALESCE(v_tax_label, 'Tax'),
-                'rate', COALESCE(v_tax_rate, 0.0500),
+                'rate', COALESCE(v_tax_rate, 0.0000),
                 'mode', COALESCE(v_tax_mode, 'inclusive')
             ));
         END IF;

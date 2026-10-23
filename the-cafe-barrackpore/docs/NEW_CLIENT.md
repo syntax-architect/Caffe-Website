@@ -50,7 +50,7 @@ export const clientDetails = {
   description: "A refined culinary retreat blending wood-fired gastronomy, single-origin roasts, and candlelit ambiance.",
 
   // Third-Party Embeds (Optional)
-  elfsightId: "YOUR_ELFSIGHT_WIDGET_ID",        // Set to real widget ID or leave placeholder
+  elfsightId: "google-reviews",                 // Built-in Google reviews card or external widget ID
   googleReviewLink: "https://search.google.com/local/writereview?placeid=...",
 
   // Staff & Terminal Access

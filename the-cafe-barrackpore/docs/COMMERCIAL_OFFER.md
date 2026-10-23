@@ -1,13 +1,13 @@
-# Commercial Offer & Services Specification: [AGENCY NAME] Hospitality Platform
+# Commercial Offer & Services Specification: Antigravity Hospitality Systems
 
-**Entity:** [AGENCY NAME]  
+**Entity:** Antigravity Hospitality Systems  
 **Offering:** Bespoke Hospitality Digital Experience & Real-Time Restaurant Operations Architecture  
 **Target Market:** Independent luxury restaurants, boutique hotel dining rooms, artisanal bistros, and multi-location culinary lounges.
 
 ---
 
 ## 1. Executive Summary
-[AGENCY NAME] delivers an end-to-end digital operations system that replaces generic third-party marketplace dependencies with an owned, high-conversion guest experience. The platform combines a cinematic, brand-first customer website with real-time table QR ordering, an integrated reservation engine, kitchen display systems, and multi-currency international commerce.
+Antigravity Hospitality Systems delivers an end-to-end digital operations system that replaces generic third-party marketplace dependencies with an owned, high-conversion guest experience. The platform combines a cinematic, brand-first customer website with real-time table QR ordering, an integrated reservation engine, kitchen display systems, and multi-currency international commerce.
 
 ---
 
@@ -55,6 +55,14 @@
 
 Pricing is structured transparently based on implementation scope, integration requirements, and ongoing operational support:
 
+### Implementation & Subscription Tiers
+
+| Package Tier | Scope & Modules Included | One-Time Setup Fee | Ongoing Monthly SLA & Care |
+|---|---|---|---|
+| **Tier 1: Essential** | Brand website, responsive digital menu, storytelling, SEO | $2,500 / ₹1,75,000 | $99/mo / ₹7,500/mo |
+| **Tier 2: Professional** | Tier 1 + QR ordering, reservations, KDS, Owner Dashboard | $4,500 / ₹3,25,000 | $199/mo / ₹15,000/mo |
+| **Tier 3: Enterprise** | Tier 2 + Online delivery, payments, multi-lingual, SMS/WhatsApp | $7,500 / ₹5,50,000 | $299/mo / ₹22,500/mo |
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 1. Initial Implementation & Customization (One-Time)                       │
@@ -84,6 +92,6 @@ Pricing is structured transparently based on implementation scope, integration r
 ---
 
 ## 5. Commercial Guardrails & Ethical Transparency
-- **No Fabricated Performance Claims:** [AGENCY NAME] does not guarantee arbitrary search rankings or specific revenue multiples; financial projections are calculated collaboratively using the client's historical dining volumes.
-- **Zero Merchant Intermediation:** Payments flow directly from the guest into the restaurant’s own merchant bank account. [AGENCY NAME] never touches customer transaction funds.
+- **No Fabricated Performance Claims:** Antigravity Hospitality Systems does not guarantee arbitrary search rankings or specific revenue multiples; financial projections are calculated collaboratively using the client's historical dining volumes.
+- **Zero Merchant Intermediation:** Payments flow directly from the guest into the restaurant’s own merchant bank account. Antigravity Hospitality Systems never touches customer transaction funds.
 - **Client Data Sovereignty:** The restaurant maintains complete ownership of all customer data, order histories, guest contact lists, and brand assets.

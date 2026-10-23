@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect, useCallback } from 'react';
 import type { CashShift, CashDrawerTransaction, ZReportData } from '../../types/billing';
 import {
@@ -17,6 +18,7 @@ import { formatRestaurantDateTime } from '../../utils/datetime';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 
 export const CashDrawerManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { user } = useAuth();
   const { addNotification } = useNotification();
   const { restaurantConfig } = useSiteConfig();
@@ -188,7 +190,7 @@ export const CashDrawerManagement: React.FC = () => {
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-serif text-lg font-bold text-white">Cash Drawer & Shift Management</h2>
+                <h2 className="font-serif text-lg font-bold text-white">{t('staff.pos.cash_drawer_shift_management', 'Cash Drawer & Shift Management')}</h2>
                 {currentShift ? (
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -201,8 +203,8 @@ export const CashDrawerManagement: React.FC = () => {
                 )}
               </div>
               <p className="text-xs text-stone-400 mt-0.5 flex items-center gap-2">
-                <span>Opening floats, cash in/out reason logs, physical cash count balancing, and Z-report audits</span>
-                {isProcessing && <span className="text-[10px] text-amber-400 font-mono animate-pulse">Syncing...</span>}
+                <span>{t('staff.pos.opening_floats_cash_in_out_rea', 'Opening floats, cash in/out reason logs, physical cash count balancing, and Z-report audits')}</span>
+                {isProcessing && <span className="text-[10px] text-amber-400 font-mono animate-pulse">{t('staff.pos.syncing', 'Syncing...')}</span>}
               </p>
             </div>
           </div>
@@ -388,7 +390,7 @@ export const CashDrawerManagement: React.FC = () => {
       ) : (
         <div className="p-12 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-center space-y-3">
           <span className="material-symbols-outlined text-4xl text-stone-500">point_of_sale</span>
-          <h3 className="font-serif text-base font-bold text-white">Cash Drawer is Closed</h3>
+          <h3 className="font-serif text-base font-bold text-white">{t('staff.pos.cash_drawer_is_closed', 'Cash Drawer is Closed')}</h3>
           <p className="text-xs text-stone-400 max-w-md mx-auto">
             Opening a shift with an opening float initializes the cash drawer ledger and tracks all cash tenders, change returns, and sales.
           </p>
@@ -419,15 +421,15 @@ export const CashDrawerManagement: React.FC = () => {
             <table className="w-full text-left text-xs text-stone-300">
               <thead className="bg-white/[0.02] text-[10px] font-mono uppercase tracking-wider text-stone-400 border-b border-white/[0.06]">
                 <tr>
-                  <th className="py-2.5 px-3">Shift</th>
-                  <th className="py-2.5 px-3">Opened</th>
-                  <th className="py-2.5 px-3">Closed</th>
-                  <th className="py-2.5 px-3">Cashier</th>
-                  <th className="py-2.5 px-3 text-right">Float</th>
-                  <th className="py-2.5 px-3 text-right">Expected</th>
-                  <th className="py-2.5 px-3 text-right">Counted</th>
-                  <th className="py-2.5 px-3 text-right">Variance</th>
-                  <th className="py-2.5 px-3 text-center">Action</th>
+                  <th className="py-2.5 px-3">{t('staff.pos.shift', 'Shift')}</th>
+                  <th className="py-2.5 px-3">{t('staff.pos.opened', 'Opened')}</th>
+                  <th className="py-2.5 px-3">{t('staff.pos.closed', 'Closed')}</th>
+                  <th className="py-2.5 px-3">{t('staff.pos.cashier', 'Cashier')}</th>
+                  <th className="py-2.5 px-3 text-right">{t('staff.pos.float', 'Float')}</th>
+                  <th className="py-2.5 px-3 text-right">{t('staff.pos.expected', 'Expected')}</th>
+                  <th className="py-2.5 px-3 text-right">{t('staff.pos.counted', 'Counted')}</th>
+                  <th className="py-2.5 px-3 text-right">{t('staff.pos.variance', 'Variance')}</th>
+                  <th className="py-2.5 px-3 text-center">{t('staff.pos.action', 'Action')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
@@ -586,7 +588,7 @@ export const CashDrawerManagement: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-xs text-stone-300 block mb-1">Amount</label>
+              <label className="text-xs text-stone-300 block mb-1">{t('staff.pos.amount', 'Amount')}</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-mono text-sm">
                   {currencySymbol}
@@ -602,10 +604,10 @@ export const CashDrawerManagement: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-xs text-stone-300 block mb-1">Reason / Notes</label>
+              <label className="text-xs text-stone-300 block mb-1">{t('staff.pos.reason_notes', 'Reason / Notes')}</label>
               <input
                 type="text"
-                placeholder="e.g. Bank change delivery, petty cash for lemons, vendor advance"
+                placeholder={t('staff.pos.e_g_bank_change_delivery_petty', 'e.g. Bank change delivery, petty cash for lemons, vendor advance')}
                 value={txReason}
                 onChange={(e) => setTxReason(e.target.value)}
                 className="w-full bg-[#080706] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
@@ -653,21 +655,21 @@ export const CashDrawerManagement: React.FC = () => {
 
             <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-stone-400">Opening Float:</span>
+                <span className="text-stone-400">{t('staff.pos.opening_float', 'Opening Float:')}</span>
                 <span className="font-mono text-white">{formatCurrency(liveZReport.openingFloat)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-stone-400">Net Cash Sales & Tips:</span>
+                <span className="text-stone-400">{t('staff.pos.net_cash_sales_tips', 'Net Cash Sales & Tips:')}</span>
                 <span className="font-mono text-white">+{formatCurrency(liveZReport.cashSales)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-stone-400">Cash Movements (In - Out):</span>
+                <span className="text-stone-400">{t('staff.pos.cash_movements_in_out', 'Cash Movements (In - Out):')}</span>
                 <span className="font-mono text-white">
                   {formatCurrency(liveZReport.cashInTotal - liveZReport.cashOutTotal - liveZReport.cashRefunds)}
                 </span>
               </div>
               <div className="flex justify-between pt-2 border-t border-white/[0.06] font-bold">
-                <span className="text-[#F3C766]">Expected Cash in Drawer:</span>
+                <span className="text-[#F3C766]">{t('staff.pos.expected_cash_in_drawer', 'Expected Cash in Drawer:')}</span>
                 <span className="font-mono text-[#F3C766] text-sm">
                   {formatCurrency(liveZReport.expectedCashInDrawer)}
                 </span>
@@ -705,7 +707,7 @@ export const CashDrawerManagement: React.FC = () => {
                       : 'bg-rose-950/20 border-rose-500/30 text-rose-300'
                   }`}
                 >
-                  <span>Difference (Variance):</span>
+                  <span>{t('staff.pos.difference_variance', 'Difference (Variance):')}</span>
                   <span className="font-mono text-sm">
                     {variance === 0
                       ? `${formatCurrency(0, currency)} (EXACT MATCH)`
@@ -718,10 +720,10 @@ export const CashDrawerManagement: React.FC = () => {
             })()}
 
             <div>
-              <label className="text-xs text-stone-300 block mb-1">Closing Notes (Optional)</label>
+              <label className="text-xs text-stone-300 block mb-1">{t('staff.pos.closing_notes_optional', 'Closing Notes (Optional)')}</label>
               <textarea
                 rows={2}
-                placeholder="Shift handoff notes or variance explanation..."
+                placeholder={t('staff.pos.shift_handoff_notes_or_varianc', 'Shift handoff notes or variance explanation...')}
                 value={closingNotes}
                 onChange={(e) => setClosingNotes(e.target.value)}
                 className="w-full bg-[#080706] border border-white/[0.1] rounded-xl p-2.5 text-xs text-white focus:outline-none"
@@ -796,19 +798,19 @@ export const CashDrawerManagement: React.FC = () => {
               {/* Shift Timing & Staff */}
               <div className="space-y-1 text-[11px] py-1 border-b border-white/[0.06]">
                 <div className="flex justify-between">
-                  <span className="text-stone-500">Opened:</span>
+                  <span className="text-stone-500">{t('staff.pos.opened', 'Opened:')}</span>
                   <span>{formatRestaurantDateTime(new Date(selectedZReport.openedAt), restaurantConfig.locale, restaurantConfig.timezone)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-500">Closed:</span>
+                  <span className="text-stone-500">{t('staff.pos.closed', 'Closed:')}</span>
                   <span>{formatRestaurantDateTime(new Date(selectedZReport.closedAt), restaurantConfig.locale, restaurantConfig.timezone)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-500">Opened By:</span>
+                  <span className="text-stone-500">{t('staff.pos.opened_by', 'Opened By:')}</span>
                   <span>{selectedZReport.openedByName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-500">Closed By:</span>
+                  <span className="text-stone-500">{t('staff.pos.closed_by', 'Closed By:')}</span>
                   <span>{selectedZReport.closedByName}</span>
                 </div>
               </div>
@@ -820,31 +822,31 @@ export const CashDrawerManagement: React.FC = () => {
                 </span>
                 <div className="space-y-1 bg-white/[0.02] p-3 rounded-lg border border-white/[0.06]">
                   <div className="flex justify-between">
-                    <span>Opening Float:</span>
+                    <span>{t('staff.pos.opening_float', 'Opening Float:')}</span>
                     <span>{formatCurrency(selectedZReport.openingFloat)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Cash Sales:</span>
+                    <span>{t('staff.pos.cash_sales', 'Cash Sales:')}</span>
                     <span>+{formatCurrency(selectedZReport.cashSales)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Cash In (Paid In):</span>
+                    <span>{t('staff.pos.cash_in_paid_in', 'Cash In (Paid In):')}</span>
                     <span>+{formatCurrency(selectedZReport.cashInTotal)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Cash Out (Paid Out):</span>
+                    <span>{t('staff.pos.cash_out_paid_out', 'Cash Out (Paid Out):')}</span>
                     <span>-{formatCurrency(selectedZReport.cashOutTotal)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Cash Refunds:</span>
+                    <span>{t('staff.pos.cash_refunds', 'Cash Refunds:')}</span>
                     <span>-{formatCurrency(selectedZReport.cashRefunds)}</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-white/[0.06] font-bold text-white">
-                    <span>Expected in Drawer:</span>
+                    <span>{t('staff.pos.expected_in_drawer', 'Expected in Drawer:')}</span>
                     <span>{formatCurrency(selectedZReport.expectedCashInDrawer)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-white">
-                    <span>Counted in Drawer:</span>
+                    <span>{t('staff.pos.counted_in_drawer', 'Counted in Drawer:')}</span>
                     <span>{formatCurrency(selectedZReport.countedCashInDrawer)}</span>
                   </div>
                   <div
@@ -856,7 +858,7 @@ export const CashDrawerManagement: React.FC = () => {
                         : 'text-rose-400'
                     }`}
                   >
-                    <span>Variance:</span>
+                    <span>{t('staff.pos.variance', 'Variance:')}</span>
                     <span>
                       {selectedZReport.variance >= 0 ? '+' : ''}
                       {formatCurrency(selectedZReport.variance)}{' '}
@@ -906,27 +908,27 @@ export const CashDrawerManagement: React.FC = () => {
                 </span>
                 <div className="space-y-1 bg-white/[0.02] p-3 rounded-lg border border-white/[0.06]">
                   <div className="flex justify-between font-bold text-white">
-                    <span>Gross Sales:</span>
+                    <span>{t('staff.pos.gross_sales', 'Gross Sales:')}</span>
                     <span>{formatCurrency(selectedZReport.totalGrossSales)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Taxes (GST):</span>
+                    <span>{t('staff.pos.taxes_gst', 'Taxes (GST):')}</span>
                     <span>{formatCurrency(selectedZReport.totalTaxes)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-white">
-                    <span>Net Sales:</span>
+                    <span>{t('staff.pos.net_sales', 'Net Sales:')}</span>
                     <span>{formatCurrency(selectedZReport.totalNetSales)}</span>
                   </div>
                   <div className="flex justify-between text-amber-300">
-                    <span>Tips Collected:</span>
+                    <span>{t('staff.pos.tips_collected', 'Tips Collected:')}</span>
                     <span>{formatCurrency(selectedZReport.totalTips)}</span>
                   </div>
                   <div className="flex justify-between text-stone-400">
-                    <span>Discounts Given:</span>
+                    <span>{t('staff.pos.discounts_given', 'Discounts Given:')}</span>
                     <span>-{formatCurrency(selectedZReport.totalDiscounts)}</span>
                   </div>
                   <div className="flex justify-between text-rose-400">
-                    <span>Voids & Refunds:</span>
+                    <span>{t('staff.pos.voids_refunds', 'Voids & Refunds:')}</span>
                     <span>-{formatCurrency(selectedZReport.totalVoids + selectedZReport.totalRefunds)}</span>
                   </div>
                 </div>

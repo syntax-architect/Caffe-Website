@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -6,6 +7,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { t } = useI18n(); void t;
   const { isLoading, isAuthenticated, isActiveStaff, signOut } = useAuth();
 
   useEffect(() => {
@@ -30,7 +32,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background text-on-surface flex flex-col items-center justify-center p-6 text-center font-body-md">
-        <p className="text-outline text-sm mb-4">Redirecting to Staff Login...</p>
+        <p className="text-outline text-sm mb-4">{t('staff.login.signingIn', 'Redirecting to Staff Login...')}</p>
         <a
           href="/staff/login"
           className="px-6 py-2 rounded-full bg-primary text-on-primary font-semibold text-xs tracking-wider uppercase"

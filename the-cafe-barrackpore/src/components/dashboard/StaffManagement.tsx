@@ -1,11 +1,14 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchStaffProfiles, toggleStaffActive, updateStaffRole, inviteStaff } from '../../services/dashboardService';
 import { useNotification } from '../../hooks/useNotification';
 import type { StaffProfile, StaffRole } from '../../types/auth';
 import { clientDetails } from '../../config/client';
+import { getLocaleForCountry } from '../../utils/currency';
 
 export const StaffManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { isOwner, isManager, staffProfile: currentProfile } = useAuth();
   const { addNotification } = useNotification();
   const staffDomain = clientDetails.staffDomain || 'example.com';
@@ -183,7 +186,7 @@ export const StaffManagement: React.FC = () => {
             className="relative group overflow-hidden px-5 py-3 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] text-[#070605] text-xs font-black tracking-wider uppercase shadow-[0_10px_30px_rgba(212,175,55,0.25)] hover:shadow-[0_15px_40px_rgba(212,175,55,0.4)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-outlined text-base font-bold">person_add</span>
-            <span>Provision Account</span>
+            <span>{t('staff.dashboard.provision_account', 'Provision Account')}</span>
           </button>
         )}
       </div>
@@ -192,25 +195,25 @@ export const StaffManagement: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Total Staff</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">{t('staff.dashboard.total_staff', 'Total Staff')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-white mt-0.5">{staffList.length}</p>
           </div>
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">Active Terminals</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">{t('staff.dashboard.active_terminals', 'Active Terminals')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-emerald-400 mt-0.5">{activeStaffCount}</p>
           </div>
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">Shift Managers</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">{t('staff.dashboard.shift_managers', 'Shift Managers')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-[#D4AF37] mt-0.5">{managerCount}</p>
           </div>
         </div>
         <div className="p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="p-3.5 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-sky-400">Proprietor</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-sky-400">{t('staff.dashboard.proprietor', 'Proprietor')}</p>
             <p className="text-xl sm:text-2xl font-serif font-bold text-sky-400 mt-0.5">
               {staffList.filter((s) => s.role === 'owner').length}
             </p>
@@ -224,7 +227,7 @@ export const StaffManagement: React.FC = () => {
           <div className="p-4 rounded-[calc(1rem-0.125rem)] bg-[#120F0D] flex items-start gap-3.5 text-xs text-amber-200">
             <span className="material-symbols-outlined text-amber-400 text-lg shrink-0 mt-0.5">shield</span>
             <div>
-              <p className="font-bold text-amber-300">Manager Shift Oversight</p>
+              <p className="font-bold text-amber-300">{t('staff.dashboard.manager_shift_oversight', 'Manager Shift Oversight')}</p>
               <p className="text-[11px] text-amber-200/80 mt-0.5 leading-relaxed">
                 You have active authorization to view the staff ledger. Provisioning new accounts and altering terminal roles is restricted to restaurant proprietors.
               </p>
@@ -235,13 +238,13 @@ export const StaffManagement: React.FC = () => {
 
       {/* STAFF DATA DISPLAY */}
       {isLoading ? (
-        <div className="py-20 text-center text-zinc-500 font-mono text-xs">Authenticating staff roster...</div>
+        <div className="py-20 text-center text-zinc-500 font-mono text-xs">{t('staff.dashboard.authenticating_staff_roster', 'Authenticating staff roster...')}</div>
       ) : staffList.length === 0 ? (
         <div className="p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
           <div className="py-20 text-center rounded-[calc(2rem-0.375rem)] bg-[#120F0D] flex flex-col items-center">
             <span className="material-symbols-outlined text-4xl mb-2 text-zinc-600">group</span>
-            <p className="font-serif font-bold text-base text-white">No staff profiles registered</p>
-            <p className="text-xs text-zinc-500 mt-1">Click "Provision Account" to create your first team credential.</p>
+            <p className="font-serif font-bold text-base text-white">{t('staff.dashboard.no_staff_profiles_registered', 'No staff profiles registered')}</p>
+            <p className="text-xs text-zinc-500 mt-1">{t('staff.dashboard.click_provision_account_to_cre', 'Click "Provision Account" to create your first team credential.')}</p>
           </div>
         </div>
       ) : (
@@ -313,7 +316,7 @@ export const StaffManagement: React.FC = () => {
                           {staff.active ? 'Deactivate' : 'Reactivate'}
                         </button>
                       ) : (
-                        <span className="text-zinc-600 font-mono text-[10px]">Protected</span>
+                        <span className="text-zinc-600 font-mono text-[10px]">{t('staff.dashboard.protected', 'Protected')}</span>
                       )}
                     </div>
                   </div>
@@ -328,11 +331,11 @@ export const StaffManagement: React.FC = () => {
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06] bg-white/[0.02] text-zinc-400 text-[10px] font-mono uppercase tracking-[0.16em]">
-                    <th className="py-4 px-6 font-bold">Team Member</th>
-                    <th className="py-4 px-4 font-bold">Assigned Role</th>
-                    <th className="py-4 px-4 font-bold">Terminal Status</th>
-                    <th className="py-4 px-4 font-bold">Registration Date</th>
-                    <th className="py-4 px-6 text-right font-bold">Access Controls</th>
+                    <th className="py-4 px-6 font-bold">{t('staff.dashboard.team_member', 'Team Member')}</th>
+                    <th className="py-4 px-4 font-bold">{t('staff.dashboard.assigned_role', 'Assigned Role')}</th>
+                    <th className="py-4 px-4 font-bold">{t('staff.dashboard.terminal_status', 'Terminal Status')}</th>
+                    <th className="py-4 px-4 font-bold">{t('staff.dashboard.registration_date', 'Registration Date')}</th>
+                    <th className="py-4 px-6 text-right font-bold">{t('staff.dashboard.access_controls', 'Access Controls')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04]">
@@ -378,9 +381,9 @@ export const StaffManagement: React.FC = () => {
                               onChange={(e) => handleRoleChange(staff, e.target.value as StaffRole)}
                               className="bg-[#070605] border border-white/[0.1] rounded-xl px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-[#D4AF37] capitalize cursor-pointer"
                             >
-                              <option value="staff" className="bg-[#120F0D]">Staff (Service/Kitchen)</option>
-                              <option value="manager" className="bg-[#120F0D]">Manager (Floor Lead)</option>
-                              <option value="owner" className="bg-[#120F0D]">Owner (Proprietor)</option>
+                              <option value="staff" className="bg-[#120F0D]">{t('staff.dashboard.staff_service_kitchen', 'Staff (Service/Kitchen)')}</option>
+                              <option value="manager" className="bg-[#120F0D]">{t('staff.dashboard.manager_floor_lead', 'Manager (Floor Lead)')}</option>
+                              <option value="owner" className="bg-[#120F0D]">{t('staff.dashboard.owner_proprietor', 'Owner (Proprietor)')}</option>
                             </select>
                           ) : (
                             <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border ${roleBadge}`}>
@@ -403,7 +406,7 @@ export const StaffManagement: React.FC = () => {
                         </td>
 
                         <td className="py-4 px-4 text-zinc-400 font-mono text-xs">
-                          {new Date(staff.created_at).toLocaleDateString('en-IN', {
+                          {new Date(staff.created_at).toLocaleDateString(getLocaleForCountry(), {
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric',
@@ -473,7 +476,7 @@ export const StaffManagement: React.FC = () => {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Rahul Sharma"
+                    placeholder={t('staff.dashboard.e_g_rahul_sharma', 'e.g. Rahul Sharma')}
                     value={inviteName}
                     onChange={(e) => setInviteName(e.target.value)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
@@ -503,9 +506,9 @@ export const StaffManagement: React.FC = () => {
                     onChange={(e) => setInviteRole(e.target.value as StaffRole)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                   >
-                    <option value="staff" className="bg-[#120F0D]">Staff (Orders &amp; Kitchen)</option>
-                    <option value="manager" className="bg-[#120F0D]">Manager (Floor &amp; Roster)</option>
-                    <option value="owner" className="bg-[#120F0D]">Owner (Proprietor Full Access)</option>
+                    <option value="staff" className="bg-[#120F0D]">{t('staff.dashboard.staff_orders_amp_kitchen', 'Staff (Orders &amp; Kitchen)')}</option>
+                    <option value="manager" className="bg-[#120F0D]">{t('staff.dashboard.manager_floor_amp_roster', 'Manager (Floor &amp; Roster)')}</option>
+                    <option value="owner" className="bg-[#120F0D]">{t('staff.dashboard.owner_proprietor_full_access', 'Owner (Proprietor Full Access)')}</option>
                   </select>
                 </div>
 
@@ -525,10 +528,10 @@ export const StaffManagement: React.FC = () => {
                     {isInviting ? (
                       <>
                         <span className="w-3.5 h-3.5 border-2 border-[#070605] border-t-transparent rounded-full animate-spin" />
-                        <span>Provisioning...</span>
+                        <span>{t('staff.dashboard.provisioning', 'Provisioning...')}</span>
                       </>
                     ) : (
-                      <span>Create Account</span>
+                      <span>{t('staff.dashboard.create_account', 'Create Account')}</span>
                     )}
                   </button>
                 </div>

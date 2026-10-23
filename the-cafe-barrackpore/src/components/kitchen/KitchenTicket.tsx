@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect } from 'react';
 import type { KitchenOrder } from '../../services/kitchenService';
 import { playTicketBumpSound, playDispatchChime } from '../../services/soundService';
@@ -12,12 +13,14 @@ interface KitchenTicketProps {
 }
 
 export const KitchenTicket: React.FC<KitchenTicketProps> = ({
+
   order,
   onAdvance,
   onCancel,
   isMutating = false,
   density = 'comfortable',
 }) => {
+  const { t } = useI18n(); void t;
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(() => {
     const createdTime = new Date(order.created_at).getTime();
     return Math.max(0, Math.floor((Date.now() - createdTime) / 1000));
@@ -204,7 +207,7 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
               </div>
             ))
           ) : (
-            <div className="text-xs text-stone-500 italic py-2">No item details recorded</div>
+            <div className="text-xs text-stone-500 italic py-2">{t('staff.kitchen.title', 'No item details recorded')}</div>
           )}
         </div>
 
@@ -213,7 +216,7 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
           <div className="mb-3 p-3 rounded-xl bg-amber-950/50 border border-amber-500/40 text-amber-200 shadow-inner">
             <div className="flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase text-amber-300 mb-0.5">
               <span className="material-symbols-outlined text-xs">priority_high</span>
-              <span>Chef Note</span>
+              <span>{t('staff.kitchen.modifierLabel', 'Chef Note')}</span>
             </div>
             <p className="text-xs font-semibold leading-relaxed">
               "{order.special_requests.trim()}"
@@ -243,7 +246,7 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
             {isMutating ? (
               <>
                 <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                <span>Updating Ticket...</span>
+                <span>{t('common.loading', 'Updating Ticket...')}</span>
               </>
             ) : (
               <>
@@ -267,7 +270,7 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
               aria-label={`Print KOT for order ${order.order_ref}`}
             >
               <span className="material-symbols-outlined text-base">print</span>
-              {hasPrinted && <span className="text-[9px] font-mono font-bold uppercase text-[#F3C766]">Dup</span>}
+              {hasPrinted && <span className="text-[9px] font-mono font-bold uppercase text-[#F3C766]">{t('staff.kitchen.title', 'Dup')}</span>}
             </button>
           </div>
 

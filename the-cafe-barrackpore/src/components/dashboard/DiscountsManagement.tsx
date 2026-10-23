@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import type { DiscountCode, HappyHourSchedule } from '../../types/owner';
@@ -17,6 +18,7 @@ import { formatCurrency } from '../../utils/currency';
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const DiscountsManagement: React.FC = () => {
+  const { t } = useI18n(); void t;
   const { addNotification } = useNotification();
   const { restaurantConfig } = useSiteConfig();
   const currency = restaurantConfig.currency || 'INR';
@@ -217,17 +219,17 @@ export const DiscountsManagement: React.FC = () => {
   };
 
   const renderDcStatus = (code: DiscountCode) => {
-    if (!code.active) return <span className="text-zinc-500 font-medium">Inactive</span>;
+    if (!code.active) return <span className="text-zinc-500 font-medium">{t('staff.dashboard.inactive', 'Inactive')}</span>;
     if (code.valid_until && new Date(code.valid_until) < new Date()) {
-      return <span className="text-red-400 font-medium">Expired</span>;
+      return <span className="text-red-400 font-medium">{t('staff.dashboard.expired', 'Expired')}</span>;
     }
     if (code.max_uses && code.used_count >= code.max_uses) {
-      return <span className="text-rose-400 font-medium">Exhausted</span>;
+      return <span className="text-rose-400 font-medium">{t('staff.dashboard.exhausted', 'Exhausted')}</span>;
     }
     if (code.max_uses && code.used_count >= code.max_uses * 0.8) {
-      return <span className="text-amber-400 font-medium">Approaching Limit</span>;
+      return <span className="text-amber-400 font-medium">{t('staff.dashboard.approaching_limit', 'Approaching Limit')}</span>;
     }
-    return <span className="text-emerald-400 font-medium">Active</span>;
+    return <span className="text-emerald-400 font-medium">{t('staff.dashboard.active', 'Active')}</span>;
   };
 
   return (
@@ -295,13 +297,13 @@ export const DiscountsManagement: React.FC = () => {
               <table className="w-full text-left text-sm text-zinc-300">
                 <thead className="text-xs uppercase bg-black/40 text-zinc-500 font-mono tracking-wider">
                   <tr>
-                    <th className="px-4 py-3">Code</th>
-                    <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Value</th>
-                    <th className="px-4 py-3">Min Order</th>
-                    <th className="px-4 py-3">Uses</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
+                    <th className="px-4 py-3">{t('staff.dashboard.code', 'Code')}</th>
+                    <th className="px-4 py-3">{t('staff.dashboard.type', 'Type')}</th>
+                    <th className="px-4 py-3">{t('staff.dashboard.value', 'Value')}</th>
+                    <th className="px-4 py-3">{t('staff.dashboard.min_order', 'Min Order')}</th>
+                    <th className="px-4 py-3">{t('staff.dashboard.uses', 'Uses')}</th>
+                    <th className="px-4 py-3">{t('staff.dashboard.status', 'Status')}</th>
+                    <th className="px-4 py-3 text-right">{t('staff.dashboard.actions', 'Actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.06]">
@@ -388,15 +390,15 @@ export const DiscountsManagement: React.FC = () => {
                     
                     <div className="mt-auto space-y-2">
                       <div className="flex justify-between text-xs">
-                        <span className="text-zinc-500">Discount:</span>
+                        <span className="text-zinc-500">{t('staff.dashboard.discount', 'Discount:')}</span>
                         <span className="text-white font-bold">{hh.discount_percentage}%</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-zinc-500">Applies to:</span>
+                        <span className="text-zinc-500">{t('staff.dashboard.applies_to', 'Applies to:')}</span>
                         <span className="text-white truncate max-w-[120px]">{catName}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-zinc-500">Status:</span>
+                        <span className="text-zinc-500">{t('staff.dashboard.status', 'Status:')}</span>
                         <span className={hh.active ? "text-emerald-400" : "text-zinc-500"}>
                           {hh.active ? 'Active' : 'Inactive'}
                         </span>
@@ -433,42 +435,42 @@ export const DiscountsManagement: React.FC = () => {
 
               <form onSubmit={handleSaveDc} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Code</label>
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.code', 'Code')}</label>
                   <input
                     required
                     type="text"
                     value={dcFormCode}
                     onChange={(e) => setDcFormCode(e.target.value.toUpperCase().replace(/\s/g, ''))}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:border-[#D4AF37] focus:outline-none uppercase font-mono"
-                    placeholder="e.g. SUMMER20"
+                    placeholder={t('staff.dashboard.e_g_summer20', 'e.g. SUMMER20')}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Description (Optional)</label>
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.description_optional', 'Description (Optional)')}</label>
                   <input
                     type="text"
                     value={dcFormDescription}
                     onChange={(e) => setDcFormDescription(e.target.value)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
-                    placeholder="Summer special promotion"
+                    placeholder={t('staff.dashboard.summer_special_promotion', 'Summer special promotion')}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Discount Type</label>
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.discount_type', 'Discount Type')}</label>
                     <select
                       value={dcFormType}
                       onChange={(e) => setDcFormType(e.target.value as 'percentage' | 'flat')}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
                     >
-                      <option value="percentage">Percentage (%)</option>
+                      <option value="percentage">{t('staff.dashboard.percentage', 'Percentage (%)')}</option>
                       <option value="flat">Flat Amount ({currencySymbol})</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Value</label>
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.value', 'Value')}</label>
                     <input
                       required
                       type="number"
@@ -493,14 +495,14 @@ export const DiscountsManagement: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Max Uses (Optional)</label>
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.max_uses_optional', 'Max Uses (Optional)')}</label>
                     <input
                       type="number"
                       min="1"
                       value={dcFormMaxUses}
                       onChange={(e) => setDcFormMaxUses(e.target.value ? Number(e.target.value) : '')}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
-                      placeholder="Unlimited"
+                      placeholder={t('staff.dashboard.unlimited', 'Unlimited')}
                     />
                   </div>
                 </div>
@@ -514,14 +516,14 @@ export const DiscountsManagement: React.FC = () => {
                       value={dcFormMaxDiscount}
                       onChange={(e) => setDcFormMaxDiscount(e.target.value ? Number(e.target.value) : '')}
                       className="w-full bg-[#070605] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
-                      placeholder="No limit"
+                      placeholder={t('staff.dashboard.no_limit', 'No limit')}
                     />
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Valid From</label>
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.valid_from', 'Valid From')}</label>
                     <input
                       type="date"
                       value={dcFormValidFrom}
@@ -530,7 +532,7 @@ export const DiscountsManagement: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Valid Until (Optional)</label>
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.valid_until_optional', 'Valid Until (Optional)')}</label>
                     <input
                       type="date"
                       value={dcFormValidUntil}
@@ -550,7 +552,7 @@ export const DiscountsManagement: React.FC = () => {
                     />
                     <div className="w-11 h-6 bg-white/[0.1] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#D4AF37]"></div>
                   </label>
-                  <span className="text-sm font-medium text-white">Active</span>
+                  <span className="text-sm font-medium text-white">{t('staff.dashboard.active', 'Active')}</span>
                 </div>
 
                 <div className="pt-4 border-t border-white/[0.06] flex justify-end gap-3">
@@ -591,19 +593,19 @@ export const DiscountsManagement: React.FC = () => {
 
               <form onSubmit={handleSaveHh} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Label</label>
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.label', 'Label')}</label>
                   <input
                     required
                     type="text"
                     value={hhFormLabel}
                     onChange={(e) => setHhFormLabel(e.target.value)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
-                    placeholder="e.g. Afternoon Tea"
+                    placeholder={t('staff.dashboard.e_g_afternoon_tea', 'e.g. Afternoon Tea')}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Day of Week</label>
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.day_of_week', 'Day of Week')}</label>
                   <select
                     value={hhFormDay}
                     onChange={(e) => setHhFormDay(Number(e.target.value))}
@@ -617,7 +619,7 @@ export const DiscountsManagement: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Start Time</label>
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.start_time', 'Start Time')}</label>
                     <input
                       required
                       type="time"
@@ -627,7 +629,7 @@ export const DiscountsManagement: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">End Time</label>
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.end_time', 'End Time')}</label>
                     <input
                       required
                       type="time"
@@ -639,7 +641,7 @@ export const DiscountsManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Discount Percentage (%)</label>
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.discount_percentage', 'Discount Percentage (%)')}</label>
                   <input
                     required
                     type="number"
@@ -652,13 +654,13 @@ export const DiscountsManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">Category Filter (Optional)</label>
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-1">{t('staff.dashboard.category_filter_optional', 'Category Filter (Optional)')}</label>
                   <select
                     value={hhFormCategory}
                     onChange={(e) => setHhFormCategory(e.target.value)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
                   >
-                    <option value="">All Categories</option>
+                    <option value="">{t('staff.dashboard.all_categories', 'All Categories')}</option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
@@ -675,7 +677,7 @@ export const DiscountsManagement: React.FC = () => {
                     />
                     <div className="w-11 h-6 bg-white/[0.1] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#D4AF37]"></div>
                   </label>
-                  <span className="text-sm font-medium text-white">Active</span>
+                  <span className="text-sm font-medium text-white">{t('staff.dashboard.active', 'Active')}</span>
                 </div>
 
                 <div className="pt-4 border-t border-white/[0.06] flex justify-end gap-3">
