@@ -115,7 +115,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
             type="button"
             onClick={onRefresh}
             className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-950/90 text-red-300 border border-red-500/50 text-[11px] font-mono font-bold hover:bg-red-900 cursor-pointer shadow-sm"
-            title="Tap to reconnect"
+            title={t('kitchen.tap_to_reconnect', 'Tap to reconnect')}
           >
             <span className="w-2 h-2 rounded-full bg-red-500" />
             <span>{t('common.retry', 'OFFLINE (RETRY)')}</span>
@@ -132,7 +132,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
           type="button"
           onClick={onExitToDashboard}
           className="group px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-stone-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
-          title="Exit to Restaurant Management Dashboard"
+          title={t('kitchen.exit_to_restaurant_management_da', 'Exit to Restaurant Management Dashboard')}
         >
           <span className="material-symbols-outlined text-base text-[#D4AF37] group-hover:-translate-x-0.5 transition-transform">
             arrow_back
@@ -146,11 +146,11 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
           </div>
           <div>
             <h1 className="font-serif text-sm font-bold tracking-[0.14em] uppercase text-white leading-none">
-              Kitchen Display
+              {t('kitchen.kitchen_display', 'Kitchen Display')}
             </h1>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="text-[9px] font-mono text-[#D4AF37] tracking-wider uppercase">
-                Station KDS-01
+                {t('kitchen.station_kds_01', 'Station KDS-01')}
               </span>
               {staffName && (
                 <span className="hidden xl:inline text-stone-400 font-mono text-[9px] border-l border-white/[0.1] pl-1.5">
@@ -175,7 +175,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
               : 'text-stone-400 hover:text-white'
           }`}
         >
-          All Tickets
+          {t('kitchen.all_tickets', 'All Tickets')}
         </button>
         <button
           type="button"
@@ -219,7 +219,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
           type="button"
           onClick={onOpenHistory}
           className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-stone-300 hover:text-[#D4AF37] transition-all cursor-pointer"
-          title="View recent completed tickets"
+          title={t('kitchen.view_recent_completed_tickets', 'View recent completed tickets')}
         >
           <span className="material-symbols-outlined text-lg">history</span>
         </button>
@@ -233,7 +233,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
               ? 'bg-[#D4AF37]/15 text-[#F3C766] border-[#D4AF37]/30 hover:bg-[#D4AF37]/25'
               : 'bg-white/[0.04] text-stone-500 border-white/[0.08] hover:text-stone-300'
           }`}
-          title={soundEnabled ? 'Chime sound alert is ON' : 'Chime sound alert is OFF'}
+          title={soundEnabled ? t('kitchen.chime_on', 'Chime sound alert is ON') : t('kitchen.chime_off', 'Chime sound alert is OFF')}
         >
           <span className="material-symbols-outlined text-lg">
             {soundEnabled ? 'volume_up' : 'volume_off'}
@@ -248,7 +248,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
             playKitchenOrderBell();
           }}
           className="p-2 rounded-xl bg-white/[0.04] hover:bg-[#D4AF37]/15 border border-white/[0.08] hover:border-[#D4AF37]/40 text-stone-300 hover:text-[#F3C766] transition-all cursor-pointer"
-          title="Sound Check: Test brass kitchen bell ring"
+          title={t('kitchen.sound_check_test_brass_kitchen_b', 'Sound Check: Test brass kitchen bell ring')}
           aria-label={t('staff.kitchen.test_kitchen_chime', 'Test kitchen chime')}
         >
           <span className="material-symbols-outlined text-lg">notifications_active</span>
@@ -260,7 +260,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
             type="button"
             onClick={onSimulateTestOrder}
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 to-[#F3C766]/10 hover:from-[#D4AF37]/30 hover:to-[#F3C766]/20 border border-[#D4AF37]/40 text-[#F3C766] text-xs font-mono font-bold transition-all cursor-pointer shadow-sm active:scale-[0.98]"
-            title="Simulate incoming Table 07 order for dinner rush testing"
+            title={t('kitchen.simulate_incoming_table_07_order', 'Simulate incoming Table 07 order for dinner rush testing')}
           >
             <span className="material-symbols-outlined text-sm">bolt</span>
             <span>{t('staff.kitchen.test_order', '+ Test Order')}</span>
@@ -272,7 +272,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
           type="button"
           onClick={() => onSetDensity(density === 'comfortable' ? 'compact' : 'comfortable')}
           className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-stone-300 hover:text-white transition-all cursor-pointer"
-          title={`Switch to ${density === 'comfortable' ? 'Compact' : 'Comfortable'} mode`}
+          title={density === 'comfortable' ? t('kitchen.switch_compact', 'Switch to Compact mode') : t('kitchen.switch_comfortable', 'Switch to Comfortable mode')}
         >
           <span className="material-symbols-outlined text-lg">
             {density === 'comfortable' ? 'view_compact' : 'view_comfortable'}
@@ -285,7 +285,7 @@ export const KitchenTopBar: React.FC<KitchenTopBarProps> = ({
           type="button"
           onClick={toggleFullscreen}
           className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-stone-300 hover:text-[#D4AF37] transition-all cursor-pointer"
-          title={isFullscreen ? 'Exit full screen' : 'Expand full screen'}
+          title={isFullscreen ? t('kitchen.exit_fullscreen', 'Exit full screen') : t('kitchen.expand_fullscreen', 'Expand full screen')}
         >
           <span className="material-symbols-outlined text-lg">
             {isFullscreen ? 'fullscreen_exit' : 'fullscreen'}

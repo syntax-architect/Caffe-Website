@@ -330,7 +330,7 @@ return (
             {/* Left 6 Cols: Valmora-Style High-Contrast Editorial Invitation */}
             <div className="lg:col-span-6 space-y-6">
               <span className="font-mono text-[11px] tracking-[0.25em] uppercase text-[#8C5A2B] font-bold block">
-                {t('vip.privateLedger', 'PRIVATE SANCTUARY LEDGER · CANTONMENT')}
+                {t('vip.privateLedger', 'PRIVATE SANCTUARY LEDGER')}
               </span>
 
               <h3 className="font-serif text-4xl sm:text-6xl tracking-tight leading-[1.03] text-[#18110D]">
@@ -339,7 +339,7 @@ return (
               </h3>
 
               <p className="font-sans text-base text-[#4A3B32] max-w-md leading-relaxed">
-                {t('vip.ledgerDesc', 'Unplugged acoustic sessions, 450°C wood-fired tastings, and sapphire velvet booths in Cantonment. Tell us who you are and we will reserve your place on the ledger.')}
+                {t('vip.ledgerDesc', 'Unplugged acoustic sessions, 450°C wood-fired tastings, and sapphire velvet booths. Tell us who you are and we will reserve your place on the ledger.')}
               </p>
 
               <div className="pt-2 flex flex-wrap items-center gap-4">
@@ -366,14 +366,14 @@ return (
                     THE CAFÉ · MEMBER DOSSIER [NO. 2026]
                   </span>
                   <span className="px-2.5 py-0.5 rounded bg-[#18110D] text-[#F4EFE6] font-mono text-[10px] tracking-widest font-bold">
-                    NO. 2026
+                    {t('vip.no_2026', 'NO. 2026')}
                   </span>
                 </div>
 
                 {isContractSubmitted ? (
                   <div className="py-8 text-center space-y-2">
                     <div className="font-serif text-2xl sm:text-3xl text-[#18110D]">
-                      Welcome to The Nocturnal Circle.
+                      {t('vip.welcome_to_the_nocturnal_circle', 'Welcome to The Nocturnal Circle.')}
                     </div>
                     <p className="font-sans text-sm text-[#4A3B32]">
                       Your dossier ({preference}) is countersigned and recorded.

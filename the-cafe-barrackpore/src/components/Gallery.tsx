@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { useI18n } from '../i18n/I18nContext';
-import { clientDetails } from '../config/client';
+import { clientDetails, isCinematicExperience } from '../config/client';
 import { SectionReveal } from './SectionReveal';
 import { getAvifSource } from '../utils/image';
 import { DEFAULT_GALLERY_ITEMS, type GalleryItem } from '../services/siteContentService';
@@ -63,7 +63,7 @@ export const Gallery: React.FC = () => {
           })
         : DEFAULT_GALLERY_ITEMS);
 
-  const hasElfsight = clientDetails.elfsightId && clientDetails.elfsightId !== "YOUR_ELFSIGHT_WIDGET_ID";
+  const hasElfsight = Boolean(clientDetails.elfsightId && !clientDetails.elfsightId.startsWith('YOUR_'));
 
   useEffect(() => {
     if (hasElfsight) {
@@ -247,7 +247,7 @@ export const Gallery: React.FC = () => {
           </div>
         ) : activeVariant === 'carousel-snap' ? (
           /* ================================================================
-             VARIANT B: CAROUSEL-SNAP (Horizontal Snap with Navigation Affordances)
+             {t('gallery.variant_b_carousel_snap_horizont', 'VARIANT B: CAROUSEL-SNAP (Horizontal Snap with Navigation Affordances)')}
              ================================================================ */
           <div className="w-full relative group/carousel">
             {/* Header controls toolbar */}
@@ -669,7 +669,7 @@ export const Gallery: React.FC = () => {
               <div className="px-5 py-2 rounded-full bg-surface-obsidian/90 border border-primary/30 backdrop-blur-md flex flex-wrap items-center justify-center gap-2 sm:gap-4 font-mono text-[9px] sm:text-[11px] tracking-widest uppercase text-on-surface/85 shadow-xl">
                 <span className="text-primary font-bold">LENS: {activeOpticalSpec.lens}</span>
                 <span className="text-outline/40">•</span>
-                <span>KELVIN: {activeOpticalSpec.kelvin}</span>
+                {isCinematicExperience() && <span>KELVIN: {activeOpticalSpec.kelvin}</span>}
                 <span className="text-outline/40">•</span>
                 <span>PROFILE: {activeOpticalSpec.iso}</span>
                 <span className="text-outline/40">•</span>
@@ -682,7 +682,7 @@ export const Gallery: React.FC = () => {
                   {selectedPhoto.data.caption}
                 </p>
                 <p className="font-sans text-[11px] text-primary/80 mt-0.5 uppercase tracking-widest">
-                  {businessName} · BARRACKPORE CANTONMENT
+                  {businessName} · {(restaurantConfig.address.region || restaurantConfig.address.city || 'SANCTUARY').toUpperCase()}
                 </p>
               </div>
             </div>

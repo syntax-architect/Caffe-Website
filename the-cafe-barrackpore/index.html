@@ -138,21 +138,23 @@
         color: #D4AF37;
         letter-spacing: 0.05em;
       }
-      .initial-loader-title {
-        font-family: 'Playfair Display', Georgia, serif;
-        font-size: 14px;
-        letter-spacing: 0.22em;
-        text-transform: uppercase;
-        color: #F7EFEA;
-        margin-bottom: 6px;
-        opacity: 0.9;
-      }
-      .initial-loader-sub {
+      .initial-loader-skip {
+        margin-top: 24px;
+        padding: 8px 18px;
+        border-radius: 9999px;
+        border: 1px solid rgba(212, 175, 55, 0.4);
+        background: rgba(17, 11, 8, 0.85);
+        color: #D4AF37;
         font-family: 'Outfit', sans-serif, -apple-system, sans-serif;
-        font-size: 10px;
-        letter-spacing: 0.2em;
+        font-size: 12px;
+        letter-spacing: 0.15em;
         text-transform: uppercase;
-        color: rgba(212, 175, 55, 0.7);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .initial-loader-skip:hover {
+        background: #D4AF37;
+        color: #110B08;
       }
       @keyframes initialSpin {
         to { transform: rotate(360deg); }
@@ -281,15 +283,24 @@
     </a>
 
     <div id="root">
-      <div class="initial-loader" aria-hidden="true">
+      <div class="initial-loader" role="status" aria-label="Loading application">
         <div class="initial-loader-crest">
           <div class="initial-loader-ring"></div>
           <span class="initial-loader-monogram">TCB</span>
         </div>
-        <div class="initial-loader-title">The Café Barrackpore</div>
-        <div class="initial-loader-sub">Artisanal Gastronomy • Est. 2024</div>
+        <button type="button" class="initial-loader-skip" onclick="var el=document.querySelector('.initial-loader');if(el)el.remove();" aria-label="Skip intro">Skip &rarr;</button>
       </div>
     </div>
+    <script>
+      setTimeout(function() {
+        var loader = document.querySelector('.initial-loader');
+        if (loader) {
+          loader.style.opacity = '0';
+          loader.style.transition = 'opacity 0.25s ease-out';
+          setTimeout(function() { loader.remove(); }, 250);
+        }
+      }, 1200);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

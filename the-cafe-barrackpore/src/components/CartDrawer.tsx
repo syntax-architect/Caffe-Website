@@ -1176,7 +1176,7 @@ export const CartDrawer: React.FC = () => {
                           </div>
                         </div>
                         <span className="px-2.5 py-1 rounded-full bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider">
-                          QR Session
+                          {t('cart.qr_session', 'QR Session')}
                         </span>
                       </div>
                     </div>
@@ -1325,7 +1325,7 @@ export const CartDrawer: React.FC = () => {
                       {orderRef}
                     </span>
                     <span className="font-sans text-xs text-on-surface/60">
-                      Unique reference for your kitchen order ticket.
+                      {t('cart.unique_reference_for_your_kitche', 'Unique reference for your kitchen order ticket.')}
                     </span>
                   </div>
 
@@ -1615,7 +1615,7 @@ export const CartDrawer: React.FC = () => {
                       {restaurantConfig.payments.provider.toUpperCase()} CHECKOUT
                     </span>
                     <h3 className="font-serif text-2xl text-on-surface font-normal mt-0.5">
-                      Authorize Payment
+                      {t('cart.authorize_payment', 'Authorize Payment')}
                     </h3>
                     <p className="font-sans text-xs text-on-surface/60 mt-1">
                       Order Reference: <span className="font-mono text-primary font-bold">{orderRef}</span>

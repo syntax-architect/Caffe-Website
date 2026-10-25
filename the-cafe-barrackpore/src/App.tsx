@@ -71,7 +71,7 @@ export const AppLayout: React.FC = () => {
     <div className="bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen">
       <AnnouncementBanner />
       <Header />
-      <main id="main-content" className="w-full pt-20 pb-32 md:pb-0">
+      <main id="main-content" tabIndex={-1} className="w-full pt-20 pb-32 md:pb-0 outline-none">
         {/* Ambient Golden Mesh Lighting - Isolated layer, zero repaint on scroll */}
         <div className="fixed inset-0 pointer-events-none -z-10 layer-isolated hidden sm:block" aria-hidden="true">
           <div className="absolute top-1/4 left-[-10%] w-72 h-72 sm:w-[500px] sm:h-[500px] rounded-full bg-primary/5 blur-[80px] sm:blur-[140px] ambient-mesh-orb-1" />
@@ -160,6 +160,12 @@ function App() {
         wheelMultiplier: 1.05,
         touchMultiplier: 1.5,
         autoRaf: true,
+        prevent: (node: HTMLElement) => {
+          return (
+            node?.hasAttribute?.('data-lenis-prevent') ||
+            Boolean(node?.closest?.('[data-lenis-prevent]'))
+          );
+        },
       });
       (window as any).__lenis = lenisInstance;
     });

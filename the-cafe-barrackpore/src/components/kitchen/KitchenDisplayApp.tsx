@@ -127,7 +127,7 @@ export const KitchenDisplayApp: React.FC<KitchenDisplayAppProps> = ({ onExit }) 
             onClick={dismissAlert}
             className="px-2 py-0.5 rounded bg-[#120c08]/20 hover:bg-[#120c08]/40 transition-colors cursor-pointer"
           >
-            DISMISS
+            {t('kitchen.dismiss', 'DISMISS')}
           </button>
         </div>
       )}
@@ -177,7 +177,7 @@ export const KitchenDisplayApp: React.FC<KitchenDisplayAppProps> = ({ onExit }) 
               onClick={refreshOrders}
               className="mt-4 px-4 py-2 rounded-lg bg-[#D4AF37] text-[#120c08] text-xs font-bold uppercase tracking-wider hover:bg-[#b89528] cursor-pointer"
             >
-              Retry Connection
+              {t('kitchen.retry_connection', 'Retry Connection')}
             </button>
           </div>
         ) : counts.totalActive === 0 ? (
@@ -193,8 +193,8 @@ export const KitchenDisplayApp: React.FC<KitchenDisplayAppProps> = ({ onExit }) 
             {/* Column 1: NEW */}
             <KitchenColumn
               id="new"
-              title="New Orders"
-              subtitle="Pending preparation"
+              title={t('kitchen.new_orders', 'New Orders')}
+              subtitle={t('kitchen.pending_preparation', 'Pending preparation')}
               count={counts.new}
               orders={newOrders}
               onAdvance={advanceOrder}
@@ -206,8 +206,8 @@ export const KitchenDisplayApp: React.FC<KitchenDisplayAppProps> = ({ onExit }) 
             {/* Column 2: PREPARING */}
             <KitchenColumn
               id="preparing"
-              title="Preparing"
-              subtitle="On the stove / grill / bar"
+              title={t('kitchen.preparing', 'Preparing')}
+              subtitle={t('kitchen.on_the_stove_grill_bar', 'On the stove / grill / bar')}
               count={counts.preparing}
               orders={preparingOrders}
               onAdvance={advanceOrder}
@@ -219,8 +219,8 @@ export const KitchenDisplayApp: React.FC<KitchenDisplayAppProps> = ({ onExit }) 
             {/* Column 3: READY */}
             <KitchenColumn
               id="ready"
-              title="Ready for Pickup"
-              subtitle="Awaiting table service or customer pickup"
+              title={t('kitchen.ready_for_pickup', 'Ready for Pickup')}
+              subtitle={t('kitchen.awaiting_table_service_or_custom', 'Awaiting table service or customer pickup')}
               count={counts.ready}
               orders={readyOrders}
               onAdvance={advanceOrder}

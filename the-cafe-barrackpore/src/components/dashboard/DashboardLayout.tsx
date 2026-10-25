@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useStaffSessionTimeout } from '../../hooks/useStaffSessionTimeout';
 import { useNotification } from '../../hooks/useNotification';
-import { isSupabaseConfigured } from '../../lib/supabase';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatRestaurantDateTime } from '../../utils/datetime';
 import { LanguageSwitcher } from '../LanguageSwitcher';
@@ -34,6 +33,28 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const toggleGroup = (groupTitle: string) => {
+    setCollapsedGroups((prev) => ({
+      ...prev,
+      [groupTitle]: !prev[groupTitle],
+    }));
+  };
 
   // Live digital clock in restaurant timezone
   useEffect(() => {
@@ -48,22 +69,58 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     return () => clearInterval(interval);
   }, [restaurantConfig.timezone, restaurantConfig.locale]);
 
-  const navItems = [
-    { label: 'Overview', path: '/staff/dashboard', icon: 'dashboard', access: true },
-    { label: 'POS Terminal', path: '/staff/pos', icon: 'point_of_sale', access: features?.pos !== false, badge: 'Counter' },
-    { label: 'Cash Drawer & Shifts', path: '/staff/drawer', icon: 'payments', access: (features?.pos !== false && features?.cash_drawer !== false) },
-    { label: 'Kitchen KDS', path: '/staff/kitchen', icon: 'soup_kitchen', access: features?.kds !== false, badge: 'Live' },
-    { label: 'Orders', path: '/staff/orders', icon: 'receipt_long', access: true },
-    { label: 'Reservations', path: '/staff/reservations', icon: 'event_seat', access: features?.reservations !== false },
-    { label: 'Tables & QR', path: '/staff/tables', icon: 'qr_code_2', access: features?.qr_table_ordering !== false },
-    { label: 'Menu Availability', path: '/staff/menu', icon: 'menu_book', access: true },
-    { label: 'Website Content', path: '/staff/content', icon: 'auto_stories', access: true },
-    { label: 'Customers', path: '/staff/customers', icon: 'contact_page', access: isOwner || isManager },
-    { label: 'Discounts & Happy Hour', path: '/staff/discounts', icon: 'local_offer', access: (isOwner || isManager) && features?.discounts !== false },
-    { label: 'Staff Roster', path: '/staff/staff', icon: 'group', access: isOwner || isManager },
-    { label: 'Security Audit', path: '/staff/audit', icon: 'shield', access: isOwner || isManager },
-    { label: 'Settings', path: '/staff/settings', icon: 'tune', access: isOwner },
-  ].filter((item) => item.access);
+  interface NavGroup {
+    title: string;
+    items: {
+      label: string;
+      path: string;
+      icon: string;
+      access: boolean;
+      badge?: string;
+    }[];
+  }
+
+  const navGroups: NavGroup[] = [
+    {
+      title: 'Service',
+      items: [
+        { label: 'Overview', path: '/staff/dashboard', icon: 'dashboard', access: true },
+        { label: 'POS Terminal', path: '/staff/pos', icon: 'point_of_sale', access: features?.pos !== false, badge: 'Counter' },
+        { label: 'Kitchen KDS', path: '/staff/kitchen', icon: 'soup_kitchen', access: features?.kds !== false, badge: 'Live' },
+        { label: 'Orders', path: '/staff/orders', icon: 'receipt_long', access: true },
+        { label: 'Reservations', path: '/staff/reservations', icon: 'event_seat', access: features?.reservations !== false },
+      ],
+    },
+    {
+      title: 'Menu & Site',
+      items: [
+        { label: 'Menu Availability', path: '/staff/menu', icon: 'menu_book', access: true },
+        { label: 'Website Content', path: '/staff/content', icon: 'auto_stories', access: true },
+        { label: 'Tables & QR', path: '/staff/tables', icon: 'qr_code_2', access: features?.qr_table_ordering !== false },
+      ],
+    },
+    {
+      title: 'People',
+      items: [
+        { label: 'Customers', path: '/staff/customers', icon: 'contact_page', access: isOwner || isManager },
+        { label: 'Staff Roster', path: '/staff/staff', icon: 'group', access: isOwner || isManager },
+      ],
+    },
+    {
+      title: 'Money',
+      items: [
+        { label: 'Cash Drawer & Shifts', path: '/staff/drawer', icon: 'payments', access: (features?.pos !== false && features?.cash_drawer !== false) },
+        { label: 'Discounts & Happy Hour', path: '/staff/discounts', icon: 'local_offer', access: (isOwner || isManager) && features?.discounts !== false },
+      ],
+    },
+    {
+      title: 'Admin',
+      items: [
+        { label: 'Security Audit', path: '/staff/audit', icon: 'shield', access: isOwner || isManager },
+        { label: 'Settings', path: '/staff/settings', icon: 'tune', access: isOwner },
+      ],
+    },
+  ];
 
   const handleSignOut = async () => {
     await signOut();
@@ -159,12 +216,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <p className="font-serif text-sm font-bold tracking-[0.14em] uppercase text-white leading-tight">
                 {restaurantConfig.businessName || "Terminal"}
               </p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <p className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-wider">
-                  Terminal Online
-                </p>
-              </div>
+              {!isOnline && (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  <p className="text-[10px] font-mono text-amber-400 uppercase tracking-wider">
+                    {t('staff.dashboard.offline_mode', 'Offline Mode')}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           <button
@@ -176,46 +235,72 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </button>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto px-3.5 py-4 space-y-1.5">
-          {navItems.map((item) => {
-            const isActive =
-              currentPath === item.path ||
-              (item.path !== '/staff/dashboard' && currentPath.startsWith(item.path));
+        {/* Grouped Collapsible Navigation */}
+        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-3.5">
+          {navGroups.map((group) => {
+            const accessibleItems = group.items.filter((item) => item.access);
+            if (accessibleItems.length === 0) return null;
+            const isCollapsed = Boolean(collapsedGroups[group.title]);
+
             return (
-              <button
-                key={item.path}
-                type="button"
-                onClick={() => handleNavClick(item.path)}
-                className={`w-full group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-left cursor-pointer ${
-                  isActive
-                    ? 'bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#120B08] shadow-[0_4px_16px_rgba(212,175,55,0.25)] font-bold'
-                    : 'text-stone-300 hover:bg-white/[0.06] hover:text-white'
-                }`}
-              >
-                <span
-                  className={`material-symbols-outlined text-lg shrink-0 transition-transform ${
-                    isActive ? 'text-[#120B08]' : 'text-stone-400 group-hover:text-[#D4AF37]'
-                  }`}
+              <div key={group.title} className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.title)}
+                  className="w-full flex items-center justify-between px-2.5 py-1 text-[11px] font-mono uppercase tracking-[0.16em] text-stone-400 hover:text-stone-200 transition-colors cursor-pointer select-none"
+                  aria-expanded={!isCollapsed}
                 >
-                  {item.icon}
-                </span>
-                <span className="truncate flex-1">{item.label}</span>
-                {item.badge && (
-                  <span
-                    className={`px-1.5 py-0.5 rounded text-[9px] font-mono uppercase tracking-wider ${
-                      isActive
-                        ? 'bg-black/20 text-[#120B08] font-bold'
-                        : 'bg-[#D4AF37]/20 text-[#F3C766] border border-[#D4AF37]/30'
-                    }`}
-                  >
-                    {item.badge}
+                  <span>{group.title}</span>
+                  <span className={`material-symbols-outlined text-sm transition-transform duration-200 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}>
+                    expand_more
                   </span>
+                </button>
+
+                {!isCollapsed && (
+                  <div className="space-y-1">
+                    {accessibleItems.map((item) => {
+                      const isActive =
+                        currentPath === item.path ||
+                        (item.path !== '/staff/dashboard' && currentPath.startsWith(item.path));
+                      return (
+                        <button
+                          key={item.path}
+                          type="button"
+                          onClick={() => handleNavClick(item.path)}
+                          className={`w-full group flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 text-left cursor-pointer ${
+                            isActive
+                              ? 'bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#120B08] shadow-[0_4px_16px_rgba(212,175,55,0.25)] font-bold'
+                              : 'text-stone-300 hover:bg-white/[0.06] hover:text-white'
+                          }`}
+                        >
+                          <span
+                            className={`material-symbols-outlined text-base shrink-0 transition-transform ${
+                              isActive ? 'text-[#120B08]' : 'text-stone-400 group-hover:text-[#D4AF37]'
+                            }`}
+                          >
+                            {item.icon}
+                          </span>
+                          <span className="truncate flex-1">{item.label}</span>
+                          {item.badge && (
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[9px] font-mono uppercase tracking-wider ${
+                                isActive
+                                  ? 'bg-black/20 text-[#120B08] font-bold'
+                                  : 'bg-[#D4AF37]/20 text-[#F3C766] border border-[#D4AF37]/30'
+                              }`}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                          {isActive && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#120B08] shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
-                {isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#120B08] shrink-0" />
-                )}
-              </button>
+              </div>
             );
           })}
         </nav>
@@ -246,12 +331,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white/[0.05] hover:bg-red-950/40 hover:text-red-300 hover:border-red-500/40 border border-white/[0.08] text-[11px] font-semibold text-stone-300 transition-colors"
             >
               <span className="material-symbols-outlined text-sm">logout</span>
-              Sign Out
+              <span>{t('staff.dashboard.sign_out', 'Sign Out')}</span>
             </button>
             <button
               type="button"
               onClick={handleSignOutEverywhere}
-              title="Sign Out Everywhere (Revoke All Active Sessions)"
+              title={t('staff.dashboard.sign_out_everywhere_title', 'Sign Out Everywhere (Revoke All Active Sessions)')}
               className="p-2.5 rounded-xl bg-white/[0.05] hover:bg-red-950/40 hover:text-red-300 hover:border-red-500/40 border border-white/[0.08] text-stone-400 transition-colors shrink-0"
             >
               <span className="material-symbols-outlined text-base">lock_reset</span>
@@ -260,7 +345,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              title="Open Public Website in New Window"
+              title={t('staff.dashboard.open_public_website', 'Open Public Website in New Window')}
               className="p-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-stone-400 hover:text-[#D4AF37] transition-colors shrink-0"
             >
               <span className="material-symbols-outlined text-base">open_in_new</span>
@@ -303,17 +388,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </div>
 
 
-            {/* Database & Service Status Indicator */}
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  isSupabaseConfigured ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
-                }`}
-              />
-              <span className="text-[11px] font-semibold text-stone-300">
-                {isSupabaseConfigured ? 'Live Database' : 'Demo Mode'}
-              </span>
-            </div>
+            {/* Connection Status - Only shown when degraded */}
+            {!isOnline && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-xs text-amber-300">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-[11px] font-semibold">{t('staff.dashboard.offline_degraded', 'Offline (Degraded)')}</span>
+              </div>
+            )}
 
             {/* Notification Center Trigger */}
             <div className="relative">
@@ -345,7 +426,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                         onClick={markAllAsRead}
                         className="text-[10px] text-[#D4AF37] hover:underline"
                       >
-                        Mark all read
+                        {t('staff.dashboard.mark_all_read', 'Mark all read')}
                       </button>
                       <span className="text-stone-600">•</span>
                       <button
@@ -353,7 +434,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                         onClick={clearNotifications}
                         className="text-[10px] text-stone-400 hover:text-white"
                       >
-                        Clear
+                        {t('staff.dashboard.clear', 'Clear')}
                       </button>
                     </div>
                   </div>

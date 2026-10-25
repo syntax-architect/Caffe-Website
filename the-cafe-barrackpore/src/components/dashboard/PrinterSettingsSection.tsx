@@ -114,13 +114,13 @@ export const PrinterSettingsSection: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
           <div>
             <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-              Hardware POS Architecture
+              {t('staff.printers.hardware_pos_architecture', 'Hardware POS Architecture')}
             </span>
             <h3 className="font-serif text-lg font-bold text-white mt-0.5">
-              Thermal Receipt &amp; KOT Printers (58mm / 80mm)
+              Thermal Receipt & KOT Printers (58mm / 80mm)
             </h3>
             <p className="text-xs text-zinc-400 mt-1">
-              Configure receipt billing printers, multi-station kitchen tickets (KOT), cash drawer pulse, and LAN printing.
+              {t('staff.printers.configure_receipt_billing_printe', 'Configure receipt billing printers, multi-station kitchen tickets (KOT), cash drawer pulse, and LAN printing.')}
             </p>
           </div>
 
@@ -131,7 +131,7 @@ export const PrinterSettingsSection: React.FC = () => {
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#120B08] font-bold text-xs uppercase tracking-wider hover:brightness-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-md"
             >
               <span className="material-symbols-outlined text-sm">save</span>
-              Save Printer Setup
+              {t('staff.printers.save_printer_setup', 'Save Printer Setup')}
             </button>
           </div>
         </div>
@@ -140,7 +140,7 @@ export const PrinterSettingsSection: React.FC = () => {
         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-semibold">
-              Client Browser Hardware Support:
+              {t('staff.printers.client_browser_hardware_support', 'Client Browser Hardware Support:')}
             </span>
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
               <span
@@ -149,10 +149,10 @@ export const PrinterSettingsSection: React.FC = () => {
                     ? 'bg-emerald-950/80 text-emerald-300 border-emerald-600/40'
                     : 'bg-zinc-900 text-zinc-500 border-zinc-800'
                 }`}
-                title="Direct USB device transfer via Google Chrome or Microsoft Edge"
+                title={t('staff.printers.direct_usb_device_transfer_via_g', 'Direct USB device transfer via Google Chrome or Microsoft Edge')}
               >
                 <span className="material-symbols-outlined text-xs">usb</span>
-                WebUSB: {capabilities.hasWebUsb ? 'Supported' : 'Unavailable'}
+                WebUSB: {capabilities.hasWebUsb ? t('staff.printers.supported', 'Supported') : t('staff.printers.unavailable', 'Unavailable')}
               </span>
 
               <span
@@ -161,10 +161,10 @@ export const PrinterSettingsSection: React.FC = () => {
                     ? 'bg-emerald-950/80 text-emerald-300 border-emerald-600/40'
                     : 'bg-zinc-900 text-zinc-500 border-zinc-800'
                 }`}
-                title="Direct RS232 / COM port serial stream"
+                title={t('staff.printers.direct_rs232_com_port_serial_str', 'Direct RS232 / COM port serial stream')}
               >
                 <span className="material-symbols-outlined text-xs">cable</span>
-                Web Serial: {capabilities.hasWebSerial ? 'Supported' : 'Unavailable'}
+                Web Serial: {capabilities.hasWebSerial ? t('staff.printers.supported', 'Supported') : t('staff.printers.unavailable', 'Unavailable')}
               </span>
 
               <button
@@ -172,7 +172,7 @@ export const PrinterSettingsSection: React.FC = () => {
                 onClick={handleCheckBridge}
                 disabled={bridgeStatus === 'checking'}
                 className="px-2.5 py-1 rounded-lg bg-sky-950/80 hover:bg-sky-900 text-sky-300 border border-sky-600/40 transition-colors flex items-center gap-1 cursor-pointer"
-                title="Verify connection to local LAN print bridge on port 9123"
+                title={t('staff.printers.verify_connection_to_local_lan_p', 'Verify connection to local LAN print bridge on port 9123')}
               >
                 <span className="material-symbols-outlined text-xs">router</span>
                 <span>
@@ -219,8 +219,8 @@ export const PrinterSettingsSection: React.FC = () => {
                 <span className="material-symbols-outlined text-base">receipt_long</span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">{t('staff.dashboard.receipt_amp_customer_bill_prin', 'Receipt &amp; Customer Bill Printer')}</h4>
-                <p className="text-[11px] text-zinc-400">{t('staff.dashboard.prints_guest_checks_tax_invoic', 'Prints guest checks, tax invoices, GST breakdowns &amp; UPI QR.')}</p>
+                <h4 className="text-sm font-bold text-white">{t('staff.dashboard.receipt_amp_customer_bill_prin', 'Receipt & Customer Bill Printer')}</h4>
+                <p className="text-[11px] text-zinc-400">{t('staff.dashboard.prints_guest_checks_tax_invoic', 'Prints guest checks, tax invoices, GST breakdowns & UPI QR.')}</p>
               </div>
             </div>
 
@@ -240,7 +240,7 @@ export const PrinterSettingsSection: React.FC = () => {
                 onClick={handleTestDrawerKick}
                 disabled={isTestingPrint !== null}
                 className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                title="Send pulse to cash drawer RJ11/RJ12 port"
+                title={t('staff.printers.send_pulse_to_cash_drawer_rj11_r', 'Send pulse to cash drawer RJ11/RJ12 port')}
               >
                 <span className="material-symbols-outlined text-sm">point_of_sale</span>
                 {isTestingPrint === 'drawer' ? 'Pulsing...' : 'Test Drawer Kick'}
@@ -252,7 +252,7 @@ export const PrinterSettingsSection: React.FC = () => {
             {/* Target Transport */}
             <div>
               <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                Print Target Transport
+                {t('staff.printers.print_target_transport', 'Print Target Transport')}
               </label>
               <select
                 value={config.receipt.target}
@@ -274,7 +274,7 @@ export const PrinterSettingsSection: React.FC = () => {
             {/* Paper Width */}
             <div>
               <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                Thermal Roll Width
+                {t('staff.printers.thermal_roll_width', 'Thermal Roll Width')}
               </label>
               <select
                 value={config.receipt.paperWidth}
@@ -296,7 +296,7 @@ export const PrinterSettingsSection: React.FC = () => {
               <>
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Printer IP Address
+                    {t('staff.printers.printer_ip_address', 'Printer IP Address')}
                   </label>
                   <input
                     type="text"
@@ -334,7 +334,7 @@ export const PrinterSettingsSection: React.FC = () => {
             {config.receipt.target === 'webserial' && (
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Serial Baud Rate
+                  {t('staff.printers.serial_baud_rate', 'Serial Baud Rate')}
                 </label>
                 <div className="flex gap-2">
                   <select
@@ -357,7 +357,7 @@ export const PrinterSettingsSection: React.FC = () => {
                     onClick={handlePairSerial}
                     className="px-3 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-xs font-semibold text-white transition-colors"
                   >
-                    Pair
+                    {t('staff.printers.pair', 'Pair')}
                   </button>
                 </div>
               </div>
@@ -367,7 +367,7 @@ export const PrinterSettingsSection: React.FC = () => {
             {config.receipt.target === 'webusb' && (
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  USB Connection
+                  {t('staff.printers.usb_connection', 'USB Connection')}
                 </label>
                 <button
                   type="button"
@@ -375,7 +375,7 @@ export const PrinterSettingsSection: React.FC = () => {
                   className="w-full px-3 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-xs font-semibold text-white border border-white/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">usb</span>
-                  Pair USB Printer
+                  {t('staff.printers.pair_usb_printer', 'Pair USB Printer')}
                 </button>
               </div>
             )}
@@ -441,7 +441,7 @@ export const PrinterSettingsSection: React.FC = () => {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-white">{t('staff.dashboard.kitchen_kot_printer', 'Kitchen KOT Printer')}</h4>
-                <p className="text-[11px] text-zinc-400">{t('staff.dashboard.prints_food_tickets_cook_instr', 'Prints food tickets, cook instructions, item modifications &amp; timers.')}</p>
+                <p className="text-[11px] text-zinc-400">{t('staff.dashboard.prints_food_tickets_cook_instr', 'Prints food tickets, cook instructions, item modifications & timers.')}</p>
               </div>
             </div>
 
@@ -461,7 +461,7 @@ export const PrinterSettingsSection: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                Print Target Transport
+                {t('staff.printers.print_target_transport', 'Print Target Transport')}
               </label>
               <select
                 value={config.kitchen.target}
@@ -482,7 +482,7 @@ export const PrinterSettingsSection: React.FC = () => {
 
             <div>
               <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                Thermal Roll Width
+                {t('staff.printers.thermal_roll_width', 'Thermal Roll Width')}
               </label>
               <select
                 value={config.kitchen.paperWidth}
@@ -503,7 +503,7 @@ export const PrinterSettingsSection: React.FC = () => {
               <>
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Kitchen Printer IP
+                    {t('staff.printers.kitchen_printer_ip', 'Kitchen Printer IP')}
                   </label>
                   <input
                     type="text"
@@ -520,7 +520,7 @@ export const PrinterSettingsSection: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Port
+                    {t('staff.printers.port', 'Port')}
                   </label>
                   <input
                     type="number"
@@ -547,8 +547,8 @@ export const PrinterSettingsSection: React.FC = () => {
                 <span className="material-symbols-outlined text-base">local_cafe</span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">{t('staff.dashboard.bar_amp_sips_beverage_printer', 'Bar &amp; Sips Beverage Printer')}</h4>
-                <p className="text-[11px] text-zinc-400">{t('staff.dashboard.routes_drink_orders_espresso_b', 'Routes drink orders, espresso bar tickets &amp; mocktails to a separate station.')}</p>
+                <h4 className="text-sm font-bold text-white">{t('staff.dashboard.bar_amp_sips_beverage_printer', 'Bar & Sips Beverage Printer')}</h4>
+                <p className="text-[11px] text-zinc-400">{t('staff.dashboard.routes_drink_orders_espresso_b', 'Routes drink orders, espresso bar tickets & mocktails to a separate station.')}</p>
               </div>
             </div>
 
@@ -586,7 +586,7 @@ export const PrinterSettingsSection: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Print Target Transport
+                  {t('staff.printers.print_target_transport', 'Print Target Transport')}
                 </label>
                 <select
                   value={config.bar.target}
@@ -607,7 +607,7 @@ export const PrinterSettingsSection: React.FC = () => {
 
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Thermal Roll Width
+                  {t('staff.printers.thermal_roll_width', 'Thermal Roll Width')}
                 </label>
                 <select
                   value={config.bar.paperWidth}
@@ -628,7 +628,7 @@ export const PrinterSettingsSection: React.FC = () => {
                 <>
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                      Bar Printer IP
+                      {t('staff.printers.bar_printer_ip', 'Bar Printer IP')}
                     </label>
                     <input
                       type="text"
@@ -645,7 +645,7 @@ export const PrinterSettingsSection: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                      Port
+                      {t('staff.printers.port', 'Port')}
                     </label>
                     <input
                       type="number"
@@ -670,10 +670,10 @@ export const PrinterSettingsSection: React.FC = () => {
           <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between">
             <div>
               <span className="text-xs font-bold text-white block">
-                Automatic Item Category Routing (Kitchen vs Bar)
+                {t('staff.printers.automatic_item_category_routing_', 'Automatic Item Category Routing (Kitchen vs Bar)')}
               </span>
               <p className="text-[11px] text-zinc-400 mt-0.5">
-                When printing an order with both food and drinks, splits items and prints to respective station printers simultaneously.
+                {t('staff.printers.when_printing_an_order_with_both', 'When printing an order with both food and drinks, splits items and prints to respective station printers simultaneously.')}
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">

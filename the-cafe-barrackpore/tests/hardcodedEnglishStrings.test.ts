@@ -164,13 +164,61 @@ const ALLOWED_LITERALS = new Set([
   'sync',
   'logout',
   'photo_size_select_actual',
+  'speed',
+  'ramen_dining',
+  'south',
+  'calendar_month',
+  'calendar_today',
+  'event',
+  'kitchen',
+  'inventory_2',
+  'account_balance_wallet',
+  'bar_chart',
+  'description',
+  'settings',
+  'dark_mode',
+  'light_mode',
+  'more_horiz',
+  'category',
+  'receipt',
+  'paid',
+  'credit_card',
+  'smartphone',
+  'sell',
+  'percent',
+  'savings',
+  'storefront',
+  'delivery_dining',
+  'room_service',
+  'countertops',
+  'table_restaurant',
+  'flatware',
+  'brunch_dining',
+  'breakfast_dining',
+  'bakery_dining',
+  'wine_bar',
+  'liquor',
+  'local_cafe',
+  'local_bar',
+  'icecream',
+  'set_meal',
+  'dinner_dining',
+  'fastfood',
+  'explore',
+  'local_dining',
+  'IN',
+  'OUT',
+  'REF',
+  'SALE',
+  'DEMO',
+  'RTL',
 ]);
 
 interface HardcodedFinding {
   file: string;
   line: number;
   snippet: string;
-  type: 'JSX_TEXT' | 'PLACEHOLDER' | 'ARIA_LABEL';
+  type: 'JSX_TEXT' | 'PLACEHOLDER' | 'ARIA_LABEL' | 'TITLE';
 }
 
 function scanFileForHardcodedStrings(filePath: string): HardcodedFinding[] {
@@ -193,12 +241,26 @@ function scanFileForHardcodedStrings(filePath: string): HardcodedFinding[] {
     });
   }
 
+  let inMultilineImport = false;
+
   for (let i = 0; i < lines.length; i++) {
     const lineNum = i + 1;
     const rawLine = lines[i];
     const trimmed = rawLine.trim();
 
-    // Skip comments and imports
+    // Track multiline import statements
+    if (trimmed.startsWith('import ') && !trimmed.includes('from ') && !trimmed.endsWith(';')) {
+      inMultilineImport = true;
+      continue;
+    }
+    if (inMultilineImport) {
+      if (trimmed.includes('from ') || trimmed.endsWith(';') || trimmed.startsWith('}')) {
+        inMultilineImport = false;
+      }
+      continue;
+    }
+
+    // Skip comments and single-line imports
     if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('import ')) {
       continue;
     }
@@ -235,6 +297,58 @@ function scanFileForHardcodedStrings(filePath: string): HardcodedFinding[] {
           snippet: rawLine.trim(),
           type: 'ARIA_LABEL',
         });
+      }
+    }
+
+    // Check title="Hardcoded English" (without {t(...)})
+    const titleMatch = rawLine.match(/title=["']([^"']+)["']/);
+    if (titleMatch) {
+      const val = titleMatch[1].trim();
+      if (val.length >= 3 && /[a-zA-Z]{3,}/.test(val) && !ALLOWED_LITERALS.has(val) && !val.startsWith('http') && !val.startsWith('data:')) {
+        findings.push({
+          file: filePath,
+          line: lineNum,
+          snippet: rawLine.trim(),
+          type: 'TITLE',
+        });
+      }
+    }
+
+    // Check multiline standalone JSX text: e.g. <p>\n  Text here\n</p>
+    if (/^[A-Z][a-zA-Z0-9\s,.'’\-–—:!?()]{2,}$/.test(trimmed)) {
+      if (
+        !ALLOWED_LITERALS.has(trimmed) &&
+        !trimmed.startsWith('export ') &&
+        !trimmed.startsWith('const ') &&
+        !trimmed.startsWith('type ') &&
+        !trimmed.startsWith('interface ') &&
+        !trimmed.startsWith('return ') &&
+        !trimmed.startsWith('case ') &&
+        !trimmed.startsWith('Boolean(') &&
+        !trimmed.endsWith('(') &&
+        !trimmed.endsWith(';') &&
+        !trimmed.endsWith(',') &&
+        !trimmed.includes('=>')
+      ) {
+        findings.push({
+          file: filePath,
+          line: lineNum,
+          snippet: `Found multiline standalone JSX text: "${trimmed}"`,
+          type: 'JSX_TEXT',
+        });
+      }
+    }
+
+    // Check direct ternary string returns inside JSX: e.g. {cond ? 'Active' : 'Inactive'}
+    const ternaryMatches = rawLine.matchAll(/\?\s*['"]([A-Z][a-zA-Z0-9\s]{2,})['"]\s*:\s*['"]([A-Z][a-zA-Z0-9\s]{2,})['"]/g);
+    for (const m of ternaryMatches) {
+      const s1 = m[1].trim();
+      const s2 = m[2].trim();
+      if (!ALLOWED_LITERALS.has(s1) && !s1.startsWith('http')) {
+        findings.push({ file: filePath, line: lineNum, snippet: `Ternary literal: "${s1}"`, type: 'JSX_TEXT' });
+      }
+      if (!ALLOWED_LITERALS.has(s2) && !s2.startsWith('http')) {
+        findings.push({ file: filePath, line: lineNum, snippet: `Ternary literal: "${s2}"`, type: 'JSX_TEXT' });
       }
     }
 

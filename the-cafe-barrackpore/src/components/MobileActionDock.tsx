@@ -157,9 +157,7 @@ export const MobileActionDock: React.FC = () => {
                     {restaurantConfig?.isTableBookingEnabled !== false ? (action.label || 'Book') : 'Visit'}
                   </span>
                   <div className="w-7 h-7 rounded-full bg-on-primary/15 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-on-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M10 14h4M6 18h12M7 6v14M17 6v14" />
-                    </svg>
+                    <span className="material-symbols-outlined text-[16px] text-on-primary">calendar_today</span>
                   </div>
                 </motion.button>
               );

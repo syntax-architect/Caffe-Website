@@ -51,7 +51,11 @@ export const tr: TranslationDictionary = {
     gallery: 'Galeri',
     ourStory: 'Hikayemiz',
     contact: 'İletişim',
-    staffPortal: 'Personel Girişi',
+    staffPortal: "Personel",
+    platters: 'Tepsiler',
+    story: 'Hikaye',
+    vip: 'VIP',
+    reserve: 'Rezervasyon',
   },
 
   hero: {
@@ -381,8 +385,8 @@ export const tr: TranslationDictionary = {
 
   story: {
     badge: "KURULUŞ BARRACKPORE ORDUGAHI",
-    title: "Miras, Alev ve Nitelikli Kahve",
-    titleItalic: "Alev & Kavrum",
+    title: "Miras, Alev ve",
+    titleItalic: "Nitelikli Kahve",
     subtitle: "Tarihi askeri ordugah mimarisinin yavaş pişen mutfak mükemmelliğiyle buluştuğu yer.",
     description: "Onlarca yıllık zanaatkar kavurma, odun ateşinde açılan ekşi mayalı hamurlar ve alacakaranlık konukseverliği.",
     manifesto: "ŞABLON YOK. ACELE MASA YOK. 9 BARDA ÇEKİLEN HER ESPRESSO, ELLE AÇILAN HER HAMUR, 2200K KEHRİBAR IŞIĞINDA.",

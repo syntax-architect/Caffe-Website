@@ -12,6 +12,7 @@ import { fetchOwnerAnalytics, fetchLowStockItems } from '../../services/ownerSer
 import type { OwnerAnalytics } from '../../types/owner';
 import type { StockAlertItem } from '../../services/ownerService';
 import { formatCurrency } from '../../utils/currency';
+import { isCleanExperience } from '../../config/client';
 
 interface SimulatedTopItem {
   item_name: string;
@@ -343,90 +344,151 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Welcome Banner - Double Bezel Executive Card */}
-      <section className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-r from-white/[0.08] via-white/[0.03] to-white/[0.01] border border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
-        <div className="rounded-[calc(2rem-0.375rem)] bg-gradient-to-br from-[#16120E] via-[#100D0B] to-[#0A0807] border border-white/[0.05] p-6 sm:p-8 relative overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-          {/* Subtle Ambient Radial Wash */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/10 rounded-full blur-[100px] pointer-events-none" />
-          <div className="absolute -bottom-10 left-1/4 w-60 h-60 bg-[#E58A1F]/5 rounded-full blur-[80px] pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      {/* Header Banner - Compact Greeting in Clean Mode, Command Center in Cinematic */}
+      {isCleanExperience() ? (
+        <section aria-label={t('staff.dashboard.operations_overview', 'Operations Overview')} className="rounded-2xl bg-[#14100D] border border-white/[0.08] p-5 sm:p-6 shadow-lg">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#D4AF37] font-semibold">
-                  Live Terminal • {getGreeting()}, {staffProfile?.full_name?.split(' ')[0] || 'Team'}
-                </span>
-              </div>
-              <h2 className="text-2xl sm:text-4xl font-serif font-bold text-white tracking-wide leading-tight">
-                {restaurantConfig.businessName} Command Center
-              </h2>
-              <p className="text-stone-400 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-                Real-time operational dashboard for table QR orders, takeaway dispatch, reservations, and inventory flow.
+              <p className="text-xs font-medium uppercase tracking-wider text-[#D4AF37]">
+                {getGreeting()}, {staffProfile?.full_name?.split(' ')[0] || 'Team'}
               </p>
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-wide mt-1">
+                {restaurantConfig.businessName}
+              </h2>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
-              {/* Executive Demo Simulation Toggle Button */}
-              <button
-                type="button"
-                onClick={() => setSimulatePeakService((prev) => !prev)}
-                className={`group py-2.5 px-4 rounded-xl border text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98] ${
-                  simulatePeakService
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
-                    : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-stone-300 hover:text-white'
-                }`}
-                title={simulatePeakService ? 'Switch to Live Database Feed' : 'Simulate Peak Evening (Friday Dinner Rush)'}
-              >
-                <span
-                  className={`material-symbols-outlined text-base ${
-                    simulatePeakService ? 'text-amber-400 animate-pulse' : 'text-[#D4AF37]'
+            <div className="flex items-center gap-3 shrink-0 flex-wrap">
+              {import.meta.env.VITE_CLIENT_MODE === 'demo' && (
+                <button
+                  type="button"
+                  onClick={() => setSimulatePeakService((prev) => !prev)}
+                  className={`py-2 px-3.5 rounded-xl border text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    simulatePeakService
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                      : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-stone-300 hover:text-white'
                   }`}
+                  title={simulatePeakService ? t('staff.dashboard.switch_live_feed', 'Switch to Live Database Feed') : t('staff.dashboard.simulate_peak_evening', 'Simulate Peak Evening')}
                 >
-                  {simulatePeakService ? 'bolt' : 'speed'}
-                </span>
-                <span>{simulatePeakService ? 'Live Database Feed' : 'Simulate Peak Evening'}</span>
-                {simulatePeakService && (
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-400 text-black">
-                    DEMO
+                  <span className={`material-symbols-outlined text-base ${simulatePeakService ? 'text-amber-400' : 'text-[#D4AF37]'}`}>
+                    {simulatePeakService ? 'bolt' : 'speed'}
                   </span>
-                )}
-              </button>
+                  <span>{simulatePeakService ? t('staff.dashboard.live_database_feed', 'Live Database Feed') : t('staff.dashboard.simulate_peak_evening', 'Simulate Peak Evening')}</span>
+                  {simulatePeakService && (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-400 text-black">
+                      {t('staff.dashboard.demo', 'DEMO')}
+                    </span>
+                  )}
+                </button>
+              )}
 
               <button
                 type="button"
                 onClick={loadOverview}
                 disabled={isRefreshing}
-                className="group py-2.5 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-stone-300 hover:text-white transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98]"
+                className="py-2 px-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-stone-300 hover:text-white transition-all flex items-center gap-2 cursor-pointer"
               >
-                <span
-                  className={`material-symbols-outlined text-base text-[#D4AF37] ${
-                    isRefreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'
-                  }`}
-                >
+                <span className={`material-symbols-outlined text-base text-[#D4AF37] ${isRefreshing ? 'animate-spin' : ''}`}>
                   refresh
                 </span>
-                <span>{isRefreshing ? 'Refreshing...' : 'Refresh Feed'}</span>
+                <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => onNavigate('/staff/kitchen')}
-                className="group py-2.5 px-5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e4b955] text-[#120B08] font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center gap-2 shadow-[0_4px_20px_rgba(212,175,55,0.25)] active:scale-[0.98]"
+                className="py-2 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e4b955] text-[#120B08] font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-[0_2px_12px_rgba(212,175,55,0.2)]"
               >
                 <span className="material-symbols-outlined text-base">soup_kitchen</span>
                 <span>{t('staff.dashboard.launch_kds', 'Launch KDS')}</span>
-                <span className="w-4 h-4 rounded-full bg-black/15 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
-                  <span className="material-symbols-outlined text-[10px]">arrow_forward</span>
-                </span>
               </button>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <section aria-label={t('staff.dashboard.command_center', 'Command Center')} className="p-1.5 sm:p-2 rounded-[2rem] bg-gradient-to-r from-white/[0.08] via-white/[0.03] to-white/[0.01] border border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+          <div className="rounded-[calc(2rem-0.375rem)] bg-gradient-to-br from-[#16120E] via-[#100D0B] to-[#0A0807] border border-white/[0.05] p-6 sm:p-8 relative overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/10 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute -bottom-10 left-1/4 w-60 h-60 bg-[#E58A1F]/5 rounded-full blur-[80px] pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#D4AF37] font-semibold">
+                    Live Terminal • {getGreeting()}, {staffProfile?.full_name?.split(' ')[0] || 'Team'}
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-serif font-bold text-white tracking-wide leading-tight">
+                  {restaurantConfig.businessName} Command Center
+                </h2>
+                <p className="text-stone-400 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
+                  {t('staff.dashboard.real_time_operational_dashboard_', 'Real-time operational dashboard for table QR orders, takeaway dispatch, reservations, and inventory flow.')}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+                {import.meta.env.VITE_CLIENT_MODE === 'demo' && (
+                  <button
+                    type="button"
+                    onClick={() => setSimulatePeakService((prev) => !prev)}
+                    className={`group py-2.5 px-4 rounded-xl border text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98] ${
+                      simulatePeakService
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+                        : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-stone-300 hover:text-white'
+                    }`}
+                    title={simulatePeakService ? t('staff.dashboard.switch_live_feed', 'Switch to Live Database Feed') : t('staff.dashboard.simulate_peak_evening_desc', 'Simulate Peak Evening (Friday Dinner Rush)')}
+                  >
+                    <span
+                      className={`material-symbols-outlined text-base ${
+                        simulatePeakService ? 'text-amber-400 animate-pulse' : 'text-[#D4AF37]'
+                      }`}
+                    >
+                      {simulatePeakService ? 'bolt' : 'speed'}
+                    </span>
+                    <span>{simulatePeakService ? t('staff.dashboard.live_database_feed', 'Live Database Feed') : t('staff.dashboard.simulate_peak_evening', 'Simulate Peak Evening')}</span>
+                    {simulatePeakService && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-400 text-black">
+                        {t('staff.dashboard.demo', 'DEMO')}
+                      </span>
+                    )}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={loadOverview}
+                  disabled={isRefreshing}
+                  className="group py-2.5 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-stone-300 hover:text-white transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98]"
+                >
+                  <span
+                    className={`material-symbols-outlined text-base text-[#D4AF37] ${
+                      isRefreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'
+                    }`}
+                  >
+                    refresh
+                  </span>
+                  <span>{isRefreshing ? 'Refreshing...' : 'Refresh Feed'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onNavigate('/staff/kitchen')}
+                  className="group py-2.5 px-5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e4b955] text-[#120B08] font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center gap-2 shadow-[0_4px_20px_rgba(212,175,55,0.25)] active:scale-[0.98]"
+                >
+                  <span className="material-symbols-outlined text-base">soup_kitchen</span>
+                  <span>{t('staff.dashboard.launch_kds', 'Launch KDS')}</span>
+                  <span className="w-4 h-4 rounded-full bg-black/15 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+                    <span className="material-symbols-outlined text-[10px]">arrow_forward</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Simulated Telemetry Alert Banner */}
-      {simulatePeakService && (
+      {import.meta.env.VITE_CLIENT_MODE === 'demo' && simulatePeakService && (
         <section aria-label={t('staff.dashboard.demo_simulation_active', 'Demo Simulation Active')} className="p-1 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-500/40 shadow-lg animate-fadeIn">
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#14100C]/90 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -434,14 +496,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               <div>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold border border-amber-500/40">
-                    DEMO SIMULATION
+                    {t('staff.dashboard.demo_simulation', 'DEMO SIMULATION')}
                   </span>
                   <span className="text-xs font-bold text-white tracking-wide">
-                    Peak Friday Dinner Service Telemetry Active
+                    {t('staff.dashboard.peak_friday_dinner_service_telem', 'Peak Friday Dinner Service Telemetry Active')}
                   </span>
                 </div>
                 <p className="text-[11px] text-stone-400 mt-0.5">
-                  Cockpit populated with high-volume telemetry for sales presentations. Live database queries remain authoritative.
+                  {t('staff.dashboard.cockpit_populated_with_high_volu', 'Cockpit populated with high-volume telemetry for sales presentations. Live database queries remain authoritative.')}
                 </p>
               </div>
             </div>
@@ -450,20 +512,20 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               onClick={() => setSimulatePeakService(false)}
               className="px-3.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-xs font-semibold text-stone-200 hover:text-white transition-all cursor-pointer shrink-0"
             >
-              Exit Simulation
+              {t('staff.dashboard.exit_simulation', 'Exit Simulation')}
             </button>
           </div>
         </section>
       )}
 
       {/* KPI Cards Grid - Double-Bezel Hardware Architecture */}
-      <section aria-label={t('staff.dashboard.key_performance_indicators', 'Key Performance Indicators')} className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <section aria-label={t('staff.dashboard.key_performance_indicators', 'Key Performance Indicators')} className={`grid grid-cols-2 ${isCleanExperience() ? "lg:grid-cols-4" : "lg:grid-cols-3 xl:grid-cols-6"} gap-4`}>
         {/* KPI 1: Today's Orders / Daily Volume */}
         <div className="group p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
             <div className="flex items-center justify-between text-stone-400 mb-2">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37] font-semibold">
-                Daily Volume
+                {t('staff.dashboard.daily_volume', 'Daily Volume')}
               </span>
               <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/25 flex items-center justify-center text-[#F3C766]">
                 <span className="material-symbols-outlined text-base">receipt_long</span>
@@ -475,7 +537,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
                 <span className="text-emerald-400 font-medium">{t('staff.dashboard.100_synced', '100% synced')}</span>
-                <span>• {simulatePeakService ? 'DEMO SIMULATION' : "Today's tickets"}</span>
+                <span>• {simulatePeakService ? t('staff.dashboard.demo_simulation', 'DEMO SIMULATION') : t('staff.dashboard.todays_tickets', "Today's tickets")}</span>
               </div>
             </div>
           </div>
@@ -486,7 +548,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
             <div className="flex items-center justify-between text-stone-400 mb-2">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-emerald-400 font-semibold">
-                Gross Revenue
+                {t('staff.dashboard.gross_revenue', 'Gross Revenue')}
               </span>
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
                 <span className="material-symbols-outlined text-base">payments</span>
@@ -502,7 +564,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
                 <span className="text-stone-300 font-mono text-[10px]">
-                  {simulatePeakService ? 'DEMO SIMULATION' : 'Net of voids'}
+                  {simulatePeakService ? t('staff.dashboard.demo_simulation', 'DEMO SIMULATION') : t('staff.dashboard.net_of_voids', 'Net of voids')}
                 </span>
                 <span>{t('staff.dashboard.live_revenue', '• Live revenue')}</span>
               </div>
@@ -515,7 +577,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
             <div className="flex items-center justify-between text-stone-400 mb-2">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-amber-400 font-semibold">
-                Active Kitchen
+                {t('staff.dashboard.active_kitchen', 'Active Kitchen')}
               </span>
               <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
                 <span className="material-symbols-outlined text-base">hourglass_top</span>
@@ -527,7 +589,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                <span>{simulatePeakService ? 'DEMO SIMULATION' : 'Pending prep'}</span>
+                <span>{simulatePeakService ? t('staff.dashboard.demo_simulation', 'DEMO SIMULATION') : t('staff.dashboard.pending_prep', 'Pending prep')}</span>
               </div>
             </div>
           </div>
@@ -538,7 +600,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
             <div className="flex items-center justify-between text-stone-400 mb-2">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37] font-semibold">
-                Table Covers
+                {t('staff.dashboard.table_covers', 'Table Covers')}
               </span>
               <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/25 flex items-center justify-center text-[#F3C766]">
                 <span className="material-symbols-outlined text-base">event_seat</span>
@@ -550,20 +612,22 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
                 <span className="text-stone-300 font-mono text-[10px]">
-                  {simulatePeakService ? 'DEMO SIMULATION' : 'Dining schedule'}
+                  {simulatePeakService ? t('staff.dashboard.demo_simulation', 'DEMO SIMULATION') : t('staff.dashboard.dining_schedule', 'Dining schedule')}
                 </span>
-                <span>• {simulatePeakService ? 'Peak covers' : 'Reserved today'}</span>
+                <span>• {simulatePeakService ? t('staff.dashboard.peak_covers', 'Peak covers') : t('staff.dashboard.reserved_today', 'Reserved today')}</span>
               </div>
             </div>
           </div>
         </div>
 
+        {!isCleanExperience() && (
+        <>
         {/* KPI 5: Average Order Value */}
         <div className="group p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.07] shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
             <div className="flex items-center justify-between text-stone-400 mb-2">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-sky-400 font-semibold">
-                Average Order Value
+                {t('staff.dashboard.average_order_value', 'Average Order Value')}
               </span>
               <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400">
                 <span className="material-symbols-outlined text-base">moving</span>
@@ -579,7 +643,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
                 <span className="text-stone-300 font-mono text-[10px]">
-                  {simulatePeakService ? 'DEMO SIMULATION' : 'AOV'}
+                  {simulatePeakService ? t('staff.dashboard.demo_simulation', 'DEMO SIMULATION') : t('staff.dashboard.aov', 'AOV')}
                 </span>
                 <span>{t('staff.dashboard.today', '• Today')}</span>
               </div>
@@ -592,7 +656,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
           <div className="rounded-[calc(1rem-0.25rem)] bg-[#120F0D]/95 border border-white/[0.04] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full flex flex-col justify-between">
             <div className="flex items-center justify-between text-stone-400 mb-2">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-violet-400 font-semibold">
-                Repeat Customers
+                {t('staff.dashboard.repeat_customers', 'Repeat Customers')}
               </span>
               <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/25 flex items-center justify-center text-violet-400">
                 <span className="material-symbols-outlined text-base">loyalty</span>
@@ -604,13 +668,15 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               </p>
               <div className="flex items-center gap-1.5 mt-1 text-[11px] text-stone-400">
                 <span className="text-stone-300 font-mono text-[10px]">
-                  {simulatePeakService ? 'DEMO SIMULATION' : 'Loyalty'}
+                  {simulatePeakService ? t('staff.dashboard.demo_simulation', 'DEMO SIMULATION') : t('staff.dashboard.loyalty', 'Loyalty')}
                 </span>
                 <span>{t('staff.dashboard.returning', '• Returning')}</span>
               </div>
             </div>
           </div>
         </div>
+        </>
+      )}
       </section>
 
       {/* ---------------- NEW OWNER SECTIONS ---------------- */}
@@ -647,7 +713,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               <h3 className="font-serif text-lg font-bold text-white tracking-wide">{t('staff.dashboard.top_selling_items', 'Top Selling Items')}</h3>
               {simulatePeakService && (
                 <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-mono font-bold border border-amber-500/30">
-                  DEMO SIMULATION
+                  {t('staff.dashboard.demo_simulation', 'DEMO SIMULATION')}
                 </span>
               )}
             </div>
@@ -682,10 +748,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               {simulatePeakService && (
                 <div className="ml-auto flex items-center gap-2">
                   <span className="text-[10px] font-mono text-[#D4AF37] font-semibold hidden sm:inline">
-                    Peak: 19:00 – 21:30
+                    {t('staff.dashboard.peak_19_00_21_30', 'Peak: 19:00 – 21:30')}
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-mono font-bold border border-amber-500/30">
-                    DEMO SIMULATION
+                    {t('staff.dashboard.demo_simulation', 'DEMO SIMULATION')}
                   </span>
                 </div>
               )}
@@ -730,7 +796,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
             <h3 className="text-xs uppercase tracking-[0.16em] font-bold text-stone-300">
-              Operations Control Dock
+              {t('staff.dashboard.operations_control_dock', 'Operations Control Dock')}
             </h3>
           </div>
           <span className="text-[10px] text-stone-500 font-mono">{t('staff.dashboard.1_click_dispatch', '1-CLICK DISPATCH')}</span>
@@ -859,7 +925,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             onClick={handleSimulateTableOrder}
             disabled={isSimulating}
             className="p-3.5 rounded-2xl bg-gradient-to-br from-[#1F1710] to-[#120F0D] hover:from-[#2B1F13] hover:to-[#17120D] border border-[#D4AF37]/50 text-left transition-all duration-300 group shadow-md flex items-center gap-3.5 active:scale-[0.98] cursor-pointer disabled:opacity-50"
-            title="Simulate dinner service order from Table 07 with audio chime"
+            title={t('staff.dashboard.simulate_dinner_service_order_fr', 'Simulate dinner service order from Table 07 with audio chime')}
           >
             <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[#F3C766] group-hover:scale-110 transition-transform">
               <span className={`material-symbols-outlined text-xl ${isSimulating ? 'animate-spin' : ''}`}>
@@ -886,11 +952,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-serif text-lg font-bold text-white tracking-wide">
-                    Live Order Activity
+                    {t('staff.dashboard.live_order_activity', 'Live Order Activity')}
                   </h3>
                   {simulatePeakService && (
                     <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-mono font-bold border border-amber-500/30">
-                      DEMO SIMULATION
+                      {t('staff.dashboard.demo_simulation', 'DEMO SIMULATION')}
                     </span>
                   )}
                 </div>
@@ -920,7 +986,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
             ) : (!simulatePeakService && (!data || data.recentOrders.length === 0)) ? (
               <div className="py-16 text-center text-stone-400 text-xs">
                 <span className="material-symbols-outlined text-3xl mb-2 text-stone-600 block">receipt_long</span>
-                No orders registered yet today.
+                {t('staff.dashboard.no_orders_registered_yet_today', 'No orders registered yet today.')}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -955,7 +1021,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                             <span>{order.order_ref}</span>
                             {simulatePeakService && (
                               <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                DEMO
+                                {t('staff.dashboard.demo', 'DEMO')}
                               </span>
                             )}
                           </td>
@@ -967,7 +1033,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/[0.05] text-stone-300 font-mono text-[11px]">
-                                Takeaway
+                                {t('staff.dashboard.takeaway', 'Takeaway')}
                               </span>
                             )}
                           </td>
@@ -997,16 +1063,16 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-serif text-lg font-bold text-white tracking-wide">
-                      Today's Bookings
+                      {t('staff.dashboard.today_s_bookings', 'Today\'s Bookings')}
                     </h3>
                     {simulatePeakService && (
                       <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-mono font-bold border border-amber-500/30">
-                        DEMO SIMULATION
+                        {t('staff.dashboard.demo_simulation', 'DEMO SIMULATION')}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-stone-400">
-                    {simulatePeakService ? 'Simulated dinner service seating schedule' : 'Seating schedule'}
+                    {simulatePeakService ? t('staff.dashboard.simulated_seating_schedule', 'Simulated dinner service seating schedule') : t('staff.dashboard.seating_schedule', 'Seating schedule')}
                   </p>
                 </div>
                 <button
@@ -1029,7 +1095,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
               ) : (!simulatePeakService && (!data || data.todayReservations.length === 0)) ? (
                 <div className="py-16 text-center text-stone-400 text-xs">
                   <span className="material-symbols-outlined text-3xl mb-2 text-stone-600 block">event_seat</span>
-                  No reservations booked for today.
+                  {t('staff.dashboard.no_reservations_booked_for_today', 'No reservations booked for today.')}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1044,7 +1110,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
                           <p className="text-xs font-semibold text-white">{res.customer_name}</p>
                           {simulatePeakService && (
                             <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                              DEMO
+                              {t('staff.dashboard.demo', 'DEMO')}
                             </span>
                           )}
                         </div>

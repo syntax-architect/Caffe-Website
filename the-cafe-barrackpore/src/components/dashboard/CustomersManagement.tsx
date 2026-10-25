@@ -87,7 +87,7 @@ export const CustomersManagement: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-serif text-white tracking-wide">
-            Customer Directory
+            {t('staff.customers.customer_directory', 'Customer Directory')}
             <span className="ml-3 inline-flex items-center justify-center px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.05] text-sm text-stone-400 font-sans">
               {customers.length}
             </span>
@@ -102,7 +102,7 @@ export const CustomersManagement: React.FC = () => {
             disabled={isLoading || customers.length === 0}
           >
             <span className="material-symbols-outlined text-lg">download</span>
-            Export CSV
+            {t('staff.customers.export_csv', 'Export CSV')}
           </button>
         </div>
       </div>
@@ -130,7 +130,7 @@ export const CustomersManagement: React.FC = () => {
                     : 'bg-[#1A1614] text-stone-400 border border-white/10 hover:border-white/20 hover:text-white'
                 }`}
               >
-                All Customers
+                {t('staff.customers.all_customers', 'All Customers')}
               </button>
               <button
                 onClick={() => setConsentFilter('opted_in')}
@@ -140,7 +140,7 @@ export const CustomersManagement: React.FC = () => {
                     : 'bg-[#1A1614] text-stone-400 border border-white/10 hover:border-white/20 hover:text-white'
                 }`}
               >
-                Marketing Opt-in Only
+                {t('staff.customers.marketing_opt_in_only', 'Marketing Opt-in Only')}
               </button>
             </div>
           </div>
@@ -213,7 +213,7 @@ export const CustomersManagement: React.FC = () => {
                               ? 'text-emerald-400 hover:bg-emerald-400/10'
                               : 'text-stone-600 hover:bg-white/5'
                           }`}
-                          title={customer.marketing_consent ? "Opted In" : "Opted Out"}
+                          title={customer.marketing_consent ? t('staff.customers.opted_in', 'Opted In') : t('staff.customers.opted_out', 'Opted Out')}
                         >
                           <span className="material-symbols-outlined text-xl">
                             {customer.marketing_consent ? 'mark_email_read' : 'unsubscribe'}

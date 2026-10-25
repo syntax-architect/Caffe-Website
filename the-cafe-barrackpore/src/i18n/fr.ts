@@ -47,11 +47,15 @@ export const fr: TranslationDictionary = {
     home: 'Accueil',
     menu: 'Menu',
     reservations: 'Réservations',
-    orderOnline: 'Commander en ligne',
+    orderOnline: 'Commander',
     gallery: 'Galerie',
     ourStory: 'Notre histoire',
     contact: 'Contact',
-    staffPortal: 'Portail employés',
+    staffPortal: 'Accès Staff',
+    platters: 'Plateaux',
+    story: 'Histoire',
+    vip: 'VIP',
+    reserve: 'Réserver',
   },
 
   hero: {
@@ -379,8 +383,8 @@ export const fr: TranslationDictionary = {
 
   story: {
     badge: "FONDATEUR CANTONNEMENT DE BARRACKPORE",
-    title: "Héritage, Flamme et Café de Spécialité",
-    titleItalic: "Flamme et Torréfaction",
+    title: "Héritage, Flamme et",
+    titleItalic: "Café de Spécialité",
     subtitle: "Où l'architecture historique rencontre la lente perfection culinaire.",
     description: "Des décennies de torréfaction artisanale, de pâtes au levain cuites au feu de bois et d’hospitalité crépusculaire.",
     manifesto: "PAS DE MODÈLES. PAS DE TABLES PRESSÉES. CHAQUE ESPRESSO EXTRAIT À 9 BARS, CHAQUE PÂTE ÉTIRÉE À LA MAIN, DANS UNE CHALEUR AMBRÉE À 2200K.",

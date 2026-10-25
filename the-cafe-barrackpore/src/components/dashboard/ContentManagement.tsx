@@ -36,11 +36,11 @@ export const ImageSpecGuide: React.FC<ImageSpecGuideProps> = ({
       <div className="flex items-center gap-2">
         <span className="material-symbols-outlined text-[#D4AF37] text-base">photo_size_select_actual</span>
         <span className="text-[11px] font-mono uppercase font-bold tracking-wider text-[#D4AF37]">
-          {sectionTitle} • Image Specification &amp; Asset Guide
+          {sectionTitle} • Image Specification & Asset Guide
         </span>
       </div>
       <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-[10px] font-mono border border-[#D4AF37]/20">
-        Best Performance
+        {t('staff.content.best_performance', 'Best Performance')}
       </span>
     </div>
 
@@ -426,7 +426,7 @@ export const ContentManagement: React.FC = () => {
           {isCurrentTabDirty ? (
             <span className="text-amber-400 font-mono font-bold inline-flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              Unsaved changes in this section
+              {t('staff.content.unsaved_changes_in_this_section', 'Unsaved changes in this section')}
             </span>
           ) : (
             <span className="text-zinc-500 font-mono text-[11px]">{t('staff.dashboard.all_changes_synced_to_supabase', 'All changes synced to Supabase')}</span>
@@ -477,14 +477,14 @@ export const ContentManagement: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
             <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-              Supabase Media &amp; Content Engine
+              Supabase Media & Content Engine
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-1 tracking-tight">
-            Website Content Engine
+            {t('staff.content.website_content_engine', 'Website Content Engine')}
           </h2>
           <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-            All customer-facing visuals and photography are synchronized with Supabase storage and instantly editable without redeploying.
+            {t('staff.content.all_customer_facing_visuals_and_', 'All customer-facing visuals and photography are synchronized with Supabase storage and instantly editable without redeploying.')}
           </p>
         </div>
 
@@ -528,7 +528,7 @@ export const ContentManagement: React.FC = () => {
                   className={`w-1.5 h-1.5 rounded-full shrink-0 animate-pulse ${
                     activeTab === tab.id ? 'bg-[#070605]' : 'bg-amber-400'
                   }`}
-                  title="Unsaved changes"
+                  title={t('staff.content.unsaved_changes', 'Unsaved changes')}
                 />
               )}
             </button>
@@ -543,7 +543,7 @@ export const ContentManagement: React.FC = () => {
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.above_the_fold', 'Above the Fold')}</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.hero_cinematic_photography_amp', 'Hero Cinematic Photography &amp; Typography')}</h3>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.hero_cinematic_photography_amp', 'Hero Cinematic Photography & Typography')}</h3>
               </div>
 
               {/* ASSET SPECIFICATION GUIDE */}
@@ -561,7 +561,7 @@ export const ContentManagement: React.FC = () => {
                 <div className="lg:col-span-7 space-y-4">
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-2">
-                      Hero Cinematic Background Visual (Supabase Sync)
+                      {t('staff.content.hero_cinematic_background_visual', 'Hero Cinematic Background Visual (Supabase Sync)')}
                     </label>
                     <div className="p-4 rounded-2xl bg-[#070605] border border-white/[0.08] space-y-3">
                       <div className="relative aspect-video rounded-xl overflow-hidden border border-white/[0.1] shadow-lg group">
@@ -572,7 +572,7 @@ export const ContentManagement: React.FC = () => {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
                           <span className="px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#D4AF37] border border-[#D4AF37]/30">
-                            Live Hero Photography
+                            {t('staff.content.live_hero_photography', 'Live Hero Photography')}
                           </span>
                         </div>
                       </div>
@@ -604,7 +604,7 @@ export const ContentManagement: React.FC = () => {
 
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                      Hero Image Accessible Alt Text (WCAG Compliance)
+                      {t('staff.content.hero_image_accessible_alt_text_w', 'Hero Image Accessible Alt Text (WCAG Compliance)')}
                     </label>
                     <input
                       type="text"
@@ -624,7 +624,7 @@ export const ContentManagement: React.FC = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                        Hero Headline
+                        {t('staff.content.hero_headline', 'Hero Headline')}
                       </label>
                       <input
                         type="text"
@@ -640,7 +640,7 @@ export const ContentManagement: React.FC = () => {
 
                     <div>
                       <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                        Sub-Headline Narrative
+                        {t('staff.content.sub_headline_narrative', 'Sub-Headline Narrative')}
                       </label>
                       <textarea
                         rows={5}
@@ -678,9 +678,9 @@ export const ContentManagement: React.FC = () => {
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.hospitality_philosophy', 'Hospitality Philosophy')}</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.our_story_amp_heritage_sanctua', 'Our Story &amp; Heritage Sanctuary')}</h3>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.our_story_amp_heritage_sanctua', 'Our Story & Heritage Sanctuary')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  Manage the flagship narrative and each of the 3 interactive sticky story chapters.
+                  {t('staff.content.manage_the_flagship_narrative_an', 'Manage the flagship narrative and each of the 3 interactive sticky story chapters.')}
                 </p>
               </div>
 
@@ -697,7 +697,7 @@ export const ContentManagement: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Section Headline
+                    {t('staff.content.section_headline', 'Section Headline')}
                   </label>
                   <input
                     type="text"
@@ -713,7 +713,7 @@ export const ContentManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Fallback Heritage Photo URL (Overview)
+                    {t('staff.content.fallback_heritage_photo_url_over', 'Fallback Heritage Photo URL (Overview)')}
                   </label>
                   <input
                     type="url"
@@ -729,7 +729,7 @@ export const ContentManagement: React.FC = () => {
 
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Overview Narrative Description
+                  {t('staff.content.overview_narrative_description', 'Overview Narrative Description')}
                 </label>
                 <textarea
                   rows={3}
@@ -752,7 +752,7 @@ export const ContentManagement: React.FC = () => {
                       <span>{t('staff.dashboard.the_3_interactive_story_chapte', 'The 3 Interactive Story Chapters')}</span>
                     </h4>
                     <p className="text-[11px] text-zinc-400 mt-0.5">
-                      Each chapter has its own dedicated high-resolution photo, badge, headline, and narrative.
+                      {t('staff.content.each_chapter_has_its_own_dedicat', 'Each chapter has its own dedicated high-resolution photo, badge, headline, and narrative.')}
                     </p>
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-[10px] font-mono font-bold border border-[#D4AF37]/30">
@@ -835,7 +835,7 @@ export const ContentManagement: React.FC = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
                         <div>
                           <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">
-                            Chapter Badge
+                            {t('staff.content.chapter_badge', 'Chapter Badge')}
                           </label>
                           <input
                             type="text"
@@ -852,7 +852,7 @@ export const ContentManagement: React.FC = () => {
 
                         <div>
                           <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">
-                            Headline Prefix
+                            {t('staff.content.headline_prefix', 'Headline Prefix')}
                           </label>
                           <input
                             type="text"
@@ -869,7 +869,7 @@ export const ContentManagement: React.FC = () => {
 
                         <div>
                           <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">
-                            Italic Highlight Word(s)
+                            {t('staff.content.italic_highlight_word_s', 'Italic Highlight Word(s)')}
                           </label>
                           <input
                             type="text"
@@ -886,7 +886,7 @@ export const ContentManagement: React.FC = () => {
 
                         <div className="sm:col-span-2">
                           <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">
-                            Narrative Copy
+                            {t('staff.content.narrative_copy', 'Narrative Copy')}
                           </label>
                           <textarea
                             rows={2}
@@ -921,7 +921,7 @@ export const ContentManagement: React.FC = () => {
 
                       <div>
                         <label className="block text-[9px] uppercase font-mono text-zinc-400 mb-1">
-                          Accessible Alt Text (WCAG Compliance)
+                          {t('staff.content.accessible_alt_text_wcag_complia', 'Accessible Alt Text (WCAG Compliance)')}
                         </label>
                         <input
                           type="text"
@@ -954,9 +954,9 @@ export const ContentManagement: React.FC = () => {
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.experiential_spaces', 'Experiential Spaces')}</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.atmosphere_amp_vibe_photo_card', 'Atmosphere &amp; Vibe Photo Cards')}</h3>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.atmosphere_amp_vibe_photo_card', 'Atmosphere & Vibe Photo Cards')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  The 4 signature architectural feature cards rendered in the "About &amp; Vibe" section.
+                  The 4 signature architectural feature cards rendered in the "About & Vibe" section.
                 </p>
               </div>
 
@@ -1049,9 +1049,9 @@ export const ContentManagement: React.FC = () => {
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.curated_group_feasts', 'Curated Group Feasts')}</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.special_banquet_amp_hangout_pl', 'Special Banquet &amp; Hangout Platters')}</h3>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.special_banquet_amp_hangout_pl', 'Special Banquet & Hangout Platters')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  Shareable signature group platters displayed on the homepage specials banner.
+                  {t('staff.content.shareable_signature_group_platte', 'Shareable signature group platters displayed on the homepage specials banner.')}
                 </p>
               </div>
 
@@ -1068,7 +1068,7 @@ export const ContentManagement: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Section Headline
+                    {t('staff.content.section_headline', 'Section Headline')}
                   </label>
                   <input
                     type="text"
@@ -1084,7 +1084,7 @@ export const ContentManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Platters Description
+                    {t('staff.content.platters_description', 'Platters Description')}
                   </label>
                   <input
                     type="text"
@@ -1102,7 +1102,7 @@ export const ContentManagement: React.FC = () => {
               {/* Platter Combos List */}
               <div className="space-y-4 pt-3">
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400">
-                  Featured Banquet Platters (3 Sharing Feasts)
+                  {t('staff.content.featured_banquet_platters_3_shar', 'Featured Banquet Platters (3 Sharing Feasts)')}
                 </label>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -1217,9 +1217,9 @@ export const ContentManagement: React.FC = () => {
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.visual_world', 'Visual World')}</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.ambiance_amp_interior_gallery', 'Ambiance &amp; Interior Gallery')}</h3>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.ambiance_amp_interior_gallery', 'Ambiance & Interior Gallery')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  High-resolution photo slots rendered in the interactive customer ambiance carousel.
+                  {t('staff.content.high_resolution_photo_slots_rend', 'High-resolution photo slots rendered in the interactive customer ambiance carousel.')}
                 </p>
               </div>
 
@@ -1310,9 +1310,9 @@ export const ContentManagement: React.FC = () => {
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.private_salon', 'Private Salon')}</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.vip_club_amp_speakeasy_sanctua', 'VIP Club &amp; Speakeasy Sanctuary')}</h3>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.vip_club_amp_speakeasy_sanctua', 'VIP Club & Speakeasy Sanctuary')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  The exclusive speakeasy salon showcase photo displayed on the homepage.
+                  {t('staff.content.the_exclusive_speakeasy_salon_sh', 'The exclusive speakeasy salon showcase photo displayed on the homepage.')}
                 </p>
               </div>
 
@@ -1331,7 +1331,7 @@ export const ContentManagement: React.FC = () => {
                 <div className="lg:col-span-7 space-y-4">
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-2">
-                      Speakeasy Salon Background Visual (Supabase Sync)
+                      {t('staff.content.speakeasy_salon_background_visua', 'Speakeasy Salon Background Visual (Supabase Sync)')}
                     </label>
 
                     <div className="p-4 rounded-2xl bg-[#070605] border border-white/[0.08] space-y-3">
@@ -1343,7 +1343,7 @@ export const ContentManagement: React.FC = () => {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
                           <span className="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#D4AF37] border border-[#D4AF37]/30">
-                            Live VIP Background Image
+                            {t('staff.content.live_vip_background_image', 'Live VIP Background Image')}
                           </span>
                         </div>
                       </div>
@@ -1375,7 +1375,7 @@ export const ContentManagement: React.FC = () => {
 
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                      Photo Accessible Alt Text (WCAG Compliance)
+                      {t('staff.content.photo_accessible_alt_text_wcag_c', 'Photo Accessible Alt Text (WCAG Compliance)')}
                     </label>
                     <input
                       type="text"
@@ -1395,7 +1395,7 @@ export const ContentManagement: React.FC = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                        Salon Title
+                        {t('staff.content.salon_title', 'Salon Title')}
                       </label>
                       <input
                         type="text"
@@ -1411,7 +1411,7 @@ export const ContentManagement: React.FC = () => {
 
                     <div>
                       <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                        Salon Subtitle
+                        {t('staff.content.salon_subtitle', 'Salon Subtitle')}
                       </label>
                       <textarea
                         rows={4}
@@ -1448,16 +1448,16 @@ export const ContentManagement: React.FC = () => {
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.identity_amp_crest', 'Identity &amp; Crest')}</span>
-                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.brand_logo_amp_official_insign', 'Brand Logo &amp; Official Insignia')}</h3>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">{t('staff.dashboard.identity_amp_crest', 'Identity & Crest')}</span>
+                <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.brand_logo_amp_official_insign', 'Brand Logo & Official Insignia')}</h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  Synchronized across the header bar, footer directory, staff login, table QR codes, invoice receipts, and kitchen display.
+                  {t('staff.content.synchronized_across_the_header_b', 'Synchronized across the header bar, footer directory, staff login, table QR codes, invoice receipts, and kitchen display.')}
                 </p>
               </div>
 
               {/* ASSET SPECIFICATION GUIDE */}
               <ImageSpecGuide
-                sectionTitle="Brand Logo &amp; Official Insignia"
+                sectionTitle="Brand Logo & Official Insignia"
                 recommendedResolution="512 × 512 px (or SVG vector)"
                 aspectRatio="1:1 Square"
                 maxFileSize="Under 150 KB"
@@ -1510,7 +1510,7 @@ export const ContentManagement: React.FC = () => {
                 <div className="lg:col-span-7 space-y-4 flex flex-col justify-between">
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                      Logo Accessible Description (Alt Text)
+                      {t('staff.content.logo_accessible_description_alt_', 'Logo Accessible Description (Alt Text)')}
                     </label>
                     <input
                       type="text"
@@ -1530,7 +1530,7 @@ export const ContentManagement: React.FC = () => {
                       <span>{t('staff.dashboard.real_time_multi_surface_synchr', 'Real-time Multi-Surface Synchronization')}</span>
                     </div>
                     <p className="text-[11px] text-zinc-400 leading-relaxed">
-                      Updating this insignia dynamically synchronizes across all operations touchpoints without requiring redeployment:
+                      {t('staff.content.updating_this_insignia_dynamical', 'Updating this insignia dynamically synchronizes across all operations touchpoints without requiring redeployment:')}
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-[10px] font-mono">
                       <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-zinc-300 flex items-center gap-1.5">

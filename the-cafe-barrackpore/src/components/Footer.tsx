@@ -8,6 +8,7 @@ import {
   DEFAULT_FOOTER_CURATIONS,
 } from '../config/defaultEngineConfig';
 import { useI18n } from '../i18n';
+import { isCinematicExperience } from '../config/client';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
 const IconInstagram = () => <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>;
@@ -119,7 +120,7 @@ export const Footer: React.FC = () => {
                   className="w-full sm:w-auto h-10 px-6 rounded-full bg-primary hover:opacity-90 active:opacity-95 text-on-primary text-xs font-sans font-semibold uppercase tracking-[0.16em] transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)] active:scale-95 cursor-pointer"
                 >
                   <span>{restaurantConfig?.isTableBookingEnabled !== false ? t('hero.bookTable', 'Reserve a Table') : t('reservation.walkInsWelcome', 'Walk-Ins Welcome')}</span>
-                  <span className="material-symbols-outlined text-[16px]">table_restaurant</span>
+                  <span className="material-symbols-outlined text-[16px]">calendar_today</span>
                 </button>
               )}
 
@@ -137,11 +138,11 @@ export const Footer: React.FC = () => {
           </div>
         )}
 
-        {/* Directory Layout: 2-Col Grid on Mobile, 4-Col Grid on Desktop */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 mb-14 md:mb-16">
+        {/* Directory Layout: Responsive 12-Col Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-8 xl:gap-10 mb-14 md:mb-16">
           
           {/* Col 1: Brand & Heritage */}
-          <div className="col-span-2 sm:col-span-2 lg:col-span-1 flex flex-col gap-4">
+          <div className="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full border border-primary/35 bg-surface-container-high flex items-center justify-center overflow-hidden shadow-[0_0_12px_rgba(var(--color-primary-rgb),0.15)] shrink-0">
                 <img src={logoUrl || "/logo.webp"} alt={`${businessName} Crest`} width="40" height="40" loading="lazy" decoding="async" className="w-full h-full object-contain" />
@@ -211,7 +212,7 @@ export const Footer: React.FC = () => {
 
           {/* Col 2: Curations */}
           {visibleCurationLinks.length > 0 && (
-            <div className="col-span-1 flex flex-col gap-3.5">
+            <div className="col-span-1 sm:col-span-1 lg:col-span-2 flex flex-col gap-3.5">
               <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold">
                 {t('footer.cuisineCurations', 'Cuisine & Curations')}
               </h4>
@@ -234,7 +235,7 @@ export const Footer: React.FC = () => {
           )}
 
           {/* Col 3: Hours & Atmosphere */}
-          <div className="col-span-1 flex flex-col gap-3.5">
+          <div className="col-span-1 sm:col-span-1 lg:col-span-2 flex flex-col gap-3.5">
             <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold">
               {t('footer.hoursAtmosphere', 'Hours & Atmosphere')}
             </h4>
@@ -262,7 +263,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* Col 4: Location & Contact */}
-          <div className="col-span-2 sm:col-span-2 lg:col-span-1 flex flex-col gap-3.5 p-4 sm:p-5 lg:p-0 rounded-2xl lg:rounded-none bg-surface-container/90 lg:bg-transparent border border-primary/20 lg:border-none shadow-md lg:shadow-none">
+          <div className="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col gap-3.5 p-4 sm:p-5 lg:p-0 rounded-2xl lg:rounded-none bg-surface-container/90 lg:bg-transparent border border-primary/20 lg:border-none shadow-md lg:shadow-none">
             <h4 className="font-sans text-xs uppercase tracking-widest text-on-surface font-semibold flex items-center gap-1.5">
               <span className="material-symbols-outlined text-primary text-base font-light">location_on</span>
               <span>{t('footer.visitContact', 'Visit & Contact')}</span>
@@ -283,8 +284,8 @@ export const Footer: React.FC = () => {
                 )}
               </div>
 
-              {/* Quick Action Buttons: Call & WhatsApp */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2 pt-1">
+              {/* Quick Action Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2 pt-1 w-full">
                 {phone && (
                   <a 
                     className="h-10 px-3.5 rounded-full bg-surface-container-high border border-outline/20 hover:border-primary/50 text-on-surface/90 hover:text-on-surface transition-all font-medium inline-flex items-center justify-center gap-2 active:scale-95 text-xs min-w-0" 
@@ -296,50 +297,51 @@ export const Footer: React.FC = () => {
                   </a>
                 )}
 
-                {whatsapp ? (
+                {whatsapp && (
                   <a 
-                    className="h-10 px-3.5 rounded-full bg-emerald-950/40 border border-emerald-500/35 hover:border-emerald-500/60 text-emerald-400 hover:text-emerald-300 transition-all font-medium inline-flex items-center justify-center gap-2 active:scale-95 text-xs min-w-0" 
+                    className="h-10 px-3.5 rounded-full bg-surface-container-high border border-outline/20 hover:border-primary/50 text-on-surface/90 hover:text-on-surface transition-all font-medium inline-flex items-center justify-center gap-2 active:scale-95 text-xs min-w-0" 
                     href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     aria-label={t('footer.directWhatsApp', 'Direct WhatsApp Message')}
                   >
-                    <span className="material-symbols-outlined text-base shrink-0">forum</span>
-                    <span className="whitespace-nowrap">{t('common.whatsapp', 'WhatsApp')}</span>
+                    <span className="material-symbols-outlined text-base text-emerald-400 shrink-0">forum</span>
+                    <span className="whitespace-nowrap font-mono">{t('common.whatsapp', 'WhatsApp')}</span>
                   </a>
-                ) : null}
+                )}
 
-                {email ? (
+                {email && (
                   <a 
                     className="h-10 px-3.5 rounded-full bg-surface-container-high border border-outline/20 hover:border-primary/50 text-on-surface/90 hover:text-on-surface transition-all font-medium inline-flex items-center justify-center gap-2 active:scale-95 text-xs min-w-0" 
                     href={`mailto:${email}`}
                     aria-label={`Email ${email}`}
                   >
                     <span className="material-symbols-outlined text-base text-primary shrink-0">mail</span>
-                    <span className="whitespace-nowrap font-mono">{email}</span>
+                    <span className="truncate font-mono text-xs">{email}</span>
                   </a>
-                ) : null}
-              </div>
+                )}
 
-              {/* Guest Concierge & Inquiry Form Trigger */}
-              <button
-                type="button"
-                onClick={() => setIsContactOpen(true)}
-                className="w-full h-10 px-4 rounded-full bg-surface-container-high/60 border border-primary/35 hover:border-primary text-primary hover:text-white transition-all text-xs font-semibold uppercase tracking-wider inline-flex items-center justify-center gap-2 cursor-pointer mt-1 active:scale-95 shadow-sm"
-              >
-                <span className="material-symbols-outlined text-base">mail</span>
-                <span>{t('contact.drawerTitle', 'Send Guest Inquiry')}</span>
-              </button>
+                {/* Guest Concierge & Inquiry Form Trigger */}
+                <button
+                  type="button"
+                  onClick={() => setIsContactOpen(true)}
+                  className="h-10 px-4 rounded-full bg-surface-container-high/60 border border-primary/35 hover:border-primary text-primary hover:text-white transition-all text-xs font-semibold uppercase tracking-wider inline-flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-base">mail</span>
+                  <span>{t('contact.drawerTitle', 'Send Guest Inquiry')}</span>
+                </button>
+              </div>
             </div>
           </div>
 
         </div>
 
-        {/* Oddball-Inspired Final LED Craft Scoreboard */}
-        <div className="my-10 rounded-2xl bg-surface-obsidian/95 border border-outline/25 p-5 sm:p-7 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_15px_40px_rgba(0,0,0,0.6)]">
+        {/* Oddball-Inspired Final LED Craft Scoreboard (Cinematic Mode only) */}
+        {isCinematicExperience() && (
+          <div className="my-10 rounded-2xl bg-surface-obsidian/95 border border-outline/25 p-5 sm:p-7 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_15px_40px_rgba(0,0,0,0.6)]">
           <div className="flex items-center gap-3">
             <span className="px-2.5 py-1 rounded bg-primary text-on-primary font-mono text-[10px] font-bold tracking-widest uppercase">
-              FINAL
+              {t('footer.final', 'FINAL')}
             </span>
             <span className="font-mono text-sm sm:text-base tracking-[0.22em] uppercase text-on-surface font-semibold">
               THE CAFÉ · ARTISANAL CRAFT
@@ -354,18 +356,19 @@ export const Footer: React.FC = () => {
 
           <div className="text-center md:text-right font-mono">
             <span className="block text-[10px] tracking-[0.22em] uppercase text-primary">
-              2200K NOCTURNE · CANTONMENT HERITAGE
+              2200K NOCTURNE · {(restaurantConfig.address.region || 'ARTISANAL').toUpperCase()} HERITAGE
             </span>
             <span className="text-xs sm:text-sm tracking-[0.22em] uppercase text-on-surface/40">
               SMALL BATCH · CRAFTED BY HAND
             </span>
           </div>
-        </div>
+          </div>
+        )}
 
         {/* Valmora-Inspired Monumental Edge-to-Edge Architectural Wordmark */}
-        <div className="w-full overflow-hidden py-4 sm:py-6 select-none pointer-events-none" aria-hidden="true">
-          <div className="font-serif text-[10vw] sm:text-[11vw] leading-[0.88] tracking-tighter uppercase text-center text-primary/15 select-none whitespace-nowrap">
-            THE CAFÉ BARRACKPORE
+        <div className="w-full overflow-hidden py-4 sm:py-6 select-none pointer-events-none flex justify-center items-center" aria-hidden="true">
+          <div className="font-serif text-[clamp(1.25rem,5.2vw,4.85rem)] leading-none tracking-tight uppercase text-center text-primary/15 select-none whitespace-nowrap">
+            {businessName.toUpperCase()}
           </div>
         </div>
 

@@ -56,12 +56,19 @@ export const useKitchenOrders = () => {
     }
   }, []);
 
-  // Initial fetch
+  // Initial fetch with safety timeout to prevent permanent skeleton
   useEffect(() => {
     let isCancelled = false;
+    const safetyTimer = setTimeout(() => {
+      if (!isCancelled) {
+        setIsLoading(false);
+      }
+    }, 3500);
+
     fetchKitchenOrders()
       .then((data) => {
         if (!isCancelled) {
+          clearTimeout(safetyTimer);
           setOrders(data.activeOrders);
           setCompletedOrders(data.completedOrders);
           setConnectionStatus('live');
@@ -70,6 +77,7 @@ export const useKitchenOrders = () => {
       })
       .catch((err) => {
         if (!isCancelled) {
+          clearTimeout(safetyTimer);
           console.error('[useKitchenOrders] Error loading orders:', err);
           setError('Unable to load kitchen orders. Tap retry to reconnect.');
           setConnectionStatus('offline');
@@ -79,6 +87,7 @@ export const useKitchenOrders = () => {
 
     return () => {
       isCancelled = true;
+      clearTimeout(safetyTimer);
     };
   }, []);
 

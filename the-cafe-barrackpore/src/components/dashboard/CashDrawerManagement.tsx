@@ -125,7 +125,9 @@ export const CashDrawerManagement: React.FC = () => {
       if (res.success) {
         addNotification(
           'success',
-          txType === 'cash_in' ? 'Cash In Recorded' : 'Cash Out Recorded',
+          txType === 'cash_in'
+            ? t('staff.cash_drawer.cash_in_recorded', 'Cash In Recorded')
+            : t('staff.cash_drawer.cash_out_recorded', 'Cash Out Recorded'),
           `${formatCurrency(txAmount)} recorded: ${txReason}`
         );
         setShowTxModal(false);
@@ -198,7 +200,7 @@ export const CashDrawerManagement: React.FC = () => {
                   </span>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-stone-500/20 text-stone-400 border border-stone-500/30">
-                    No Active Shift
+                    {t('staff.cash_drawer.no_active_shift', 'No Active Shift')}
                   </span>
                 )}
               </div>
@@ -217,7 +219,7 @@ export const CashDrawerManagement: React.FC = () => {
                 className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e0b555] text-black font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.98] cursor-pointer flex items-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-sm">lock_open</span>
-                Open New Shift
+                {t('staff.cash_drawer.open_new_shift', 'Open New Shift')}
               </button>
             ) : (
               <>
@@ -235,7 +237,7 @@ export const CashDrawerManagement: React.FC = () => {
                   className="py-2 px-3.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">summarize</span>
-                  Live Z-Report
+                  {t('staff.cash_drawer.live_z_report', 'Live Z-Report')}
                 </button>
                 <button
                   type="button"
@@ -243,7 +245,7 @@ export const CashDrawerManagement: React.FC = () => {
                   className="py-2 px-3.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">lock</span>
-                  Close Shift
+                  {t('staff.cash_drawer.close_shift', 'Close Shift')}
                 </button>
               </>
             )}
@@ -251,7 +253,7 @@ export const CashDrawerManagement: React.FC = () => {
               type="button"
               onClick={loadShiftData}
               className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-stone-300 hover:text-white border border-white/[0.08] transition-colors"
-              title="Refresh"
+              title={t('staff.cash_drawer.refresh', 'Refresh')}
             >
               <span className="material-symbols-outlined text-lg">refresh</span>
             </button>
@@ -266,7 +268,7 @@ export const CashDrawerManagement: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
               <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400 block mb-1">
-                Opening Float
+                {t('staff.cash_drawer.opening_float', 'Opening Float')}
               </span>
               <div className="text-lg font-mono font-bold text-white">
                 {formatCurrency(liveZReport.openingFloat)}
@@ -275,7 +277,7 @@ export const CashDrawerManagement: React.FC = () => {
 
             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
               <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 block mb-1">
-                Cash Sales
+                {t('staff.cash_drawer.cash_sales', 'Cash Sales')}
               </span>
               <div className="text-lg font-mono font-bold text-emerald-300">
                 {formatCurrency(liveZReport.cashSales)}
@@ -284,7 +286,7 @@ export const CashDrawerManagement: React.FC = () => {
 
             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
               <span className="text-[10px] font-mono uppercase tracking-wider text-blue-400 block mb-1">
-                Cash In (Paid In)
+                {t('staff.cash_drawer.cash_in_paid_in', 'Cash In (Paid In)')}
               </span>
               <div className="text-lg font-mono font-bold text-blue-300">
                 +{formatCurrency(liveZReport.cashInTotal)}
@@ -293,7 +295,7 @@ export const CashDrawerManagement: React.FC = () => {
 
             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
               <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 block mb-1">
-                Cash Out (Paid Out)
+                {t('staff.cash_drawer.cash_out_paid_out', 'Cash Out (Paid Out)')}
               </span>
               <div className="text-lg font-mono font-bold text-amber-300">
                 -{formatCurrency(liveZReport.cashOutTotal)}
@@ -315,7 +317,7 @@ export const CashDrawerManagement: React.FC = () => {
 
             <div className="p-4 rounded-xl bg-gradient-to-b from-[#D4AF37]/15 to-transparent border border-[#D4AF37]/30">
               <span className="text-[10px] font-mono uppercase tracking-wider text-[#F3C766] font-bold block mb-1">
-                Expected in Drawer
+                {t('staff.cash_drawer.expected_in_drawer', 'Expected in Drawer')}
               </span>
               <div className="text-xl font-mono font-bold text-[#F3C766]">
                 {formatCurrency(liveZReport.expectedCashInDrawer)}
@@ -362,7 +364,13 @@ export const CashDrawerManagement: React.FC = () => {
                             : 'bg-emerald-500/20 text-emerald-300'
                         }`}
                       >
-                        {tx.type === 'cash_in' ? 'IN' : tx.type === 'cash_out' ? 'OUT' : tx.type === 'refund' ? 'REF' : 'SALE'}
+                        {tx.type === 'cash_in'
+                          ? t('staff.cash_drawer.in', 'IN')
+                          : tx.type === 'cash_out'
+                          ? t('staff.cash_drawer.out', 'OUT')
+                          : tx.type === 'refund'
+                          ? t('staff.cash_drawer.ref', 'REF')
+                          : t('staff.cash_drawer.sale', 'SALE')}
                       </span>
                       <div>
                         <div className="font-bold text-white">{tx.reason}</div>
@@ -392,7 +400,7 @@ export const CashDrawerManagement: React.FC = () => {
           <span className="material-symbols-outlined text-4xl text-stone-500">point_of_sale</span>
           <h3 className="font-serif text-base font-bold text-white">{t('staff.pos.cash_drawer_is_closed', 'Cash Drawer is Closed')}</h3>
           <p className="text-xs text-stone-400 max-w-md mx-auto">
-            Opening a shift with an opening float initializes the cash drawer ledger and tracks all cash tenders, change returns, and sales.
+            {t('staff.cash_drawer.opening_a_shift_with_an_opening_', 'Opening a shift with an opening float initializes the cash drawer ledger and tracks all cash tenders, change returns, and sales.')}
           </p>
           <button
             type="button"
@@ -400,7 +408,7 @@ export const CashDrawerManagement: React.FC = () => {
             className="py-2.5 px-6 rounded-xl bg-[#D4AF37] hover:bg-[#c29f2f] text-black font-bold text-xs uppercase tracking-wider transition-all shadow-md inline-flex items-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">lock_open</span>
-            Open Shift Now
+            {t('staff.cash_drawer.open_shift_now', 'Open Shift Now')}
           </button>
         </div>
       )}
@@ -414,7 +422,7 @@ export const CashDrawerManagement: React.FC = () => {
 
         {pastShifts.filter((s) => s.status === 'closed').length === 0 ? (
           <div className="py-8 text-center text-xs text-stone-500">
-            No closed shifts in the archive yet.
+            {t('staff.cash_drawer.no_closed_shifts_in_the_archive_', 'No closed shifts in the archive yet.')}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -470,7 +478,7 @@ export const CashDrawerManagement: React.FC = () => {
                           onClick={() => s.z_report_summary && setSelectedZReport(s.z_report_summary)}
                           className="px-2.5 py-1 rounded bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#F3C766] border border-[#D4AF37]/30 text-[10px] font-mono font-bold uppercase transition-colors"
                         >
-                          View Z-Report
+                          {t('staff.cash_drawer.view_z_report', 'View Z-Report')}
                         </button>
                       </td>
                     </tr>
@@ -488,7 +496,7 @@ export const CashDrawerManagement: React.FC = () => {
             <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
               <h3 className="font-serif text-base font-bold text-white flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#D4AF37]">lock_open</span>
-                Open Cash Shift
+                {t('staff.cash_drawer.open_cash_shift', 'Open Cash Shift')}
               </h3>
               <button
                 type="button"
@@ -501,7 +509,7 @@ export const CashDrawerManagement: React.FC = () => {
 
             <div>
               <label className="text-xs text-stone-300 block mb-1 font-semibold">
-                Opening Cash Float in Drawer:
+                {t('staff.cash_drawer.opening_cash_float_in_drawer', 'Opening Cash Float in Drawer:')}
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-mono text-sm">
@@ -526,7 +534,7 @@ export const CashDrawerManagement: React.FC = () => {
                 onClick={() => setShowOpenModal(false)}
                 className="flex-1 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-stone-300 text-xs font-semibold"
               >
-                Cancel
+                {t('staff.cash_drawer.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -571,7 +579,7 @@ export const CashDrawerManagement: React.FC = () => {
                 }`}
               >
                 <span className="material-symbols-outlined text-sm">arrow_downward</span>
-                Cash In (Paid In)
+                {t('staff.cash_drawer.cash_in_paid_in', 'Cash In (Paid In)')}
               </button>
               <button
                 type="button"
@@ -583,7 +591,7 @@ export const CashDrawerManagement: React.FC = () => {
                 }`}
               >
                 <span className="material-symbols-outlined text-sm">arrow_upward</span>
-                Cash Out (Paid Out)
+                {t('staff.cash_drawer.cash_out_paid_out', 'Cash Out (Paid Out)')}
               </button>
             </div>
 
@@ -620,7 +628,7 @@ export const CashDrawerManagement: React.FC = () => {
                 onClick={() => setShowTxModal(false)}
                 className="flex-1 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-stone-300 text-xs font-semibold"
               >
-                Cancel
+                {t('staff.cash_drawer.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -678,7 +686,7 @@ export const CashDrawerManagement: React.FC = () => {
 
             <div>
               <label className="text-xs text-stone-300 block mb-1 font-semibold">
-                Counted Physical Cash in Drawer:
+                {t('staff.cash_drawer.counted_physical_cash_in_drawer', 'Counted Physical Cash in Drawer:')}
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-mono text-sm">
@@ -710,9 +718,11 @@ export const CashDrawerManagement: React.FC = () => {
                   <span>{t('staff.pos.difference_variance', 'Difference (Variance):')}</span>
                   <span className="font-mono text-sm">
                     {variance === 0
-                      ? `${formatCurrency(0, currency)} (EXACT MATCH)`
+                      ? `${formatCurrency(0, currency)} (${t('staff.cash_drawer.exact_match', 'EXACT MATCH')})`
                       : `${variance > 0 ? '+' : ''}${formatCurrency(variance, currency)} (${
-                          variance > 0 ? 'CASH OVER' : 'CASH SHORT'
+                          variance > 0
+                            ? t('staff.cash_drawer.cash_over', 'CASH OVER')
+                            : t('staff.cash_drawer.cash_short', 'CASH SHORT')
                         })`}
                   </span>
                 </div>
@@ -736,7 +746,7 @@ export const CashDrawerManagement: React.FC = () => {
                 onClick={() => setShowCloseModal(false)}
                 className="flex-1 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-stone-300 text-xs font-semibold"
               >
-                Cancel
+                {t('staff.cash_drawer.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -769,7 +779,7 @@ export const CashDrawerManagement: React.FC = () => {
                   className="py-1.5 px-3 rounded-lg bg-[#D4AF37] hover:bg-[#c29f2f] text-black text-xs font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm"
                 >
                   <span className="material-symbols-outlined text-sm">print</span>
-                  Print Thermal
+                  {t('staff.cash_drawer.print_thermal', 'Print Thermal')}
                 </button>
                 <button
                   type="button"
@@ -788,7 +798,7 @@ export const CashDrawerManagement: React.FC = () => {
                   {selectedZReport.restaurantName}
                 </h4>
                 <div className="text-[11px] text-[#F3C766] uppercase font-bold">
-                  DAILY FINANCIAL Z-REPORT
+                  {t('staff.cash_drawer.daily_financial_z_report', 'DAILY FINANCIAL Z-REPORT')}
                 </div>
                 <div className="text-[10px] text-stone-400">
                   Shift #{selectedZReport.shiftNumber} • Total Txns: {selectedZReport.totalTransactionCount}
@@ -818,7 +828,7 @@ export const CashDrawerManagement: React.FC = () => {
               {/* Drawer Balancing */}
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37] block mb-2">
-                  CASH DRAWER RECONCILIATION
+                  {t('staff.cash_drawer.cash_drawer_reconciliation', 'CASH DRAWER RECONCILIATION')}
                 </span>
                 <div className="space-y-1 bg-white/[0.02] p-3 rounded-lg border border-white/[0.06]">
                   <div className="flex justify-between">
@@ -875,7 +885,7 @@ export const CashDrawerManagement: React.FC = () => {
               {/* Tenders Breakdown */}
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37] block mb-2">
-                  SALES BY TENDER TYPE
+                  {t('staff.cash_drawer.sales_by_tender_type', 'SALES BY TENDER TYPE')}
                 </span>
                 <div className="space-y-1 bg-white/[0.02] p-3 rounded-lg border border-white/[0.06]">
                   <div className="flex justify-between">

@@ -50,10 +50,10 @@ export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
         <div className="p-5 border-b border-white/[0.06] flex items-center justify-between bg-[#120F0D]">
           <div>
             <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-              Dispatch Archives
+              {t('kitchen.dispatch_archives', 'Dispatch Archives')}
             </span>
             <h2 id="history-drawer-title" className="text-lg font-serif font-black text-white mt-0.5">
-              Completed Kitchen Tickets
+              {t('kitchen.completed_kitchen_tickets', 'Completed Kitchen Tickets')}
             </h2>
             <p className="text-xs text-zinc-400 mt-0.5">
               Showing last {completedOrders.length} fulfilled orders
@@ -111,7 +111,7 @@ export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
                         <div className="mt-1">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                            Fulfilled
+                            {t('kitchen.fulfilled', 'Fulfilled')}
                           </span>
                         </div>
                       </div>
@@ -136,7 +136,7 @@ export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
                         disabled={isMutatingId === order.id}
                         onClick={() => onRecall(order)}
                         className="px-3.5 py-2 rounded-xl text-xs font-mono font-bold text-amber-300 bg-amber-950/40 hover:bg-amber-900/50 border border-amber-600/40 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                        title="Recall this ticket back into the Ready column"
+                        title={t('kitchen.recall_this_ticket_back_into_the', 'Recall this ticket back into the Ready column')}
                       >
                         <span className="material-symbols-outlined text-sm">history</span>
                         <span>{t('staff.kitchen.recallTicket', 'Recall to Ready')}</span>
@@ -151,7 +151,7 @@ export const KitchenHistoryDrawer: React.FC<KitchenHistoryDrawerProps> = ({
               <span className="material-symbols-outlined text-4xl mb-2 text-zinc-600">receipt_long</span>
               <p className="font-serif font-bold text-sm text-white">{t('staff.kitchen.title', 'No recently completed tickets')}</p>
               <p className="text-xs text-zinc-500 mt-1 max-w-[220px]">
-                Orders punched as completed will archive here for quick kitchen recall.
+                {t('kitchen.orders_punched_as_completed_will', 'Orders punched as completed will archive here for quick kitchen recall.')}
               </p>
             </div>
           )}

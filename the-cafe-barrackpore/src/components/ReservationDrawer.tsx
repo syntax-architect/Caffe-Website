@@ -452,7 +452,7 @@ export const ReservationDrawer: React.FC = () => {
                     {/* Security Verification (Cloudflare Turnstile) */}
                     <div className="flex flex-col gap-1.5">
                       <label className="font-sans text-[11px] uppercase tracking-wider text-on-surface/75 font-medium">
-                        Security Verification
+                        {t('reservation.security_verification', 'Security Verification')}
                       </label>
                       <TurnstileWidget action="reservation" onVerify={(token) => setCaptchaToken(token)} />
                     </div>
@@ -501,7 +501,7 @@ export const ReservationDrawer: React.FC = () => {
                     </span>
                     <span className="w-8 h-8 rounded-full bg-[#120B08]/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">
                       <span className="material-symbols-outlined text-[15px] text-[#120B08]">
-                        {restaurantConfig.isTableBookingEnabled === false ? 'pause' : 'event'}
+                        {restaurantConfig.isTableBookingEnabled === false ? 'pause' : 'calendar_today'}
                       </span>
                     </span>
                   </button>

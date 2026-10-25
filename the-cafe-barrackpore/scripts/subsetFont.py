@@ -7,92 +7,147 @@ from fontTools.ttLib import TTFont
 
 REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 PUBLIC_FONTS_DIR = os.path.join(REPO_DIR, 'public', 'fonts')
-ORIGINAL_FONT = os.path.join(PUBLIC_FONTS_DIR, 'material-symbols-outlined.woff2')
-BACKUP_FONT = os.path.join(PUBLIC_FONTS_DIR, 'material-symbols-outlined.original.woff2')
+ORIGINAL_FONT = os.path.join(REPO_DIR, 'scripts', 'material-symbols-original.woff2')
 SUBSET_FONT = os.path.join(PUBLIC_FONTS_DIR, 'material-symbols-outlined.woff2')
 DIST_FONT = os.path.join(REPO_DIR, 'dist', 'fonts', 'material-symbols-outlined.woff2')
 
-FOUNDATIONAL_ICONS = {
-    'add', 'remove', 'close', 'menu', 'search', 'check', 'check_circle', 'cancel',
-    'delete', 'edit', 'save', 'refresh', 'sync', 'sync_alt', 'home', 'arrow_back',
-    'arrow_forward', 'arrow_upward', 'arrow_downward', 'chevron_left', 'chevron_right',
-    'chevron_down', 'chevron_up', 'expand_more', 'expand_less', 'shopping_bag',
-    'shopping_cart', 'restaurant', 'restaurant_menu', 'local_cafe', 'coffee', 'local_bar',
-    'local_drink', 'wine_bar', 'liquor', 'room_service', 'room_service_sharp', 'fastfood',
-    'lunch_dining', 'dinner_dining', 'cake', 'bakery_dining', 'table_restaurant', 'table_bar',
-    'countertops', 'kitchen', 'skillet', 'soup_kitchen', 'point_of_sale', 'credit_card',
-    'payments', 'receipt', 'receipt_long', 'print', 'qr_code', 'qr_code_scanner',
-    'timer', 'schedule', 'hourglass_empty', 'hourglass_top', 'hourglass_bottom',
-    'notifications', 'notifications_active', 'notifications_off', 'call', 'chat', 'mail',
-    'event', 'event_available', 'event_busy', 'calendar_today', 'groups', 'people', 'person',
-    'person_add', 'person_outline', 'verified', 'verified_user', 'shield', 'shield_locked',
-    'lock', 'lock_open', 'key', 'warning', 'error', 'error_outline', 'info', 'info_outline',
-    'help', 'help_outline', 'support_agent', 'security', 'visibility', 'visibility_off',
-    'star', 'star_border', 'star_half', 'stars', 'favorite', 'favorite_border',
-    'local_fire_department', 'sparkles', 'swipe', 'pan_tool', 'touch_app', 'filter_alt',
-    'sort', 'history', 'badge', 'badge_sharp', 'login', 'logout', 'download', 'upload',
-    'cloud_off', 'cloud_done', 'wifi', 'wifi_off', 'pause', 'play_arrow', 'pause_circle',
-    'play_circle', 'content_copy', 'fullscreen', 'fullscreen_exit', 'more_vert', 'more_horiz',
-    'tune', 'settings', 'insights', 'analytics', 'trending_up', 'inventory', 'inventory_2',
-    'progress_activity', 'currency_rupee', 'attach_money', 'explore', 'map', 'near_me',
-    'location_on', 'place', 'done', 'done_all', 'thumb_up', 'thumb_down', 'share',
-    'open_in_new', 'launch', 'dark_mode', 'light_mode', 'wb_sunny', 'nightlight'
+# Mandatory fixed category picker list for DB & dynamic category selection
+CATEGORY_PICKER_ICONS = {
+    'restaurant_menu', 'restaurant', 'local_pizza', 'ramen_dining', 'skillet',
+    'local_cafe', 'soup_kitchen', 'bakery_dining', 'fastfood', 'lunch_dining',
+    'dinner_dining', 'cake', 'icecream', 'local_bar', 'wine_bar', 'liquor',
+    'local_drink', 'emoji_food_beverage', 'set_meal', 'takeout_dining',
+    'kebab_dining', 'bento', 'tapas', 'egg', 'breakfast_dining', 'brunch_dining',
+    'flatware', 'table_restaurant', 'sports_bar', 'coffee'
 }
 
-def scan_codebase_icons():
-    found = set()
-    span_regex = re.compile(r'material-symbols[^\"]*\"[^>]*>([a-z0-9_]+)<', re.IGNORECASE)
-    prop_regex = re.compile(r'\b(?:icon|iconName)\s*:\s*[\'\"]([a-z0-9_]+)[\'\"]')
-    quote_regex = re.compile(r'[\'\"]([a-z0-9_]{3,30})[\'\"]')
+# Explicitly verified known broken / required icons
+KNOWN_CRITICAL_ICONS = {
+    'south', 'local_pizza', 'ramen_dining', 'speed', 'volume_off',
+    'view_compact', 'arrow_drop_down', 'unsubscribe', 'expand_more',
+    'expand_less', 'calendar_today', 'calendar_month', 'event', 'event_seat'
+}
 
-    for root, dirs, files in os.walk(os.path.join(REPO_DIR, 'src')):
-        for f in files:
-            if f.endswith(('.tsx', '.ts', '.jsx', '.js', '.html')):
-                path = os.path.join(root, f)
-                with open(path, 'r', encoding='utf-8', errors='ignore') as fp:
-                    content = fp.read()
-                    for m in span_regex.finditer(content):
-                        name = m.group(1).strip()
-                        if name:
-                            found.add(name.lower())
-                    for m in prop_regex.finditer(content):
-                        name = m.group(1).strip()
-                        if name:
-                            found.add(name.lower())
-                    if 'material-symbols' in content:
-                        for m in quote_regex.finditer(content):
-                            w = m.group(1).strip().lower()
-                            if w in FOUNDATIONAL_ICONS:
-                                found.add(w)
-    return found
+def ensure_original_font():
+    """Ensure the full 3.9MB unpruned master font is available as subsetting source."""
+    if os.path.exists(ORIGINAL_FONT) and os.path.getsize(ORIGINAL_FONT) > 3_000_000:
+        return ORIGINAL_FONT
 
-def main():
-    print('=== MATERIAL SYMBOLS PRECISION SUBSETTING PIPELINE ===\n')
+    # Check public or dist original font
+    candidates = [
+        os.path.join(PUBLIC_FONTS_DIR, 'material-symbols-outlined.original.woff2'),
+        os.path.join(REPO_DIR, 'dist', 'fonts', 'material-symbols-outlined.original.woff2')
+    ]
+    for cand in candidates:
+        if os.path.exists(cand) and os.path.getsize(cand) > 3_000_000:
+            shutil.copy2(cand, ORIGINAL_FONT)
+            return ORIGINAL_FONT
 
-    # Backup original font if not already present
-    if not os.path.exists(BACKUP_FONT):
-        if os.path.exists(ORIGINAL_FONT) and os.path.getsize(ORIGINAL_FONT) > 1_000_000:
-            print(f'Backing up original 3.9MB font to {BACKUP_FONT}...')
-            shutil.copy2(ORIGINAL_FONT, BACKUP_FONT)
-        else:
-            print('Error: Original font backup not found and current font is not full size.')
-            sys.exit(1)
+    print(f"Extracting pristine original master font into {ORIGINAL_FONT}...")
+    cmd = ['git', 'cat-file', '-p', '4f2084c:the-cafe-barrackpore/public/fonts/material-symbols-outlined.woff2']
+    try:
+        res = subprocess.run(cmd, cwd=REPO_DIR, capture_output=True)
+        if res.returncode == 0 and len(res.stdout) > 3_000_000:
+            with open(ORIGINAL_FONT, 'wb') as f:
+                f.write(res.stdout)
+            print(f"Master font ready ({len(res.stdout):,} bytes).")
+            return ORIGINAL_FONT
+    except Exception as e:
+        print(f"Git extraction failed: {e}")
 
-    source_font_path = BACKUP_FONT
-    orig_size = os.path.getsize(source_font_path)
-    print(f'Original Full Font Size: {orig_size / (1024*1024):.2f} MB ({orig_size:,} bytes)')
+    # Fallback to checking public/fonts if it happens to be > 3MB
+    if os.path.exists(SUBSET_FONT) and os.path.getsize(SUBSET_FONT) > 3_000_000:
+        shutil.copy2(SUBSET_FONT, ORIGINAL_FONT)
+        return ORIGINAL_FONT
 
-    # Scan icons
-    scanned_icons = scan_codebase_icons()
-    all_target_icons = set(FOUNDATIONAL_ICONS).union(scanned_icons)
-    print(f'Targeting {len(all_target_icons)} icon ligatures ({len(scanned_icons)} scanned + {len(FOUNDATIONAL_ICONS)} foundational).')
+    raise RuntimeError("Cannot locate or extract master 3.9MB font for subsetting.")
 
-    # Load original font
-    font = TTFont(source_font_path)
+def extract_original_ligatures(font_path):
+    """Parse GSUB table to map all ligature words to their components and glyphs."""
+    font = TTFont(font_path)
     cmap = font.getBestCmap()
     rev_cmap = {g: chr(cp) for cp, g in cmap.items()}
+    gsub = font['GSUB'].table
 
-    # Extract all ligatures from GSUB
+    all_ligatures = {}
+    for st in gsub.LookupList.Lookup[0].SubTable:
+        sub = st.ExtSubTable if hasattr(st, 'ExtSubTable') else st
+        if hasattr(sub, 'ligatures'):
+            for first_g, l_list in sub.ligatures.items():
+                first_char = rev_cmap.get(first_g, first_g).lower()
+                for lig in l_list:
+                    comp_chars = [rev_cmap.get(c, c).lower() for c in lig.Component]
+                    word = (first_char + ''.join(comp_chars)).strip()
+                    all_ligatures[word] = lig
+    return font, cmap, rev_cmap, all_ligatures
+
+def scan_all_tokens_in_codebase(available_ligatures):
+    """
+    Exhaustively scans EVERY quoted token, ternary result, object value, array element,
+    seed data, and JSX element across src/, supabase/, and public/.
+    Keeps any token that exists as a glyph/ligature name in the original font.
+    """
+    matched = set()
+
+    # Regex capturing single/double/backtick strings, object property values, and JSX content
+    token_pattern = re.compile(
+        r"""(?:['"`])([a-zA-Z0-9_-]+)(?:['"`])|"""
+        r"""(?:icon|iconName)\s*:\s*['"`]([a-zA-Z0-9_-]+)['"`]|"""
+        r""">\s*([a-zA-Z0-9_-]+)\s*<"""
+    )
+
+    scan_roots = [
+        os.path.join(REPO_DIR, 'src'),
+        os.path.join(REPO_DIR, 'supabase'),
+        os.path.join(REPO_DIR, 'public'),
+    ]
+
+    total_scanned_files = 0
+    for root_dir in scan_roots:
+        for dirpath, _, filenames in os.walk(root_dir):
+            for filename in filenames:
+                if filename.endswith(('.tsx', '.ts', '.jsx', '.js', '.sql', '.json', '.html')):
+                    filepath = os.path.join(dirpath, filename)
+                    total_scanned_files += 1
+                    try:
+                        with open(filepath, 'r', encoding='utf-8', errors='ignore') as fp:
+                            content = fp.read()
+                            for match in token_pattern.finditer(content):
+                                for group_val in match.groups():
+                                    if group_val:
+                                        token = group_val.strip().lower()
+                                        if token in available_ligatures:
+                                            matched.add(token)
+                    except Exception:
+                        pass
+
+    print(f"Scanned {total_scanned_files} files across src, supabase, public.")
+    return matched
+
+def main():
+    print("=== HIGH-PRECISION MATERIAL SYMBOLS FONT SUBSET PIPELINE ===\n")
+
+    master_font_path = ensure_original_font()
+    orig_size = os.path.getsize(master_font_path)
+    print(f"Source Font Size: {orig_size / (1024*1024):.2f} MB ({orig_size:,} bytes)")
+
+    font, cmap, rev_cmap, all_ligatures = extract_original_ligatures(master_font_path)
+    print(f"Original Master Font contains {len(all_ligatures):,} ligatures.")
+
+    # 1. Scan codebase for all tokens that match ligatures
+    scanned_tokens = scan_all_tokens_in_codebase(all_ligatures)
+
+    # 2. Add category picker list & known required icons
+    target_icons = scanned_tokens.union(CATEGORY_PICKER_ICONS).union(KNOWN_CRITICAL_ICONS)
+    print(f"Targeting {len(target_icons)} icon ligatures ({len(scanned_tokens)} discovered + category picker + critical).")
+
+    # Verify known broken icons are present
+    for critical_icon in KNOWN_CRITICAL_ICONS:
+        if critical_icon not in target_icons:
+            print(f"WARNING: Critical icon '{critical_icon}' not detected! Adding explicitly.")
+            target_icons.add(critical_icon)
+
+    # 3. Filter GSUB subtable ligatures
     gsub = font['GSUB'].table
     kept_ligatures = 0
     target_lig_glyphs = set()
@@ -107,8 +162,7 @@ def main():
                 for lig in l_list:
                     comp_chars = [rev_cmap.get(c, c).lower() for c in lig.Component]
                     word = (first_char + ''.join(comp_chars)).strip()
-                    # Check if word matches our icons or if LigGlyph matches
-                    if word in all_target_icons or lig.LigGlyph in all_target_icons:
+                    if word in target_icons or lig.LigGlyph in target_icons:
                         filtered.append(lig)
                         target_lig_glyphs.add(lig.LigGlyph)
                         kept_ligatures += 1
@@ -123,9 +177,9 @@ def main():
         or (hasattr(st, 'ligatures') and st.ligatures)
     ]
 
-    print(f'Retained {kept_ligatures} active ligatures mapping to {len(target_lig_glyphs)} unique icon glyphs.')
+    print(f"Retained {kept_ligatures} active ligatures mapping to {len(target_lig_glyphs)} unique icon glyphs.")
 
-    # Drop variable font tables (eliminating the ~9.3 MB uncompressed / ~3 MB compressed gvar bloat)
+    # 4. Drop variable font tables (gvar is ~9.3 MB uncompressed / ~3 MB compressed bloat)
     for tag in ['gvar', 'fvar', 'avar', 'HVAR', 'STAT']:
         if tag in font:
             del font[tag]
@@ -133,7 +187,7 @@ def main():
     temp_pruned_ttf = os.path.join(PUBLIC_FONTS_DIR, 'material-symbols-pruned.tmp.ttf')
     font.save(temp_pruned_ttf)
 
-    # Base ASCII glyphs (space, letters, digits, punctuation)
+    # Base ASCII glyphs (space, letters, digits, punctuation for ligature typing)
     ascii_glyphs = {gname for cp, gname in cmap.items() if 32 <= cp <= 126}
     ascii_glyphs.add('.notdef')
 
@@ -154,42 +208,52 @@ def main():
         '--glyph-names'
     ]
 
-    print('Running fontTools.subset with optimized glyph set...')
+    print("Executing fontTools.subset optimization...")
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
-        print('fontTools.subset failed:')
+        print("fontTools.subset failed:")
         print(res.stderr)
         if os.path.exists(temp_pruned_ttf):
             os.remove(temp_pruned_ttf)
         sys.exit(res.returncode)
 
-    # Clean up temp ttf
     if os.path.exists(temp_pruned_ttf):
         os.remove(temp_pruned_ttf)
 
     new_size = os.path.getsize(temp_output_woff2)
     pct_reduction = (1 - (new_size / orig_size)) * 100
 
-    print('\n[OK] Material Symbols Font Successfully Subsetted!')
-    print(f'Before: {orig_size / (1024*1024):.2f} MB ({orig_size:,} bytes)')
-    print(f'After:  {new_size / 1024:.2f} KB ({new_size:,} bytes)')
-    print(f'Savings: {orig_size - new_size:,} bytes ({pct_reduction:.1f}% reduction!)')
+    # Safety check: NEVER ship full 3.9 MB font
+    if new_size > 500_000:
+        print(f"ERROR: Subset font size ({new_size:,} bytes) exceeds 500 KB limit!")
+        sys.exit(1)
 
-    # Install to public/fonts/
-    shutil.move(temp_output_woff2, SUBSET_FONT)
-    print(f'Saved optimized font to {SUBSET_FONT}')
+    print("\n[OK] Material Symbols Font Subsetting Complete!")
+    print(f"Master Size:   {orig_size / (1024*1024):.2f} MB ({orig_size:,} bytes)")
+    print(f"Subset Size:   {new_size / 1024:.2f} KB ({new_size:,} bytes)")
+    print(f"Payload Saved: {orig_size - new_size:,} bytes ({pct_reduction:.1f}% reduction)")
+
+    os.makedirs(PUBLIC_FONTS_DIR, exist_ok=True)
+    # On Windows, os.rename/shutil.move can fail with WinError 1224 if Vite dev server holds a mapped section.
+    # Reading bytes and writing directly safely overwrites in-place.
+    with open(temp_output_woff2, 'rb') as f_src:
+        font_bytes = f_src.read()
+    with open(SUBSET_FONT, 'wb') as f_dst:
+        f_dst.write(font_bytes)
+    if os.path.exists(temp_output_woff2):
+        os.remove(temp_output_woff2)
+    print(f"Installed subset font to {SUBSET_FONT}")
 
     # Also sync to dist/fonts if dist exists
     dist_fonts_dir = os.path.dirname(DIST_FONT)
     if os.path.exists(dist_fonts_dir):
         shutil.copy2(SUBSET_FONT, DIST_FONT)
-        print(f'Synced to {DIST_FONT}')
+        print(f"Synced subset font to {DIST_FONT}")
 
-    # Clean up any test artifacts
-    for cleanup_f in ['pruned-temp.ttf', 'test-subset.woff2', 'test-static-subset.woff2', 'test-instantiated.woff2', 'pruned-subset.woff2']:
-        p = os.path.join(PUBLIC_FONTS_DIR, cleanup_f)
-        if os.path.exists(p):
-            os.remove(p)
+    # Clean up testSubsetScan.py
+    test_scan = os.path.join(REPO_DIR, 'scripts', 'testSubsetScan.py')
+    if os.path.exists(test_scan):
+        os.remove(test_scan)
 
 if __name__ == '__main__':
     main()

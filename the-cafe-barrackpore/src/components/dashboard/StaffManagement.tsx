@@ -175,7 +175,7 @@ export const StaffManagement: React.FC = () => {
             Staff & Terminals
           </h2>
           <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
-            Manage operational team profiles, POS credentials, role authorization, and terminal permissions.
+            {t('staff.staff.manage_operational_team_profiles', 'Manage operational team profiles, POS credentials, role authorization, and terminal permissions.')}
           </p>
         </div>
 
@@ -229,7 +229,7 @@ export const StaffManagement: React.FC = () => {
             <div>
               <p className="font-bold text-amber-300">{t('staff.dashboard.manager_shift_oversight', 'Manager Shift Oversight')}</p>
               <p className="text-[11px] text-amber-200/80 mt-0.5 leading-relaxed">
-                You have active authorization to view the staff ledger. Provisioning new accounts and altering terminal roles is restricted to restaurant proprietors.
+                {t('staff.staff.you_have_active_authorization_to', 'You have active authorization to view the staff ledger. Provisioning new accounts and altering terminal roles is restricted to restaurant proprietors.')}
               </p>
             </div>
           </div>
@@ -278,7 +278,7 @@ export const StaffManagement: React.FC = () => {
                             {staff.full_name}
                             {isCurrent && (
                               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] font-mono uppercase">
-                                You
+                                {t('staff.staff.you', 'You')}
                               </span>
                             )}
                           </p>
@@ -313,7 +313,7 @@ export const StaffManagement: React.FC = () => {
                               : 'bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border-emerald-500/30'
                           }`}
                         >
-                          {staff.active ? 'Deactivate' : 'Reactivate'}
+                          {staff.active ? t('staff.staff.deactivate', 'Deactivate') : t('staff.staff.reactivate', 'Reactivate')}
                         </button>
                       ) : (
                         <span className="text-zinc-600 font-mono text-[10px]">{t('staff.dashboard.protected', 'Protected')}</span>
@@ -363,7 +363,7 @@ export const StaffManagement: React.FC = () => {
                                 <span className="text-sm">{staff.full_name}</span>
                                 {isCurrent && (
                                   <span className="px-2 py-0.5 rounded-full text-[9px] bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 font-mono uppercase tracking-wider">
-                                    You
+                                    {t('staff.staff.you', 'You')}
                                   </span>
                                 )}
                               </p>
@@ -401,7 +401,7 @@ export const StaffManagement: React.FC = () => {
                             }`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${staff.active ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                            <span>{staff.active ? 'Active' : 'Deactivated'}</span>
+                            <span>{staff.active ? t('staff.staff.active', 'Active') : t('staff.staff.deactivated', 'Deactivated')}</span>
                           </span>
                         </td>
 
@@ -424,7 +424,7 @@ export const StaffManagement: React.FC = () => {
                                   : 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border-emerald-500/30'
                               }`}
                             >
-                              {staff.active ? 'Deactivate' : 'Reactivate'}
+                              {staff.active ? t('staff.staff.deactivate', 'Deactivate') : t('staff.staff.reactivate', 'Reactivate')}
                             </button>
                           ) : (
                             <span className="text-zinc-600 font-mono text-xs">—</span>
@@ -453,10 +453,10 @@ export const StaffManagement: React.FC = () => {
               <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-5">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                    Security Provisioning
+                    {t('staff.staff.security_provisioning', 'Security Provisioning')}
                   </span>
                   <h3 className="text-xl font-serif font-black text-white mt-0.5">
-                    Provision Terminal Profile
+                    {t('staff.staff.provision_terminal_profile', 'Provision Terminal Profile')}
                   </h3>
                 </div>
                 <button
@@ -471,7 +471,7 @@ export const StaffManagement: React.FC = () => {
               <form onSubmit={handleInviteSubmit} className="space-y-4 text-xs">
                 <div>
                   <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Full Name
+                    {t('staff.staff.full_name', 'Full Name')}
                   </label>
                   <input
                     type="text"
@@ -485,7 +485,7 @@ export const StaffManagement: React.FC = () => {
 
                 <div>
                   <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Terminal Email Address
+                    {t('staff.staff.terminal_email_address', 'Terminal Email Address')}
                   </label>
                   <input
                     type="email"
@@ -499,15 +499,15 @@ export const StaffManagement: React.FC = () => {
 
                 <div>
                   <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Operational Role
+                    {t('staff.staff.operational_role', 'Operational Role')}
                   </label>
                   <select
                     value={inviteRole}
                     onChange={(e) => setInviteRole(e.target.value as StaffRole)}
                     className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                   >
-                    <option value="staff" className="bg-[#120F0D]">{t('staff.dashboard.staff_orders_amp_kitchen', 'Staff (Orders &amp; Kitchen)')}</option>
-                    <option value="manager" className="bg-[#120F0D]">{t('staff.dashboard.manager_floor_amp_roster', 'Manager (Floor &amp; Roster)')}</option>
+                    <option value="staff" className="bg-[#120F0D]">{t('staff.dashboard.staff_orders_amp_kitchen', 'Staff (Orders & Kitchen)')}</option>
+                    <option value="manager" className="bg-[#120F0D]">{t('staff.dashboard.manager_floor_amp_roster', 'Manager (Floor & Roster)')}</option>
                     <option value="owner" className="bg-[#120F0D]">{t('staff.dashboard.owner_proprietor_full_access', 'Owner (Proprietor Full Access)')}</option>
                   </select>
                 </div>
@@ -518,7 +518,7 @@ export const StaffManagement: React.FC = () => {
                     onClick={() => setIsInviteModalOpen(false)}
                     className="flex-1 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] font-bold text-xs text-zinc-300 hover:text-white transition-colors cursor-pointer"
                   >
-                    Cancel
+                    {t('staff.staff.cancel', 'Cancel')}
                   </button>
                   <button
                     type="submit"

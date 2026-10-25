@@ -49,9 +49,13 @@ export const es: TranslationDictionary = {
     reservations: 'Reservas',
     orderOnline: 'Pedir online',
     gallery: 'Galería',
-    ourStory: 'Nuestra historia',
+    ourStory: 'Historia',
     contact: 'Contacto',
-    staffPortal: 'Portal del personal',
+    staffPortal: 'Personal',
+    platters: 'Platos',
+    story: 'Historia',
+    vip: 'VIP',
+    reserve: 'Reservar',
   },
 
   hero: {
@@ -381,8 +385,8 @@ export const es: TranslationDictionary = {
 
   story: {
     badge: "EST. CANTÓN DE BARRACKPORE",
-    title: "Herencia, Fuego y Café de Especialidad",
-    titleItalic: "Fuego y Tueste",
+    title: "Herencia, Fuego y",
+    titleItalic: "Café de Especialidad",
     subtitle: "Donde la arquitectura histórica militar se une a la perfección culinaria pausada.",
     description: "Décadas de tueste artesanal, masas madre estiradas a mano al horno de leña y hospitalidad crepuscular.",
     manifesto: "SIN PLANTILLAS. SIN PRISAS EN LA MESA. CADA ESPRESSO EXTRAÍDO A 9 BARES, CADA MASA ESTIRADA A MANO, EN CÁLIDA LUZ ÁMBAR A 2200K.",

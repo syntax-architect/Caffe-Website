@@ -240,14 +240,14 @@ export const DiscountsManagement: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
             <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-              Promotion Engine
+              {t('staff.discounts.promotion_engine', 'Promotion Engine')}
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-1 tracking-tight">
             Discounts & Happy Hours
           </h2>
           <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
-            Manage promotional discount codes and automate weekly happy hour schedules.
+            {t('staff.discounts.manage_promotional_discount_code', 'Manage promotional discount codes and automate weekly happy hour schedules.')}
           </p>
         </div>
       </div>
@@ -262,7 +262,7 @@ export const DiscountsManagement: React.FC = () => {
               : 'text-zinc-500 hover:text-white hover:bg-white/[0.04] border border-transparent'
           }`}
         >
-          Discount Codes
+          {t('staff.discounts.discount_codes', 'Discount Codes')}
         </button>
         <button
           onClick={() => setActiveTab('happy_hours')}
@@ -272,7 +272,7 @@ export const DiscountsManagement: React.FC = () => {
               : 'text-zinc-500 hover:text-white hover:bg-white/[0.04] border border-transparent'
           }`}
         >
-          Happy Hours
+          {t('staff.discounts.happy_hours', 'Happy Hours')}
         </button>
       </div>
 
@@ -288,7 +288,7 @@ export const DiscountsManagement: React.FC = () => {
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] text-[#070605] text-xs font-black tracking-wider uppercase flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all"
             >
               <span className="material-symbols-outlined text-sm">add</span>
-              Create Code
+              {t('staff.discounts.create_code', 'Create Code')}
             </button>
           </div>
 
@@ -338,7 +338,7 @@ export const DiscountsManagement: React.FC = () => {
                   {discountCodes.length === 0 && (
                     <tr>
                       <td colSpan={7} className="px-4 py-8 text-center text-zinc-500">
-                        No discount codes found. Create one to get started.
+                        {t('staff.discounts.no_discount_codes_found_create_o', 'No discount codes found. Create one to get started.')}
                       </td>
                     </tr>
                   )}
@@ -355,7 +355,7 @@ export const DiscountsManagement: React.FC = () => {
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] text-[#070605] text-xs font-black tracking-wider uppercase flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all"
             >
               <span className="material-symbols-outlined text-sm">add</span>
-              Add Schedule
+              {t('staff.discounts.add_schedule', 'Add Schedule')}
             </button>
           </div>
 
@@ -400,7 +400,7 @@ export const DiscountsManagement: React.FC = () => {
                       <div className="flex justify-between text-xs">
                         <span className="text-zinc-500">{t('staff.dashboard.status', 'Status:')}</span>
                         <span className={hh.active ? "text-emerald-400" : "text-zinc-500"}>
-                          {hh.active ? 'Active' : 'Inactive'}
+                          {hh.active ? t('staff.discounts.active', 'Active') : t('staff.discounts.inactive', 'Inactive')}
                         </span>
                       </div>
                     </div>
@@ -411,7 +411,7 @@ export const DiscountsManagement: React.FC = () => {
             {happyHours.length === 0 && (
               <div className="col-span-full py-10 text-center text-zinc-500 p-1 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06]">
                 <div className="p-4 rounded-[calc(1rem-0.125rem)] bg-[#120F0D]">
-                  No happy hour schedules found. Create one to automatically apply discounts during specific times.
+                  {t('staff.discounts.no_happy_hour_schedules_found_cr', 'No happy hour schedules found. Create one to automatically apply discounts during specific times.')}
                 </div>
               </div>
             )}
@@ -426,7 +426,7 @@ export const DiscountsManagement: React.FC = () => {
             <div className="bg-[#120F0D] rounded-[calc(1rem-0.125rem)] p-6 overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-serif font-black text-white">
-                  {dcFormId ? 'Edit Discount Code' : 'Create Discount Code'}
+                  {dcFormId ? t('staff.discounts.edit_code', 'Edit Discount Code') : t('staff.discounts.create_code', 'Create Discount Code')}
                 </h3>
                 <button onClick={() => setIsDcModalOpen(false)} className="text-zinc-400 hover:text-white">
                   <span className="material-symbols-outlined">close</span>
@@ -561,7 +561,7 @@ export const DiscountsManagement: React.FC = () => {
                     onClick={() => setIsDcModalOpen(false)}
                     className="px-4 py-2 rounded-lg text-sm font-bold text-zinc-400 hover:text-white transition-colors"
                   >
-                    Cancel
+                    {t('staff.discounts.cancel', 'Cancel')}
                   </button>
                   <button
                     type="submit"
@@ -584,7 +584,7 @@ export const DiscountsManagement: React.FC = () => {
             <div className="bg-[#120F0D] rounded-[calc(1rem-0.125rem)] p-6 overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-serif font-black text-white">
-                  {hhFormId ? 'Edit Happy Hour' : 'Add Happy Hour'}
+                  {hhFormId ? t('staff.discounts.edit_hh', 'Edit Happy Hour') : t('staff.discounts.add_hh', 'Add Happy Hour')}
                 </h3>
                 <button onClick={() => setIsHhModalOpen(false)} className="text-zinc-400 hover:text-white">
                   <span className="material-symbols-outlined">close</span>
@@ -686,7 +686,7 @@ export const DiscountsManagement: React.FC = () => {
                     onClick={() => setIsHhModalOpen(false)}
                     className="px-4 py-2 rounded-lg text-sm font-bold text-zinc-400 hover:text-white transition-colors"
                   >
-                    Cancel
+                    {t('staff.discounts.cancel', 'Cancel')}
                   </button>
                   <button
                     type="submit"

@@ -281,7 +281,7 @@ export const AuditLogManagement: React.FC = () => {
                         onClick={() => setSelectedLog(log)}
                         className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-stone-300 hover:text-white text-[11px] transition-colors"
                       >
-                        Details
+                        {t('staff.audit.details', 'Details')}
                       </button>
                     </td>
                   </tr>
@@ -342,7 +342,7 @@ export const AuditLogManagement: React.FC = () => {
                 onClick={() => setSelectedLog(null)}
                 className="px-4 py-2 rounded-xl bg-[#D4AF37] text-[#120B08] font-bold text-xs"
               >
-                Close
+                {t('staff.audit.close', 'Close')}
               </button>
             </div>
           </div>

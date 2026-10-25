@@ -680,7 +680,7 @@ export const Hero: React.FC = React.memo(() => {
         </span>
         <span className="text-outline/40">|</span>
         <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-primary font-semibold">
-          REEL 01 READY
+          {t('hero.reel_01_ready', 'REEL 01 READY')}
         </span>
       </div>
     </section>

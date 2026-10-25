@@ -18,7 +18,7 @@ lighthouse-*
 *-report*.html
 *.trace.json
 *.devtoolslog.json
-test-results/
+test-results-temp/
 playwright-report/
 src/config/pendingTaxRules.json
 

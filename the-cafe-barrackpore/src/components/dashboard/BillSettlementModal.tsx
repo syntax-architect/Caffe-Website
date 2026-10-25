@@ -294,7 +294,9 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
         const changeMsg = res.changeDue > 0 ? ` (Change Due: ${formatCurrency(res.changeDue)})` : '';
         addNotification(
           'success',
-          res.isDuplicate ? 'Payment Already Verified' : 'Payment Recorded',
+          res.isDuplicate
+            ? t('staff.settlement.payment_verified', 'Payment Already Verified')
+            : t('staff.settlement.payment_recorded', 'Payment Recorded'),
           `Settled ${formatCurrency(res.amount)} via ${res.tenderType.toUpperCase()}${changeMsg}.`
         );
 
@@ -407,7 +409,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
             }`}
           >
             <span className="material-symbols-outlined text-sm">payments</span>
-            Take Payment
+            {t('staff.settlement.take_payment', 'Take Payment')}
           </button>
           {features?.split_bills !== false && (
             <button
@@ -420,7 +422,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
               }`}
             >
               <span className="material-symbols-outlined text-sm">call_split</span>
-              Split Bill
+              {t('staff.settlement.split_bill', 'Split Bill')}
             </button>
           )}
           <button
@@ -444,7 +446,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
               <span className="material-symbols-outlined animate-spin text-2xl text-[#D4AF37] block mb-2">
                 progress_activity
               </span>
-              Loading billing configuration...
+              {t('staff.settlement.loading_billing_configuration', 'Loading billing configuration...')}
             </div>
           ) : (
             <>
@@ -508,7 +510,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                   {/* Tender Selection */}
                   <div>
                     <label className="text-xs font-bold uppercase tracking-wider text-stone-300 block mb-2">
-                      Choose Tender Type
+                      {t('staff.settlement.choose_tender_type', 'Choose Tender Type')}
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {[
@@ -584,7 +586,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                         </div>
                         <div>
                           <label className="text-xs text-stone-300 block mb-1">
-                            Cash Tendered by Guest:
+                            {t('staff.settlement.cash_tendered_by_guest', 'Cash Tendered by Guest:')}
                           </label>
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-mono">
@@ -603,7 +605,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                         {/* Change Due Callout */}
                         <div className="flex justify-between items-center pt-2 border-t border-amber-500/20">
                           <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                            Change Due to Guest:
+                            {t('staff.settlement.change_due_to_guest', 'Change Due to Guest:')}
                           </span>
                           <span
                             className={`text-lg font-mono font-bold ${
@@ -678,7 +680,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                       {isProcessing ? (
                         <>
                           <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
-                          Recording Settlement...
+                          {t('staff.settlement.recording_settlement', 'Recording Settlement...')}
                         </>
                       ) : (
                         <>
@@ -694,10 +696,10 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                           printCustomerReceipt(order, items);
                         }}
                         className="py-3 px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-stone-300 hover:text-white border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                        title="Print Customer Bill"
+                        title={t('staff.settlement.print_customer_bill', 'Print Customer Bill')}
                       >
                         <span className="material-symbols-outlined text-sm">receipt_long</span>
-                        Print Bill
+                        {t('staff.settlement.print_bill', 'Print Bill')}
                       </button>
                     )}
                   </div>
@@ -735,7 +737,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                     <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-4">
                       <div className="flex items-center justify-between">
                         <label className="text-xs text-stone-300 font-bold uppercase tracking-wider">
-                          Number of Guests (N People):
+                          {t('staff.settlement.number_of_guests_n_people', 'Number of Guests (N People):')}
                         </label>
                         <div className="flex items-center gap-2">
                           <button
@@ -800,7 +802,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                     <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold uppercase tracking-wider text-stone-300">
-                          Number of Guest Shares:
+                          {t('staff.settlement.number_of_guest_shares', 'Number of Guest Shares:')}
                         </span>
                         <div className="flex items-center gap-2">
                           <button
@@ -872,7 +874,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                         onClick={handleApplyItemSplit}
                         className="w-full py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c29f2f] text-black font-bold text-xs uppercase tracking-wider transition-all"
                       >
-                        Apply Itemized Split with Proportional Tax
+                        {t('staff.settlement.apply_itemized_split_with_propor', 'Apply Itemized Split with Proportional Tax')}
                       </button>
                     </div>
                   )}
@@ -882,7 +884,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                     <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-bold uppercase tracking-wider text-stone-300">
-                          Custom Amounts by Payer
+                          {t('staff.settlement.custom_amounts_by_payer', 'Custom Amounts by Payer')}
                         </span>
                         <button
                           type="button"
@@ -965,7 +967,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                         onClick={handleApplyCustomSplit}
                         className="w-full py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c29f2f] text-black font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50"
                       >
-                        Apply Custom Split
+                        {t('staff.settlement.apply_custom_split', 'Apply Custom Split')}
                       </button>
                     </div>
                   )}
@@ -980,7 +982,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                       <span className="material-symbols-outlined text-3xl text-rose-400">shield_lock</span>
                       <h4 className="font-bold text-sm text-white">{t('staff.dashboard.manager_authorization_required', 'Manager Authorization Required')}</h4>
                       <p className="text-xs text-rose-200">
-                        Refunds and post-payment voiding require Manager or Owner role credentials. Standard staff cannot perform cancellations after settlement.
+                        {t('staff.settlement.refunds_and_post_payment_voiding', 'Refunds and post-payment voiding require Manager or Owner role credentials. Standard staff cannot perform cancellations after settlement.')}
                       </p>
                     </div>
                   ) : (

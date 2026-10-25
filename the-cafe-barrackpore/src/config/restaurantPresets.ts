@@ -1018,3 +1018,82 @@ export const DEFAULT_RESTAURANT_CONFIG: RestaurantLocalizationConfig = {
     language_switcher: true,
   },
 };
+
+
+/**
+ * Ireland Euro Demo Preset
+ * Turnkey configuration for European demonstration:
+ * EUR currency, 9% / 23% dual-rate VAT, Dublin address, international dietary system.
+ */
+export const IRELAND_DEMO_CONFIG: RestaurantLocalizationConfig = {
+  country: 'IE',
+  businessName: 'The Artisan Roast Dublin',
+  shortName: 'Artisan Roast',
+  currency: 'EUR',
+  currencySymbol: '€',
+  locale: 'en-IE',
+  timezone: 'Europe/Dublin',
+  phoneCountryCode: '+353',
+  phoneValidationMode: 'country',
+  openingTime: '08:00 AM',
+  closingTime: '11:00 PM',
+  isOrderingEnabled: true,
+  isTableBookingEnabled: true,
+  announcementBanner: null,
+
+  tax: {
+    enabled: true,
+    mode: 'inclusive',
+    label: 'VAT',
+    rate: 0.09, // 9% food / hospitality
+    taxId: 'IE3294817H',
+    taxIdLabel: 'VAT No.',
+  },
+
+  dietary: {
+    system: 'international',
+  },
+
+  contact: {
+    primaryMethod: 'phone',
+    phone: '+35314982000',
+    displayPhone: '+353 1 498 2000',
+    whatsapp: '+35314982000',
+    email: 'info@artisanroast.ie',
+  },
+
+  address: {
+    line1: '28 Temple Bar',
+    city: 'Dublin',
+    region: 'Leinster',
+    postalCode: 'D02 X285',
+    country: 'Ireland',
+  },
+
+  payments: {
+    enabled: false,
+    provider: 'stripe',
+    mode: 'disabled',
+  },
+
+  features: {
+    online_ordering: true,
+    delivery: false,
+    takeaway: true,
+    qr_table_ordering: true,
+    reservations: true,
+    kds: true,
+    pos: true,
+    running_table_bills: true,
+    split_bills: true,
+    cash_drawer: true,
+    kot_printing: true,
+    discounts: true,
+    tips: true,
+    vip_club: true,
+    online_payments: false,
+    specials_banner: true,
+    gallery: true,
+    language_switcher: true,
+  },
+};

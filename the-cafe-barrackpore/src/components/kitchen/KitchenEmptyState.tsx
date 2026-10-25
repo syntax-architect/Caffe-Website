@@ -31,13 +31,13 @@ export const KitchenEmptyState: React.FC<KitchenEmptyStateProps> = ({
           </div>
 
           <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#D4AF37]">
-            Active Station Standby
+            {t('kitchen.active_station_standby', 'Active Station Standby')}
           </span>
-          <h3 className="text-2xl font-serif font-black text-white tracking-tight mt-1">
-            Kitchen Rail is Clear
+          <h3 data-testid="kds-empty-state" className="text-2xl font-serif font-black text-white tracking-tight mt-1">
+            {t('staff.kitchen.noActiveTickets', 'No active tickets')}
           </h3>
           <p className="text-xs text-zinc-400 mt-2 leading-relaxed max-w-sm">
-            All guest orders have been prepared and delivered to dining covers or takeaway. Real-time optical dispatch is standing by for new tickets.
+            {t('staff.kitchen.railClear', 'All guest orders have been prepared and delivered. Kitchen rail is clear and standing by for new tickets.')}
           </p>
 
           {/* Action shortcuts */}

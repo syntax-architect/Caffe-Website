@@ -101,7 +101,7 @@ const QRContent: React.FC = () => {
             <img src={logoUrl || "/logo.webp"} alt={restaurantConfig.businessName} className="w-full h-full object-contain" />
           </div>
           <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#D4AF37]">
-            Optical Table Interface
+            {t('qr.optical_table_interface', 'Optical Table Interface')}
           </span>
           <h1 className="text-xl sm:text-2xl font-serif font-semibold tracking-wider text-white mt-1">
             {restaurantConfig.businessName}
@@ -116,7 +116,7 @@ const QRContent: React.FC = () => {
               </div>
 
               <h2 className="text-2xl font-serif font-semibold text-white mb-2">
-                Scan Your Table Stand
+                {t('qr.scan_your_table_stand', 'Scan Your Table Stand')}
               </h2>
 
               <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed mb-8">
@@ -207,7 +207,7 @@ const QRContent: React.FC = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           {/* Brand Crest */}
           <div className="flex items-center gap-3">
-            <a href="/" title="Go to Home" className="flex items-center gap-3 group">
+            <a href="/" title={t('qr.go_to_home', 'Go to Home')} className="flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37]/25 to-black/60 border border-[#D4AF37]/40 flex items-center justify-center p-1.5 transition-transform group-hover:scale-105 shadow-[0_0_16px_rgba(212,175,55,0.25)] shrink-0">
                 <img src={logoUrl || "/logo.webp"} alt="Logo" className="w-full h-full object-contain" />
               </div>
@@ -215,8 +215,8 @@ const QRContent: React.FC = () => {
                 <p className="text-xs font-serif font-semibold tracking-wider text-white leading-tight group-hover:text-[#D4AF37] transition-colors">
                   {restaurantConfig.shortName || restaurantConfig.businessName}
                 </p>
-                <p className="text-[9px] text-zinc-400 uppercase tracking-widest font-mono">
-                  {restaurantConfig.address.city} • Cantonment
+                <p className="text-[11px] text-zinc-400 uppercase tracking-widest font-mono">
+                  {restaurantConfig.address.city} • {restaurantConfig.address.region || restaurantConfig.address.country}
                 </p>
               </div>
             </a>
@@ -474,7 +474,7 @@ const QRContent: React.FC = () => {
               <span>•</span>
               <span>{t('qr.zeroWaitDispatch', 'Zero-Wait Line Dispatch')}</span>
               <span>•</span>
-              <span>{t('footer.cantonmentLocation', 'Cantonment, Barrackpore')}</span>
+              <span>{restaurantConfig.address.city}{restaurantConfig.address.region ? `, ${restaurantConfig.address.region}` : ''}</span>
             </div>
           </div>
         </div>

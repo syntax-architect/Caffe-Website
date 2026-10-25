@@ -42,6 +42,24 @@ async function main() {
     CREATE OR REPLACE FUNCTION auth.jwt() RETURNS JSONB AS $$
       SELECT COALESCE(NULLIF(current_setting('request.jwt.claims', true), ''), '{}')::jsonb;
     $$ LANGUAGE sql STABLE;
+
+    -- PGlite Wasm environment pgcrypto crypt & gen_salt compatibility
+    CREATE OR REPLACE FUNCTION gen_salt(type text, iter_count integer DEFAULT 8)
+    RETURNS text AS $$
+    BEGIN
+      RETURN '$2a$08$' || substr(md5(random()::text), 1, 22);
+    END;
+    $$ LANGUAGE plpgsql;
+
+    CREATE OR REPLACE FUNCTION crypt(password text, salt text)
+    RETURNS text AS $$
+    DECLARE
+      v_prefix text;
+    BEGIN
+      v_prefix := substr(salt, 1, 29);
+      RETURN v_prefix || encode(sha256((v_prefix || ':' || password)::bytea), 'hex');
+    END;
+    $$ LANGUAGE plpgsql;
   `);
 
   const migrationsDir = path.resolve(process.cwd(), 'supabase/migrations');

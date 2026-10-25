@@ -345,7 +345,7 @@ export const OrderSuccessPage: React.FC = () => {
             <div>
               <h1 className="font-serif text-2xl font-bold text-white">{t('cart.paymentFailed', 'Payment Declined')}</h1>
               <p className="text-xs text-zinc-400 mt-2 max-w-sm mx-auto">
-                Your transaction could not be processed by the bank or gateway. Please try an alternative payment method or choose Pay at Counter.
+                {t('orderSuccess.your_transaction_could_not_be_pr', 'Your transaction could not be processed by the bank or gateway. Please try an alternative payment method or choose Pay at Counter.')}
               </p>
             </div>
             {orderRef && (
@@ -382,7 +382,7 @@ export const OrderSuccessPage: React.FC = () => {
                 {t('cart.paymentPending', 'Awaiting Gateway Settlement')}
               </h1>
               <p className="text-xs text-zinc-400 mt-2 max-w-sm mx-auto">
-                We received your authorization. Confirming payment settlement with your bank and registering your kitchen ticket...
+                {t('orderSuccess.we_received_your_authorization_c', 'We received your authorization. Confirming payment settlement with your bank and registering your kitchen ticket...')}
               </p>
             </div>
             {orderRef && (
@@ -579,7 +579,7 @@ export const OrderSuccessPage: React.FC = () => {
                 <span className="text-amber-400 text-lg">★★★★★</span>
                 <div>
                   <p className="text-xs font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
-                    Loved your meal? Rate us on Google Maps
+                    {t('orderSuccess.loved_your_meal_rate_us_on_googl', 'Loved your meal? Rate us on Google Maps')}
                   </p>
                   <p className="text-[11px] text-zinc-400">
                     Takes 5 seconds and helps our local café team immensely.

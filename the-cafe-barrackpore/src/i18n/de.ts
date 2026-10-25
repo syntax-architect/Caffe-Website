@@ -47,11 +47,15 @@ export const de: TranslationDictionary = {
     home: 'Startseite',
     menu: 'Speisekarte',
     reservations: 'Reservierungen',
-    orderOnline: 'Online bestellen',
+    orderOnline: 'Bestellen',
     gallery: 'Galerie',
-    ourStory: 'Unsere Geschichte',
+    ourStory: 'Geschichte',
     contact: 'Kontakt',
-    staffPortal: 'Mitarbeiterportal',
+    staffPortal: 'Personal',
+    platters: 'Platten',
+    story: 'Geschichte',
+    vip: 'VIP',
+    reserve: 'Reservieren',
   },
 
   hero: {
@@ -381,8 +385,8 @@ export const de: TranslationDictionary = {
 
   story: {
     badge: "GEGR. BARRACKPORE CANTONMENT",
-    title: "Erbe, Flamme & Spezialitätenkaffee",
-    titleItalic: "Flamme & Röstung",
+    title: "Erbe, Flamme &",
+    titleItalic: "Spezialitätenkaffee",
     subtitle: "Wo historische Militärarchitektur auf langsame kulinarische Perfektion trifft.",
     description: "Jahrzehnte handwerklicher Röstung, holzgebackene Sauerteigkrusten und abendliche Gastfreundschaft.",
     manifesto: "KEINE SCHABLONEN. KEINE GEHETZTEN TISCHE. JEDER ESPRESSO BEI 9 BAR GEZOGEN, JEDER TEIG VON HAND GEFORMT, BEI 2200K BERNSTEINWÄRME.",

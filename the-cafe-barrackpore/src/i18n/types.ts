@@ -78,12 +78,18 @@ export interface TranslationDictionary {
   nav: {
     home: string;
     menu: string;
+    specials?: string;
+    ourStory: string;
+    gallery: string;
+    vipClub?: string;
     reservations: string;
     orderOnline: string;
-    gallery: string;
-    ourStory: string;
     contact: string;
     staffPortal: string;
+    platters?: string;
+    story?: string;
+    vip?: string;
+    reserve?: string;
   };
 
   // ─── Hero Section ──────────────────────────────────

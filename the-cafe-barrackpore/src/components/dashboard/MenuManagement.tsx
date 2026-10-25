@@ -6,6 +6,7 @@ import type { MenuItem, MenuCategory, MenuItemTranslations } from '../../types/m
 import type { TaxCategory } from '../../types/tax';
 import { suggestTaxCategory } from '../../config/taxRegistry';
 import { LANGUAGE_META, type SupportedLanguage } from '../../i18n';
+import { CATEGORY_PICKER_ICONS, getCategoryIcon } from '../../config/categoryIcons';
 import {
   fetchMenuItems,
   fetchMenuCategories,
@@ -28,6 +29,8 @@ export const MenuManagement: React.FC = () => {
 
   const [items, setItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<MenuCategory[]>(MENU_CATEGORIES_FALLBACK);
+  const [isCategoryPickerModalOpen, setIsCategoryPickerModalOpen] = useState(false);
+  const [selectedCategoryForIcon, setSelectedCategoryForIcon] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -198,7 +201,9 @@ export const MenuManagement: React.FC = () => {
 
       addNotification(
         'success',
-        editingItem ? 'Menu Item Updated' : 'Menu Item Created',
+        editingItem
+          ? t('staff.menu.item_updated', 'Menu Item Updated')
+          : t('staff.menu.item_created', 'Menu Item Created'),
         `"${formName}" has been persisted to the database and is live on the website.`
       );
       setEditingItem(null);
@@ -297,18 +302,31 @@ export const MenuManagement: React.FC = () => {
             Menu & Availability
           </h2>
           <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
-            Instant 86'd toggles for kitchen service, real-time catalog pricing, and automatic Supabase synchronization across table QR and online delivery.
+            {t('staff.menu.instant_86_d_toggles_for_kitchen', 'Instant 86\'d toggles for kitchen service, real-time catalog pricing, and automatic Supabase synchronization across table QR and online delivery.')}
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="relative group overflow-hidden px-5 py-3 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] text-[#070605] text-xs font-black tracking-wider uppercase shadow-[0_10px_30px_rgba(212,175,55,0.25)] hover:shadow-[0_15px_40px_rgba(212,175,55,0.4)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-base font-bold">add</span>
-          <span>{t('staff.dashboard.add_menu_item', 'Add Menu Item')}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedCategoryForIcon(categories[0]?.id || null);
+              setIsCategoryPickerModalOpen(true);
+            }}
+            className="px-4 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] text-zinc-300 hover:text-white text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-md"
+          >
+            <span className="material-symbols-outlined text-base text-[#D4AF37]">category</span>
+            <span>{t('staff.dashboard.category_icons', 'Category Icons')}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="relative group overflow-hidden px-5 py-3 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] text-[#070605] text-xs font-black tracking-wider uppercase shadow-[0_10px_30px_rgba(212,175,55,0.25)] hover:shadow-[0_15px_40px_rgba(212,175,55,0.4)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-base font-bold">add</span>
+            <span>{t('staff.dashboard.add_menu_item', 'Add Menu Item')}</span>
+          </button>
+        </div>
       </div>
 
       {/* OVERVIEW STATS STRIP */}
@@ -350,7 +368,7 @@ export const MenuManagement: React.FC = () => {
           <div>
             <p className="font-serif font-bold text-white text-sm">{t('staff.dashboard.supabase_realtime_menu_catalog', 'Supabase Realtime Menu Catalog & Storage')}</p>
             <p className="text-zinc-400 text-[11px] leading-relaxed mt-0.5">
-              Catalog mutations and availability toggles write directly to postgres with Row Level Security. Connected guests and kitchen displays update automatically via Supabase Realtime without redeploying.
+              {t('staff.menu.catalog_mutations_and_availabili', 'Catalog mutations and availability toggles write directly to postgres with Row Level Security. Connected guests and kitchen displays update automatically via Supabase Realtime without redeploying.')}
             </p>
           </div>
         </div>
@@ -376,7 +394,7 @@ export const MenuManagement: React.FC = () => {
               onClick={() => setSearchQuery('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs cursor-pointer"
             >
-              Clear
+              {t('staff.menu.clear', 'Clear')}
             </button>
           )}
         </div>
@@ -415,18 +433,20 @@ export const MenuManagement: React.FC = () => {
         </button>
         {categories.map((cat) => {
           const count = items.filter((i) => (i.category_id || i.category) === cat.id).length;
+          const icon = getCategoryIcon(cat.name, cat.icon);
           return (
             <button
               key={cat.id}
               type="button"
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap border ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap border flex items-center gap-2 ${
                 selectedCategory === cat.id
                   ? 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/40'
                   : 'bg-white/[0.02] text-zinc-400 border-white/[0.06] hover:text-white'
               }`}
             >
-              {cat.name} ({count})
+              <span className="material-symbols-outlined text-sm">{icon}</span>
+              <span>{cat.name} ({count})</span>
             </button>
           );
         })}
@@ -556,7 +576,7 @@ export const MenuManagement: React.FC = () => {
                           <span className="text-zinc-500 font-sans text-[10px]">{t('staff.dashboard.unlimited', 'Unlimited')}</span>
                         ) : item.stock_count === 0 ? (
                           <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] font-bold">
-                            SOLD OUT (0)
+                            {t('staff.menu.sold_out_0', 'SOLD OUT (0)')}
                           </span>
                         ) : item.stock_count <= 5 ? (
                           <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
@@ -576,7 +596,7 @@ export const MenuManagement: React.FC = () => {
                               ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
                               : 'bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30'
                           }`}
-                          title="Click to toggle availability"
+                          title={t('staff.menu.click_to_toggle_availability', 'Click to toggle availability')}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
@@ -593,7 +613,7 @@ export const MenuManagement: React.FC = () => {
                           onClick={() => handleOpenEdit(item)}
                           className="px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.06] text-xs font-semibold transition-colors cursor-pointer"
                         >
-                          Edit Item
+                          {t('staff.menu.edit_item', 'Edit Item')}
                         </button>
                       </td>
                     </tr>
@@ -621,7 +641,7 @@ export const MenuManagement: React.FC = () => {
               <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-5">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                    Catalog Mutation
+                    {t('staff.menu.catalog_mutation', 'Catalog Mutation')}
                   </span>
                   <h3 className="text-xl font-serif font-black text-white mt-0.5">
                     {editingItem ? `Edit: ${editingItem.name}` : 'Add Menu Item'}
@@ -642,7 +662,7 @@ export const MenuManagement: React.FC = () => {
               <form onSubmit={handleSaveItem} className="space-y-4 text-xs">
                 <div>
                   <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Dish Name
+                    {t('staff.menu.dish_name', 'Dish Name')}
                   </label>
                   <input
                     type="text"
@@ -678,7 +698,7 @@ export const MenuManagement: React.FC = () => {
 
                   <div>
                     <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                      Category
+                      {t('staff.menu.category', 'Category')}
                     </label>
                     <select
                       value={formCategory}
@@ -702,11 +722,11 @@ export const MenuManagement: React.FC = () => {
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400">
-                        Tax Category
+                        {t('staff.menu.tax_category', 'Tax Category')}
                       </label>
                       {!isTaxCategoryManual && formName.trim() && (
                         <span className="text-[10px] font-mono text-[#D4AF37] px-1.5 py-0.5 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-                          Auto-suggested
+                          {t('staff.menu.auto_suggested', 'Auto-suggested')}
                         </span>
                       )}
                     </div>
@@ -749,7 +769,7 @@ export const MenuManagement: React.FC = () => {
                 {/* IMAGE UPLOAD TO STORAGE BUCKET */}
                 <div>
                   <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Dish Photo (Storage Bucket: site-images)
+                    {t('staff.menu.dish_photo_storage_bucket_site_i', 'Dish Photo (Storage Bucket: site-images)')}
                   </label>
                   <div className="flex items-center gap-3">
                     <div className="w-16 h-16 rounded-xl bg-black/40 border border-white/[0.1] overflow-hidden shrink-0 flex items-center justify-center">
@@ -784,7 +804,7 @@ export const MenuManagement: React.FC = () => {
 
                 <div>
                   <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Dietary Classification
+                    {t('staff.menu.dietary_classification', 'Dietary Classification')}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {(['veg', 'nv', 'vegan'] as const).map((diet) => (
@@ -806,7 +826,7 @@ export const MenuManagement: React.FC = () => {
 
                 <div>
                   <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Badge Tag (Optional)
+                    {t('staff.menu.badge_tag_optional', 'Badge Tag (Optional)')}
                   </label>
                   <input
                     type="text"
@@ -819,7 +839,7 @@ export const MenuManagement: React.FC = () => {
 
                 <div>
                   <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Allergen Warnings (Select all that apply)
+                    {t('staff.menu.allergen_warnings_select_all_tha', 'Allergen Warnings (Select all that apply)')}
                   </label>
                   <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-[#070605] border border-white/[0.1]">
                     {ALLERGEN_OPTIONS.map((alg) => {
@@ -861,7 +881,7 @@ export const MenuManagement: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-[#D4AF37] text-sm">translate</span>
                       <label className="uppercase font-mono font-bold tracking-wider text-white text-[11px]">
-                        Multilingual Translations (12 Languages)
+                        {t('staff.menu.multilingual_translations_12_lan', 'Multilingual Translations (12 Languages)')}
                       </label>
                     </div>
                     <span className="text-[10px] font-mono text-zinc-400">
@@ -909,7 +929,7 @@ export const MenuManagement: React.FC = () => {
                         </span>
                         {LANGUAGE_META[selectedTransLang].direction === 'rtl' && (
                           <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                            RTL
+                            {t('staff.menu.rtl', 'RTL')}
                           </span>
                         )}
                       </div>
@@ -925,7 +945,7 @@ export const MenuManagement: React.FC = () => {
                           }}
                           className="text-[10px] text-zinc-500 hover:text-rose-400 transition-colors"
                         >
-                          Clear
+                          {t('staff.menu.clear', 'Clear')}
                         </button>
                       )}
                     </div>
@@ -997,9 +1017,9 @@ export const MenuManagement: React.FC = () => {
                       type="button"
                       onClick={() => handleDeleteItem(editingItem)}
                       className="py-3 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-xs transition-colors cursor-pointer"
-                      title="Permanently delete from database"
+                      title={t('staff.menu.permanently_delete_from_database', 'Permanently delete from database')}
                     >
-                      Delete
+                      {t('staff.menu.delete', 'Delete')}
                     </button>
                   )}
                   <button
@@ -1010,7 +1030,7 @@ export const MenuManagement: React.FC = () => {
                     }}
                     className="flex-1 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] font-bold text-xs text-zinc-300 hover:text-white transition-colors cursor-pointer"
                   >
-                    Cancel
+                    {t('staff.menu.cancel', 'Cancel')}
                   </button>
                   <button
                     type="submit"
@@ -1021,6 +1041,107 @@ export const MenuManagement: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CATEGORY ICON PICKER MODAL (LIMITED TO SUBSET ICONS) */}
+      {isCategoryPickerModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-xl rounded-3xl bg-[#0F0C0A] border border-[#D4AF37]/40 p-6 shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-[#D4AF37] text-2xl">category</span>
+                <div>
+                  <h3 className="font-serif font-bold text-white text-lg">
+                    {t('staff.dashboard.manage_category_icons', 'Manage Category Icons')}
+                  </h3>
+                  <p className="text-zinc-400 text-xs mt-0.5">
+                    {t('staff.dashboard.fixed_picker_notice', 'Selected icons are strictly restricted to the verified font subset.')}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCategoryPickerModalOpen(false)}
+                className="p-1 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label={t('common.close', 'Close')}
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            {/* Category Select Tabs */}
+            <div className="flex items-center gap-2 overflow-x-auto py-3 border-b border-white/[0.06]">
+              {categories.map((cat) => {
+                const isSelected = (selectedCategoryForIcon || categories[0]?.id) === cat.id;
+                const currentIcon = getCategoryIcon(cat.name, cat.icon);
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategoryForIcon(cat.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all cursor-pointer whitespace-nowrap ${
+                      isSelected
+                        ? 'bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/50 shadow'
+                        : 'bg-white/[0.02] text-zinc-400 border-white/[0.06] hover:text-white'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-sm">{currentIcon}</span>
+                    <span>{cat.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Fixed Icon Grid from CATEGORY_PICKER_ICONS */}
+            <div className="flex-1 overflow-y-auto py-4">
+              <p className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2">
+                {t('staff.dashboard.choose_icon_for', 'Choose Icon For')}:{' '}
+                <span className="text-[#D4AF37] font-bold">
+                  {categories.find((c) => c.id === (selectedCategoryForIcon || categories[0]?.id))?.name}
+                </span>
+              </p>
+              <div className="grid grid-cols-5 sm:grid-cols-6 gap-2.5">
+                {CATEGORY_PICKER_ICONS.map((iconName: string) => {
+                  const targetCat = categories.find((c) => c.id === (selectedCategoryForIcon || categories[0]?.id));
+                  const isCurrent = targetCat ? getCategoryIcon(targetCat.name, targetCat.icon) === iconName : false;
+                  return (
+                    <button
+                      key={iconName}
+                      type="button"
+                      onClick={() => {
+                        const targetId = selectedCategoryForIcon || categories[0]?.id;
+                        if (!targetId) return;
+                        setCategories((prev) =>
+                          prev.map((c) => (c.id === targetId ? { ...c, icon: iconName } : c))
+                        );
+                        addNotification('success', t('staff.dashboard.icon_updated', 'Category Icon Updated'), `${targetCat?.name}: ${iconName}`);
+                      }}
+                      className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1.5 border transition-all cursor-pointer active:scale-95 ${
+                        isCurrent
+                          ? 'bg-[#D4AF37]/25 text-[#D4AF37] border-[#D4AF37] shadow-lg shadow-[#D4AF37]/20'
+                          : 'bg-white/[0.03] text-zinc-300 border-white/[0.06] hover:border-[#D4AF37]/40 hover:text-white hover:bg-white/[0.06]'
+                      }`}
+                      title={iconName}
+                    >
+                      <span className="material-symbols-outlined text-2xl">{iconName}</span>
+                      <span className="text-[9px] font-mono text-zinc-400 truncate max-w-full">{iconName}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-white/10 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsCategoryPickerModalOpen(false)}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs uppercase tracking-wider cursor-pointer"
+              >
+                {t('common.done', 'Done')}
+              </button>
             </div>
           </div>
         </div>

@@ -3,16 +3,28 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import type { MenuItem, MenuCategory, EditableMenuItemInput } from '../types/menu';
 import { setMenuItemAvailability } from './menuAvailabilityService';
 
-export { MENU_CATEGORIES_FALLBACK, MENU_ITEMS_FALLBACK } from '../data/menuFallbacks';
-import { MENU_CATEGORIES_FALLBACK, MENU_ITEMS_FALLBACK } from '../data/menuFallbacks';
-let inMemoryMenuCache: MenuItem[] = [...MENU_ITEMS_FALLBACK];
+export { MENU_CATEGORIES_FALLBACK, MENU_ITEMS_FALLBACK, IRELAND_MENU_CATEGORIES_FALLBACK, IRELAND_MENU_ITEMS_FALLBACK } from '../data/menuFallbacks';
+import { MENU_CATEGORIES_FALLBACK, MENU_ITEMS_FALLBACK, IRELAND_MENU_CATEGORIES_FALLBACK, IRELAND_MENU_ITEMS_FALLBACK } from '../data/menuFallbacks';
+
+const isIrelandDemo = (): boolean => {
+  return (
+    ((globalThis as any).process?.env?.VITE_DEMO_PRESET === 'IE') ||
+    ((import.meta as any).env?.VITE_DEMO_PRESET === 'IE') ||
+    ((globalThis as any).process?.env?.VITE_RESTAURANT_COUNTRY === 'IE') ||
+    ((import.meta as any).env?.VITE_RESTAURANT_COUNTRY === 'IE')
+  );
+};
+
+const getInitialCategories = () => isIrelandDemo() ? IRELAND_MENU_CATEGORIES_FALLBACK : MENU_CATEGORIES_FALLBACK;
+const getInitialItems = () => isIrelandDemo() ? IRELAND_MENU_ITEMS_FALLBACK : MENU_ITEMS_FALLBACK;
+let inMemoryMenuCache: MenuItem[] = [...getInitialItems()];
 
 /**
  * Fetches all menu categories ordered by sort_order.
  */
 export async function fetchMenuCategories(): Promise<MenuCategory[]> {
   if (!isSupabaseConfigured || !supabase) {
-    return MENU_CATEGORIES_FALLBACK;
+    return getInitialCategories();
   }
 
   try {
@@ -22,13 +34,13 @@ export async function fetchMenuCategories(): Promise<MenuCategory[]> {
       .order('sort_order', { ascending: true });
 
     if (error || !data || data.length === 0) {
-      return MENU_CATEGORIES_FALLBACK;
+      return getInitialCategories();
     }
 
     return data as MenuCategory[];
   } catch (err) {
     console.warn('[menuService] Error fetching menu categories, using fallback:', err);
-    return MENU_CATEGORIES_FALLBACK;
+    return getInitialCategories();
   }
 }
 

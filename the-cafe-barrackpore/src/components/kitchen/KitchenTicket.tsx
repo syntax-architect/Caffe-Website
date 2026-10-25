@@ -149,11 +149,11 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
                 </span>
                 {order.payment_status === 'paid' ? (
                   <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full border bg-emerald-950/80 text-emerald-300 border-emerald-600/40">
-                    PAID
+                    {t('kitchen.paid', 'PAID')}
                   </span>
                 ) : (
                   <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full border bg-amber-950/80 text-amber-300 border-amber-600/40">
-                    COUNTER
+                    {t('kitchen.counter', 'COUNTER')}
                   </span>
                 )}
               </div>
@@ -180,7 +180,7 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
             {/* Live Elapsed Wait Timer Badge */}
             <div
               className={`flex items-center gap-1.5 px-3 py-1 rounded-lg border font-mono text-xs font-bold shadow-sm ${urgency.badge}`}
-              title="Elapsed prep time"
+              title={t('kitchen.elapsed_prep_time', 'Elapsed prep time')}
             >
               <span className={`w-2 h-2 rounded-full ${urgency.timerDot}`} />
               <span>{formatElapsed(elapsedSeconds)}</span>
@@ -286,15 +286,15 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
                       onCancel(order);
                     }}
                     className="px-3 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold uppercase transition-colors shadow"
-                    title="Confirm order cancellation"
+                    title={t('kitchen.confirm_order_cancellation', 'Confirm order cancellation')}
                   >
-                    Void
+                    {t('kitchen.void', 'Void')}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowCancelConfirm(false)}
                     className="px-2.5 py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-[11px] font-bold"
-                    title="Keep order"
+                    title={t('kitchen.keep_order', 'Keep order')}
                   >
                     ✕
                   </button>
@@ -304,7 +304,7 @@ export const KitchenTicket: React.FC<KitchenTicketProps> = ({
                   type="button"
                   onClick={() => setShowCancelConfirm(true)}
                   className="p-3 rounded-xl bg-white/[0.03] hover:bg-red-950/40 text-stone-500 hover:text-red-400 border border-white/[0.06] hover:border-red-500/30 transition-colors cursor-pointer"
-                  title="Void order"
+                  title={t('kitchen.void_order', 'Void order')}
                   aria-label={`Void order ${order.order_ref}`}
                 >
                   <span className="material-symbols-outlined text-base">close</span>

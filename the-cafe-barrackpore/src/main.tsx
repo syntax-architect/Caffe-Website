@@ -4,7 +4,9 @@ import Root from './Root';
 
 const rootEl = document.getElementById('root')!;
 
-if (rootEl.hasChildNodes() && !rootEl.querySelector('.initial-loader')) {
+const isPrerendered = Boolean(rootEl.querySelector('header, #theme-tokens, main'));
+
+if (isPrerendered) {
   hydrateRoot(rootEl, <Root />);
 } else {
   createRoot(rootEl).render(<Root />);

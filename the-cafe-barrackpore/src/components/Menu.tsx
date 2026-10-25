@@ -14,6 +14,7 @@ import {
 import type { MenuItem, MenuCategory } from '../types/menu';
 import type { MenuVariant } from '../types/restaurantEngine';
 import { useI18n } from '../i18n';
+import { isCinematicExperience } from '../config/client';
 
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Burgers & Pizzas': 'Hand-stretched sourdough crusts flame-baked to crisp perfection & artisanal toasted brioche burgers.',
@@ -23,15 +24,68 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   'Soups & Salads': 'Peppery restorative broths, fresh farm greens, and aromatic warm bowls.',
 };
 
-const getCategoryIcon = (categoryName: string): string => {
-  const cat = categoryName?.toLowerCase() || '';
-  if (cat.includes('burger') || cat.includes('pizza')) return 'local_pizza';
-  if (cat.includes('starter') || cat.includes('momo')) return 'ramen_dining';
-  if (cat.includes('main') || cat.includes('platter')) return 'skillet';
-  if (cat.includes('sip') || cat.includes('dessert') || cat.includes('coffee')) return 'local_cafe';
-  if (cat.includes('soup') || cat.includes('salad')) return 'soup_kitchen';
-  return 'restaurant_menu';
+export const CategoryIcon: React.FC<{ name?: string; className?: string }> = ({ name = '', className = 'w-4 h-4' }) => {
+  const cat = name.toLowerCase();
+  if (cat.includes('burger') || cat.includes('pizza')) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L2 20c3.3 1.4 6.7 1.4 10 0 3.3 1.4 6.7 1.4 10 0L12 2z" />
+        <circle cx="12" cy="10" r="1.2" fill="currentColor" />
+        <circle cx="9.5" cy="15.5" r="1.1" fill="currentColor" />
+        <circle cx="14.5" cy="15" r="1.1" fill="currentColor" />
+      </svg>
+    );
+  }
+  if (cat.includes('starter') || cat.includes('momo') || cat.includes('dim sum')) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 14c0 4.2 3.6 7.5 8 7.5s8-3.3 8-7.5c0-4-3-6-8-6s-8 2-8 6z" />
+        <path d="M12 8V5.5c0-.8-.7-1.5-1.5-1.5s-1.5.7-1.5 1.5" />
+        <path d="M8 14c1.2-1 2.5-1.5 4-1.5s2.8.5 4 1.5" />
+      </svg>
+    );
+  }
+  if (cat.includes('main') || cat.includes('platter') || cat.includes('curry')) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 18h18" />
+        <path d="M4 18a8 8 0 0 1 16 0" />
+        <circle cx="12" cy="7" r="1.5" />
+        <path d="M7 21h10" />
+      </svg>
+    );
+  }
+  if (cat.includes('sip') || cat.includes('dessert') || cat.includes('coffee') || cat.includes('drink')) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 8h1a4 4 0 0 1 0 8h-1" />
+        <path d="M3 8h14v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z" />
+        <path d="M6 2v3" />
+        <path d="M10 2v3" />
+        <path d="M14 2v3" />
+      </svg>
+    );
+  }
+  if (cat.includes('soup') || cat.includes('salad') || cat.includes('bowl')) {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 11c0 5 4 9 9 9s9-4 9-9H3z" />
+        <path d="M8 3c0 1.5-1 2.5-1 4" />
+        <path d="M12 2c0 2-1 3-1 5" />
+        <path d="M16 3c0 1.5-1 2.5-1 4" />
+      </svg>
+    );
+  }
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2" />
+      <path d="M15 2v20" />
+      <path d="M6 2v20" />
+      <path d="M6 7h4a2 2 0 0 0 2-2V2H6v5z" />
+    </svg>
+  );
 };
+
 
 interface FloatingMenuPreviewProps {
   imageSrc: string | null;
@@ -466,35 +520,41 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
         {/* Floating Image (Desktop Only - Isolated RAF GPU Transform) */}
         {!isTouchDevice && <FloatingMenuPreview imageSrc={hoveredImage} />}
 
-        <SectionReveal
-          className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-6"
-        >
-          <div>
-            <div className="inline-flex items-center gap-2 mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              <span className="editorial-eyebrow">{isQrMode ? t('menu.artisanalSelection', 'Artisanal Table Selection') : t('menu.curatedGastronomy', 'Curated Gastronomy')}</span>
+        <SectionReveal className="flex flex-col gap-5 md:gap-6 border-b border-white/10 pb-6">
+          {/* Header Row: Title on Left, Pure Veg Toggle & Mobile Picker on Right */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <span className="editorial-eyebrow">{isQrMode ? t('menu.artisanalSelection', 'Artisanal Table Selection') : t('menu.curatedGastronomy', 'Curated Gastronomy')}</span>
+              </div>
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-on-surface font-normal tracking-tight">
+                {isQrMode ? t('menu.title', 'Explore The Menu') : t('menu.culinaryCollection', 'The Culinary Collection')}
+              </h2>
             </div>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-on-surface font-normal tracking-tight">
-              {isQrMode ? t('menu.title', 'Explore The Menu') : t('menu.culinaryCollection', 'The Culinary Collection')}
-            </h2>
-          </div>
 
-          <div className="flex flex-col items-start md:items-end gap-3.5 mt-2 md:mt-0 w-full md:w-auto">
-            {/* Top Controls Row: Pure Veg Toggle + Mobile All Categories Quick Picker */}
-            <div className="flex items-center justify-between w-full md:w-auto gap-3">
+            {/* Controls: Pure Veg Switch & Mobile Category Picker */}
+            <div className="flex items-center gap-3 self-start sm:self-end">
               {/* Pure Veg Toggle Switch */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-surface-container-low/80 border border-outline/25 shadow-sm">
                 <div className="flex items-center gap-1.5">
-                  <span
-                    className={`material-symbols-outlined text-sm transition-colors ${
+                  <svg
+                    className={`w-3.5 h-3.5 transition-colors shrink-0 ${
                       isVegOnly ? 'text-emerald-400' : 'text-on-surface/60'
                     }`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    eco
-                  </span>
+                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+                    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+                  </svg>
                   <span
-                    className={`font-sans text-xs uppercase tracking-wider transition-colors ${
-                      isVegOnly ? 'text-emerald-400 font-semibold' : 'text-on-surface/60'
+                    className={`font-sans text-[11px] font-semibold tracking-wider uppercase transition-colors ${
+                      isVegOnly ? 'text-emerald-400' : 'text-on-surface/65'
                     }`}
                   >
                     {t('menu.pureVegOnly', 'Pure Veg Only')}
@@ -506,15 +566,15 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                   role="switch"
                   aria-checked={isVegOnly}
                   aria-label={t('menu.filterVeg', 'Filter vegetarian only items')}
-                  className={`w-11 h-6 rounded-full p-0.5 transition-all duration-300 ease-in-out flex items-center border cursor-pointer ${
+                  className={`w-9 h-5 rounded-full p-0.5 transition-all duration-300 ease-in-out flex items-center border cursor-pointer ${
                     isVegOnly
                       ? 'bg-emerald-500/20 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
                       : 'bg-surface-elevated/40 border-outline/25'
                   }`}
                 >
                   <div
-                    className={`w-4 h-4 rounded-full shadow-sm transition-transform duration-200 ease-out ${
-                      isVegOnly ? 'bg-emerald-400 translate-x-5' : 'bg-on-surface/50 translate-x-0'
+                    className={`w-3.5 h-3.5 rounded-full shadow-sm transition-transform duration-200 ease-out ${
+                      isVegOnly ? 'bg-emerald-400 translate-x-4' : 'bg-on-surface/50 translate-x-0'
                     }`}
                   />
                 </button>
@@ -525,7 +585,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                 <button
                   type="button"
                   onClick={() => setIsCategoryPickerOpen(!isCategoryPickerOpen)}
-                  className="px-3 py-1.5 min-h-[44px] sm:min-h-0 rounded-full bg-surface-container border border-primary/40 text-primary text-xs font-sans font-medium flex items-center gap-1.5 active:scale-95 shadow-sm hover:border-primary transition-all cursor-pointer"
+                  className="px-3 py-1.5 min-h-[38px] rounded-full bg-surface-container border border-primary/40 text-primary text-xs font-sans font-medium flex items-center gap-1.5 active:scale-95 shadow-sm hover:border-primary transition-all cursor-pointer"
                   aria-label={t('menu.allCategories', 'View all categories')}
                   aria-expanded={isCategoryPickerOpen}
                 >
@@ -566,7 +626,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                             }`}
                           >
                             <span className="flex items-center gap-2">
-                              <span className="material-symbols-outlined text-sm">{getCategoryIcon(cat.name)}</span>
+                              <CategoryIcon name={cat.name} className="w-4 h-4 shrink-0" />
                               <span>{getCategoryName(cat)}</span>
                             </span>
                             {isActive && <span className="material-symbols-outlined text-xs text-primary">check</span>}
@@ -578,86 +638,73 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Mobile Category Discovery Hint */}
-            <div className="flex md:hidden items-center justify-between w-full px-0.5 text-[11px] font-sans text-on-surface/65">
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                <span className="font-medium text-on-surface/80">{categories.length} {t('menu.categories', 'Categories')}</span>
-              </span>
-              <span className="flex items-center gap-1 text-primary text-[10px] uppercase tracking-wider font-semibold">
-                <span>{t('menu.swipeHint', 'Swipe or tap arrows')}</span>
-                <span className="material-symbols-outlined text-xs animate-pulse">arrow_forward</span>
-              </span>
-            </div>
-
-            {/* Horizontally Scrollable Category Pills with Tap Chevrons & Gradient Edge Masks */}
-            <div className="relative w-full md:w-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-              {/* Left Scroll Chevron & Gradient Mask */}
-              {canScrollLeft && (
-                <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pl-1 sm:pl-0 pr-5 bg-gradient-to-r from-background via-background/95 to-transparent pointer-events-none">
-                  <button
-                    type="button"
-                    onClick={() => scrollCategories('left')}
-                    aria-label={t('menu.scrollPrev', 'Scroll to previous categories')}
-                    className="w-7 h-7 rounded-full bg-surface-container/95 border border-primary/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-sm">chevron_left</span>
-                  </button>
-                </div>
-              )}
-
-              {/* Scroll Container */}
-              <div
-                ref={categoryScrollRef}
-                className="w-full md:w-auto overflow-x-auto hide-scrollbar scroll-smooth"
-              >
-                <div className="flex items-center gap-2 pb-1">
-                  {categories.map((category) => {
-                    const isActive = activeCategoryId === category.id;
-                    return (
-                      <button
-                        key={category.id}
-                        ref={(el) => { categoryBtnRefs.current[category.id] = el; }}
-                        type="button"
-                        onClick={() => handleSelectCategory(category.id)}
-                        className={`relative px-3.5 sm:px-4 py-2 min-h-[44px] sm:min-h-0 rounded-full font-sans text-xs uppercase tracking-wider transition-colors duration-200 whitespace-nowrap cursor-pointer border flex items-center gap-1.5 active:scale-95 shrink-0 ${
-                          isActive
-                            ? 'bg-primary text-on-primary border-primary font-bold shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.35)]'
-                            : 'bg-surface-container-low/80 text-on-surface-variant border-outline/20 hover:border-primary/40 hover:text-on-surface'
-                        }`}
-                      >
-                        {isActive && (
-                          <motion.span
-                            layoutId="activeCategoryPill"
-                            className="absolute inset-0 bg-primary rounded-full -z-10 shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.35)]"
-                            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-                          />
-                        )}
-                        <span className="material-symbols-outlined text-[15px] z-10">
-                          {getCategoryIcon(category.name)}
-                        </span>
-                        <span className="z-10">{getCategoryName(category)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+          {/* Full Width Horizontally Scrollable Category Pills with Tap Chevrons & Gradient Edge Masks */}
+          <div className="relative w-full">
+            {/* Left Scroll Chevron & Gradient Mask */}
+            {canScrollLeft && (
+              <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pl-0.5 pr-6 bg-gradient-to-r from-background via-background/95 to-transparent pointer-events-none">
+                <button
+                  type="button"
+                  onClick={() => scrollCategories('left')}
+                  aria-label={t('menu.scrollPrev', 'Scroll to previous categories')}
+                  className="w-7 h-7 rounded-full bg-surface-container/95 border border-primary/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">chevron_left</span>
+                </button>
               </div>
+            )}
 
-              {/* Right Scroll Chevron & Gradient Mask */}
-              {canScrollRight && (
-                <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pr-1 sm:pr-0 pl-5 bg-gradient-to-l from-background via-background/95 to-transparent pointer-events-none">
-                  <button
-                    type="button"
-                    onClick={() => scrollCategories('right')}
-                    aria-label={t('menu.scrollNext', 'Scroll to more categories')}
-                    className="w-7 h-7 rounded-full bg-surface-container/95 border border-primary/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-sm">chevron_right</span>
-                  </button>
-                </div>
-              )}
+            {/* Scroll Container */}
+            <div
+              ref={categoryScrollRef}
+              data-lenis-prevent
+              className="w-full overflow-x-auto hide-scrollbar scroll-smooth py-1"
+            >
+              <div className="flex items-center gap-2 sm:gap-2.5 pb-0.5">
+                {categories.map((category) => {
+                  const isActive = activeCategoryId === category.id;
+                  return (
+                    <button
+                      key={category.id}
+                      ref={(el) => { categoryBtnRefs.current[category.id] = el; }}
+                      type="button"
+                      onClick={() => handleSelectCategory(category.id)}
+                      className={`relative px-4 sm:px-5 py-2.5 min-h-[42px] sm:min-h-0 rounded-full font-sans text-xs tracking-wider uppercase transition-all duration-200 whitespace-nowrap cursor-pointer border flex items-center gap-2 active:scale-95 shrink-0 ${
+                        isActive
+                          ? 'bg-primary text-on-primary border-primary font-bold shadow-[0_4px_16px_rgba(230,177,63,0.32)]'
+                          : 'bg-surface-container-low/80 text-on-surface-variant border-outline/20 hover:border-primary/40 hover:text-on-surface hover:bg-surface-container'
+                      }`}
+                    >
+                      {isActive && (
+                        <motion.span
+                          layoutId="activeCategoryPill"
+                          className="absolute inset-0 bg-primary rounded-full -z-10 shadow-[0_4px_16px_rgba(230,177,63,0.32)]"
+                          transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                        />
+                      )}
+                      <CategoryIcon name={category.name} className="w-3.5 h-3.5 z-10 shrink-0" />
+                      <span className="z-10 font-semibold">{getCategoryName(category)}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Right Scroll Chevron & Gradient Mask */}
+            {canScrollRight && (
+              <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pr-0.5 pl-6 bg-gradient-to-l from-background via-background/95 to-transparent pointer-events-none">
+                <button
+                  type="button"
+                  onClick={() => scrollCategories('right')}
+                  aria-label={t('menu.scrollNext', 'Scroll to more categories')}
+                  className="w-7 h-7 rounded-full bg-surface-container/95 border border-primary/40 text-primary flex items-center justify-center pointer-events-auto shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">chevron_right</span>
+                </button>
+              </div>
+            )}
           </div>
         </SectionReveal>
 
@@ -803,8 +850,9 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                           </p>
                         )}
 
-                        {/* Interactive Sensory Telemetry & Chef Rating Strip */}
-                        <div className="my-4 p-3.5 rounded-2xl bg-surface-obsidian/80 border border-outline/20 flex flex-col gap-3 font-mono text-[10px] uppercase tracking-wider">
+                        {/* Interactive Sensory Telemetry & Chef Rating Strip (Cinematic Mode only) */}
+                        {isCinematicExperience() && (
+                          <div className="my-4 p-3.5 rounded-2xl bg-surface-obsidian/80 border border-outline/20 flex flex-col gap-3 font-mono text-[11px] uppercase tracking-wider">
                           <div className="grid grid-cols-3 gap-2">
                             <div>
                               <span className="text-on-surface/45 block text-[9px]">{t('menu.culinaryNotes', 'CULINARY NOTES')}</span>
@@ -868,6 +916,25 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                             </div>
                           </div>
                         </div>
+                        )}
+
+                        {/* Useful Real Kitchen Facts (Clean & Authentic) */}
+                        {((featuredItem as any).prep_time_minutes || (featuredItem as any).spice_level) && (
+                          <div className="my-3 flex items-center gap-3 text-xs text-on-surface/80 flex-wrap">
+                            {(featuredItem as any).prep_time_minutes && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container border border-outline/20 font-sans text-xs">
+                                <span className="material-symbols-outlined text-xs text-primary">schedule</span>
+                                <span>{(featuredItem as any).prep_time_minutes} min prep</span>
+                              </span>
+                            )}
+                            {(featuredItem as any).spice_level && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container border border-outline/20 font-sans text-xs">
+                                <span className="material-symbols-outlined text-xs text-amber-400">local_fire_department</span>
+                                <span>{(featuredItem as any).spice_level}</span>
+                              </span>
+                            )}
+                          </div>
+                        )}
 
                         {/* Curated Tasting Notes - De-nested editorial presentation */}
                         {activeSensoryMetadata?.tastingNotes && (
@@ -1190,9 +1257,7 @@ export const Menu: React.FC<MenuProps> = ({ forcedVariant, isQrMode = false }) =
                       </div>
                     ) : (
                       <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary/15 via-surface-container to-surface-obsidian border border-primary/30 flex items-center justify-center text-primary group-hover:scale-105 group-hover:bg-primary/25 transition-all duration-300 shrink-0 shadow-md">
-                        <span className="material-symbols-outlined text-lg sm:text-xl font-light">
-                          {getCategoryIcon(activeCategoryName)}
-                        </span>
+                        <CategoryIcon name={activeCategoryName} className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
                     )}
                   </div>

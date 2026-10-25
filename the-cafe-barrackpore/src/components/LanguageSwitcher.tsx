@@ -95,12 +95,15 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.96 }}
               transition={{ duration: 0.16, ease: 'easeOut' }}
-              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0 w-64 max-h-80 overflow-y-auto rounded-2xl bg-[#140D09]/95 backdrop-blur-xl border border-primary/30 shadow-[0_-12px_40px_rgba(0,0,0,0.8)] z-50 p-1.5 scrollbar-thin scrollbar-thumb-primary/20"
+              data-lenis-prevent
+              onWheel={(e) => e.stopPropagation()}
+              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0 w-64 max-h-80 overflow-y-auto overscroll-contain touch-pan-y rounded-2xl bg-[#140D09]/95 backdrop-blur-xl border border-primary/30 shadow-[0_-12px_40px_rgba(0,0,0,0.8)] z-50 p-1.5 custom-scrollbar"
               role="listbox"
               aria-label={t('languageSwitcher.selectLanguage', 'Select Language')}
             >
-              <div className="px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-[#D4AF37] border-b border-white/[0.08] mb-1">
-                {t('languageSwitcher.selectLanguage', 'Select Language')}
+              <div className="sticky top-0 bg-[#140D09]/95 backdrop-blur-md z-10 px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-[#D4AF37] border-b border-white/[0.08] mb-1 flex items-center justify-between">
+                <span>{t('languageSwitcher.selectLanguage', 'Select Language')}</span>
+                <span className="text-[9px] text-stone-400">{availableLanguages.length} Languages</span>
               </div>
               <div className="flex flex-col gap-0.5">
                 {availableLanguages.map((lang: LanguageMeta) => {
@@ -191,7 +194,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         type="button"
         data-testid="language-switcher-trigger"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex items-center gap-1.5 h-11 px-3 sm:px-3.5 rounded-full border border-outline/20 bg-surface-container/80 hover:border-primary/50 hover:bg-surface-container-high text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-md min-w-[44px] min-h-[44px] justify-center ${
+        className={`flex items-center gap-1 sm:gap-1.5 h-8 sm:h-10 px-2 sm:px-3 rounded-full border border-outline/20 bg-surface-container/80 hover:border-primary/50 hover:bg-surface-container-high text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-md min-w-[32px] sm:min-w-[40px] min-h-[32px] sm:min-h-[40px] justify-center shrink-0 ${
           variant === 'staff' ? 'h-9 px-2.5 text-xs bg-white/[0.04] border-white/[0.08]' : ''
         }`}
         aria-haspopup="listbox"
@@ -199,15 +202,23 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         aria-label={t('languageSwitcher.selectLanguage', 'Select Language')}
         title={`${t('languageSwitcher.currentLanguage', 'Current Language')}: ${meta.nativeName}`}
       >
-        <span className="text-base leading-none" role="img" aria-hidden="true">
+        <span className="text-sm sm:text-base leading-none" role="img" aria-hidden="true">
           {meta.flag}
         </span>
         <span className="text-xs font-semibold tracking-wider uppercase font-mono hidden sm:inline text-primary">
           {meta.code}
         </span>
-        <span className="material-symbols-outlined text-[15px] text-on-surface/60 transition-transform duration-200">
-          {isOpen ? 'arrow_drop_up' : 'arrow_drop_down'}
-        </span>
+        <svg
+          className={`w-3 h-3 sm:w-3.5 sm:h-3.5 text-on-surface/60 transition-transform duration-200 hidden min-[360px]:inline-block ${isOpen ? 'rotate-180' : ''}`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
       </motion.button>
 
       <AnimatePresence>
@@ -217,13 +228,15 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.96 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className="absolute top-full mt-2 right-0 w-64 max-h-80 overflow-y-auto rounded-2xl bg-[#140D09]/95 backdrop-blur-xl border border-primary/30 shadow-[0_16px_40px_rgba(0,0,0,0.85)] z-50 p-1.5 scrollbar-thin scrollbar-thumb-primary/20"
+            data-lenis-prevent
+            onWheel={(e) => e.stopPropagation()}
+            className="absolute top-full mt-2 right-0 w-64 max-h-80 overflow-y-auto overscroll-contain touch-pan-y rounded-2xl bg-[#140D09]/95 backdrop-blur-xl border border-primary/30 shadow-[0_16px_40px_rgba(0,0,0,0.85)] z-50 p-1.5 custom-scrollbar"
             role="listbox"
             aria-label={t('languageSwitcher.selectLanguage', 'Select Language')}
           >
-            <div className="px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-[#D4AF37] border-b border-white/[0.08] mb-1 flex items-center justify-between">
+            <div className="sticky top-0 bg-[#140D09]/95 backdrop-blur-md z-10 px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-[#D4AF37] border-b border-white/[0.08] mb-1 flex items-center justify-between">
               <span>{t('languageSwitcher.selectLanguage', 'Select Language')}</span>
-              <span className="text-[9px] text-stone-400">12 Languages</span>
+              <span className="text-[9px] text-stone-400">{availableLanguages.length} Languages</span>
             </div>
             <div className="flex flex-col gap-0.5">
               {availableLanguages.map((lang: LanguageMeta) => {

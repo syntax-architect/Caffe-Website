@@ -52,6 +52,10 @@ export const ko: TranslationDictionary = {
     ourStory: '브랜드 스토리',
     contact: '문의하기',
     staffPortal: '직원 포털',
+    platters: '플래터',
+    story: '스토리',
+    vip: 'VIP',
+    reserve: '예약',
   },
 
   hero: {
@@ -381,8 +385,8 @@ export const ko: TranslationDictionary = {
 
   story: {
     badge: "바락포어 주둔지 창립",
-    title: "유산, 화염, 그리고 스페셜티 로스팅",
-    titleItalic: "화염과 로스팅",
+    title: "유산, 화염, 그리고",
+    titleItalic: "스페셜티 로스팅",
     subtitle: "유서 깊은 주둔지 건축 양식과 슬로우 푸드의 완벽한 만남.",
     description: "수십 년 동안 이어온 장인 로스팅, 참나무 화덕 사워도우, 그리고 황혼의 안락함.",
     manifesto: "틀에 박힌 것은 없습니다. 서두르지 않는 테이블. 9바 압력으로 추출하는 에스프레소, 손으로 직접 빚은 도우, 2200K 앰버 빛 따스함.",

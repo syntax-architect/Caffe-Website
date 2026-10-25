@@ -3,6 +3,7 @@ import { useSiteConfig } from '../context/SiteConfigContext';
 import { useI18n } from '../i18n';
 import { SectionReveal } from './SectionReveal';
 import { getAvifSource } from '../utils/image';
+import { isCleanExperience } from '../config/client';
 import type { AmbienceItem } from '../services/siteContentService';
 import {
   DEFAULT_AMBIENCE_ITEMS,
@@ -327,8 +328,76 @@ export const AboutVibe: React.FC = () => {
           </div>
         </SectionReveal>
 
-        {/* VALMORA SPATIAL HOTSPOT & SANCTUARY COCKPIT STAGE */}
-        <div className="relative w-full mt-4">
+        {/* OUR SPACES CARD ROW (Clean Mode) vs SPATIAL COCKPIT (Cinematic Mode) */}
+        {isCleanExperience() ? (
+          <div className="relative w-full mt-6">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 pb-4 border-b border-outline/15">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary font-semibold">
+                    {t('vibe.spacesBadge', 'OUR DINING SPACES')}
+                  </span>
+                </div>
+                <h3 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-on-surface font-normal tracking-tight">
+                  {t('vibe.spacesTitle', 'Explore Our Spaces')}
+                </h3>
+              </div>
+              <p className="font-sans text-xs text-on-surface-variant max-w-sm sm:text-right">
+                {t('vibe.spacesSubtitle', 'Thoughtfully curated spaces for quiet mornings, afternoon work, and intimate dinners.')}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+              {safeItems.map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  className="group rounded-2xl border border-outline/25 bg-surface-obsidian/90 hover:border-primary/50 overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+                >
+                  <div className="relative w-full aspect-[4/3] overflow-hidden bg-surface-container-lowest">
+                    <picture>
+                      {getItemAvifImage(item, idx) && (
+                        <source srcSet={getItemAvifImage(item, idx)!} type="image/avif" />
+                      )}
+                      <img
+                        src={getItemImage(item, idx)}
+                        alt={getItemAlt(item, idx)}
+                        className="w-full h-full object-cover brightness-[0.88] contrast-[1.05] group-hover:scale-105 transition-transform duration-700 ease-out"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </picture>
+                    <div className="absolute inset-0 bg-gradient-to-t from-surface-obsidian via-transparent to-black/20" />
+                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-surface-obsidian/85 backdrop-blur-md border border-primary/30 font-mono text-[11px] uppercase tracking-wider text-primary font-semibold">
+                      0{idx + 1} • {item.eyebrow || 'SANCTUARY'}
+                    </div>
+                  </div>
+
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h4 className="font-serif text-lg text-on-surface font-semibold mb-2 group-hover:text-primary transition-colors">
+                        {item.title}
+                      </h4>
+                      <p className="font-sans text-xs text-on-surface-variant leading-relaxed font-light mb-4 line-clamp-3">
+                        {item.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-outline/15 flex items-center justify-between text-xs text-on-surface/80">
+                      <span className="font-sans text-[11px] text-primary font-medium">
+                        {(item as any).capacity || ZONE_TELEMETRY[idx]?.capacity?.split('·')[0]?.trim() || 'Reserved Seating'}
+                      </span>
+                      <span className="font-sans text-[11px] text-on-surface/70">
+                        {ZONE_TELEMETRY[idx]?.materials?.split('·')[0]?.trim() || 'Velvet & Timber'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="relative w-full mt-4">
           <div
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
@@ -606,6 +675,7 @@ export const AboutVibe: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
 
       </div>
     </section>

@@ -168,10 +168,10 @@ export const ReservationsManagement: React.FC = () => {
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-1 tracking-tight">
-            Guest Reservations
+            {t('staff.reservations.guest_reservations', 'Guest Reservations')}
           </h2>
           <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
-            Manage table bookings, guest arrivals, seating status, and send instant WhatsApp concierge confirmations.
+            {t('staff.reservations.manage_table_bookings_guest_arri', 'Manage table bookings, guest arrivals, seating status, and send instant WhatsApp concierge confirmations.')}
           </p>
         </div>
 
@@ -391,7 +391,7 @@ export const ReservationsManagement: React.FC = () => {
                             }}
                             className="px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.06] text-xs font-semibold transition-colors cursor-pointer"
                           >
-                            Concierge
+                            {t('staff.reservations.concierge', 'Concierge')}
                           </button>
                         </td>
                       </tr>
@@ -418,7 +418,7 @@ export const ReservationsManagement: React.FC = () => {
               <div className="flex items-center justify-between pb-5 border-b border-white/[0.06] mb-6">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                    Concierge Ledger
+                    {t('staff.reservations.concierge_ledger', 'Concierge Ledger')}
                   </span>
                   <h3 className="text-2xl font-mono font-black text-white mt-0.5">
                     {activeRes.reservation_ref}
@@ -461,7 +461,7 @@ export const ReservationsManagement: React.FC = () => {
                         onClick={() => handleStatusChange(activeRes.id, 'confirmed')}
                         className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 text-white font-bold text-xs shadow transition-all cursor-pointer"
                       >
-                        Confirm Booking
+                        {t('staff.reservations.confirm_booking', 'Confirm Booking')}
                       </button>
                       <button
                         type="button"
@@ -469,7 +469,7 @@ export const ReservationsManagement: React.FC = () => {
                         onClick={() => handleStatusChange(activeRes.id, 'cancelled')}
                         className="py-2.5 px-3 rounded-xl bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 font-semibold text-xs transition-colors cursor-pointer"
                       >
-                        Decline
+                        {t('staff.reservations.decline', 'Decline')}
                       </button>
                     </>
                   )}
@@ -482,7 +482,7 @@ export const ReservationsManagement: React.FC = () => {
                         onClick={() => handleStatusChange(activeRes.id, 'seated')}
                         className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs shadow transition-all cursor-pointer"
                       >
-                        Mark Guests Seated
+                        {t('staff.reservations.mark_guests_seated', 'Mark Guests Seated')}
                       </button>
                       <button
                         type="button"
@@ -490,7 +490,7 @@ export const ReservationsManagement: React.FC = () => {
                         onClick={() => handleStatusChange(activeRes.id, 'no_show')}
                         className="py-2.5 px-3 rounded-xl bg-purple-950/60 hover:bg-purple-900/60 text-purple-300 border border-purple-500/30 font-semibold text-xs transition-colors cursor-pointer"
                       >
-                        No-Show
+                        {t('staff.reservations.no_show', 'No-Show')}
                       </button>
                     </>
                   )}
@@ -502,7 +502,7 @@ export const ReservationsManagement: React.FC = () => {
                       onClick={() => handleStatusChange(activeRes.id, 'completed')}
                       className="w-full py-2.5 px-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-white font-bold text-xs transition-colors cursor-pointer"
                     >
-                      Complete Dining Service
+                      {t('staff.reservations.complete_dining_service', 'Complete Dining Service')}
                     </button>
                   )}
                 </div>
@@ -511,7 +511,7 @@ export const ReservationsManagement: React.FC = () => {
               {/* Guest Profile Card */}
               <div className="p-5 rounded-2xl bg-[#120F0D] border border-white/[0.08] mb-6 space-y-4">
                 <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                  Primary Guest Contact
+                  {t('staff.reservations.primary_guest_contact', 'Primary Guest Contact')}
                 </p>
 
                 <div className="flex items-center justify-between">
@@ -526,14 +526,14 @@ export const ReservationsManagement: React.FC = () => {
                       type="button"
                       onClick={() => handleWhatsAppGuest(activeRes)}
                       className="p-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-colors flex items-center justify-center cursor-pointer"
-                      title="Open WhatsApp Concierge Chat"
+                      title={t('staff.reservations.open_whatsapp_concierge_chat', 'Open WhatsApp Concierge Chat')}
                     >
                       <span className="material-symbols-outlined text-lg">chat</span>
                     </button>
                     <a
                       href={`tel:${activeRes.customer_phone}`}
                       className="p-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] transition-colors flex items-center justify-center"
-                      title="Call Guest Phone"
+                      title={t('staff.reservations.call_guest_phone', 'Call Guest Phone')}
                     >
                       <span className="material-symbols-outlined text-lg">call</span>
                     </a>
@@ -567,7 +567,7 @@ export const ReservationsManagement: React.FC = () => {
                 {activeRes.special_requests && (
                   <div className="pt-3 border-t border-white/[0.06]">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400">
-                      Special Guest Notes
+                      {t('staff.reservations.special_guest_notes', 'Special Guest Notes')}
                     </span>
                     <p className="text-xs text-zinc-300 mt-1 italic leading-relaxed">
                       "{activeRes.special_requests}"

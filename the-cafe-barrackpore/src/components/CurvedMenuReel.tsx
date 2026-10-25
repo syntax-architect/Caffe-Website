@@ -1,8 +1,9 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { useI18n } from '../i18n';
+import { isCinematicExperience } from '../config/client';
 import { getAvifSource } from '../utils/image';
 import type { MenuItem } from '../types/menu';
 
@@ -123,109 +124,73 @@ export const CurvedMenuReel: React.FC = () => {
   const { showToast } = useUI();
   const { formatPrice } = useSiteConfig();
   const { t } = useI18n();
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const [offset, setOffset] = useState<number>(0);
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedDish, setSelectedDish] = useState<SignatureDishItem | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Physics & drag state
+  // Drag-to-scroll state
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
-  const startOffsetRef = useRef(0);
-  const velocityRef = useRef(0);
-  const lastSampleRef = useRef<{ x: number; t: number }>({ x: 0, t: performance.now() });
-  const hasMovedSignificantRef = useRef(false);
-  const rafRef = useRef<number | null>(null);
-  const lastTimeRef = useRef(performance.now());
+  const scrollLeftRef = useRef(0);
+  const hasDraggedSignificantlyRef = useRef(false);
 
-  // Screen-size detection
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const updateSize = () => {
-      setIsMobile(window.innerWidth < 820);
-    };
-    updateSize();
-    window.addEventListener('resize', updateSize, { passive: true });
-    return () => window.removeEventListener('resize', updateSize);
+  // Update scroll indicator buttons state
+  const checkScrollBounds = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
   }, []);
 
-  // Geometry configuration based on viewport width
-  const cardPitch = isMobile ? 160 : 210;
-  const totalWidth = SIGNATURE_REEL_DISHES.length * cardPitch;
-
-  // Discrete nudge for Chevrons and Keyboard arrows
-  const nudge = useCallback((direction: number) => {
-    // direction: +1 = previous / rightward spin, -1 = next / leftward spin
-    velocityRef.current = direction * 16;
-  }, []);
-
-  // 60fps Physics & Auto-Scroll Loop
-  const tickPhysics = useCallback(() => {
-    const now = performance.now();
-    const dt = Math.min(0.05, (now - lastTimeRef.current) / 1000);
-    lastTimeRef.current = now;
-
-    if (!isDraggingRef.current && !isPaused && !selectedDish) {
-      if (Math.abs(velocityRef.current) > 0.3) {
-        // Momentum decay (decays ~95% per second)
-        velocityRef.current *= Math.pow(0.95, dt * 60);
-        setOffset((prev) => (prev + velocityRef.current * dt * 60) % totalWidth);
-      } else {
-        // Continuous steady auto-scroll (42px/s right-to-left)
-        setOffset((prev) => (prev - 42 * dt) % totalWidth);
-      }
-    }
-
-    rafRef.current = requestAnimationFrame(tickPhysics);
-  }, [totalWidth, isPaused, selectedDish]);
-
   useEffect(() => {
-    rafRef.current = requestAnimationFrame(tickPhysics);
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    checkScrollBounds();
+    el.addEventListener('scroll', checkScrollBounds, { passive: true });
+    window.addEventListener('resize', checkScrollBounds, { passive: true });
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      el.removeEventListener('scroll', checkScrollBounds);
+      window.removeEventListener('resize', checkScrollBounds);
     };
-  }, [tickPhysics]);
+  }, [checkScrollBounds]);
 
-  // Keyboard navigation & Escape-to-close listener
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedDish) {
-        setSelectedDish(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedDish]);
+  // Smooth step scroll via buttons or keys
+  const scrollByAmount = (direction: 'left' | 'right') => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const scrollAmount = el.clientWidth > 640 ? 320 : 280;
+    el.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  };
 
-  // Pointer drag interaction handlers
-  const handlePointerDown = (e: React.PointerEvent) => {
+  // Drag-to-scroll handlers for desktop mouse
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
     isDraggingRef.current = true;
-    hasMovedSignificantRef.current = false;
-    startXRef.current = e.clientX;
-    startOffsetRef.current = offset;
-    velocityRef.current = 0;
-    lastSampleRef.current = { x: e.clientX, t: performance.now() };
+    hasDraggedSignificantlyRef.current = false;
+    startXRef.current = e.pageX - el.offsetLeft;
+    scrollLeftRef.current = el.scrollLeft;
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDraggingRef.current) return;
-    const dx = e.clientX - startXRef.current;
-    if (Math.abs(dx) > 5) {
-      hasMovedSignificantRef.current = true;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    e.preventDefault();
+    const x = e.pageX - el.offsetLeft;
+    const walk = (x - startXRef.current) * 1.4;
+    if (Math.abs(walk) > 6) {
+      hasDraggedSignificantlyRef.current = true;
     }
-
-    const now = performance.now();
-    const dt = Math.max(8, now - lastSampleRef.current.t);
-    const instDx = e.clientX - lastSampleRef.current.x;
-    velocityRef.current = (instDx / dt) * 16;
-    lastSampleRef.current = { x: e.clientX, t: now };
-
-    setOffset(startOffsetRef.current + dx);
+    el.scrollLeft = scrollLeftRef.current - walk;
   };
 
-  const handlePointerUp = () => {
+  const handleMouseUp = () => {
     isDraggingRef.current = false;
   };
 
@@ -255,210 +220,170 @@ export const CurvedMenuReel: React.FC = () => {
     });
   };
 
+  // Keyboard escape listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedDish) {
+        setSelectedDish(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedDish]);
+
   return (
-    <div className="relative w-full overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-b from-surface-obsidian via-surface-container-lowest to-surface-obsidian p-4 sm:p-6 lg:p-8 shadow-[0_25px_80px_rgba(0,0,0,0.85)] mb-8 sm:mb-12 select-none">
+    <section
+      id="chef-specials"
+      className="relative w-full overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-b from-[#140D09] via-[#0E0907] to-[#140D09] p-5 sm:p-7 lg:p-8 shadow-[0_25px_80px_rgba(0,0,0,0.85)] mb-8 sm:mb-12 select-none"
+    >
       {/* Background warm gold ambient lighting flare */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[340px] bg-primary/10 blur-[130px] pointer-events-none rounded-full" />
 
-      {/* Header Eyebrow & Live Status Bar */}
-      <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-outline/15">
-        <div className="flex items-center gap-2.5">
-          <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
-          <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-primary font-bold">
-            {t('curvedReel.badge', "CHEF'S SIGNATURE SELECTION")} · 3D REEL
-          </span>
+      {/* Header Bar */}
+      <div className="relative z-10 flex flex-wrap items-end justify-between gap-4 pb-5 border-b border-outline/15">
+        <div>
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.8)]" />
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-primary font-bold">
+              {t('curvedReel.badge', "CHEF'S SIGNATURE SELECTION")}
+            </span>
+          </div>
+          <h3 className="font-serif text-2xl sm:text-3xl text-on-surface font-semibold tracking-tight">
+            {t('curvedReel.title', 'Curated Culinary Feasts')}
+          </h3>
+          <p className="font-sans text-xs sm:text-sm text-on-surface/65 mt-1 max-w-xl leading-relaxed">
+            {t('curvedReel.subtitle', 'Swipe or touch to explore our signature flame-charred hearth dishes.')}
+          </p>
         </div>
-        <div className="font-mono text-[10px] tracking-widest uppercase text-on-surface/60 flex items-center gap-3">
-          <span className="hidden sm:inline">{t('curvedReel.cylindricalPerspective', 'CYLINDRICAL PERSPECTIVE')}</span>
-          <span>•</span>
-          <span className="text-primary/90 font-semibold">{t('curvedReel.amberWarmth', '2200K AMBER')}</span>
+
+        {/* Carousel Chevron Controls */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="font-mono text-[10px] tracking-widest uppercase text-on-surface/50 hidden sm:inline mr-2">
+            8 {t('curvedReel.badge', 'CREATIONS')}
+          </span>
+          <button
+            type="button"
+            aria-label={t('common.previous', 'Previous signature dishes')}
+            onClick={() => scrollByAmount('left')}
+            disabled={!canScrollLeft}
+            className={`w-10 h-10 rounded-full border border-primary/30 bg-surface-obsidian/90 text-primary flex items-center justify-center transition-all duration-200 shadow-md cursor-pointer ${
+              canScrollLeft
+                ? 'hover:bg-primary hover:text-on-primary hover:scale-105 active:scale-95'
+                : 'opacity-40 cursor-not-allowed border-outline/20'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            aria-label={t('common.next', 'Next signature dishes')}
+            onClick={() => scrollByAmount('right')}
+            disabled={!canScrollRight}
+            className={`w-10 h-10 rounded-full border border-primary/30 bg-surface-obsidian/90 text-primary flex items-center justify-center transition-all duration-200 shadow-md cursor-pointer ${
+              canScrollRight
+                ? 'hover:bg-primary hover:text-on-primary hover:scale-105 active:scale-95'
+                : 'opacity-40 cursor-not-allowed border-outline/20'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       </div>
 
-      {/* Hand-Drawn Gold Craft Doodles with Curving SVG Arrows (Desktop View) */}
-      <div className="relative w-full">
-        <div className="absolute top-2 left-6 lg:left-12 font-serif italic text-primary/85 text-xs sm:text-sm hidden md:flex items-center gap-3 pointer-events-none z-20">
-          <span className="drop-shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.4)]">
-            ✨ {t('curvedReel.title', 'Hand-Crafted Signatures')}
-          </span>
-          <svg className="w-10 h-10 text-primary/70 animate-pulse" viewBox="0 0 40 40" fill="none" stroke="currentColor">
-            <path
-              d="M4 10 C 16 6, 28 14, 30 28 M30 28 L 22 24 M30 28 L 31 20"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
+      {/* Smooth Showcase Track */}
+      <div className="relative w-full my-4">
+        {/* Subtle Edge Vignettes */}
+        <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-14 bg-gradient-to-r from-[#140D09] to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-14 bg-gradient-to-l from-[#140D09] to-transparent z-10 pointer-events-none" />
 
-        <div className="absolute top-2 right-6 lg:right-12 font-serif italic text-primary/85 text-xs sm:text-sm hidden md:flex items-center gap-3 pointer-events-none z-20">
-          <svg className="w-10 h-10 text-primary/70 rotate-45 animate-pulse" viewBox="0 0 40 40" fill="none" stroke="currentColor">
-            <path
-              d="M4 10 C 16 6, 28 14, 30 28 M30 28 L 22 24 M30 28 L 31 20"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="drop-shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.4)]">
-            {t('curvedReel.subtitle', 'Pulled at 9 Bars Pressure')} ☕
-          </span>
-        </div>
-
-        {/* Left / Right Floating Chevrons (Desktop) */}
-        <button
-          type="button"
-          aria-label={t('common.previous', 'Previous signature dishes')}
-          onClick={() => nudge(1)}
-          className="hidden md:flex absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-surface-obsidian/90 hover:bg-primary border border-primary/35 hover:border-primary text-primary hover:text-on-primary items-center justify-center transition-all duration-300 shadow-[0_6px_24px_rgba(0,0,0,0.85)] hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md group"
-        >
-          <span className="material-symbols-outlined text-xl transition-transform group-hover:-translate-x-0.5">chevron_left</span>
-        </button>
-
-        <button
-          type="button"
-          aria-label={t('common.next', 'Next signature dishes')}
-          onClick={() => nudge(-1)}
-          className="hidden md:flex absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-surface-obsidian/90 hover:bg-primary border border-primary/35 hover:border-primary text-primary hover:text-on-primary items-center justify-center transition-all duration-300 shadow-[0_6px_24px_rgba(0,0,0,0.85)] hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md group"
-        >
-          <span className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-0.5">chevron_right</span>
-        </button>
-
-        {/* 3D Cylindrical Reel Stage */}
         <div
-          ref={containerRef}
+          ref={scrollContainerRef}
+          data-lenis-prevent
           tabIndex={0}
           role="region"
-          aria-label={t('curvedReel.ariaLabel', '3D Cylindrical Signature Menu Reel')}
-          aria-roledescription="carousel"
-          onKeyDown={(e) => {
-            if (e.key === 'ArrowLeft') {
-              e.preventDefault();
-              nudge(1);
-            } else if (e.key === 'ArrowRight') {
-              e.preventDefault();
-              nudge(-1);
-            }
-          }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => {
-            setIsPaused(false);
-            isDraggingRef.current = false;
-          }}
-          className="relative w-full h-[320px] sm:h-[380px] lg:h-[420px] overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing my-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/40 rounded-2xl"
-          style={{
-            touchAction: 'pan-y',
-            perspective: '1200px',
-            transformStyle: 'preserve-3d',
-          }}
+          aria-label={t('curvedReel.ariaLabel', 'Signature Menu Carousel')}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          className="flex gap-4 sm:gap-6 overflow-x-auto py-3 px-2 custom-scrollbar snap-x snap-mandatory scroll-smooth cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/40"
+          style={{ touchAction: 'pan-x pan-y' }}
         >
-          {/* Edge Blur Vignette Masks */}
-          <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-20 bg-gradient-to-r from-surface-obsidian via-surface-obsidian/80 to-transparent z-20 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-20 bg-gradient-to-l from-surface-obsidian via-surface-obsidian/80 to-transparent z-20 pointer-events-none" />
-
-          {/* Cards projection loop */}
-          {SIGNATURE_REEL_DISHES.map((dish, idx) => {
-            // Infinite wrapping calculation
-            const rawOffset = ((idx * cardPitch + offset) % totalWidth + totalWidth) % totalWidth;
-            const centeredOffset = rawOffset > totalWidth / 2 ? rawOffset - totalWidth : rawOffset;
-
-            // Distance from viewport center (normalized 0..1)
-            const maxSpan = isMobile ? 320 : 540;
-            const normDist = Math.min(1.0, Math.abs(centeredOffset) / maxSpan);
-
-            // Cylinder curvature mathematics:
-            // 1. Width expands outward
-            const baseW = isMobile ? 140 : 180;
-            const expandW = isMobile ? 32 : 48;
-            const cardWidth = baseW + expandW * Math.pow(normDist, 2);
-
-            // 2. Height expands on outer perimeter like an inside cylinder
-            const baseH = isMobile ? 220 : 280;
-            const expandH = isMobile ? 65 : 92;
-            const cardHeight = baseH + expandH * Math.pow(normDist, 2.4);
-
-            // 3. Center push outward
-            const pushX = centeredOffset * (1 + 0.08 * Math.pow(normDist, 2));
-
-            // 4. Subtle arched vertical dip
-            const dipY = Math.pow(normDist, 2) * -14;
-
-            // 5. Cylindrical 3D perspective rotation (degrees)
-            const rotateY = (centeredOffset / maxSpan) * 18;
-
-            // 6. Layer depth & edge fade
-            const zIndex = Math.round(100 - normDist * 60);
-            const opacity = Math.max(0.25, 1 - Math.pow(normDist, 3.2));
-
+          {SIGNATURE_REEL_DISHES.map((dish) => {
             const avifSrc = getAvifSource(dish.image);
 
             return (
               <div
                 key={dish.id}
                 onClick={() => {
-                  if (!hasMovedSignificantRef.current) {
+                  if (!hasDraggedSignificantlyRef.current) {
                     setSelectedDish(dish);
                   }
                 }}
-                className="absolute transition-transform will-change-transform rounded-2xl overflow-hidden border border-primary/30 bg-surface-obsidian/95 shadow-[0_20px_50px_rgba(0,0,0,0.85)] group backdrop-blur-xl cursor-pointer"
-                style={{
-                  width: `${cardWidth}px`,
-                  height: `${cardHeight}px`,
-                  transform: `translate3d(${pushX}px, ${dipY}px, 0) rotateY(${rotateY}deg)`,
-                  zIndex,
-                  opacity,
-                  transformStyle: 'preserve-3d',
-                }}
+                className="w-[240px] sm:w-[275px] shrink-0 snap-start flex flex-col rounded-2xl border border-primary/25 bg-[#120D0A]/95 hover:border-primary/60 transition-all duration-300 shadow-[0_12px_36px_rgba(0,0,0,0.7)] hover:shadow-[0_16px_45px_rgba(212,175,55,0.18)] hover:-translate-y-1 group cursor-pointer overflow-hidden"
               >
-                {/* Authentic Food Photograph with AVIF Picture fallback */}
-                <picture>
-                  {avifSrc && <source srcSet={avifSrc} type="image/avif" />}
-                  <img
-                    src={dish.image}
-                    alt={dish.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover brightness-[0.86] transition-transform duration-700 group-hover:scale-108 pointer-events-none"
-                  />
-                </picture>
+                {/* Food Photograph */}
+                <div className="relative w-full h-[180px] sm:h-[200px] overflow-hidden bg-[#0A0705]">
+                  <picture>
+                    {avifSrc && <source srcSet={avifSrc} type="image/avif" />}
+                    <img
+                      src={dish.image}
+                      alt={dish.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover brightness-[0.88] transition-transform duration-500 ease-out group-hover:scale-106 pointer-events-none"
+                    />
+                  </picture>
 
-                {/* Dark Vignette Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-surface-obsidian via-surface-obsidian/40 to-transparent pointer-events-none" />
+                  {/* Dark Vignette Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#120D0A] via-transparent to-black/30 pointer-events-none" />
 
-                {/* Top Badge: Frame Code & Diet status */}
-                <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none z-10">
-                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-obsidian/85 backdrop-blur-md border border-primary/30 font-mono text-[9px] uppercase tracking-wider text-primary font-semibold">
-                    <span className={`w-1.5 h-1.5 rounded-full ${dish.diet === 'veg' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                    <span>{dish.tag}</span>
+                  {/* Badges */}
+                  <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none z-10">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-obsidian/90 border border-primary/30 font-mono text-[9px] uppercase tracking-wider text-primary font-semibold">
+                      <span className={`w-1.5 h-1.5 rounded-full ${dish.diet === 'veg' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                      <span>{dish.tag}</span>
+                    </div>
+                    {isCinematicExperience() && (
+                      <span className="font-mono text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-obsidian/85 text-on-surface/80 border border-outline/20">
+                        {dish.craftTelemetry}
+                      </span>
+                    )}
                   </div>
-                  <span className="font-mono text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-obsidian/80 text-on-surface/70 border border-outline/20">
-                    {dish.craftTelemetry}
-                  </span>
                 </div>
 
-                {/* Bottom Dish Information & 1-Tap Quick Add */}
-                <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10">
-                  <span className="font-mono text-[8px] sm:text-[9px] uppercase tracking-widest text-primary/80 block mb-0.5">
-                    {dish.category}
-                  </span>
-                  <h4 className="font-serif text-xs sm:text-sm lg:text-base text-on-surface font-medium leading-snug line-clamp-1 mb-1">
-                    {dish.name}
-                  </h4>
-                  <div className="flex items-center justify-between pt-1 border-t border-outline/15">
-                    <span className="font-mono text-xs sm:text-sm text-primary font-bold">
+                {/* Dish Information */}
+                <div className="p-4 flex flex-col justify-between flex-1 bg-[#120D0A]">
+                  <div>
+                    <span className="font-mono text-[9px] uppercase tracking-widest text-primary/80 block mb-1">
+                      {dish.category}
+                    </span>
+                    <h4 className="font-serif text-base sm:text-lg text-on-surface font-semibold leading-snug line-clamp-1 group-hover:text-primary transition-colors">
+                      {dish.name}
+                    </h4>
+                    <p className="font-sans text-xs text-on-surface/65 line-clamp-2 mt-1 leading-relaxed">
+                      {dish.subtitle}
+                    </p>
+                  </div>
+
+                  {/* Price & Quick Add */}
+                  <div className="flex items-center justify-between pt-3 mt-3 border-t border-outline/15">
+                    <span className="font-mono text-sm sm:text-base text-primary font-bold">
                       {formatPrice(dish.price)}
                     </span>
                     <button
                       type="button"
                       aria-label={`Add ${dish.name} to order`}
                       onClick={(e) => handleQuickAdd(e, dish)}
-                      className="px-2.5 py-1 rounded-full bg-primary text-on-primary font-sans font-semibold text-[11px] sm:text-xs flex items-center gap-1 shadow-[0_0_12px_rgba(var(--color-primary-rgb),0.4)] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                      className="px-3 py-1.5 rounded-full bg-primary/20 hover:bg-primary border border-primary/40 hover:border-primary text-primary hover:text-on-primary font-sans font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all duration-200 cursor-pointer active:scale-95"
                     >
-                      <span className="material-symbols-outlined text-xs">add</span>
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
                       <span>{t('menu.add', 'ADD')}</span>
                     </button>
                   </div>
@@ -469,16 +394,18 @@ export const CurvedMenuReel: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Telemetry & Navigation Instructions */}
+      {/* Footer Info Strip */}
       <div className="relative z-10 pt-3 border-t border-outline/15 flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[0.2em] uppercase text-on-surface/50">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-xs text-primary animate-pulse">drag_indicator</span>
-          <span>{t('curvedReel.dragHint', 'DRAG OR SWIPE TO SPIN • HOVER TO PAUSE • CLICK CARD FOR CRAFT NOTES')}</span>
+          <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+          <span>{t('curvedReel.dragHint', 'SWIPE OR DRAG TO EXPLORE • CLICK CARD FOR CRAFT NOTES')}</span>
         </div>
         <div className="flex items-center gap-2 text-primary font-semibold">
-          <span>8 {t('curvedReel.badge', 'SIGNATURE CREATIONS')}</span>
+          <span>8 {t('curvedReel.badge', 'SIGNATURE SELECTIONS')}</span>
           <span>•</span>
-          <span>{t('curvedReel.addToOrder', 'TAP ADD TO ORDER')}</span>
+          <span>{t('curvedReel.addToOrder', 'ADD TO ORDER')}</span>
         </div>
       </div>
 
@@ -488,7 +415,7 @@ export const CurvedMenuReel: React.FC = () => {
           role="dialog"
           aria-modal="true"
           aria-labelledby="dish-modal-title"
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in"
           onClick={() => setSelectedDish(null)}
         >
           <div
@@ -502,7 +429,9 @@ export const CurvedMenuReel: React.FC = () => {
               onClick={() => setSelectedDish(null)}
               className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-surface-container-high/80 hover:bg-primary text-on-surface hover:text-on-primary flex items-center justify-center transition-all cursor-pointer border border-outline/20"
             >
-              <span className="material-symbols-outlined text-sm">close</span>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
 
             {/* Modal Image Header */}
@@ -523,16 +452,18 @@ export const CurvedMenuReel: React.FC = () => {
                   <span className={`w-1.5 h-1.5 rounded-full ${selectedDish.diet === 'veg' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                   <span>{selectedDish.tag}</span>
                 </span>
-                <span className="font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-surface-obsidian/80 text-on-surface/80 border border-outline/20">
-                  {selectedDish.craftTelemetry}
-                </span>
+                {isCinematicExperience() && (
+                  <span className="font-mono text-[11px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-surface-obsidian/80 text-on-surface/80 border border-outline/20">
+                    {selectedDish.craftTelemetry}
+                  </span>
+                )}
               </div>
             </div>
 
             {/* Title & Category */}
             <div className="mb-4">
               <span className="font-mono text-[10px] uppercase tracking-widest text-primary/80 block mb-1">
-                {selectedDish.category} • {selectedDish.accentNote}
+                {dishCategoryLabel(selectedDish.category, selectedDish.accentNote)}
               </span>
               <div className="flex items-baseline justify-between gap-3">
                 <h3 id="dish-modal-title" className="font-serif text-xl sm:text-2xl text-on-surface font-semibold">
@@ -547,8 +478,9 @@ export const CurvedMenuReel: React.FC = () => {
               </p>
             </div>
 
-            {/* Sensory Tri-Spectrum Craft Strip */}
-            <div className="mb-5 p-3 rounded-xl bg-surface-container-lowest/80 border border-outline/20 space-y-2 font-mono text-[9px] uppercase tracking-wider">
+            {/* Sensory Tri-Spectrum Craft Strip (Cinematic Mode only) */}
+            {isCinematicExperience() && (
+              <div className="mb-5 p-3 rounded-xl bg-surface-container-lowest/80 border border-outline/20 space-y-2 font-mono text-[11px] uppercase tracking-wider">
               <div className="flex justify-between text-on-surface/60">
                 <span>{t('curvedReel.chefSensory', 'CHEF SENSORY CALIBRATION')}</span>
                 <span className="text-primary font-semibold">{t('curvedReel.authenticProfile', 'AUTHENTIC PROFILE')}</span>
@@ -582,7 +514,8 @@ export const CurvedMenuReel: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
+            )}
 
             {/* Action Bar */}
             <div className="flex items-center gap-3 pt-3 border-t border-outline/15">
@@ -601,13 +534,19 @@ export const CurvedMenuReel: React.FC = () => {
                 }}
                 className="flex-1 py-2.5 rounded-full bg-primary text-on-primary font-sans font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.4)] hover:scale-102 active:scale-98 transition-all cursor-pointer"
               >
-                <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
                 <span>{t('curvedReel.addToOrder', 'Add to Order')} · {formatPrice(selectedDish.price)}</span>
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };
+
+function dishCategoryLabel(category: string, accentNote: string): string {
+  return `${category} • ${accentNote}`;
+}

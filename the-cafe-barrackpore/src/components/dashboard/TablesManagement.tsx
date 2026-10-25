@@ -127,7 +127,7 @@ export const TablesManagement: React.FC = () => {
         addNotification(
           'warning',
           'Table Status Changed',
-          `Table ${table.table_number} is now ${nextActive ? 'Active' : 'Deactivated'}.`
+          `Table ${table.table_number} is now ${nextActive ? t('staff.tables.active', 'Active') : t('staff.tables.deactivated', 'Deactivated')}.`
         );
         setTables((prev) =>
           prev.map((t) => (t.id === table.id ? { ...t, active: nextActive } : t))
@@ -162,7 +162,7 @@ export const TablesManagement: React.FC = () => {
             Floor Tables & Smart QR
           </h2>
           <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
-            Manage physical dining covers, table seating capacities, optical tabletop QR stands, and real-time seat activation.
+            {t('staff.tables.manage_physical_dining_covers_ta', 'Manage physical dining covers, table seating capacities, optical tabletop QR stands, and real-time seat activation.')}
           </p>
         </div>
 
@@ -269,7 +269,7 @@ export const TablesManagement: React.FC = () => {
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
                             : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
                         }`}
-                        title="Click to toggle table availability"
+                        title={t('staff.tables.click_to_toggle_table_availabili', 'Click to toggle table availability')}
                       >
                         <span
                           className={`w-1.5 h-1.5 rounded-full ${
@@ -294,7 +294,7 @@ export const TablesManagement: React.FC = () => {
                     <div
                       onClick={() => setActiveQrTable(table)}
                       className="relative p-3.5 rounded-2xl bg-white flex flex-col items-center justify-center cursor-pointer shadow-lg group-hover:shadow-[0_8px_25px_rgba(212,175,55,0.2)] transition-all transform group-hover:-translate-y-0.5"
-                      title="Click to inspect and print table tent card"
+                      title={t('staff.tables.click_to_inspect_and_print_table', 'Click to inspect and print table tent card')}
                     >
                       <QRCodeSVG
                         value={qrTarget}
@@ -328,7 +328,7 @@ export const TablesManagement: React.FC = () => {
                       onClick={() => handleOpenEditModal(table)}
                       className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.06] text-[11px] font-semibold transition-colors cursor-pointer"
                     >
-                      Edit Config
+                      {t('staff.tables.edit_config', 'Edit Config')}
                     </button>
                   </div>
                 </div>
@@ -370,7 +370,7 @@ export const TablesManagement: React.FC = () => {
                 {businessName}
               </h4>
               <p className="text-[9px] font-mono tracking-[0.25em] text-zinc-400 print:text-zinc-600 uppercase mt-0.5 mb-4">
-                Smart Table Service
+                {t('staff.tables.smart_table_service', 'Smart Table Service')}
               </p>
 
               {/* Table Pill */}
@@ -418,12 +418,12 @@ export const TablesManagement: React.FC = () => {
                   type="button"
                   onClick={() => handleCopyQrUrl(buildTableQrUrl(activeQrTable.table_number))}
                   className="px-4 py-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-200 border border-white/[0.08] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  title="Copy QR Order Link"
+                  title={t('staff.tables.copy_qr_order_link', 'Copy QR Order Link')}
                 >
                   <span className="material-symbols-outlined text-sm">
                     {copiedUrl ? 'check' : 'content_copy'}
                   </span>
-                  <span>{copiedUrl ? 'Copied' : 'Link'}</span>
+                  <span>{copiedUrl ? t('staff.tables.copied', 'Copied') : t('staff.tables.link', 'Link')}</span>
                 </button>
               </div>
 
@@ -432,7 +432,7 @@ export const TablesManagement: React.FC = () => {
                 onClick={() => setActiveQrTable(null)}
                 className="w-full py-2.5 rounded-xl text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
               >
-                Close Preview
+                {t('staff.tables.close_preview', 'Close Preview')}
               </button>
             </div>
           </div>
@@ -455,7 +455,7 @@ export const TablesManagement: React.FC = () => {
               <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-5">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                    Dining Room Configuration
+                    {t('staff.tables.dining_room_configuration', 'Dining Room Configuration')}
                   </span>
                   <h3 className="text-xl font-serif font-black text-white mt-0.5">
                     {editingTable ? `Edit Table ${editingTable.table_number}` : 'Add New Dining Table'}
@@ -483,7 +483,7 @@ export const TablesManagement: React.FC = () => {
               <form onSubmit={handleSaveTable} className="space-y-4 text-xs">
                 <div>
                   <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Table Identifier (01 - 99)
+                    {t('staff.tables.table_identifier_01_99', 'Table Identifier (01 - 99)')}
                   </label>
                   <input
                     type="text"
@@ -511,7 +511,7 @@ export const TablesManagement: React.FC = () => {
 
                 <div>
                   <label className="block uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Seating Capacity (Guests)
+                    {t('staff.tables.seating_capacity_guests', 'Seating Capacity (Guests)')}
                   </label>
                   <div className="flex items-center gap-3">
                     <button
@@ -549,7 +549,7 @@ export const TablesManagement: React.FC = () => {
                     }}
                     className="flex-1 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] font-bold text-xs text-zinc-300 hover:text-white transition-colors cursor-pointer"
                   >
-                    Cancel
+                    {t('staff.tables.cancel', 'Cancel')}
                   </button>
                   <button
                     type="submit"

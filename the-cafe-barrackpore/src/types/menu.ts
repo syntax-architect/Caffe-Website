@@ -19,6 +19,7 @@ export interface MenuCategory {
   id: string;
   name: string;
   sort_order: number;
+  icon?: string;
   translations?: MenuCategoryTranslations;
   created_at?: string;
   updated_at?: string;

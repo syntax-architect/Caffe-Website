@@ -51,7 +51,11 @@ export const pt: TranslationDictionary = {
     gallery: 'Galeria',
     ourStory: 'Nossa História',
     contact: 'Contato',
-    staffPortal: 'Portal da Equipe',
+    staffPortal: 'Portal Equipe',
+    platters: 'Pratos',
+    story: 'História',
+    vip: 'VIP',
+    reserve: 'Reservar',
   },
 
   hero: {
@@ -381,8 +385,8 @@ export const pt: TranslationDictionary = {
 
   story: {
     badge: "EST. ACAMPAMENTO DE BARRACKPORE",
-    title: "Herança, Fogo e Café Especial",
-    titleItalic: "Fogo e Torra",
+    title: "Herança, Fogo e",
+    titleItalic: "Café Especial",
     subtitle: "Onde a arquitetura histórica se encontra com a perfeição culinária lenta.",
     description: "Décadas de torra artesanal, massa lêveda cozida em forno a lenha e hospitalidade crepuscular.",
     manifesto: "SEM MODELOS. SEM PRESSAS À MESA. CADA EXPRESSO EXTRAÍDO A 9 BARES, CADA MASSA ESTICADA À MÃO, COM CALOR ÂMBAR A 2200K.",

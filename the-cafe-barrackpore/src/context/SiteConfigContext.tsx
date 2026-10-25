@@ -110,7 +110,18 @@ export interface VIPClubConfig extends ImageAsset {
   successMessage?: string;
 }
 
-import { DEFAULT_RESTAURANT_CONFIG, RESTAURANT_PRESETS } from '../config/restaurantPresets';
+import { DEFAULT_RESTAURANT_CONFIG, RESTAURANT_PRESETS, IRELAND_DEMO_CONFIG } from '../config/restaurantPresets';
+
+const isIrelandDemoActive = (): boolean => {
+  return (
+    ((globalThis as any).process?.env?.VITE_DEMO_PRESET === 'IE') ||
+    ((import.meta as any).env?.VITE_DEMO_PRESET === 'IE') ||
+    ((globalThis as any).process?.env?.VITE_RESTAURANT_COUNTRY === 'IE') ||
+    ((import.meta as any).env?.VITE_RESTAURANT_COUNTRY === 'IE')
+  );
+};
+
+const INITIAL_RESTAURANT_CONFIG = isIrelandDemoActive() ? IRELAND_DEMO_CONFIG : DEFAULT_RESTAURANT_CONFIG;
 import type { RestaurantLocalizationConfig } from '../types/restaurantConfig';
 import type { RestaurantEngineConfig, RestaurantVisualTheme, ThemePresetId } from '../types/restaurantEngine';
 import { defaultEngineConfig } from '../config/defaultEngineConfig';
@@ -341,7 +352,7 @@ const defaultContextValue: SiteConfigContextType = {
   error: null,
   updateSection: async () => false,
 
-  restaurantConfig: DEFAULT_RESTAURANT_CONFIG,
+  restaurantConfig: INITIAL_RESTAURANT_CONFIG,
   features: DEFAULT_FEATURE_FLAGS,
   engineConfig: defaultEngineConfig,
   formatPrice: (amount: number, customCurrency?: string) =>
@@ -605,7 +616,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const [restaurantConfig, setRestaurantConfig] = useState<RestaurantLocalizationConfig>(() => {
-    if (typeof window === 'undefined') return DEFAULT_RESTAURANT_CONFIG;
+    if (typeof window === 'undefined') return INITIAL_RESTAURANT_CONFIG;
     try {
       const stored = localStorage.getItem(RESTAURANT_CONFIG_STORAGE_KEY);
       if (stored) {
@@ -614,7 +625,7 @@ export const SiteConfigProvider: React.FC<{ children: ReactNode }> = ({ children
     } catch {
       // fallback
     }
-    return DEFAULT_RESTAURANT_CONFIG;
+    return INITIAL_RESTAURANT_CONFIG;
   });
 
   useEffect(() => {

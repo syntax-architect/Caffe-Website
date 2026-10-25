@@ -2281,9 +2281,10 @@ BEGIN
       tr.effective_from DESC
     LIMIT 1;
 
-    -- Zero 5% silent fallback: return 0.0000 Zero Rate / Exempt instead of 0.0500
+    -- Strict Tax Guard: If tax is enabled and no rule matches, raise error (no 0% silent fallback)
     IF NOT FOUND THEN
-        RETURN QUERY SELECT 'Zero Rate / Exempt'::VARCHAR, 0.0000::NUMERIC, 'inclusive'::VARCHAR, 'verified'::VARCHAR;
+        RAISE EXCEPTION 'NO_MATCHING_TAX_RULE: No active verified tax rule matches country=%, region=%, category=%, order_type=%, date=%. Tax is enabled but jurisdiction has no matching rule.',
+            p_country, p_region, p_category, p_order_type, p_date;
     END IF;
 END;
 $$;

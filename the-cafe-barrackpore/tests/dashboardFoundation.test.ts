@@ -356,7 +356,12 @@ for (const token of requiredTokens) {
   }
 }
 
-console.log('✔ Executive Dashboard Live Demo Simulation Toggle & Telemetry contract verified\n');
+// Invariant: Simulate Peak Evening must only render when VITE_CLIENT_MODE=demo
+if (!dashboardOverviewContent.includes("import.meta.env.VITE_CLIENT_MODE === 'demo'")) {
+  throw new Error("Test 7 Invariant Failed: 'Simulate Peak Evening' must be gated strictly by import.meta.env.VITE_CLIENT_MODE === 'demo'");
+}
+
+console.log('✔ Executive Dashboard Live Demo Simulation Toggle & Telemetry contract verified (gated by VITE_CLIENT_MODE=demo)\n');
 
 console.log('======================================================');
 console.log('✔ ALL PHASE 1G RESTAURANT DASHBOARD TESTS PASSED (7/7)');

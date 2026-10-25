@@ -872,7 +872,7 @@ export const POSManagement: React.FC = () => {
               {currencySymbol}
               {tables.reduce((sum, t) => sum + t.running_total, 0) +
                 counterBills.reduce((sum, b) => sum + b.grand_total, 0)}{' '}
-              Live Floor Sales
+              {t('staff.pos.live_floor_sales', 'Live Floor Sales')}
             </span>
           </div>
 
@@ -880,7 +880,7 @@ export const POSManagement: React.FC = () => {
             type="button"
             onClick={refreshFloorData}
             className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-stone-300 transition-colors"
-            title="Refresh Floor"
+            title={t('staff.pos.refresh_floor', 'Refresh Floor')}
           >
             <span className="material-symbols-outlined text-base">refresh</span>
           </button>
@@ -904,10 +904,10 @@ export const POSManagement: React.FC = () => {
                 <div>
                   <h2 className="text-base font-bold text-white flex items-center gap-2">
                     <span className="material-symbols-outlined text-[#D4AF37]">grid_view</span>
-                    Dining Floor Table Map
+                    {t('staff.pos.dining_floor_table_map', 'Dining Floor Table Map')}
                   </h2>
                   <p className="text-xs text-stone-400 mt-0.5">
-                    Click any table to open running bill, view KOT batches, or take a new order.
+                    {t('staff.pos.click_any_table_to_open_running_', 'Click any table to open running bill, view KOT batches, or take a new order.')}
                   </p>
                 </div>
 
@@ -1071,7 +1071,7 @@ export const POSManagement: React.FC = () => {
                         : 'bg-white/5 text-stone-300 hover:bg-white/10'
                     }`}
                   >
-                    All Items
+                    {t('staff.pos.all_items', 'All Items')}
                   </button>
                   {categories.map((c) => (
                     <button
@@ -1132,7 +1132,7 @@ export const POSManagement: React.FC = () => {
                               type="button"
                               onClick={() => handleOpenCustomizer(item)}
                               className="p-1 rounded-lg bg-white/5 hover:bg-white/15 text-stone-300 transition-colors"
-                              title="Customize modifiers & notes"
+                              title={t('staff.pos.customize_modifiers_notes', 'Customize modifiers & notes')}
                             >
                               <span className="material-symbols-outlined text-sm">tune</span>
                             </button>
@@ -1281,7 +1281,7 @@ export const POSManagement: React.FC = () => {
                                 setVoidManagerPin('');
                               }}
                               className="p-1 rounded hover:bg-red-500/20 text-stone-400 hover:text-red-400"
-                              title="Void item"
+                              title={t('staff.pos.void_item', 'Void item')}
                             >
                               <span className="material-symbols-outlined text-sm">cancel</span>
                             </button>
@@ -1307,14 +1307,14 @@ export const POSManagement: React.FC = () => {
                     onClick={() => setDraftItems([])}
                     className="text-[10px] text-red-400 hover:underline"
                   >
-                    Clear Draft
+                    {t('staff.pos.clear_draft', 'Clear Draft')}
                   </button>
                 )}
               </div>
 
               {draftItems.length === 0 ? (
                 <div className="py-6 text-center text-xs text-stone-500 italic">
-                  Select items from the catalog to add to this KOT ticket.
+                  {t('staff.pos.select_items_from_the_catalog_to', 'Select items from the catalog to add to this KOT ticket.')}
                 </div>
               ) : (
                 <div className="space-y-1.5">
@@ -1440,13 +1440,13 @@ export const POSManagement: React.FC = () => {
                       onClick={handleApplyPromoCode}
                       className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-colors"
                     >
-                      Apply
+                      {t('staff.pos.apply', 'Apply')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsManualDiscountModalOpen(true)}
                       className="px-2.5 py-1.5 rounded-lg bg-[#D4AF37]/20 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/30 text-xs font-bold text-[#F3C766] transition-colors"
-                      title="Manager Manual Discount"
+                      title={t('staff.pos.manager_manual_discount', 'Manager Manual Discount')}
                     >
                       Manager %
                     </button>
@@ -1516,21 +1516,21 @@ export const POSManagement: React.FC = () => {
                   onClick={() => setIsTransferModalOpen(true)}
                   className="flex-1 py-1 px-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-stone-300 font-semibold text-center transition-colors"
                 >
-                  Transfer Table
+                  {t('staff.pos.transfer_table', 'Transfer Table')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsMergeModalOpen(true)}
                   className="flex-1 py-1 px-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-stone-300 font-semibold text-center transition-colors"
                 >
-                  Merge Table
+                  {t('staff.pos.merge_table', 'Merge Table')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsMoveItemsModalOpen(true)}
                   className="flex-1 py-1 px-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-stone-300 font-semibold text-center transition-colors"
                 >
-                  Move Items
+                  {t('staff.pos.move_items', 'Move Items')}
                 </button>
               </div>
             )}
@@ -1628,7 +1628,7 @@ export const POSManagement: React.FC = () => {
               onClick={handleConfirmCustomizer}
               className="w-full py-3 rounded-xl bg-[#D4AF37] hover:bg-[#c29f2f] text-black font-black text-xs uppercase tracking-wide transition-all shadow-lg"
             >
-              Add To Ticket
+              {t('staff.pos.add_to_ticket', 'Add To Ticket')}
             </button>
           </div>
         </div>
@@ -1680,7 +1680,7 @@ export const POSManagement: React.FC = () => {
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-stone-300">
-                Manager PIN (Default: 1234)
+                {t('staff.pos.manager_pin_default_1234', 'Manager PIN (Default: 1234)')}
               </label>
               <input
                 type="password"
@@ -1698,7 +1698,7 @@ export const POSManagement: React.FC = () => {
                 onClick={() => setVoidingItem(null)}
                 className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-stone-300"
               >
-                Cancel
+                {t('staff.pos.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -1721,7 +1721,7 @@ export const POSManagement: React.FC = () => {
           <div className="w-full max-w-sm bg-[#16120E] border border-[#D4AF37]/40 rounded-2xl p-5 shadow-2xl space-y-4">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
               <span className="material-symbols-outlined text-[#D4AF37]">percent</span>
-              Manager Manual Discount
+              {t('staff.pos.manager_manual_discount', 'Manager Manual Discount')}
             </h3>
 
             <div className="flex gap-2 p-1 bg-black/40 rounded-xl border border-white/10 text-xs font-bold">
@@ -1776,7 +1776,7 @@ export const POSManagement: React.FC = () => {
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-stone-300">
-                Manager PIN (Default: 1234)
+                {t('staff.pos.manager_pin_default_1234', 'Manager PIN (Default: 1234)')}
               </label>
               <input
                 type="password"
@@ -1794,14 +1794,14 @@ export const POSManagement: React.FC = () => {
                 onClick={() => setIsManualDiscountModalOpen(false)}
                 className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-stone-300"
               >
-                Cancel
+                {t('staff.pos.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
                 onClick={handleApplyManualDiscount}
                 className="flex-1 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c29f2f] text-xs font-bold text-black shadow-lg"
               >
-                Authorize
+                {t('staff.pos.authorize', 'Authorize')}
               </button>
             </div>
           </div>
@@ -1823,7 +1823,7 @@ export const POSManagement: React.FC = () => {
               <label className="text-xs font-bold text-stone-300">{t('staff.pos.select_free_destination_table', 'Select Free Destination Table')}</label>
               {freeTables.length === 0 ? (
                 <div className="p-3 rounded-xl bg-red-950/20 text-red-300 text-xs">
-                  No free tables available right now.
+                  {t('staff.pos.no_free_tables_available_right_n', 'No free tables available right now.')}
                 </div>
               ) : (
                 <select
@@ -1847,7 +1847,7 @@ export const POSManagement: React.FC = () => {
                 onClick={() => setIsTransferModalOpen(false)}
                 className="flex-1 py-2.5 rounded-xl bg-white/10 text-xs font-bold text-stone-300"
               >
-                Cancel
+                {t('staff.pos.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -1855,7 +1855,7 @@ export const POSManagement: React.FC = () => {
                 onClick={handleConfirmTransfer}
                 className="flex-1 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c29f2f] text-xs font-bold text-black shadow-lg disabled:opacity-50"
               >
-                Confirm Move
+                {t('staff.pos.confirm_move', 'Confirm Move')}
               </button>
             </div>
           </div>
@@ -1881,7 +1881,7 @@ export const POSManagement: React.FC = () => {
               <label className="text-xs font-bold text-stone-300">{t('staff.pos.select_target_table', 'Select Target Table')}</label>
               {otherRunningBills.length === 0 ? (
                 <div className="p-3 rounded-xl bg-amber-950/20 text-amber-300 text-xs">
-                  No other active tables to merge into.
+                  {t('staff.pos.no_other_active_tables_to_merge_', 'No other active tables to merge into.')}
                 </div>
               ) : (
                 <select
@@ -1905,7 +1905,7 @@ export const POSManagement: React.FC = () => {
                 onClick={() => setIsMergeModalOpen(false)}
                 className="flex-1 py-2.5 rounded-xl bg-white/10 text-xs font-bold text-stone-300"
               >
-                Cancel
+                {t('staff.pos.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -1913,7 +1913,7 @@ export const POSManagement: React.FC = () => {
                 onClick={handleConfirmMerge}
                 className="flex-1 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c29f2f] text-xs font-bold text-black shadow-lg disabled:opacity-50"
               >
-                Merge Tables
+                {t('staff.pos.merge_tables', 'Merge Tables')}
               </button>
             </div>
           </div>
@@ -1987,7 +1987,7 @@ export const POSManagement: React.FC = () => {
                 onClick={() => setIsMoveItemsModalOpen(false)}
                 className="flex-1 py-2.5 rounded-xl bg-white/10 text-xs font-bold text-stone-300"
               >
-                Cancel
+                {t('staff.pos.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -1995,7 +1995,7 @@ export const POSManagement: React.FC = () => {
                 onClick={handleConfirmMoveItems}
                 className="flex-1 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c29f2f] text-xs font-bold text-black shadow-lg disabled:opacity-50"
               >
-                Move Selected
+                {t('staff.pos.move_selected', 'Move Selected')}
               </button>
             </div>
           </div>
@@ -2012,7 +2012,7 @@ export const POSManagement: React.FC = () => {
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <span className="material-symbols-outlined text-[#D4AF37]">receipt_long</span>
-                  Bill Settlement
+                  {t('staff.pos.bill_settlement', 'Bill Settlement')}
                 </h3>
                 <p className="text-xs text-stone-400 mt-0.5">
                   {activeBill.order_type === 'dine_in'
@@ -2033,7 +2033,7 @@ export const POSManagement: React.FC = () => {
             {/* Total Due Banner */}
             <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/40 to-black/60 border border-[#D4AF37]/30 text-center">
               <span className="text-xs uppercase tracking-wider text-stone-400 font-bold">
-                Total Amount Due
+                {t('staff.pos.total_amount_due', 'Total Amount Due')}
               </span>
               <div className="text-3xl font-black text-[#F3C766] font-mono mt-1">
                 {currencySymbol}{liveTotals.grandTotal}
@@ -2093,7 +2093,7 @@ export const POSManagement: React.FC = () => {
                       onClick={() => setCashTendered(String(liveTotals.grandTotal))}
                       className="px-2 py-0.5 rounded bg-amber-500/20 text-[10px] font-mono text-amber-300"
                     >
-                      Exact
+                      {t('staff.pos.exact', 'Exact')}
                     </button>
                   </div>
                 </div>

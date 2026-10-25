@@ -46,12 +46,18 @@ export const en: TranslationDictionary = {
   nav: {
     home: 'Home',
     menu: 'Menu',
+    specials: 'Specials',
+    ourStory: 'Our Story',
+    gallery: 'Gallery',
+    vipClub: 'VIP Club',
     reservations: 'Reservations',
     orderOnline: 'Order Online',
-    gallery: 'Gallery',
-    ourStory: 'Our Story',
     contact: 'Contact',
     staffPortal: 'Staff Portal',
+    platters: 'Platters',
+    story: 'Story',
+    vip: 'VIP',
+    reserve: 'Reserve',
   },
 
   hero: {
@@ -382,8 +388,8 @@ export const en: TranslationDictionary = {
   // ─── Our Story & Heritage ───────────────────────────
   story: {
     badge: 'EST. BARRACKPORE CANTONMENT',
-    title: 'Heritage, Flame & Specialty Roast',
-    titleItalic: 'Flame & Roast',
+    title: 'Heritage, Flame &',
+    titleItalic: 'Specialty Roast',
     subtitle: 'Where historical military cantonment architecture meets slow culinary perfection.',
     description: 'Decades of artisan roasting, hand-stretched wood-fired crusts, and twilight hospitality.',
     manifesto: 'NO TEMPLATES. NO RUSHED TABLES. EVERY ESPRESSO PULLED AT NINE BARS, EVERY SOURDOUGH STRETCHED BY HAND, AND EVERY EVENING TUNED TO 2200K AMBER WARMTH.',

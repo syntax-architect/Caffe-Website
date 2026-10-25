@@ -52,6 +52,10 @@ export const ja: TranslationDictionary = {
     ourStory: 'ストーリー',
     contact: 'お問い合わせ',
     staffPortal: 'スタッフポータル',
+    platters: '大皿料理',
+    story: 'ストーリー',
+    vip: 'VIP',
+    reserve: '予約',
   },
 
   hero: {
@@ -381,8 +385,8 @@ export const ja: TranslationDictionary = {
 
   story: {
     badge: "バラックポール兵営地 創業",
-    title: "歴史、直火、そしてスペシャリティロースト",
-    titleItalic: "直火と焙煎",
+    title: "歴史、直火、そして",
+    titleItalic: "スペシャリティロースト",
     subtitle: "歴史的な兵営建築と、じっくり仕込まれる極上の美味が出逢う場所。",
     description: "何十年にもわたる職人焙煎、石窯で手伸ばしした薪焼きクラスト、そして黄昏のおもてなし。",
     manifesto: "型にはまらない。急かさない。9気圧で抽出されるエスプレッソ、手作業で伸ばすサワードウ、2200Kの温かな琥珀色の光。",

@@ -8,7 +8,7 @@ export const clientDetails = {
   displayPhone: "084205 07105",
   whatsapp: "+918420507105",
   email: "contact@thecafe.com",
-  address: "14, Riverside Road, Cantonment",
+  address: "14, Riverside Road",
   googleMapsLink: "https://maps.app.goo.gl/6N1csn9kKtCY7By97",
   instagramLink: "https://www.instagram.com/the_cafe_barrackpore?stkn=dmxjN2xuZGhtbTMw",
   facebookLink: "#",
@@ -23,5 +23,17 @@ export const clientDetails = {
   clientMode: (((globalThis as any).process?.env?.VITE_CLIENT_MODE) || (import.meta as any).env?.VITE_CLIENT_MODE || 'demo') as 'demo' | 'production',
   inquiryPrefix: "INQ-2026",
   conciergeWhatsAppGreeting: "Hello {businessName} Concierge! ☕",
-  location: { address: "14, Riverside Road, Cantonment", city: "Barrackpore" },
+  location: { address: "14, Riverside Road", city: "Barrackpore" },
 };
+
+const getExperience = (): 'clean' | 'cinematic' => {
+  const envVal = (
+    ((globalThis as any).process?.env?.VITE_EXPERIENCE) ||
+    ((import.meta as any).env?.VITE_EXPERIENCE) ||
+    'clean'
+  ).toString().toLowerCase();
+  return envVal === 'cinematic' ? 'cinematic' : 'clean';
+};
+
+export const isCinematicExperience = (): boolean => getExperience() === 'cinematic';
+export const isCleanExperience = (): boolean => getExperience() === 'clean';

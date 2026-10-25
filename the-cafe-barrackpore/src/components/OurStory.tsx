@@ -6,7 +6,7 @@ import { getAvifSource } from '../utils/image';
 import { DEFAULT_STORY_CHAPTERS, type StoryChapter } from '../services/siteContentService';
 
 const MANIFESTO_TEXT =
-  'NO TEMPLATES. NO RUSHED TABLES. EVERY ESPRESSO PULLED AT NINE BARS, EVERY SOURDOUGH STRETCHED BY HAND, AND EVERY EVENING TUNED TO 2200K AMBER WARMTH — BECAUSE CANTONMENT DESERVES UNFORGETTABLE.';
+  'NO TEMPLATES. NO RUSHED TABLES. EVERY ESPRESSO PULLED AT NINE BARS, EVERY SOURDOUGH STRETCHED BY HAND, AND EVERY EVENING TUNED TO 2200K AMBER WARMTH — BECAUSE OUR GUESTS DESERVE UNFORGETTABLE.';
 
 const HIGHLIGHT_WORDS = new Set([
   'NINE',
@@ -45,7 +45,7 @@ const EVENING_PHASES: EveningPhaseSpec[] = [
     titleHighlight: 'Aperitivo.',
     subtitle: 'Quiet transition from afternoon into evening twilight',
     description:
-      'Single-origin Arabica espresso pulled to micron precision and cold-clarified botanical coolers as the sun dips over Barrackpore Cantonment. The ideal hour for unhurried conversations and quiet creative moments.',
+      'Single-origin Arabica espresso pulled to micron precision and cold-clarified botanical coolers as the twilight hour descends. The ideal hour for unhurried conversations and quiet creative moments.',
     vibe: 'Unhurried & Mellow',
     bestFor: 'Coffee catch-ups, solo reads & casual meetings',
     lighting: '2700K Warm Twilight Glow',
@@ -111,7 +111,7 @@ const EVENING_PHASES: EveningPhaseSpec[] = [
 ];
 
 export const OurStory: React.FC = () => {
-  const { ourStory, engineConfig } = useSiteConfig();
+  const { ourStory, engineConfig, restaurantConfig } = useSiteConfig();
   const { t } = useI18n();
   const sectionRef = useRef<HTMLElement>(null);
   const chaptersTrackRef = useRef<HTMLDivElement>(null);
@@ -226,7 +226,7 @@ export const OurStory: React.FC = () => {
             
             {/* Background Watermark Telemetry */}
             <div className="absolute top-6 right-8 font-mono text-[11px] tracking-[0.3em] uppercase text-primary/10 select-none pointer-events-none hidden lg:block">
-              CANTONMENT SANCTUARY · 2200K NOCTURNE
+              {restaurantConfig?.address?.region ? `${restaurantConfig.address.region.toUpperCase()} SANCTUARY` : 'SANCTUARY'} · NOCTURNE LOUNGE
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
@@ -566,7 +566,7 @@ export const OurStory: React.FC = () => {
                 <div className="flex items-center justify-between font-mono text-[10px] tracking-[0.2em] uppercase text-on-surface-variant/80 mb-3 pb-2.5 border-b border-outline/15">
                   <span className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                    CANTONMENT SANCTUARY FLOOR PLAN
+                    {restaurantConfig?.address?.city?.toUpperCase() || 'CULINARY'} SANCTUARY FLOOR PLAN
                   </span>
                   <span className="px-2.5 py-0.5 rounded bg-surface-obsidian text-primary font-bold border border-primary/25">
                     {activePhase.timeRange}
@@ -738,7 +738,7 @@ export const OurStory: React.FC = () => {
                 <div className="flex items-center justify-between pt-3 border-t border-outline/15 font-mono text-[9px] uppercase tracking-widest text-on-surface/60">
                   <span className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    CLICK ANY ZONE TO PREVIEW SERVICE
+                    {t('story.click_any_zone_to_preview_servic', 'CLICK ANY ZONE TO PREVIEW SERVICE')}
                   </span>
                   <span className="font-bold text-primary">{activePhase.activeZoneName}</span>
                 </div>
@@ -780,7 +780,7 @@ export const OurStory: React.FC = () => {
 
                   <div className="p-3 rounded-xl bg-surface-elevated/40 border border-outline/15 flex flex-col">
                     <span className="font-mono text-[9px] uppercase tracking-wider text-primary font-semibold mb-0.5">
-                      BEST FOR
+                      {t('story.best_for', 'BEST FOR')}
                     </span>
                     <span className="font-sans text-xs sm:text-[13px] text-on-surface font-medium leading-tight">
                       {activePhase.bestFor}
@@ -789,7 +789,7 @@ export const OurStory: React.FC = () => {
 
                   <div className="p-3 rounded-xl bg-surface-elevated/40 border border-outline/15 flex flex-col">
                     <span className="font-mono text-[9px] uppercase tracking-wider text-primary font-semibold mb-0.5">
-                      LIGHTING
+                      {t('story.lighting', 'LIGHTING')}
                     </span>
                     <span className="font-sans text-xs sm:text-[13px] text-on-surface font-medium leading-tight">
                       {activePhase.lighting}
@@ -798,7 +798,7 @@ export const OurStory: React.FC = () => {
 
                   <div className="p-3 rounded-xl bg-surface-elevated/40 border border-outline/15 flex flex-col">
                     <span className="font-mono text-[9px] uppercase tracking-wider text-primary font-semibold mb-0.5">
-                      SIGNATURE PAIRING
+                      {t('story.signature_pairing', 'SIGNATURE PAIRING')}
                     </span>
                     <span className="font-sans text-xs sm:text-[13px] text-on-surface font-medium leading-tight">
                       {activePhase.signaturePairing}

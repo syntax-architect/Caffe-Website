@@ -151,22 +151,22 @@ BEGIN
 END $$;
 
 -- Cryptographic PIN hash helper
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Cryptographic PIN hash helper (Blowfish bcrypt via pgcrypto)
 CREATE OR REPLACE FUNCTION public.hash_manager_pin(p_pin TEXT)
 RETURNS TEXT
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
-DECLARE
-    v_salt TEXT;
 BEGIN
     IF p_pin IS NULL OR length(trim(p_pin)) < 4 OR length(trim(p_pin)) > 8 OR trim(p_pin) !~ '^[0-9]+$' THEN
         RAISE EXCEPTION 'Manager PIN must be between 4 and 8 numeric digits';
     END IF;
 
-    -- Generate random 16-char hex salt
-    v_salt := substr(replace(gen_random_uuid()::text, '-', ''), 1, 16);
-    RETURN v_salt || '$' || encode(sha256((v_salt || ':' || trim(p_pin))::bytea), 'hex');
+    -- Blowfish bcrypt hash via pgcrypto
+    RETURN crypt(trim(p_pin), gen_salt('bf', 8));
 END;
 $$;
 
@@ -185,14 +185,19 @@ BEGIN
         RETURN FALSE;
     END IF;
 
-    -- Salted SHA-256 format: "salt$hexhash"
+    -- 1. Blowfish bcrypt ($2a$ or $2b$) check via pgcrypto crypt()
+    IF p_hash LIKE '$2%' THEN
+        RETURN (crypt(trim(p_pin), p_hash) = p_hash);
+    END IF;
+
+    -- 2. Legacy Salted SHA-256 format: "salt$hexhash"
     IF position('$' IN p_hash) > 0 THEN
         v_salt := split_part(p_hash, '$', 1);
         v_expected := v_salt || '$' || encode(sha256((v_salt || ':' || trim(p_pin))::bytea), 'hex');
         RETURN (p_hash = v_expected);
     END IF;
 
-    -- Raw sha256 fallback
+    -- 3. Raw sha256 fallback
     RETURN (p_hash = encode(sha256(trim(p_pin)::bytea), 'hex'));
 END;
 $$;

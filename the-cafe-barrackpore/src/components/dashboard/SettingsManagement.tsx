@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { fetchRestaurantSettings, updateRestaurantSettings } from '../../services/dashboardService';
 import { RESTAURANT_PRESETS, PRESET_REGIONS } from '../../config/restaurantPresets';
-import { getCountryTaxProfile } from '../../config/taxProfiles';
+import { getCountryTaxProfile, canJurisdictionGoLive } from '../../config/taxProfiles';
 import { useNotification } from '../../hooks/useNotification';
 import { checkPaymentHealth, sendTestPayment, type PaymentHealthStatus } from '../../services/paymentService';
 import type { RestaurantSettings, RestaurantFeatureFlags } from '../../types/dashboard';
@@ -62,7 +62,7 @@ export const SettingsManagement: React.FC = () => {
       isOrderingEnabled: key === 'online_ordering' ? nextVal : isOrderingEnabled,
       isTableBookingEnabled: key === 'reservations' ? nextVal : isBookingEnabled,
     });
-    addNotification('info', `Feature Updated`, `${FEATURE_METADATA[key]?.label || key} is now ${nextVal ? 'ENABLED' : 'DISABLED'}.`);
+    addNotification('info', t('staff.settings.feature_updated', 'Feature Updated'), `${FEATURE_METADATA[key]?.label || key} is now ${nextVal ? t('staff.settings.enabled', 'ENABLED') : t('staff.settings.disabled', 'DISABLED')}.`);
   };
 
   // Change Password State
@@ -467,10 +467,10 @@ export const SettingsManagement: React.FC = () => {
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-black text-white mt-1 tracking-tight">
-            Restaurant Configuration
+            {t('staff.settings.restaurant_configuration', 'Restaurant Configuration')}
           </h2>
           <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-            Configure global localization presets, live dining and ordering toggles, digital payment gateways, and operational hours.
+            {t('staff.settings.configure_global_localization_pr', 'Configure global localization presets, live dining and ordering toggles, digital payment gateways, and operational hours.')}
           </p>
         </div>
 
@@ -497,7 +497,7 @@ export const SettingsManagement: React.FC = () => {
                   : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
-              All Settings
+              {t('staff.settings.all_settings', 'All Settings')}
             </button>
             <button
               type="button"
@@ -521,7 +521,7 @@ export const SettingsManagement: React.FC = () => {
                   : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
-              Operations
+              {t('staff.settings.operations', 'Operations')}
             </button>
             <button
               type="button"
@@ -543,7 +543,7 @@ export const SettingsManagement: React.FC = () => {
                   : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
-              Payments
+              {t('staff.settings.payments', 'Payments')}
             </button>
             <button
               type="button"
@@ -554,7 +554,7 @@ export const SettingsManagement: React.FC = () => {
                   : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
-              Thermal Printers
+              {t('staff.settings.thermal_printers', 'Thermal Printers')}
             </button>
           </div>
 
@@ -565,10 +565,10 @@ export const SettingsManagement: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-white/[0.06]">
                   <div>
                     <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                      Settings &gt; Features
+                      Settings {'>'} Features
                     </span>
                     <h3 className="font-serif text-lg font-bold text-white mt-0.5">
-                      Modular Feature Switchboard (18 Capabilities)
+                      {t('staff.settings.modular_feature_switchboard_18_c', 'Modular Feature Switchboard (18 Capabilities)')}
                     </h3>
                   </div>
                   <div className="flex items-center gap-2">
@@ -576,13 +576,13 @@ export const SettingsManagement: React.FC = () => {
                       {Object.values(features).filter(Boolean).length} / 18 Active
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono border border-emerald-500/20">
-                      Zero-Downtime Hot Toggle
+                      {t('staff.settings.zero_downtime_hot_toggle', 'Zero-Downtime Hot Toggle')}
                     </span>
                   </div>
                 </div>
 
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  Toggle individual restaurant capabilities on or off with immediate cross-tab effect. When a feature is disabled, its navigation routes and customer buttons hide instantly, and open operations remain safely protected.
+                  {t('staff.settings.toggle_individual_restaurant_cap', 'Toggle individual restaurant capabilities on or off with immediate cross-tab effect. When a feature is disabled, its navigation routes and customer buttons hide instantly, and open operations remain safely protected.')}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
@@ -654,7 +654,7 @@ export const SettingsManagement: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                      Operational Gates
+                      {t('staff.settings.operational_gates', 'Operational Gates')}
                     </span>
                     <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.master_service_switches', 'Master Service Switches')}</h3>
                   </div>
@@ -664,7 +664,24 @@ export const SettingsManagement: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 {/* Online Ordering Toggle */}
                 <div
-                  onClick={() => isOwner && setIsOrderingEnabled(!isOrderingEnabled)}
+                  onClick={() => {
+                    if (!isOwner) return;
+                    if (!isOrderingEnabled) {
+                      const targetCountry = country || restaurantConfig?.country || 'IN';
+                      const isCustom = !RESTAURANT_PRESETS[targetCountry];
+                      const liveCheck = canJurisdictionGoLive(targetCountry, isCustom ? customAccountantConfirmed : true);
+                      if (!liveCheck.allowed) {
+                        addNotification('error', t('staff.settings.golive_blocked', 'Go-Live Blocked'), liveCheck.reason || t('staff.settings.tax_rule_required', 'Tax is enabled but no active verified tax rules match this jurisdiction.'));
+                        return;
+                      }
+                      const taxProfile = getCountryTaxProfile(targetCountry);
+                      if (taxProfile && taxProfile.config.rate === 0 && (!taxProfile.config.rules || taxProfile.config.rules.length === 0) && (restaurantConfig as any)?.tax_mode !== 'none') {
+                        addNotification('error', t('staff.settings.golive_blocked', 'Go-Live Blocked'), t('staff.settings.tax_rule_required', 'Tax is enabled but no verified tax rules exist. Live ordering is blocked to prevent 0% unauthorized tax leakage.'));
+                        return;
+                      }
+                    }
+                    setIsOrderingEnabled(!isOrderingEnabled);
+                  }}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                     isOrderingEnabled
                       ? 'bg-emerald-950/20 border-emerald-500/30 hover:border-emerald-500/50'
@@ -680,7 +697,7 @@ export const SettingsManagement: React.FC = () => {
                     <div>
                       <p className="text-sm font-bold text-white">{t('staff.dashboard.online_ordering_qr_web', 'Online Ordering (QR & Web)')}</p>
                       <p className="text-[11px] text-zinc-400 mt-0.5">
-                        {isOrderingEnabled ? 'Accepting guest orders actively' : 'Ordering paused across portal'}
+                        {isOrderingEnabled ? t('staff.settings.accepting_orders', 'Accepting guest orders actively') : t('staff.settings.ordering_paused', 'Ordering paused across portal')}
                       </p>
                     </div>
                   </div>
@@ -688,7 +705,23 @@ export const SettingsManagement: React.FC = () => {
                     type="checkbox"
                     checked={isOrderingEnabled}
                     disabled={!isOwner}
-                    onChange={(e) => setIsOrderingEnabled(e.target.checked)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        const targetCountry = country || restaurantConfig?.country || 'IN';
+                        const isCustom = !RESTAURANT_PRESETS[targetCountry];
+                        const liveCheck = canJurisdictionGoLive(targetCountry, isCustom ? customAccountantConfirmed : true);
+                        if (!liveCheck.allowed) {
+                          addNotification('error', t('staff.settings.golive_blocked', 'Go-Live Blocked'), liveCheck.reason || t('staff.settings.tax_rule_required', 'Tax is enabled but no active verified tax rules match this jurisdiction.'));
+                          return;
+                        }
+                        const taxProfile = getCountryTaxProfile(targetCountry);
+                        if (taxProfile && taxProfile.config.rate === 0 && (!taxProfile.config.rules || taxProfile.config.rules.length === 0) && (restaurantConfig as any)?.tax_mode !== 'none') {
+                          addNotification('error', t('staff.settings.golive_blocked', 'Go-Live Blocked'), t('staff.settings.tax_rule_required', 'Tax is enabled but no verified tax rules exist. Live ordering is blocked to prevent 0% unauthorized tax leakage.'));
+                          return;
+                        }
+                      }
+                      setIsOrderingEnabled(e.target.checked);
+                    }}
                     className="w-5 h-5 rounded accent-[#D4AF37] cursor-pointer"
                   />
                 </div>
@@ -711,7 +744,7 @@ export const SettingsManagement: React.FC = () => {
                     <div>
                       <p className="text-sm font-bold text-white">{t('staff.dashboard.table_reservations', 'Table Reservations')}</p>
                       <p className="text-[11px] text-zinc-400 mt-0.5">
-                        {isBookingEnabled ? 'Accepting booking requests' : 'Reservations closed for rush hour'}
+                        {isBookingEnabled ? t('staff.settings.accepting_bookings', 'Accepting booking requests') : t('staff.settings.bookings_paused', 'Reservations closed for rush hour')}
                       </p>
                     </div>
                   </div>
@@ -734,13 +767,13 @@ export const SettingsManagement: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                    Global Standards
+                    {t('staff.settings.global_standards', 'Global Standards')}
                   </span>
                   <h3 className="font-serif text-lg font-bold text-white mt-0.5">
                     International Localization & Presets
                   </h3>
                   <p className="text-xs text-zinc-400 mt-0.5">
-                    Select a national deployment preset to configure currency, tax rules, and local address standards.
+                    {t('staff.settings.select_a_national_deployment_pre', 'Select a national deployment preset to configure currency, tax rules, and local address standards.')}
                   </p>
                 </div>
                 {isOwner && (
@@ -816,7 +849,7 @@ export const SettingsManagement: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Country Code (ISO 3166)
+                    {t('staff.settings.country_code_iso_3166', 'Country Code (ISO 3166)')}
                   </label>
                   <input
                     type="text"
@@ -829,7 +862,7 @@ export const SettingsManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Currency Code (ISO 4217)
+                    {t('staff.settings.currency_code_iso_4217', 'Currency Code (ISO 4217)')}
                   </label>
                   <input
                     type="text"
@@ -842,7 +875,7 @@ export const SettingsManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Currency Symbol
+                    {t('staff.settings.currency_symbol', 'Currency Symbol')}
                   </label>
                   <input
                     type="text"
@@ -855,7 +888,7 @@ export const SettingsManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Display Locale
+                    {t('staff.settings.display_locale', 'Display Locale')}
                   </label>
                   <input
                     type="text"
@@ -868,7 +901,7 @@ export const SettingsManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Restaurant Timezone (IANA)
+                    {t('staff.settings.restaurant_timezone_iana', 'Restaurant Timezone (IANA)')}
                   </label>
                   <input
                     type="text"
@@ -881,7 +914,7 @@ export const SettingsManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Default Calling Code
+                    {t('staff.settings.default_calling_code', 'Default Calling Code')}
                   </label>
                   <input
                     type="text"
@@ -916,7 +949,7 @@ export const SettingsManagement: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                      Display Mode
+                      {t('staff.settings.display_mode', 'Display Mode')}
                     </label>
                     <select
                       value={taxMode}
@@ -931,7 +964,7 @@ export const SettingsManagement: React.FC = () => {
 
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                      Tax Label
+                      {t('staff.settings.tax_label', 'Tax Label')}
                     </label>
                     <input
                       type="text"
@@ -1002,7 +1035,7 @@ export const SettingsManagement: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                        Service Charge Label
+                        {t('staff.settings.service_charge_label', 'Service Charge Label')}
                       </label>
                       <input
                         type="text"
@@ -1051,7 +1084,7 @@ export const SettingsManagement: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                      Dietary Standard
+                      {t('staff.settings.dietary_standard', 'Dietary Standard')}
                     </label>
                     <select
                       value={dietarySystem}
@@ -1066,7 +1099,7 @@ export const SettingsManagement: React.FC = () => {
 
                   <div>
                     <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                      Primary Customer Concierge Channel
+                      {t('staff.settings.primary_customer_concierge_chann', 'Primary Customer Concierge Channel')}
                     </label>
                     <select
                       value={primaryContactMethod}
@@ -1090,7 +1123,7 @@ export const SettingsManagement: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                    Transaction Gateway
+                    {t('staff.settings.transaction_gateway', 'Transaction Gateway')}
                   </span>
                   <h3 className="font-serif text-lg font-bold text-white mt-0.5">
                     Payment Architecture & Checkout
@@ -1102,7 +1135,7 @@ export const SettingsManagement: React.FC = () => {
 
                 <div className="flex items-center gap-3">
                   <label htmlFor="payment-enabled-toggle" className="text-xs text-zinc-400 font-mono">
-                    Payments Active
+                    {t('staff.settings.payments_active', 'Payments Active')}
                   </label>
                   <input
                     id="payment-enabled-toggle"
@@ -1128,22 +1161,22 @@ export const SettingsManagement: React.FC = () => {
                     {paymentProvider === 'none' ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-zinc-800 text-zinc-400 border border-zinc-700">
                         <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
-                        Disabled (None)
+                        {t('staff.settings.disabled_none', 'Disabled (None)')}
                       </span>
                     ) : paymentProvider === 'demo' ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-amber-950/40 text-amber-300 border border-amber-500/30">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                        Simulator Active (Dev Only)
+                        {t('staff.settings.simulator_active_dev_only', 'Simulator Active (Dev Only)')}
                       </span>
                     ) : healthStatus?.providers[paymentProvider]?.connected ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-950/40 text-emerald-300 border border-emerald-500/30">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                        Connected
+                        {t('staff.settings.connected', 'Connected')}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-rose-950/40 text-rose-300 border border-rose-500/30">
                         <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                        Not connected
+                        {t('staff.settings.not_connected', 'Not connected')}
                       </span>
                     )}
                   </div>
@@ -1154,7 +1187,7 @@ export const SettingsManagement: React.FC = () => {
                       disabled={isCheckingHealth}
                       onClick={refreshPaymentHealth}
                       className="px-3 py-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-xs text-zinc-300 font-mono transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                      title="Check gateway secrets presence in Supabase Edge Functions"
+                      title={t('staff.settings.check_gateway_secrets_presence_i', 'Check gateway secrets presence in Supabase Edge Functions')}
                     >
                       <span className={`material-symbols-outlined text-sm ${isCheckingHealth ? 'animate-spin' : ''}`}>
                         refresh
@@ -1167,7 +1200,7 @@ export const SettingsManagement: React.FC = () => {
                       disabled={!isOwner || isSendingTest || paymentProvider === 'none'}
                       onClick={handleSendTestPayment}
                       className="px-3.5 py-1.5 rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-xs text-[#D4AF37] font-mono font-medium transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                      title="Simulate a small test payment to verify edge functions"
+                      title={t('staff.settings.simulate_a_small_test_payment_to', 'Simulate a small test payment to verify edge functions')}
                     >
                       <span className={`material-symbols-outlined text-sm ${isSendingTest ? 'animate-spin' : ''}`}>
                         {isSendingTest ? 'progress_activity' : 'send'}
@@ -1226,7 +1259,7 @@ export const SettingsManagement: React.FC = () => {
               {/* Provider Selection Cards */}
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-2">
-                  Active Payment Provider
+                  {t('staff.settings.active_payment_provider', 'Active Payment Provider')}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
@@ -1282,7 +1315,7 @@ export const SettingsManagement: React.FC = () => {
               {/* Payment Mode Selector */}
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Checkout Requirement Policy
+                  {t('staff.settings.checkout_requirement_policy', 'Checkout Requirement Policy')}
                 </label>
                 <select
                   value={paymentMode}
@@ -1312,7 +1345,7 @@ export const SettingsManagement: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Opening Time
+                    {t('staff.settings.opening_time', 'Opening Time')}
                   </label>
                   <input
                     type="text"
@@ -1326,7 +1359,7 @@ export const SettingsManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Closing Time
+                    {t('staff.settings.closing_time', 'Closing Time')}
                   </label>
                   <input
                     type="text"
@@ -1353,7 +1386,7 @@ export const SettingsManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Business Legal Name
+                    {t('staff.settings.business_legal_name', 'Business Legal Name')}
                   </label>
                   <input
                     type="text"
@@ -1366,7 +1399,7 @@ export const SettingsManagement: React.FC = () => {
 
                 <div className="sm:col-span-2">
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Physical Address
+                    {t('staff.settings.physical_address', 'Physical Address')}
                   </label>
                   <input
                     type="text"
@@ -1439,11 +1472,11 @@ export const SettingsManagement: React.FC = () => {
           <div className="p-1 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-2xl">
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-4">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                Customer Notice
+                {t('staff.settings.customer_notice', 'Customer Notice')}
               </span>
               <h3 className="font-serif text-lg font-bold text-white">{t('staff.dashboard.top_announcement_banner', 'Top Announcement Banner')}</h3>
               <p className="text-xs text-zinc-400">
-                Display a priority announcement at the very top of the customer website.
+                {t('staff.settings.display_a_priority_announcement_', 'Display a priority announcement at the very top of the customer website.')}
               </p>
 
               <textarea
@@ -1462,13 +1495,13 @@ export const SettingsManagement: React.FC = () => {
             <div className="p-6 sm:p-8 rounded-[calc(2rem-0.25rem)] bg-[#120F0D] space-y-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                  Owner Operations
+                  {t('staff.settings.owner_operations', 'Owner Operations')}
                 </span>
                 <h3 className="font-serif text-lg font-bold text-white mt-0.5">
                   Daily Sales Summaries, Alerts & Reviews
                 </h3>
                 <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                  Configure automated end-of-day sales digests, low-stock threshold alerts, and customer review links.
+                  {t('staff.settings.configure_automated_end_of_day_s', 'Configure automated end-of-day sales digests, low-stock threshold alerts, and customer review links.')}
                 </p>
               </div>
 
@@ -1476,7 +1509,7 @@ export const SettingsManagement: React.FC = () => {
                 {/* Daily Digest Channel */}
                 <div>
                   <label className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2">
-                    Daily Sales Summary Channel
+                    {t('staff.settings.daily_sales_summary_channel', 'Daily Sales Summary Channel')}
                   </label>
                   <select
                     value={ownerNotificationMethod}
@@ -1495,7 +1528,7 @@ export const SettingsManagement: React.FC = () => {
                 {/* Low Stock Alert Threshold */}
                 <div>
                   <label className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2">
-                    Low-Stock Alert Threshold
+                    {t('staff.settings.low_stock_alert_threshold', 'Low-Stock Alert Threshold')}
                   </label>
                   <div className="relative">
                     <input
@@ -1516,7 +1549,7 @@ export const SettingsManagement: React.FC = () => {
                 {/* Owner WhatsApp Phone */}
                 <div>
                   <label className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2">
-                    Owner WhatsApp Number
+                    {t('staff.settings.owner_whatsapp_number', 'Owner WhatsApp Number')}
                   </label>
                   <input
                     type="tel"
@@ -1532,7 +1565,7 @@ export const SettingsManagement: React.FC = () => {
                 {/* Owner Notification Email */}
                 <div>
                   <label className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-2">
-                    Owner Report Email
+                    {t('staff.settings.owner_report_email', 'Owner Report Email')}
                   </label>
                   <input
                     type="email"
@@ -1561,7 +1594,7 @@ export const SettingsManagement: React.FC = () => {
                   className="w-full bg-[#070605] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 />
                 <p className="text-[10px] text-zinc-500 mt-1">
-                  Shown to diners on the checkout confirmation screen after their order is successfully received.
+                  {t('staff.settings.shown_to_diners_on_the_checkout_', 'Shown to diners on the checkout confirmation screen after their order is successfully received.')}
                 </p>
               </div>
             </div>
@@ -1576,7 +1609,7 @@ export const SettingsManagement: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                    Security Credentials
+                    {t('staff.settings.security_credentials', 'Security Credentials')}
                   </span>
                   <h3 className="font-serif text-lg font-bold text-white mt-0.5">{t('staff.dashboard.change_staff_password', 'Change Staff Password')}</h3>
                 </div>
@@ -1587,13 +1620,13 @@ export const SettingsManagement: React.FC = () => {
               </div>
 
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Update your personal staff access password. Passwords must be at least 6 characters long.
+                {t('staff.settings.update_your_personal_staff_acces', 'Update your personal staff access password. Passwords must be at least 6 characters long.')}
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    New Security Password
+                    {t('staff.settings.new_security_password', 'New Security Password')}
                   </label>
                   <div className="relative">
                     <input
@@ -1608,7 +1641,7 @@ export const SettingsManagement: React.FC = () => {
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white transition-colors"
-                      aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                      aria-label={showNewPassword ? t('staff.settings.hide_password', 'Hide password') : t('staff.settings.show_password', 'Show password')}
                     >
                       <span className="material-symbols-outlined text-sm">
                         {showNewPassword ? 'visibility_off' : 'visibility'}
@@ -1619,7 +1652,7 @@ export const SettingsManagement: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                    Confirm New Password
+                    {t('staff.settings.confirm_new_password', 'Confirm New Password')}
                   </label>
                   <input
                     type={showNewPassword ? 'text' : 'password'}
@@ -1662,7 +1695,7 @@ export const SettingsManagement: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span className="text-xs font-mono text-zinc-300">
-                    Proprietor authentication verified &amp; ready to commit
+                    Proprietor authentication verified & ready to commit
                   </span>
                 </div>
 
@@ -1687,14 +1720,14 @@ export const SettingsManagement: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-xl">🌐</span>
                   <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                    Manual Jurisdiction Setup
+                    {t('staff.settings.manual_jurisdiction_setup', 'Manual Jurisdiction Setup')}
                   </span>
                 </div>
                 <h3 className="font-serif text-xl font-bold text-white mt-1">
-                  Custom Country Tax Setup Wizard
+                  {t('staff.settings.custom_country_tax_setup_wizard', 'Custom Country Tax Setup Wizard')}
                 </h3>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  Configure a custom jurisdiction not present in the master registry. Requires certified accountant confirmation to go live.
+                  {t('staff.settings.configure_a_custom_jurisdiction_', 'Configure a custom jurisdiction not present in the master registry. Requires certified accountant confirmation to go live.')}
                 </p>
               </div>
               <button
@@ -1736,7 +1769,7 @@ export const SettingsManagement: React.FC = () => {
 
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Currency Code (ISO 4217)
+                  {t('staff.settings.currency_code_iso_4217', 'Currency Code (ISO 4217)')}
                 </label>
                 <input
                   type="text"
@@ -1790,7 +1823,7 @@ export const SettingsManagement: React.FC = () => {
 
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Tax Calculation Mode
+                  {t('staff.settings.tax_calculation_mode', 'Tax Calculation Mode')}
                 </label>
                 <select
                   value={customTaxMode}
@@ -1836,7 +1869,7 @@ export const SettingsManagement: React.FC = () => {
 
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Tax Label
+                  {t('staff.settings.tax_label', 'Tax Label')}
                 </label>
                 <input
                   type="text"
@@ -1907,7 +1940,7 @@ export const SettingsManagement: React.FC = () => {
                 </span>
               </div>
               <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Under the platform honesty rules, custom jurisdictions must be verified by a certified accountant before live ordering can be unlocked.
+                {t('staff.settings.under_the_platform_honesty_rules', 'Under the platform honesty rules, custom jurisdictions must be verified by a certified accountant before live ordering can be unlocked.')}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
@@ -1933,7 +1966,7 @@ export const SettingsManagement: React.FC = () => {
                   className="w-4 h-4 rounded accent-[#D4AF37] cursor-pointer mt-0.5"
                 />
                 <span className="text-[11px] text-zinc-300">
-                  I confirm that a licensed accountant has approved these tax rates, category splits, and invoice compliance rules for live restaurant operations.
+                  {t('staff.settings.i_confirm_that_a_licensed_accoun', 'I confirm that a licensed accountant has approved these tax rates, category splits, and invoice compliance rules for live restaurant operations.')}
                 </span>
               </label>
             </div>
@@ -1944,7 +1977,7 @@ export const SettingsManagement: React.FC = () => {
                 onClick={() => setShowCustomModal(false)}
                 className="px-4 py-2.5 rounded-xl border border-white/10 text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
               >
-                Cancel
+                {t('staff.settings.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -1952,7 +1985,7 @@ export const SettingsManagement: React.FC = () => {
                 disabled={!customCountryCode || !customCountryName || !customAccountantConfirmed}
                 className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-bold text-xs uppercase tracking-wider hover:brightness-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-md"
               >
-                Apply Custom Country Profile
+                {t('staff.settings.apply_custom_country_profile', 'Apply Custom Country Profile')}
               </button>
             </div>
           </div>

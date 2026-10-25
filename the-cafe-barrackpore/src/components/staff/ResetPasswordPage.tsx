@@ -97,7 +97,7 @@ export const ResetPasswordPage: React.FC = () => {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#D4AF37] px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/25">
-            Credential Reset
+            {t('staff.auth.credential_reset', 'Credential Reset')}
           </span>
         </div>
       </header>
@@ -116,13 +116,13 @@ export const ResetPasswordPage: React.FC = () => {
               </div>
 
               <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-[#D4AF37] font-semibold mb-1">
-                Security Credentials
+                {t('staff.auth.security_credentials', 'Security Credentials')}
               </span>
               <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-[0.06em] text-white">
-                Set New Password
+                {t('staff.auth.set_new_password', 'Set New Password')}
               </h1>
               <p className="text-stone-400 text-xs sm:text-sm mt-1 max-w-xs leading-relaxed">
-                Create a secure password to access your staff operations portal.
+                {t('staff.auth.create_a_secure_password_to_acce', 'Create a secure password to access your staff operations portal.')}
               </p>
             </div>
 
@@ -134,7 +134,7 @@ export const ResetPasswordPage: React.FC = () => {
                   </span>
                   <p className="font-bold text-sm text-emerald-100">{t('staff.dashboard.password_updated_successfully', 'Password Updated Successfully')}</p>
                   <p className="text-xs text-emerald-200/90 mt-1">
-                    Your password has been securely updated. You can now log in to the operations terminal.
+                    {t('staff.auth.your_password_has_been_securely_', 'Your password has been securely updated. You can now log in to the operations terminal.')}
                   </p>
                 </div>
 
@@ -168,7 +168,7 @@ export const ResetPasswordPage: React.FC = () => {
                     htmlFor="new-password"
                     className="block text-[11px] uppercase tracking-wider text-stone-300 font-semibold mb-1.5"
                   >
-                    New Security Password
+                    {t('staff.auth.new_security_password', 'New Security Password')}
                   </label>
                   <div className="relative">
                     <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-lg pointer-events-none">
@@ -188,7 +188,7 @@ export const ResetPasswordPage: React.FC = () => {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white transition-colors p-1"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      aria-label={showPassword ? t('staff.auth.hide_password', 'Hide password') : t('staff.auth.show_password', 'Show password')}
                     >
                       <span className="material-symbols-outlined text-lg">
                         {showPassword ? 'visibility_off' : 'visibility'}
@@ -202,7 +202,7 @@ export const ResetPasswordPage: React.FC = () => {
                     htmlFor="confirm-password"
                     className="block text-[11px] uppercase tracking-wider text-stone-300 font-semibold mb-1.5"
                   >
-                    Confirm Security Password
+                    {t('staff.auth.confirm_security_password', 'Confirm Security Password')}
                   </label>
                   <div className="relative">
                     <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-lg pointer-events-none">

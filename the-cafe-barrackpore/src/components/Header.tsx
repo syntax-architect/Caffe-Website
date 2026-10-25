@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useCart } from '../context/CartContext';
-import { clientDetails } from '../config/client';
+import { clientDetails, isCleanExperience } from '../config/client';
 import { useUI } from '../context/UIContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import {
@@ -20,6 +20,7 @@ export interface OrderedSectionItem {
   id: string;
   label: string;
   shortLabel: string;
+  icon: string;
   href: string;
   sectionKey?: keyof SectionVisibilityConfig;
   badge?: string;
@@ -32,7 +33,8 @@ export const ORDERED_FLAGSHIP_SECTIONS: OrderedSectionItem[] = [
   {
     id: 'sec-vibe',
     label: 'Atmosphere & Vibe',
-    shortLabel: 'Atmosphere',
+    shortLabel: 'Home',
+    icon: 'local_cafe',
     href: '#about-and-vibe',
     sectionKey: 'aboutVibe',
     badge: 'Ambience',
@@ -44,6 +46,7 @@ export const ORDERED_FLAGSHIP_SECTIONS: OrderedSectionItem[] = [
     id: 'sec-menu',
     label: 'Curated Menu',
     shortLabel: 'Curated Menu',
+    icon: 'restaurant_menu',
     href: '#menu-section',
     sectionKey: 'menu',
     badge: 'Cuisine',
@@ -54,7 +57,8 @@ export const ORDERED_FLAGSHIP_SECTIONS: OrderedSectionItem[] = [
   {
     id: 'sec-specials',
     label: "Chef's Specials",
-    shortLabel: 'Chef Specials',
+    shortLabel: 'Specials',
+    icon: 'star',
     href: '#chef-specials',
     sectionKey: 'specialsBanner',
     badge: 'Signature',
@@ -66,6 +70,7 @@ export const ORDERED_FLAGSHIP_SECTIONS: OrderedSectionItem[] = [
     id: 'sec-story',
     label: 'Heritage & Roots',
     shortLabel: 'Our Story',
+    icon: 'menu_book',
     href: '#our-story',
     sectionKey: 'story',
     badge: 'Heritage',
@@ -77,6 +82,7 @@ export const ORDERED_FLAGSHIP_SECTIONS: OrderedSectionItem[] = [
     id: 'sec-gallery',
     label: 'Moments Gallery',
     shortLabel: 'Gallery',
+    icon: 'photo_camera',
     href: '#gallery',
     sectionKey: 'gallery',
     badge: 'Visuals',
@@ -88,6 +94,7 @@ export const ORDERED_FLAGSHIP_SECTIONS: OrderedSectionItem[] = [
     id: 'sec-vip',
     label: 'Nocturnal VIP Circle',
     shortLabel: 'VIP Club',
+    icon: 'workspace_premium',
     href: '#vip-club',
     sectionKey: 'vipClub',
     badge: 'Private',
@@ -98,7 +105,8 @@ export const ORDERED_FLAGSHIP_SECTIONS: OrderedSectionItem[] = [
   {
     id: 'sec-hours',
     label: 'Visit, Hours & Tables',
-    shortLabel: 'Visit & Hours',
+    shortLabel: 'Reservations',
+    icon: 'calendar_month',
     href: '#reserve-section',
     sectionKey: 'footer',
     badge: 'Concierge',
@@ -129,6 +137,82 @@ export const Header: React.FC = React.memo(() => {
 
   // Active ordered flagship items respecting dynamic section toggles and active language
   const enabledOrderedSections = useMemo(() => {
+    if (isCleanExperience()) {
+      const cleanNavItems: OrderedSectionItem[] = [
+        {
+          id: 'sec-clean-menu',
+          label: t('nav.menu', 'Menu'),
+          shortLabel: t('nav.menu', 'Menu'),
+          icon: 'restaurant_menu',
+          href: '#menu-section',
+          sectionKey: 'menu',
+          chapterIndex: 1,
+          chapterTitle: t('nav.menu', 'Menu'),
+          description: t('nav.menu', 'Curated Culinary Menu'),
+        },
+        {
+          id: 'sec-clean-platters',
+          label: t('nav.platters', 'Platters'),
+          shortLabel: t('nav.platters', 'Platters'),
+          icon: 'star',
+          href: '#chef-specials',
+          sectionKey: 'specialsBanner',
+          chapterIndex: 2,
+          chapterTitle: t('nav.platters', 'Platters'),
+          description: t('nav.platters', "Chef's Signature Banquets"),
+        },
+        {
+          id: 'sec-clean-story',
+          label: t('nav.story', 'Story'),
+          shortLabel: t('nav.story', 'Story'),
+          icon: 'menu_book',
+          href: '#our-story',
+          sectionKey: 'story',
+          chapterIndex: 3,
+          chapterTitle: t('nav.story', 'Story'),
+          description: t('nav.story', 'Heritage & Philosophy'),
+        },
+        {
+          id: 'sec-clean-gallery',
+          label: t('nav.gallery', 'Gallery'),
+          shortLabel: t('nav.gallery', 'Gallery'),
+          icon: 'photo_camera',
+          href: '#gallery',
+          sectionKey: 'gallery',
+          chapterIndex: 4,
+          chapterTitle: t('nav.gallery', 'Gallery'),
+          description: t('nav.gallery', 'Chronicles & Spaces'),
+        },
+        {
+          id: 'sec-clean-vip',
+          label: t('nav.vip', 'VIP'),
+          shortLabel: t('nav.vip', 'VIP'),
+          icon: 'workspace_premium',
+          href: '#vip-club',
+          sectionKey: 'vipClub',
+          chapterIndex: 5,
+          chapterTitle: t('nav.vip', 'VIP'),
+          description: t('nav.vip', 'Private Dining & Tastings'),
+        },
+        {
+          id: 'sec-clean-reserve',
+          label: t('nav.reserve', 'Reserve'),
+          shortLabel: t('nav.reserve', 'Reserve'),
+          icon: 'calendar_month',
+          href: '#reserve-section',
+          sectionKey: 'footer',
+          chapterIndex: 6,
+          chapterTitle: t('nav.reserve', 'Reserve'),
+          description: t('nav.reserve', 'Table Bookings & Concierge'),
+        },
+      ];
+
+      return cleanNavItems.filter((item) => {
+        if (item.sectionKey && sections && sections[item.sectionKey] === false) return false;
+        return true;
+      });
+    }
+
     return ORDERED_FLAGSHIP_SECTIONS.filter((item) => {
       if (item.sectionKey && sections && sections[item.sectionKey] === false) return false;
       return true;
@@ -143,7 +227,7 @@ export const Header: React.FC = React.memo(() => {
         shortLabel = t('nav.menu', item.shortLabel);
       } else if (item.sectionKey === 'specialsBanner') {
         label = t('nav.act3', item.label);
-        shortLabel = t('curvedReel.title', item.shortLabel);
+        shortLabel = t('nav.specials', item.shortLabel);
       } else if (item.sectionKey === 'story') {
         label = t('nav.act4', item.label);
         shortLabel = t('nav.ourStory', item.shortLabel);
@@ -152,15 +236,16 @@ export const Header: React.FC = React.memo(() => {
         shortLabel = t('nav.gallery', item.shortLabel);
       } else if (item.sectionKey === 'vipClub') {
         label = t('nav.act6', item.label);
-        shortLabel = t('vip.title', item.shortLabel);
+        shortLabel = t('nav.vipClub', item.shortLabel);
       } else if (item.sectionKey === 'footer') {
         label = t('nav.act7', item.label);
         shortLabel = t('nav.reservations', item.shortLabel);
       }
+      const max14 = (s: string) => (s && s.length > 14 ? s.slice(0, 13) + '…' : s);
       return {
         ...item,
-        label,
-        shortLabel,
+        label: max14(label),
+        shortLabel: max14(shortLabel),
       };
     });
   }, [sections, t]);
@@ -326,21 +411,21 @@ export const Header: React.FC = React.memo(() => {
     engineConfig?.features?.reservationsEnabled !== false;
 
   return (
-    <header className={`fixed top-0 w-full z-50 transition-[background-color,backdrop-filter,border-color,box-shadow,padding] duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${isScrolled ? 'bg-surface/94 backdrop-blur-xl border-b border-primary/25 shadow-[0_10px_30px_rgba(0,0,0,0.65)] py-2.5' : 'bg-transparent py-4'}`}>
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 sm:gap-4">
+    <header className={`fixed top-0 w-full z-50 transition-[background-color,backdrop-filter,border-color,box-shadow,padding] duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${isScrolled ? 'bg-surface/94 backdrop-blur-xl border-b border-primary/25 shadow-[0_10px_30px_rgba(0,0,0,0.65)] py-2 sm:py-2.5' : 'bg-transparent py-2.5 sm:py-4'}`}>
+      <div className="max-w-[1400px] mx-auto px-2.5 sm:px-4 lg:px-6 xl:px-8 flex items-center justify-between gap-1.5 sm:gap-3">
         
-        {/* Brand Crest & Monogram */}
+        {/* Brand Crest & Monogram with WCAG AA 4.5:1 Contrast Scrim */}
         <a 
-          className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 shrink-0 cursor-pointer" 
+          className="flex items-center gap-1.5 sm:gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl px-2 py-1 bg-surface-obsidian/75 backdrop-blur-md border border-white/10 shadow-[0_2px_10px_rgba(0,0,0,0.45)] shrink min-w-0 cursor-pointer" 
           href="/" 
           onClick={(e) => handleNavClick(e, 'root')}
         >
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-primary/35 bg-surface-container flex items-center justify-center transition-all duration-300 group-hover:border-primary group-hover:shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.3)] overflow-hidden shrink-0">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-primary/35 bg-surface-container flex items-center justify-center transition-all duration-300 group-hover:border-primary group-hover:shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.3)] overflow-hidden shrink-0">
             <img 
               src={logoUrl || "/logo.webp"} 
               alt={`${businessName} Crest`} 
-              width="44"
-              height="44"
+              width="40"
+              height="40"
               className="w-full h-full object-contain" 
               loading="lazy"
               fetchPriority="low"
@@ -348,21 +433,22 @@ export const Header: React.FC = React.memo(() => {
             />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="font-sans text-base sm:text-lg tracking-tight text-on-surface font-semibold group-hover:text-primary transition-colors truncate max-w-[130px] min-[360px]:max-w-[190px] sm:max-w-none">
+            <span className="font-sans text-xs sm:text-base font-semibold tracking-tight text-[#FAF6F0] group-hover:text-primary transition-colors truncate max-w-[85px] min-[360px]:max-w-[110px] min-[400px]:max-w-[150px] sm:max-w-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
               {businessName}
             </span>
-            <span className="font-sans text-[10px] tracking-[0.25em] uppercase text-primary/80 -mt-0.5 font-medium truncate max-w-[130px] min-[360px]:max-w-[190px] sm:max-w-none">
+            <span className="font-sans text-[8.5px] sm:text-[11px] tracking-[0.18em] sm:tracking-[0.25em] uppercase text-[#F3E5AB] -mt-0.5 font-medium truncate max-w-[85px] min-[360px]:max-w-[110px] min-[400px]:max-w-[150px] sm:max-w-none hidden min-[340px]:block drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
               {shortName}
             </span>
           </div>
         </a>
         
-        {/* Clean Desktop Navigation Bar */}
+        {/* Responsive Desktop Navigation Bar — shrinks gracefully to icon-only before any clipping */}
         <nav 
-          className="hidden lg:flex items-center px-3 py-1.5 rounded-full bg-surface-container/75 backdrop-blur-xl border border-outline/25 shadow-[0_8px_24px_rgba(0,0,0,0.55)] relative"
+          data-testid="header-desktop-nav"
+          className="hidden lg:flex items-center px-1.5 min-[1440px]:px-3 py-1.5 rounded-full bg-surface-container/75 backdrop-blur-xl border border-outline/25 shadow-[0_8px_24px_rgba(0,0,0,0.55)] relative shrink"
           aria-label={t('a11y.navigation', 'Chronological Website Navigation')}
         >
-          <div className="flex items-center gap-1 xl:gap-1.5">
+          <div className="flex items-center gap-0.5 xl:gap-1">
             {enabledOrderedSections.map((item) => {
               const itemSecId = item.href.slice(1);
               const isActive = activeSection === itemSecId;
@@ -371,18 +457,23 @@ export const Header: React.FC = React.memo(() => {
                   key={item.id}
                   href={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
-                  className={`font-sans text-[11px] xl:text-[12px] uppercase tracking-[0.14em] font-medium px-3 xl:px-3.5 py-1.5 rounded-full transition-all duration-300 relative whitespace-nowrap group cursor-pointer ${
+                  title={item.shortLabel}
+                  aria-label={item.shortLabel}
+                  className={`font-sans text-[10.5px] xl:text-[11.5px] uppercase tracking-[0.08em] min-[1440px]:tracking-[0.12em] font-medium px-2 min-[1440px]:px-3.5 py-1.5 rounded-full transition-all duration-300 relative whitespace-nowrap group cursor-pointer flex items-center gap-1.5 ${
                     isActive
                       ? 'text-primary bg-primary/15 shadow-[inset_0_0_12px_rgba(var(--color-primary-rgb),0.2)] font-semibold border border-primary/35'
                       : 'text-on-surface/75 hover:text-primary hover:bg-surface-container-high/60 border border-transparent'
                   }`}
                 >
-                  <span className="relative z-10 flex items-center gap-1.5">
-                    <span>{item.shortLabel}</span>
+                  <span className="material-symbols-outlined text-[17px] shrink-0" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  <span data-testid="nav-item-text" className="hidden min-[1440px]:inline">
+                    {item.shortLabel}
                   </span>
                   {/* Glowing gold active bottom indicator */}
                   <span
-                    className={`absolute bottom-0.5 left-3 right-3 h-[1.5px] bg-primary transition-all duration-300 rounded-full ${
+                    className={`absolute bottom-0.5 left-2 right-2 h-[1.5px] bg-primary transition-all duration-300 rounded-full ${
                       isActive ? 'opacity-100 shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.9)]' : 'opacity-0 group-hover:opacity-50'
                     }`}
                   />
@@ -393,7 +484,7 @@ export const Header: React.FC = React.memo(() => {
         </nav>
         
         {/* Right Actions & Tactile Controls */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* Multi-Language Switcher */}
           <LanguageSwitcher variant="header" />
 
@@ -404,11 +495,11 @@ export const Header: React.FC = React.memo(() => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsDrawerOpen(true)}
-              className="relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:border-primary/50 hover:bg-surface-container-high text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-md"
+              className="relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:border-primary/50 hover:bg-surface-container-high text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shadow-md shrink-0"
               aria-label={t('a11y.openCart', `View order bag with ${cartCount} items`)}
               title={t('cart.title', 'View Order Bag')}
             >
-              <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
               {cartCount > 0 && (
@@ -417,7 +508,7 @@ export const Header: React.FC = React.memo(() => {
                   initial={{ scale: 0.4, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-on-primary font-sans text-[11px] font-extrabold flex items-center justify-center shadow-[0_2px_8px_rgba(var(--color-primary-rgb),0.4)]"
+                  className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-primary text-on-primary font-sans text-[9px] sm:text-[11px] font-extrabold flex items-center justify-center shadow-[0_2px_8px_rgba(var(--color-primary-rgb),0.4)]"
                 >
                   {cartCount}
                 </motion.span>
@@ -425,38 +516,45 @@ export const Header: React.FC = React.memo(() => {
             </motion.button>
           )}
           
-          {/* Refined Luxury Primary CTA (Desktop) */}
+          {/* Refined Luxury Primary CTA (Book Button) */}
           {showPrimaryCta && (
             <motion.button 
+              data-testid="header-book-button"
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               type="button"
               onClick={handlePrimaryCtaClick}
-              className="hidden sm:inline-flex items-center gap-2 h-9 px-5 rounded-full bg-primary hover:opacity-90 active:opacity-95 text-on-primary font-sans text-[11px] font-semibold tracking-[0.18em] uppercase transition-all duration-300 shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)] cursor-pointer shrink-0"
+              className="inline-flex items-center justify-center gap-1 sm:gap-1.5 h-8 sm:h-9 px-2 sm:px-3.5 xl:px-4 2xl:px-5 rounded-full bg-primary hover:opacity-90 active:opacity-95 text-on-primary font-sans text-[10px] sm:text-[11px] font-semibold tracking-[0.06em] sm:tracking-[0.12em] uppercase transition-all duration-300 shadow-[0_2px_12px_rgba(var(--color-primary-rgb),0.25)] hover:shadow-[0_4px_16px_rgba(var(--color-primary-rgb),0.4)] cursor-pointer shrink-0"
             >
-              <span>
+              <span className="material-symbols-outlined text-[14px] sm:text-[16px] shrink-0" aria-hidden="true">
+                calendar_today
+              </span>
+              <span className="hidden sm:inline">
                 {restaurantConfig?.isTableBookingEnabled !== false
                   ? (headerConfig.primaryCtaText || t('hero.bookTable', 'Book a Table'))
                   : t('nav.walkIns', 'Walk-Ins Welcome')}
               </span>
-              <span className="material-symbols-outlined text-[15px] font-light">
-                {restaurantConfig?.isTableBookingEnabled !== false ? 'table_restaurant' : 'storefront'}
+              <span className="sm:hidden">
+                {restaurantConfig?.isTableBookingEnabled !== false
+                  ? (headerConfig.primaryCtaText ? headerConfig.primaryCtaText.slice(0, 4) : t('hero.book', 'Book'))
+                  : t('nav.walkInsShort', 'Walk-In')}
               </span>
             </motion.button>
           )}
 
           {/* Mobile Menu Fluid Hamburger Morph */}
           <motion.button 
+            data-testid="header-mobile-menu-trigger"
             whileTap={{ scale: 0.92 }}
-            className="lg:hidden relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:bg-surface-container-high text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+            className="lg:hidden relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-outline/20 bg-surface-container/80 hover:bg-surface-container-high text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer shrink-0"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? t('a11y.closeMenu', 'Close navigation menu') : t('a11y.openMenu', 'Open navigation menu')}
             aria-expanded={isMobileMenuOpen}
           >
-            <div className="w-5 h-4 relative flex flex-col justify-between items-center">
+            <div className="w-4 h-3 sm:w-5 sm:h-3.5 relative flex flex-col justify-between items-center">
               <span 
                 className={`w-full h-0.5 bg-on-surface rounded-full transition-all duration-300 transform origin-center ${
-                  isMobileMenuOpen ? 'rotate-45 translate-y-[7px] bg-primary' : ''
+                  isMobileMenuOpen ? 'rotate-45 translate-y-[5px] sm:translate-y-[6px] bg-primary' : ''
                 }`} 
               />
               <span 
@@ -466,7 +564,7 @@ export const Header: React.FC = React.memo(() => {
               />
               <span 
                 className={`w-full h-0.5 bg-on-surface rounded-full transition-all duration-300 transform origin-center ${
-                  isMobileMenuOpen ? '-rotate-45 -translate-y-[7px] bg-primary' : ''
+                  isMobileMenuOpen ? '-rotate-45 -translate-y-[5px] sm:-translate-y-[6px] bg-primary' : ''
                 }`} 
               />
             </div>
@@ -494,7 +592,8 @@ export const Header: React.FC = React.memo(() => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.98 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="lg:hidden fixed top-20 left-0 right-0 max-h-[calc(100dvh-5.5rem)] bg-surface-container/98 border-b border-primary/35 shadow-[0_30px_70px_rgba(0,0,0,0.9)] z-50 overflow-y-auto overscroll-contain rounded-b-[2rem] pointer-events-auto"
+              data-lenis-prevent
+              className="lg:hidden fixed top-20 left-0 right-0 max-h-[calc(100dvh-5.5rem)] bg-surface-container/98 border-b border-primary/35 shadow-[0_30px_70px_rgba(0,0,0,0.9)] z-50 overflow-y-auto overscroll-contain rounded-b-[2rem] pointer-events-auto custom-scrollbar"
             >
               <div className="max-w-[1320px] mx-auto px-4 sm:px-6 py-5 flex flex-col gap-5">
                 
@@ -506,18 +605,18 @@ export const Header: React.FC = React.memo(() => {
                     </div>
                     <div className="flex flex-col">
                       <span className="font-serif text-sm font-semibold text-on-surface">{businessName}</span>
-                      <span className="font-sans text-[9px] uppercase tracking-[0.2em] text-primary/80">
+                      <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-primary/80">
                         {restaurantConfig?.address?.city || shortName || 'Hospitality'}
                       </span>
                     </div>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-sans font-semibold uppercase tracking-wider">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-sans font-semibold uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span>{t('header.openNow', 'Open Now')}</span>
                   </div>
                 </div>
 
-                {/* 7 Authentic Acts Navigation in Exact Chronological Order */}
+                {/* Navigation in Chronological Order */}
                 <nav className="flex flex-col gap-1.5" aria-label={t('a11y.navigation', 'Mobile Navigation')}>
                   {enabledOrderedSections.map((item, idx) => {
                     const itemSectionId = item.href.slice(1);
@@ -551,7 +650,7 @@ export const Header: React.FC = React.memo(() => {
                                 {item.shortLabel}
                               </span>
                               {item.badge && (
-                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary/90 border border-primary/20 shrink-0">
+                                <span className="text-[11px] font-sans font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary/90 border border-primary/20 shrink-0">
                                   {item.badge}
                                 </span>
                               )}
@@ -593,7 +692,7 @@ export const Header: React.FC = React.memo(() => {
                       </span>
                       <div className="w-8 h-8 rounded-full bg-on-primary/15 flex items-center justify-center transition-transform group-hover:scale-105">
                         <span className="material-symbols-outlined text-[16px] text-on-primary">
-                          {restaurantConfig?.isTableBookingEnabled !== false ? 'table_restaurant' : 'storefront'}
+                          {restaurantConfig?.isTableBookingEnabled !== false ? 'calendar_today' : 'storefront'}
                         </span>
                       </div>
                     </button>

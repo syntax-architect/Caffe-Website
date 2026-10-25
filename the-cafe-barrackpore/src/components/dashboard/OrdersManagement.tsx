@@ -276,7 +276,7 @@ export const OrdersManagement: React.FC = () => {
                 type="button"
                 onClick={handleSimulateTableOrder}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 to-[#F3C766]/10 hover:from-[#D4AF37]/30 hover:to-[#F3C766]/20 border border-[#D4AF37]/40 text-[#F3C766] text-xs font-mono font-bold transition-all cursor-pointer shadow-sm active:scale-[0.98]"
-                title="Simulate incoming dinner service order from Table 07"
+                title={t('staff.orders.simulate_incoming_dinner_service', 'Simulate incoming dinner service order from Table 07')}
               >
                 <span className="material-symbols-outlined text-sm">bolt</span>
                 <span className="hidden sm:inline">{t('staff.orders.table_07_order', '+ Table 07 Order')}</span>
@@ -288,7 +288,7 @@ export const OrdersManagement: React.FC = () => {
               onClick={loadOrders}
               disabled={isRefreshing}
               className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-stone-300 hover:text-white transition-all cursor-pointer"
-              title="Refresh Orders"
+              title={t('staff.orders.refresh_orders', 'Refresh Orders')}
             >
               <span
                 className={`material-symbols-outlined text-lg text-[#D4AF37] ${
@@ -338,7 +338,7 @@ export const OrdersManagement: React.FC = () => {
               </div>
               <p className="font-serif font-bold text-base text-white">{t('staff.orders.no_matching_orders_found', 'No Matching Orders Found')}</p>
               <p className="text-xs text-stone-500 mt-1 max-w-sm">
-                No orders match the selected filters. Change filter options or submit a new test ticket.
+                {t('staff.orders.no_orders_match_the_selected_fil', 'No orders match the selected filters. Change filter options or submit a new test ticket.')}
               </p>
             </div>
           ) : (
@@ -431,7 +431,7 @@ export const OrdersManagement: React.FC = () => {
                             }}
                             className="px-3.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-[#D4AF37] hover:text-[#120B08] border border-white/[0.1] text-[11px] font-semibold text-[#D4AF37] transition-all"
                           >
-                            Inspect
+                            {t('staff.orders.inspect', 'Inspect')}
                           </button>
                         </td>
                       </tr>
@@ -496,7 +496,7 @@ export const OrdersManagement: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
                     <span className="text-[10px] uppercase font-mono tracking-[0.2em] text-[#D4AF37] font-semibold">
-                      Ticket Inspector
+                      {t('staff.orders.ticket_inspector', 'Ticket Inspector')}
                     </span>
                   </div>
                   <h3 className="text-2xl font-mono font-bold text-white mt-0.5">
@@ -517,7 +517,7 @@ export const OrdersManagement: React.FC = () => {
               <div className="mb-6 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.07]">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs text-stone-400 uppercase tracking-wider font-semibold">
-                    Current Ticket State
+                    {t('staff.orders.current_ticket_state', 'Current Ticket State')}
                   </span>
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ${getStatusColor(activeOrder.status)}`}>
                     {activeOrder.status}
@@ -534,7 +534,7 @@ export const OrdersManagement: React.FC = () => {
                         onClick={() => handleStatusChange(activeOrder.id, 'confirmed')}
                         className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.98] cursor-pointer"
                       >
-                        Confirm Ticket
+                        {t('staff.orders.confirm_ticket', 'Confirm Ticket')}
                       </button>
                       <button
                         type="button"
@@ -542,7 +542,7 @@ export const OrdersManagement: React.FC = () => {
                         onClick={() => handleStatusChange(activeOrder.id, 'cancelled')}
                         className="py-2.5 px-4 rounded-xl bg-red-950/60 hover:bg-red-900/60 text-red-200 border border-red-500/35 font-semibold text-xs uppercase tracking-wider transition-colors cursor-pointer"
                       >
-                        Void
+                        {t('staff.orders.void', 'Void')}
                       </button>
                     </>
                   )}
@@ -555,7 +555,7 @@ export const OrdersManagement: React.FC = () => {
                         onClick={() => handleStatusChange(activeOrder.id, 'preparing')}
                         className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.98] cursor-pointer"
                       >
-                        Send to Kitchen (Preparing)
+                        {t('staff.orders.send_to_kitchen_preparing', 'Send to Kitchen (Preparing)')}
                       </button>
                       <button
                         type="button"
@@ -563,7 +563,7 @@ export const OrdersManagement: React.FC = () => {
                         onClick={() => handleStatusChange(activeOrder.id, 'cancelled')}
                         className="py-2.5 px-4 rounded-xl bg-red-950/60 hover:bg-red-900/60 text-red-200 border border-red-500/35 font-semibold text-xs uppercase tracking-wider transition-colors cursor-pointer"
                       >
-                        Void
+                        {t('staff.orders.void', 'Void')}
                       </button>
                     </>
                   )}
@@ -575,7 +575,7 @@ export const OrdersManagement: React.FC = () => {
                       onClick={() => handleStatusChange(activeOrder.id, 'ready')}
                       className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-[0.98] cursor-pointer"
                     >
-                      Mark Ready for Dispatch
+                      {t('staff.orders.mark_ready_for_dispatch', 'Mark Ready for Dispatch')}
                     </button>
                   )}
 
@@ -653,7 +653,7 @@ export const OrdersManagement: React.FC = () => {
                     }
                   }}
                   className="py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                  title="Print Kitchen Order Ticket (80mm/58mm thermal roll)"
+                  title={t('staff.orders.print_kitchen_order_ticket_80mm_', 'Print Kitchen Order Ticket (80mm/58mm thermal roll)')}
                 >
                   <span className="material-symbols-outlined text-sm">soup_kitchen</span>
                   {printedKotOrders.has(activeOrder.id) ? 'Reprint KOT (Dup)' : 'Print KOT'}
@@ -701,10 +701,10 @@ export const OrdersManagement: React.FC = () => {
                     }
                   }}
                   className="py-2.5 px-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-stone-200 border border-white/10 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                  title="Print Guest Bill Receipt (80mm/58mm thermal roll)"
+                  title={t('staff.orders.print_guest_bill_receipt_80mm_58', 'Print Guest Bill Receipt (80mm/58mm thermal roll)')}
                 >
                   <span className="material-symbols-outlined text-sm">receipt_long</span>
-                  Print Bill
+                  {t('staff.orders.print_bill', 'Print Bill')}
                 </button>
               </div>
 
@@ -724,17 +724,17 @@ export const OrdersManagement: React.FC = () => {
                   }
                 }}
                 className="w-full mb-4 py-2 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                title="Send ESC/POS pulse to open RJ11/RJ12 cash drawer"
+                title={t('staff.orders.send_esc_pos_pulse_to_open_rj11_', 'Send ESC/POS pulse to open RJ11/RJ12 cash drawer')}
               >
                 <span className="material-symbols-outlined text-sm">lock_open</span>
-                Open Cash Drawer
+                {t('staff.orders.open_cash_drawer', 'Open Cash Drawer')}
               </button>
 
               {/* Guest & Dining Info */}
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.07]">
                   <span className="text-[10px] uppercase font-mono tracking-wider text-stone-400 font-semibold">
-                    Guest Name
+                    {t('staff.orders.guest_name', 'Guest Name')}
                   </span>
                   <p className="text-xs font-bold text-white mt-1">{activeOrder.customer_name}</p>
                   <p className="text-xs text-[#F3C766] font-mono mt-0.5">{activeOrder.customer_phone}</p>
@@ -742,7 +742,7 @@ export const OrdersManagement: React.FC = () => {
 
                 <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.07]">
                   <span className="text-[10px] uppercase font-mono tracking-wider text-stone-400 font-semibold">
-                    Service Channel
+                    {t('staff.orders.service_channel', 'Service Channel')}
                   </span>
                   <p className="text-xs font-bold text-white mt-1">
                     {activeOrder.order_type === 'dine_in'
@@ -759,7 +759,7 @@ export const OrdersManagement: React.FC = () => {
               <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.07] mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] uppercase font-mono tracking-wider text-stone-400 font-semibold">
-                    Settlement Status
+                    {t('staff.orders.settlement_status', 'Settlement Status')}
                   </span>
                   {(() => {
                     const badge = getPaymentBadge(activeOrder.payment_status);
@@ -794,16 +794,16 @@ export const OrdersManagement: React.FC = () => {
                 {isOwner && activeOrder.payment_status === 'paid' && (
                   <div className="pt-3 mt-3 border-t border-white/[0.06] flex items-center justify-between">
                     <span className="text-[10px] uppercase font-mono tracking-wider text-stone-400 font-semibold">
-                      Owner Action
+                      {t('staff.orders.owner_action', 'Owner Action')}
                     </span>
                     <button
                       type="button"
                       onClick={() => setShowRefundModal(true)}
                       className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-mono font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
-                      title="Issue a full gateway refund via Edge Function"
+                      title={t('staff.orders.issue_a_full_gateway_refund_via_', 'Issue a full gateway refund via Edge Function')}
                     >
                       <span className="material-symbols-outlined text-sm">currency_exchange</span>
-                      Issue Full Refund
+                      {t('staff.orders.issue_full_refund', 'Issue Full Refund')}
                     </button>
                   </div>
                 )}
@@ -813,7 +813,7 @@ export const OrdersManagement: React.FC = () => {
               {activeOrder.special_requests && (
                 <div className="mb-4 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
                   <span className="text-[10px] uppercase font-bold text-amber-300 block mb-0.5">
-                    Special Kitchen Request
+                    {t('staff.orders.special_kitchen_request', 'Special Kitchen Request')}
                   </span>
                   <p>{activeOrder.special_requests}</p>
                 </div>
@@ -822,7 +822,7 @@ export const OrdersManagement: React.FC = () => {
               {/* Line Items Breakdown */}
               <div className="mb-6">
                 <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-400 mb-2">
-                  Order Line Items
+                  {t('staff.orders.order_line_items', 'Order Line Items')}
                 </h4>
                 {isLoadingItems ? (
                   <p className="text-xs text-stone-500 py-4 text-center">{t('staff.orders.loading_items', 'Loading items...')}</p>
@@ -892,7 +892,7 @@ export const OrdersManagement: React.FC = () => {
                 type="button"
                 onClick={() => window.print()}
                 className="py-3 px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-stone-300 hover:text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-                title="Print Kitchen Ticket"
+                title={t('staff.orders.print_kitchen_ticket', 'Print Kitchen Ticket')}
               >
                 <span className="material-symbols-outlined text-base">print</span>
                 <span>{t('staff.orders.print', 'Print')}</span>
@@ -903,7 +903,7 @@ export const OrdersManagement: React.FC = () => {
                 onClick={() => setActiveOrder(null)}
                 className="py-3 px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-semibold text-stone-300 hover:text-white transition-colors cursor-pointer"
               >
-                Close
+                {t('staff.orders.close', 'Close')}
               </button>
             </div>
           </div>
@@ -932,7 +932,7 @@ export const OrdersManagement: React.FC = () => {
 
             <div>
               <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                Reason for Refund
+                {t('staff.orders.reason_for_refund', 'Reason for Refund')}
               </label>
               <select
                 value={refundReason}
@@ -954,7 +954,7 @@ export const OrdersManagement: React.FC = () => {
                 onClick={() => setShowRefundModal(false)}
                 className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-stone-300 hover:text-white transition-colors"
               >
-                Cancel
+                {t('staff.orders.cancel', 'Cancel')}
               </button>
               <button
                 type="button"

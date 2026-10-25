@@ -52,6 +52,10 @@ export const zh: TranslationDictionary = {
     ourStory: '品牌故事',
     contact: '联系我们',
     staffPortal: '员工通道',
+    platters: '特色拼盘',
+    story: '品牌故事',
+    vip: '贵宾专区',
+    reserve: '预约席位',
   },
 
   hero: {
@@ -381,8 +385,8 @@ export const zh: TranslationDictionary = {
 
   story: {
     badge: "巴拉克普尔兵营 始创",
-    title: "传承、炉火与精品烘焙",
-    titleItalic: "炉火与烘焙",
+    title: "传承、炉火与",
+    titleItalic: "精品烘焙",
     subtitle: "历史悠久的军事营区建筑，邂逅慢火熬制的烹饪美学。",
     description: "数十年手作匠心烘焙、柴火石窑酸种披萨与静谧黄昏款待。",
     manifesto: "绝无千篇一律。拒绝走马观花。每杯浓缩咖啡皆在9巴标准萃取，每张饼底皆由手工拉伸，沐浴在2200K的温润琥珀光芒中。",
