@@ -68,10 +68,11 @@ test.describe('Comprehensive Visual, Accessibility & Quality Audit across All Pa
 
         const height = width <= 768 ? (width === 390 ? 844 : 1024) : 900;
         await page.setViewportSize({ width, height });
+        await page.emulateMedia({ reducedMotion: 'reduce' });
 
         // Navigate
         await page.goto(pageItem.path, { waitUntil: 'domcontentloaded' });
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(1200);
 
         // Wait for font ready
         await page.evaluate(async () => {

@@ -57,7 +57,10 @@ node_modules/
 dist/
 dist-server/
 *.log
-test-results/
+test-results/*
+!test-results/screenshots/
+!the-cafe-barrackpore/test-results/screenshots/
+!the-cafe-barrackpore/test-results/screenshots/**
 *-report*.json
 *lighthouse*
 lighthouse-report*.json
