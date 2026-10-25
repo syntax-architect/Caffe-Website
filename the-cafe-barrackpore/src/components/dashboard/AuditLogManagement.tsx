@@ -126,7 +126,7 @@ export const AuditLogManagement: React.FC = () => {
       setLogs(data || []);
     } catch (err: any) {
       console.error('[AuditLog] Error fetching audit records:', err);
-      addNotification('error', 'Audit Log Error', err.message || 'Failed to load security audit records.');
+      addNotification('error', t('staff.audit.error_title', 'Audit Log Error'), err.message || t('staff.audit.error_desc', 'Failed to load security audit records.'));
     } finally {
       setIsLoading(false);
     }

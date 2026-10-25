@@ -359,7 +359,7 @@ export const SpecialsBanner: React.FC = () => {
                         <span className="text-[10px] uppercase tracking-[0.22em] text-primary font-semibold">
                           Master Banquet Selection
                         </span>
-                        <span className="font-mono text-[9px] uppercase tracking-wider text-on-surface/40">
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-on-surface/75">
                           {PLATTER_TELEMETRY[0].editionCode}
                         </span>
                       </div>
@@ -681,7 +681,7 @@ export const SpecialsBanner: React.FC = () => {
                           </span>
                         </button>
                       ) : (
-                        <div className="w-full py-2.5 text-center font-mono text-xs tracking-widest text-on-surface/40 uppercase bg-surface-container-lowest/60 rounded-full border border-outline/20">
+                        <div className="w-full py-2.5 text-center font-mono text-xs tracking-widest text-on-surface/75 uppercase bg-surface-container-lowest/60 rounded-full border border-outline/20">
                           86'd · Sold Out
                         </div>
                       )}

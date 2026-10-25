@@ -82,22 +82,22 @@ export const CashDrawerManagement: React.FC = () => {
       const res = await openShift({
         openingFloat: openingFloatInput,
         openedById: user?.id || 'cashier',
-        openedByName: user?.email || 'Cashier',
+        openedByName: user?.email || t('staff.cash.cashier', 'Cashier'),
       });
 
       if (res.success && res.shift) {
         addNotification(
           'success',
-          'Shift Opened',
-          `Shift #${res.shift.shift_number} opened with float of ${formatCurrency(openingFloatInput)}.`
+          t('staff.cash.shift_opened', 'Shift Opened'),
+          t('staff.cash.shift_opened_with_float', 'Shift #{num} opened with float of {amt}.').replace('{num}', String(res.shift.shift_number)).replace('{amt}', formatCurrency(openingFloatInput))
         );
         setShowOpenModal(false);
         await loadShiftData();
       } else {
-        addNotification('error', 'Open Failed', res.error || 'Could not open shift.');
+        addNotification('error', t('staff.cash.open_failed', 'Open Failed'), res.error || t('staff.cash.could_not_open_shift', 'Could not open shift.'));
       }
     } catch (e: any) {
-      addNotification('error', 'Error', e.message);
+      addNotification('error', t('common.error', 'Error'), e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -107,7 +107,7 @@ export const CashDrawerManagement: React.FC = () => {
   const handleRecordTransaction = async () => {
     if (!currentShift) return;
     if (!txReason.trim()) {
-      addNotification('error', 'Validation Error', 'A reason is required for cash drawer transactions.');
+      addNotification('error', t('staff.cash.validation_error', 'Validation Error'), t('staff.cash.reason_required_desc', 'A reason is required for cash drawer transactions.'));
       return;
     }
 
@@ -119,7 +119,7 @@ export const CashDrawerManagement: React.FC = () => {
         amount: txAmount,
         reason: txReason.trim(),
         actorId: user?.id || 'cashier',
-        actorName: user?.email || 'Cashier',
+        actorName: user?.email || t('staff.cash.cashier', 'Cashier'),
       });
 
       if (res.success) {
@@ -134,10 +134,10 @@ export const CashDrawerManagement: React.FC = () => {
         setTxReason('');
         await loadShiftData();
       } else {
-        addNotification('error', 'Transaction Failed', res.error || 'Could not record cash transaction.');
+        addNotification('error', t('staff.cash.transaction_failed', 'Transaction Failed'), res.error || t('staff.cash.could_not_record_transaction', 'Could not record cash transaction.'));
       }
     } catch (e: any) {
-      addNotification('error', 'Error', e.message);
+      addNotification('error', t('staff.cash.error', 'Error'), e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -152,24 +152,24 @@ export const CashDrawerManagement: React.FC = () => {
         shiftId: currentShift.id,
         countedCash: countedCashInput,
         closedById: user?.id || 'cashier',
-        closedByName: user?.email || 'Cashier',
+        closedByName: user?.email || t('staff.cash.cashier', 'Cashier'),
         closingNotes: closingNotes.trim() || undefined,
       });
 
       if (res.success && res.zReport) {
         addNotification(
           'success',
-          'Shift Closed',
-          `Shift #${currentShift.shift_number} successfully closed. Variance: ${formatCurrency(res.zReport.variance)}.`
+          t('staff.cash.shift_closed', 'Shift Closed'),
+          t('staff.cash.shift_closed_variance', 'Shift #{num} successfully closed. Variance: {amt}.').replace('{num}', String(currentShift.shift_number)).replace('{amt}', formatCurrency(res.zReport.variance))
         );
         setShowCloseModal(false);
         setSelectedZReport(res.zReport);
         await loadShiftData();
       } else {
-        addNotification('error', 'Close Failed', res.error || 'Could not close shift.');
+        addNotification('error', t('staff.cash.close_failed', 'Close Failed'), res.error || t('staff.cash.could_not_close_shift', 'Could not close shift.'));
       }
     } catch (e: any) {
-      addNotification('error', 'Error', e.message);
+      addNotification('error', t('staff.cash.error', 'Error'), e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -178,7 +178,7 @@ export const CashDrawerManagement: React.FC = () => {
   // Print Z-Report
   const handlePrintZReport = (report: ZReportData) => {
     printZReport(report);
-    addNotification('info', 'Print Dispatched', 'Z-Report sent to thermal receipt printer.');
+    addNotification('info', t('staff.cash.print_dispatched', 'Print Dispatched'), t('staff.cash.z_report_sent_desc', 'Z-Report sent to thermal receipt printer.'));
   };
 
   return (
@@ -542,7 +542,7 @@ export const CashDrawerManagement: React.FC = () => {
                 onClick={handleOpenShift}
                 className="flex-1 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c29f2f] text-black text-xs font-bold uppercase tracking-wider shadow-md"
               >
-                {isProcessing ? 'Opening...' : 'Confirm & Open'}
+                {isProcessing ? t('staff.cash.opening', 'Opening...') : t('staff.cash.confirm_open', 'Confirm & Open')}
               </button>
             </div>
           </div>
@@ -636,7 +636,7 @@ export const CashDrawerManagement: React.FC = () => {
                 onClick={handleRecordTransaction}
                 className="flex-1 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c29f2f] text-black text-xs font-bold uppercase tracking-wider shadow-md"
               >
-                {isProcessing ? 'Saving...' : 'Record Transaction'}
+                {isProcessing ? t('staff.cash.saving', 'Saving...') : t('staff.cash.record_transaction', 'Record Transaction')}
               </button>
             </div>
           </div>
@@ -754,7 +754,7 @@ export const CashDrawerManagement: React.FC = () => {
                 onClick={handleCloseShift}
                 className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold uppercase tracking-wider shadow-md"
               >
-                {isProcessing ? 'Closing...' : 'Confirm & Close Shift'}
+                {isProcessing ? t('staff.cash.closing', 'Closing...') : t('staff.cash.confirm_close_shift', 'Confirm & Close Shift')}
               </button>
             </div>
           </div>

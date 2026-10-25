@@ -57,7 +57,7 @@ function scanDirectory(dirPath: string, results: MatchOccurrence[]) {
     const relPath = path.relative(projectRoot, fullPath).replace(/\\/g, '/');
 
     if (entry.isDirectory()) {
-      if (['node_modules', 'dist', 'dist-server', '.git', 'test-results'].includes(entry.name)) {
+      if (['node_modules', 'dist', 'dist-server', '.git', 'test-results', 'internal'].includes(entry.name)) {
         continue;
       }
       scanDirectory(fullPath, results);

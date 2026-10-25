@@ -48,12 +48,12 @@ export const StaffManagement: React.FC = () => {
 
   const handleToggleStatus = async (staff: StaffProfile) => {
     if (!isOwner) {
-      addNotification('warning', 'Permission Denied', 'Only restaurant owners can deactivate or reactivate staff.');
+      addNotification('warning', t('staff.staff.permission_denied', 'Permission Denied'), t('staff.staff.only_owners_deactivate', 'Only restaurant owners can deactivate or reactivate staff.'));
       return;
     }
 
     if (staff.id === currentProfile?.id) {
-      addNotification('error', 'Cannot Deactivate Self', 'You cannot deactivate your own owner profile.');
+      addNotification('error', t('staff.staff.cannot_deactivate_self', 'Cannot Deactivate Self'), t('staff.staff.cannot_deactivate_self_desc', 'You cannot deactivate your own owner profile.'));
       return;
     }
 
@@ -63,28 +63,28 @@ export const StaffManagement: React.FC = () => {
       if (res.success) {
         addNotification(
           'success',
-          'Account Updated',
-          `${staff.full_name}'s terminal access has been ${nextActive ? 'reactivated' : 'deactivated'}.`
+          t('staff.staff.account_updated', 'Account Updated'),
+          t('staff.staff.terminal_access_updated', "{name}'s terminal access has been {status}.").replace('{name}', staff.full_name).replace('{status}', nextActive ? t('staff.staff.reactivated', 'reactivated') : t('staff.staff.deactivated', 'deactivated'))
         );
         setStaffList((prev) =>
           prev.map((s) => (s.id === staff.id ? { ...s, active: nextActive } : s))
         );
       } else {
-        addNotification('error', 'Action Failed', res.error || 'Could not update staff status.');
+        addNotification('error', t('staff.staff.action_failed', 'Action Failed'), res.error || t('staff.staff.could_not_update_status', 'Could not update staff status.'));
       }
     } catch {
-      addNotification('error', 'Error', 'Failed to update staff status.');
+      addNotification('error', t('staff.staff.error', 'Error'), t('staff.staff.failed_to_update_status', 'Failed to update staff status.'));
     }
   };
 
   const handleRoleChange = async (staff: StaffProfile, newRole: StaffRole) => {
     if (!isOwner) {
-      addNotification('warning', 'Permission Denied', 'Only restaurant owners can modify staff roles.');
+      addNotification('warning', t('staff.staff.permission_denied', 'Permission Denied'), t('staff.staff.only_owners_modify_roles', 'Only restaurant owners can modify staff roles.'));
       return;
     }
 
     if (staff.id === currentProfile?.id) {
-      addNotification('warning', 'Owner Role Locked', 'You cannot alter your primary proprietor role.');
+      addNotification('warning', t('staff.staff.owner_role_locked', 'Owner Role Locked'), t('staff.staff.owner_role_locked_desc', 'You cannot alter your primary proprietor role.'));
       return;
     }
 
@@ -93,24 +93,24 @@ export const StaffManagement: React.FC = () => {
       if (res.success) {
         addNotification(
           'success',
-          'Role Updated',
-          `${staff.full_name}'s role updated to ${newRole.toUpperCase()}.`
+          t('staff.staff.role_updated', 'Role Updated'),
+          t('staff.staff.role_updated_desc', "{name}'s role updated to {role}.").replace('{name}', staff.full_name).replace('{role}', newRole.toUpperCase())
         );
         setStaffList((prev) =>
           prev.map((s) => (s.id === staff.id ? { ...s, role: newRole } : s))
         );
       } else {
-        addNotification('error', 'Update Failed', res.error || 'Could not update staff role.');
+        addNotification('error', t('staff.staff.update_failed', 'Update Failed'), res.error || t('staff.staff.could_not_update_role', 'Could not update staff role.'));
       }
     } catch {
-      addNotification('error', 'Error', 'Failed to update staff role.');
+      addNotification('error', t('staff.staff.error', 'Error'), t('staff.staff.failed_to_update_role', 'Failed to update staff role.'));
     }
   };
 
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isOwner) {
-      addNotification('warning', 'Permission Denied', 'Only restaurant owners can provision new staff accounts.');
+      addNotification('warning', t('staff.staff.permission_denied', 'Permission Denied'), t('staff.staff.only_owners_provision', 'Only restaurant owners can provision new staff accounts.'));
       return;
     }
 
@@ -118,7 +118,7 @@ export const StaffManagement: React.FC = () => {
     const cleanName = inviteName.trim();
 
     if (!cleanEmail || !cleanName) {
-      addNotification('error', 'Validation Error', 'Please provide both staff name and email address.');
+      addNotification('error', t('staff.staff.validation_error', 'Validation Error'), t('staff.staff.provide_both_name_email', 'Please provide both staff name and email address.'));
       return;
     }
 
@@ -128,8 +128,8 @@ export const StaffManagement: React.FC = () => {
       if (res.success) {
         addNotification(
           'success',
-          'Staff Provisioned',
-          `Invitation sent to ${cleanEmail}. Staff profile created with ${inviteRole.toUpperCase()} permissions.`
+          t('staff.staff.staff_provisioned', 'Staff Provisioned'),
+          t('staff.staff.staff_provisioned_desc', 'Invitation sent to {email}. Staff profile created with {role} permissions.').replace('{email}', cleanEmail).replace('{role}', inviteRole.toUpperCase())
         );
         setIsInviteModalOpen(false);
         setInviteEmail('');
@@ -148,10 +148,10 @@ export const StaffManagement: React.FC = () => {
           }
         }
       } else {
-        addNotification('error', 'Provisioning Failed', res.error || 'Could not provision staff account.');
+        addNotification('error', t('staff.staff.provisioning_failed', 'Provisioning Failed'), res.error || t('staff.staff.could_not_provision', 'Could not provision staff account.'));
       }
     } catch (err: any) {
-      addNotification('error', 'System Error', err?.message || 'An unexpected error occurred while inviting staff.');
+      addNotification('error', t('staff.staff.system_error', 'System Error'), err?.message || t('staff.staff.unexpected_error_inviting', 'An unexpected error occurred while inviting staff.'));
     } finally {
       setIsInviting(false);
     }

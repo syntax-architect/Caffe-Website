@@ -133,10 +133,10 @@ export const TablesManagement: React.FC = () => {
           prev.map((t) => (t.id === table.id ? { ...t, active: nextActive } : t))
         );
       } else {
-        addNotification('error', 'Status Update Failed', res.error || 'Could not toggle table status.');
+        addNotification('error', t('staff.tables.status_update_failed', 'Status Update Failed'), res.error || t('staff.tables.could_not_toggle_status', 'Could not toggle table status.'));
       }
     } catch {
-      addNotification('error', 'Error', 'Failed to toggle table status.');
+      addNotification('error', t('staff.tables.error', 'Error'), t('staff.tables.failed_to_toggle_status', 'Failed to toggle table status.'));
     }
   };
 
@@ -144,7 +144,7 @@ export const TablesManagement: React.FC = () => {
     navigator.clipboard.writeText(url);
     setCopiedUrl(true);
     setTimeout(() => setCopiedUrl(false), 2000);
-    addNotification('info', 'URL Copied', 'Direct table ordering link copied to clipboard.');
+    addNotification('info', t('staff.tables.url_copied', 'URL Copied'), t('staff.tables.url_copied_desc', 'Direct table ordering link copied to clipboard.'));
   };
 
   return (

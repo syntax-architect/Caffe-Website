@@ -128,7 +128,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   };
 
   const handleSignOutEverywhere = async () => {
-    if (window.confirm('Revoke all sessions and sign out across every browser and device?')) {
+    if (window.confirm(t('staff.dashboard.revoke_all_sessions_confirm', 'Revoke all sessions and sign out across every browser and device?'))) {
       await signOutEverywhere();
       window.location.href = '/staff/login';
     }

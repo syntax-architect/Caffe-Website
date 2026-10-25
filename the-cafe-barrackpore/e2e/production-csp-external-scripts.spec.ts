@@ -78,10 +78,15 @@ test.afterAll(async () => {
   if (previewProcess && previewProcess.pid) {
     console.log('[Preview] Shutting down preview server...');
     if (process.platform === 'win32') {
-      spawn('taskkill', ['/pid', String(previewProcess.pid), '/f', '/t']);
+      try {
+        spawn('taskkill', ['/pid', String(previewProcess.pid), '/f']);
+      } catch {
+        // ignore
+      }
     } else {
       previewProcess.kill('SIGTERM');
     }
+    previewProcess = null;
   }
 });
 

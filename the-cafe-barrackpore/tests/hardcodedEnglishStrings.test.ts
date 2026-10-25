@@ -218,7 +218,7 @@ interface HardcodedFinding {
   file: string;
   line: number;
   snippet: string;
-  type: 'JSX_TEXT' | 'PLACEHOLDER' | 'ARIA_LABEL' | 'TITLE';
+  type: 'JSX_TEXT' | 'PLACEHOLDER' | 'ARIA_LABEL' | 'TITLE' | 'NOTIFICATION';
 }
 
 function scanFileForHardcodedStrings(filePath: string): HardcodedFinding[] {
@@ -266,8 +266,32 @@ function scanFileForHardcodedStrings(filePath: string): HardcodedFinding[] {
     }
 
     // Skip lines that are pure TypeScript logic (no JSX)
-    if (trimmed.includes('setActiveFilmstripIndex') || trimmed.includes('for (') || trimmed.includes('while (') || trimmed.includes('window.innerWidth')) {
+    if (
+      trimmed.includes('setActiveFilmstripIndex') ||
+      trimmed.includes('for (') ||
+      trimmed.includes('while (') ||
+      trimmed.includes('window.innerWidth') ||
+      (trimmed.startsWith('const ') && (trimmed.includes(': Record<') || trimmed.includes(': Promise<') || trimmed.includes('=> string)'))) ||
+      trimmed.startsWith('export type ') ||
+      trimmed.startsWith('export interface ') ||
+      trimmed.startsWith('type ') ||
+      trimmed.startsWith('interface ')
+    ) {
       continue;
+    }
+
+    // Check addNotification / toast / alert / confirm with hardcoded string
+    const notifMatch = rawLine.match(/(?:addNotification|toast|alert|confirm)\s*\(\s*(?:['"](?:success|error|warning|info)['"]\s*,\s*)?['"]([A-Z][a-zA-Z0-9\s.,!?'"-]{2,})['"]/);
+    if (notifMatch) {
+      const val = notifMatch[1].trim();
+      if (!ALLOWED_LITERALS.has(val) && !val.startsWith('http')) {
+        findings.push({
+          file: filePath,
+          line: lineNum,
+          snippet: `Hardcoded notification or alert message: "${val}" in: ${rawLine.trim()}`,
+          type: 'NOTIFICATION',
+        });
+      }
     }
 
     // Check placeholder="Hardcoded English" (without {t(...)})

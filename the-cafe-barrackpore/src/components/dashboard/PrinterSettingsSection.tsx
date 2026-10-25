@@ -28,7 +28,7 @@ export const PrinterSettingsSection: React.FC = () => {
 
   const handleSave = () => {
     saveStationPrinterSettings(config);
-    addNotification('success', 'Hardware Settings Saved', 'Thermal printer station profiles saved successfully.');
+    addNotification('success', t('staff.printer.hardware_settings_saved', 'Hardware Settings Saved'), t('staff.printer.profiles_saved_desc', 'Thermal printer station profiles saved successfully.'));
   };
 
   const handleTestPrint = async (station: 'receipt' | 'kitchen' | 'bar') => {
@@ -38,18 +38,18 @@ export const PrinterSettingsSection: React.FC = () => {
       if (res.success) {
         addNotification(
           'success',
-          'Test Page Dispatched',
+          t('staff.printer.test_page_dispatched', 'Test Page Dispatched'),
           res.message || `Test page sent to ${station.toUpperCase()} printer (${res.targetUsed}).`
         );
       } else {
         addNotification(
           'error',
-          'Test Print Failed',
-          res.error || 'Failed to print test page. Check connection or fallback to Browser Print.'
+          t('staff.printer.test_print_failed', 'Test Print Failed'),
+          res.error || t('staff.printer.failed_print_test_page', 'Failed to print test page. Check connection or fallback to Browser Print.')
         );
       }
     } catch (err: any) {
-      addNotification('error', 'Print Error', err?.message || 'Unexpected printing error.');
+      addNotification('error', t('staff.printer.print_error', 'Print Error'), err?.message || t('staff.printer.unexpected_print_error', 'Unexpected printing error.'));
     } finally {
       setIsTestingPrint(null);
     }
@@ -60,12 +60,12 @@ export const PrinterSettingsSection: React.FC = () => {
     try {
       const res = await kickCashDrawer(config.receipt);
       if (res.success) {
-        addNotification('success', 'Cash Drawer Fired', res.message || 'Drawer kick pulse dispatched.');
+        addNotification('success', t('staff.printer.drawer_fired', 'Cash Drawer Fired'), res.message || t('staff.printer.drawer_pulse_dispatched', 'Drawer kick pulse dispatched.'));
       } else {
-        addNotification('warning', 'Drawer Kick Notice', res.message || res.error || 'Could not pulse cash drawer.');
+        addNotification('warning', t('staff.printer.drawer_notice', 'Drawer Kick Notice'), res.message || res.error || t('staff.printer.could_not_pulse_drawer', 'Could not pulse cash drawer.'));
       }
     } catch (err: any) {
-      addNotification('error', 'Drawer Error', err?.message || 'Failed to trigger cash drawer.');
+      addNotification('error', t('staff.printer.drawer_error', 'Drawer Error'), err?.message || t('staff.printer.failed_trigger_drawer', 'Failed to trigger cash drawer.'));
     } finally {
       setIsTestingPrint(null);
     }
@@ -77,14 +77,14 @@ export const PrinterSettingsSection: React.FC = () => {
     if (result.online) {
       setBridgeStatus('online');
       setBridgeMessage(`Bridge v${result.version} online and listening.`);
-      addNotification('success', 'Print Bridge Connected', `Local bridge v${result.version} is active.`);
+      addNotification('success', t('staff.printer.bridge_connected', 'Print Bridge Connected'), t('staff.printer.local_bridge_active', 'Local bridge v{ver} is active.').replace('{ver}', result.version || '1.0.0'));
     } else {
       setBridgeStatus('offline');
-      setBridgeMessage(result.error || 'Bridge unreachable.');
+      setBridgeMessage(result.error || t('staff.printer.bridge_unreachable_msg', 'Bridge unreachable.'));
       addNotification(
         'error',
-        'Print Bridge Unreachable',
-        'Make sure to run: node scripts/print-bridge.mjs on your POS host computer.'
+        t('staff.printer.bridge_unreachable', 'Print Bridge Unreachable'),
+        t('staff.printer.make_sure_run_bridge', 'Make sure to run: node scripts/print-bridge.mjs on your POS host computer.')
       );
     }
   };
@@ -92,18 +92,18 @@ export const PrinterSettingsSection: React.FC = () => {
   const handlePairUsb = async () => {
     const res = await connectWebUsbPrinter();
     if (res.success) {
-      addNotification('success', 'USB Printer Paired', `Connected to ${res.device?.productName || 'USB Thermal Printer'}.`);
+      addNotification('success', t('staff.printer.usb_paired', 'USB Printer Paired'), t('staff.printer.connected_to_usb', 'Connected to {name}.').replace('{name}', res.device?.productName || t('staff.printer.usb_thermal_printer', 'USB Thermal Printer')));
     } else {
-      addNotification('error', 'USB Pairing Failed', res.error || 'Failed to pair USB printer.');
+      addNotification('error', t('staff.printer.usb_failed', 'USB Pairing Failed'), res.error || t('staff.printer.failed_pair_usb', 'Failed to pair USB printer.'));
     }
   };
 
   const handlePairSerial = async () => {
     const res = await connectWebSerialPrinter(config.receipt.serialBaudRate || 9600);
     if (res.success) {
-      addNotification('success', 'Serial Port Opened', 'Successfully opened serial COM printer port.');
+      addNotification('success', t('staff.printer.serial_opened', 'Serial Port Opened'), t('staff.printer.serial_opened_desc', 'Successfully opened serial COM printer port.'));
     } else {
-      addNotification('error', 'Serial Port Failed', res.error || 'Failed to open serial port.');
+      addNotification('error', t('staff.printer.serial_failed', 'Serial Port Failed'), res.error || t('staff.printer.failed_open_serial', 'Failed to open serial port.'));
     }
   };
 
@@ -176,14 +176,14 @@ export const PrinterSettingsSection: React.FC = () => {
               >
                 <span className="material-symbols-outlined text-xs">router</span>
                 <span>
-                  LAN Bridge:{' '}
+                  {t('staff.printer.lan_bridge', 'LAN Bridge')}:{' '}
                   {bridgeStatus === 'checking'
-                    ? 'Checking...'
+                    ? t('staff.printer.checking', 'Checking...')
                     : bridgeStatus === 'online'
-                    ? 'Online'
+                    ? t('staff.printer.online', 'Online')
                     : bridgeStatus === 'offline'
-                    ? 'Offline'
-                    : 'Ping Bridge'}
+                    ? t('staff.printer.offline', 'Offline')
+                    : t('staff.printer.ping_bridge', 'Ping Bridge')}
                 </span>
               </button>
             </div>
@@ -232,7 +232,7 @@ export const PrinterSettingsSection: React.FC = () => {
                 className="px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-stone-200 border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">print</span>
-                {isTestingPrint === 'receipt' ? 'Printing...' : 'Print Test Page'}
+                {isTestingPrint === 'receipt' ? t('staff.printer.printing', 'Printing...') : t('staff.printer.print_test_page', 'Print Test Page')}
               </button>
 
               <button
@@ -243,7 +243,7 @@ export const PrinterSettingsSection: React.FC = () => {
                 title={t('staff.printers.send_pulse_to_cash_drawer_rj11_r', 'Send pulse to cash drawer RJ11/RJ12 port')}
               >
                 <span className="material-symbols-outlined text-sm">point_of_sale</span>
-                {isTestingPrint === 'drawer' ? 'Pulsing...' : 'Test Drawer Kick'}
+                {isTestingPrint === 'drawer' ? t('staff.printer.pulsing', 'Pulsing...') : t('staff.printer.test_drawer_kick', 'Test Drawer Kick')}
               </button>
             </div>
           </div>
@@ -453,7 +453,7 @@ export const PrinterSettingsSection: React.FC = () => {
                 className="px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-stone-200 border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">print</span>
-                {isTestingPrint === 'kitchen' ? 'Printing...' : 'Print Kitchen Test KOT'}
+                {isTestingPrint === 'kitchen' ? t('staff.printer.printing', 'Printing...') : t('staff.printer.print_kitchen_test_kot', 'Print Kitchen Test KOT')}
               </button>
             </div>
           </div>
@@ -576,7 +576,7 @@ export const PrinterSettingsSection: React.FC = () => {
                   className="px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-stone-200 border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">print</span>
-                  {isTestingPrint === 'bar' ? 'Printing...' : 'Print Bar Test KOT'}
+                  {isTestingPrint === 'bar' ? t('staff.printer.printing', 'Printing...') : t('staff.printer.print_bar_test_kot', 'Print Bar Test KOT')}
                 </button>
               )}
             </div>

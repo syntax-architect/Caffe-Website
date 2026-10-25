@@ -372,7 +372,7 @@ export const Gallery: React.FC = () => {
               ))}
             </div>
 
-            <div className="flex sm:hidden justify-center items-center gap-2 mt-3 text-[10px] text-on-surface/50 uppercase tracking-widest font-mono">
+            <div className="flex sm:hidden justify-center items-center gap-2 mt-3 text-[10px] text-on-surface/75 uppercase tracking-widest font-mono">
               <span className="material-symbols-outlined text-xs">swipe</span>
               <span>{t('gallery.swipeHint', 'Swipe photographs')}</span>
             </div>
@@ -548,7 +548,7 @@ export const Gallery: React.FC = () => {
             </div>
 
             {/* Mobile Swipe Hint */}
-            <div className="flex sm:hidden justify-center items-center gap-2 mt-4 text-[10px] text-on-surface/50 uppercase tracking-widest font-mono">
+            <div className="flex sm:hidden justify-center items-center gap-2 mt-4 text-[10px] text-on-surface/75 uppercase tracking-widest font-mono">
               <span className="material-symbols-outlined text-xs">swipe</span>
               <span>{t('gallery.swipeHint', 'Swipe photographs')}</span>
             </div>

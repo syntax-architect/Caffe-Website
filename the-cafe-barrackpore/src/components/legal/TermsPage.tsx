@@ -134,7 +134,7 @@ export const TermsPage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-8 px-4 text-center text-xs text-zinc-500">
+      <footer className="border-t border-white/10 py-8 px-4 text-center text-xs text-zinc-400">
         <p>© {new Date().getFullYear()} {businessName}. {t('footer.allRightsReserved', 'All culinary and brand rights reserved.')}</p>
       </footer>
     </div>

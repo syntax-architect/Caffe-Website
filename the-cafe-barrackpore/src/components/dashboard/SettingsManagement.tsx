@@ -13,29 +13,30 @@ import { DEFAULT_FEATURE_FLAGS } from '../../types/dashboard';
 import { PrinterSettingsSection } from './PrinterSettingsSection';
 import { getLocaleForCountry } from '../../utils/currency';
 
-const FEATURE_METADATA: Record<keyof RestaurantFeatureFlags, { label: string; desc: string; icon: string }> = {
-  online_ordering: { label: 'Online Ordering', desc: 'Allows customers to order via the website', icon: 'shopping_cart' },
-  delivery: { label: 'Home Delivery', desc: 'Accept customer delivery addresses and delivery fees', icon: 'moped' },
-  takeaway: { label: 'Takeaway / Pickup', desc: 'Package orders for customer pickup at counter', icon: 'takeout_dining' },
-  qr_table_ordering: { label: 'QR Table Ordering', desc: 'Dine-in guests order directly from table QR codes', icon: 'qr_code_scanner' },
-  reservations: { label: 'Table Reservations', desc: 'Guest booking system and reservation roster', icon: 'event_seat' },
-  kds: { label: 'Kitchen Display System (KDS)', desc: 'Real-time kitchen order ticket display and bump screen', icon: 'soup_kitchen' },
-  pos: { label: 'POS Terminal', desc: 'Counter billing, table management, and order taking', icon: 'point_of_sale' },
-  running_table_bills: { label: 'Running Table Bills', desc: 'Keep open dining table tabs and add items incrementally', icon: 'receipt' },
-  split_bills: { label: 'Split Bills', desc: 'Split customer bills by seats or equal shares', icon: 'call_split' },
-  cash_drawer: { label: 'Cash Drawer & Shifts', desc: 'Track opening float, cash in/out, and Z-report balancing', icon: 'payments' },
-  kot_printing: { label: 'KOT & Thermal Printing', desc: 'Print 58mm/80mm kitchen tickets and guest receipts', icon: 'print' },
-  discounts: { label: 'Discounts & Happy Hours', desc: 'Promotional discount codes and scheduled discounts', icon: 'local_offer' },
-  tips: { label: 'Customer Tipping', desc: 'Accept server tips on checkout and bill settlement', icon: 'volunteer_activism' },
-  vip_club: { label: 'VIP Club', desc: 'Guest loyalty program and exclusive member perks', icon: 'workspace_premium' },
-  online_payments: { label: 'Online Card Payments', desc: 'Process Stripe & online payment gateways', icon: 'credit_card' },
-  specials_banner: { label: "Chef's Specials Banner", desc: 'Display curated chef specials on homepage', icon: 'stars' },
-  gallery: { label: 'Moments Photo Gallery', desc: 'Showcase ambiance and food gallery on website', icon: 'photo_library' },
-  language_switcher: { label: 'Multi-Language Switcher', desc: 'Support international language translation selector', icon: 'translate' },
-};
+const getFeatureMetadata = (t: (key: string, fallback?: string) => string): Record<keyof RestaurantFeatureFlags, { label: string; desc: string; icon: string }> => ({
+  online_ordering: { label: t('staff.settings.feat_ordering_label', 'Online Ordering'), desc: t('staff.settings.feat_ordering_desc', 'Allows customers to order via the website'), icon: 'shopping_cart' },
+  delivery: { label: t('staff.settings.feat_delivery_label', 'Home Delivery'), desc: t('staff.settings.feat_delivery_desc', 'Accept customer delivery addresses and delivery fees'), icon: 'moped' },
+  takeaway: { label: t('staff.settings.feat_takeaway_label', 'Takeaway / Pickup'), desc: t('staff.settings.feat_takeaway_desc', 'Package orders for customer pickup at counter'), icon: 'takeout_dining' },
+  qr_table_ordering: { label: t('staff.settings.feat_qr_ordering_label', 'QR Table Ordering'), desc: t('staff.settings.feat_qr_ordering_desc', 'Dine-in guests order directly from table QR codes'), icon: 'qr_code_scanner' },
+  reservations: { label: t('staff.settings.feat_reservations_label', 'Table Reservations'), desc: t('staff.settings.feat_reservations_desc', 'Guest booking system and reservation roster'), icon: 'event_seat' },
+  kds: { label: t('staff.settings.feat_kds_label', 'Kitchen Display System (KDS)'), desc: t('staff.settings.feat_kds_desc', 'Real-time kitchen order ticket display and bump screen'), icon: 'soup_kitchen' },
+  pos: { label: t('staff.settings.feat_pos_label', 'POS Terminal'), desc: t('staff.settings.feat_pos_desc', 'Counter billing, table management, and order taking'), icon: 'point_of_sale' },
+  running_table_bills: { label: t('staff.settings.feat_table_bills_label', 'Running Table Bills'), desc: t('staff.settings.feat_table_bills_desc', 'Keep open dining table tabs and add items incrementally'), icon: 'receipt' },
+  split_bills: { label: t('staff.settings.feat_split_bills_label', 'Split Bills'), desc: t('staff.settings.feat_split_bills_desc', 'Split customer bills by seats or equal shares'), icon: 'call_split' },
+  cash_drawer: { label: t('staff.settings.feat_cash_drawer_label', 'Cash Drawer & Shifts'), desc: t('staff.settings.feat_cash_drawer_desc', 'Track opening float, cash in/out, and Z-report balancing'), icon: 'payments' },
+  kot_printing: { label: t('staff.settings.feat_kot_printing_label', 'KOT & Thermal Printing'), desc: t('staff.settings.feat_kot_printing_desc', 'Print 58mm/80mm kitchen tickets and guest receipts'), icon: 'print' },
+  discounts: { label: t('staff.settings.feat_discounts_label', 'Discounts & Happy Hours'), desc: t('staff.settings.feat_discounts_desc', 'Promotional discount codes and scheduled discounts'), icon: 'local_offer' },
+  tips: { label: t('staff.settings.feat_tipping_label', 'Customer Tipping'), desc: t('staff.settings.feat_tipping_desc', 'Accept server tips on checkout and bill settlement'), icon: 'volunteer_activism' },
+  vip_club: { label: t('staff.settings.feat_vip_club_label', 'VIP Club'), desc: t('staff.settings.feat_vip_club_desc', 'Guest loyalty program and exclusive member perks'), icon: 'workspace_premium' },
+  online_payments: { label: t('staff.settings.feat_online_payments_label', 'Online Card Payments'), desc: t('staff.settings.feat_online_payments_desc', 'Process Stripe & online payment gateways'), icon: 'credit_card' },
+  specials_banner: { label: t('staff.settings.feat_specials_banner_label', "Chef's Specials Banner"), desc: t('staff.settings.feat_specials_banner_desc', 'Display curated chef specials on homepage'), icon: 'stars' },
+  gallery: { label: t('staff.settings.feat_photo_gallery_label', 'Moments Photo Gallery'), desc: t('staff.settings.feat_photo_gallery_desc', 'Showcase ambiance and food gallery on website'), icon: 'photo_library' },
+  language_switcher: { label: t('staff.settings.feat_multi_language_label', 'Multi-Language Switcher'), desc: t('staff.settings.feat_multi_language_desc', 'Support international language translation selector'), icon: 'translate' },
+});
 
 export const SettingsManagement: React.FC = () => {
-  const { t } = useI18n(); void t;
+  const { t } = useI18n();
+  const featureMetadata = getFeatureMetadata(t);
   const { user, isOwner } = useAuth();
   const { addNotification } = useNotification();
   const { restaurantConfig, updateRestaurantConfig } = useSiteConfig();
@@ -62,7 +63,7 @@ export const SettingsManagement: React.FC = () => {
       isOrderingEnabled: key === 'online_ordering' ? nextVal : isOrderingEnabled,
       isTableBookingEnabled: key === 'reservations' ? nextVal : isBookingEnabled,
     });
-    addNotification('info', t('staff.settings.feature_updated', 'Feature Updated'), `${FEATURE_METADATA[key]?.label || key} is now ${nextVal ? t('staff.settings.enabled', 'ENABLED') : t('staff.settings.disabled', 'DISABLED')}.`);
+    addNotification('info', t('staff.settings.feature_updated', 'Feature Updated'), `${featureMetadata[key]?.label || key} is now ${nextVal ? t('staff.settings.enabled', 'ENABLED') : t('staff.settings.disabled', 'DISABLED')}.`);
   };
 
   // Change Password State
@@ -102,7 +103,7 @@ export const SettingsManagement: React.FC = () => {
   // Form Fields - Service Charge
   const [serviceChargeEnabled, setServiceChargeEnabled] = useState(false);
   const [serviceChargeRate, setServiceChargeRate] = useState('0');
-  const [serviceChargeLabel, setServiceChargeLabel] = useState('Service Charge');
+  const [serviceChargeLabel, setServiceChargeLabel] = useState(() => t('staff.settings.service_charge', 'Service Charge'));
   const [serviceChargeTaxable, setServiceChargeTaxable] = useState(false);
 
   // Form Fields - Payment Architecture
@@ -136,7 +137,7 @@ export const SettingsManagement: React.FC = () => {
   const [customFoodRate, setCustomFoodRate] = useState('');
   const [customAlcoholRate, setCustomAlcoholRate] = useState('');
   const [customTaxLabel, setCustomTaxLabel] = useState('VAT');
-  const [customTaxIdLabel, setCustomTaxIdLabel] = useState('VAT ID');
+  const [customTaxIdLabel, setCustomTaxIdLabel] = useState(() => t('staff.settings.vat_id', 'VAT ID'));
   const [customTaxIdFormat, setCustomTaxIdFormat] = useState('');
   const [customServiceCharge, setCustomServiceCharge] = useState('0');
   const [customServiceChargeTaxable, setCustomServiceChargeTaxable] = useState(false);
@@ -153,7 +154,7 @@ export const SettingsManagement: React.FC = () => {
     setTaxRatePercent(customTaxRate || '0');
     setTaxMode(customTaxMode);
     setShowCustomModal(false);
-    addNotification('success', 'Custom Country Applied', `Custom profile for ${customCountryName} applied.`);
+    addNotification('success', t('staff.settings.custom_country_applied', 'Custom Country Applied'), t('staff.settings.custom_profile_applied', 'Custom profile for {country} applied.').replace('{country}', customCountryName));
   };
 
   const refreshPaymentHealth = async () => {
@@ -174,12 +175,12 @@ export const SettingsManagement: React.FC = () => {
     try {
       const res = await sendTestPayment(paymentProvider as any, 100, currency);
       if (res.success) {
-        addNotification('success', 'Test Payment Sent', res.message || 'Test payment registered successfully.');
+        addNotification('success', t('staff.settings.test_payment_sent', 'Test Payment Sent'), res.message || t('staff.settings.test_payment_registered_success', 'Test payment registered successfully.'));
       } else {
-        addNotification('error', 'Test Payment Failed', res.error || 'Failed to send test payment.');
+        addNotification('error', t('staff.settings.test_payment_failed', 'Test Payment Failed'), res.error || t('staff.settings.failed_to_send_test_payment', 'Failed to send test payment.'));
       }
     } catch (err: any) {
-      addNotification('error', 'Test Payment Error', err.message || 'Unexpected error.');
+      addNotification('error', t('staff.settings.test_payment_error', 'Test Payment Error'), err.message || t('staff.settings.unexpected_error', 'Unexpected error.'));
     } finally {
       setIsSendingTest(false);
     }
@@ -299,7 +300,7 @@ export const SettingsManagement: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isOwner) {
-      addNotification('warning', 'Permission Denied', 'Only owners can update restaurant settings.');
+      addNotification('warning', t('staff.settings.permission_denied', 'Permission Denied'), t('staff.settings.only_owners_can_update', 'Only owners can update restaurant settings.'));
       return;
     }
 
@@ -340,7 +341,7 @@ export const SettingsManagement: React.FC = () => {
         allow_pay_at_counter: allowPayAtCounter,
         service_charge_enabled: serviceChargeEnabled,
         service_charge_rate: parseFloat(serviceChargeRate) / 100 || 0,
-        service_charge_label: serviceChargeLabel.trim() || 'Service Charge',
+        service_charge_label: serviceChargeLabel.trim() || t('staff.settings.service_charge', 'Service Charge'),
         service_charge_taxable: serviceChargeTaxable,
         service_charge_optional: false,
         google_review_link: googleReviewLink.trim() || null,
@@ -375,7 +376,7 @@ export const SettingsManagement: React.FC = () => {
             rate: updated.tax_rate ?? 0.05,
             serviceCharge: serviceChargeEnabled ? {
               enabled: true,
-              label: serviceChargeLabel.trim() || 'Service Charge',
+              label: serviceChargeLabel.trim() || t('staff.settings.service_charge', 'Service Charge'),
               rate: parsedScRate,
               taxable: serviceChargeTaxable,
               optional: false,
@@ -396,7 +397,7 @@ export const SettingsManagement: React.FC = () => {
             city: updated.city || '',
             region: updated.state_region || '',
             postalCode: updated.postal_code || '',
-            country: updated.country === 'IN' ? 'India' : updated.country || '',
+            country: updated.country === 'IN' ? t('staff.settings.india', 'India') : updated.country || '',
           },
           payments: {
             enabled: paymentsEnabled,
@@ -408,12 +409,12 @@ export const SettingsManagement: React.FC = () => {
         });
 
         await refreshPaymentHealth();
-        addNotification('success', 'Settings Saved', 'Operational and payment gateway settings updated.');
+        addNotification('success', t('staff.settings.settings_saved', 'Settings Saved'), t('staff.settings.settings_saved_desc', 'Operational and payment gateway settings updated.'));
       } else {
-        addNotification('error', 'Update Failed', res.error || 'Failed to update settings.');
+        addNotification('error', t('staff.settings.update_failed', 'Update Failed'), res.error || t('staff.settings.failed_to_update_settings', 'Failed to update settings.'));
       }
     } catch {
-      addNotification('error', 'Error', 'Failed to save settings.');
+      addNotification('error', t('common.error', 'Error'), t('staff.settings.failed_to_save_settings', 'Failed to save settings.'));
     } finally {
       setIsSaving(false);
     }
@@ -422,19 +423,19 @@ export const SettingsManagement: React.FC = () => {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPassword) {
-      addNotification('error', 'Validation Error', 'Please enter a new password.');
+      addNotification('error', t('staff.settings.validation_error', 'Validation Error'), t('staff.settings.enter_new_password', 'Please enter a new password.'));
       return;
     }
     if (newPassword.length < 6) {
-      addNotification('error', 'Validation Error', 'Password must be at least 6 characters long.');
+      addNotification('error', t('staff.settings.validation_error', 'Validation Error'), t('staff.settings.password_min_length', 'Password must be at least 6 characters long.'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      addNotification('error', 'Validation Error', 'Passwords do not match. Please verify both fields.');
+      addNotification('error', t('staff.settings.validation_error', 'Validation Error'), t('staff.settings.passwords_do_not_match', 'Passwords do not match. Please verify both fields.'));
       return;
     }
     if (!supabase || !isSupabaseConfigured) {
-      addNotification('error', 'Service Unavailable', 'Authentication service is not configured.');
+      addNotification('error', t('staff.settings.service_unavailable', 'Service Unavailable'), t('staff.settings.auth_not_configured', 'Authentication service is not configured.'));
       return;
     }
 
@@ -442,14 +443,14 @@ export const SettingsManagement: React.FC = () => {
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) {
-        addNotification('error', 'Password Change Failed', error.message);
+        addNotification('error', t('staff.settings.password_change_failed', 'Password Change Failed'), error.message);
       } else {
-        addNotification('success', 'Password Updated', 'Your security password has been changed successfully.');
+        addNotification('success', t('staff.settings.password_updated', 'Password Updated'), t('staff.settings.password_updated_desc', 'Your security password has been changed successfully.'));
         setNewPassword('');
         setConfirmPassword('');
       }
     } catch (err: any) {
-      addNotification('error', 'Error', err.message || 'An unexpected error occurred.');
+      addNotification('error', t('common.error', 'Error'), err.message || t('staff.settings.unexpected_error_occurred', 'An unexpected error occurred.'));
     } finally {
       setIsUpdatingPassword(false);
     }
@@ -586,8 +587,8 @@ export const SettingsManagement: React.FC = () => {
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
-                  {(Object.keys(FEATURE_METADATA) as Array<keyof RestaurantFeatureFlags>).map((key) => {
-                    const meta = FEATURE_METADATA[key];
+                  {(Object.keys(featureMetadata) as Array<keyof RestaurantFeatureFlags>).map((key) => {
+                    const meta = featureMetadata[key];
                     const isEnabled = features[key];
                     return (
                       <div
@@ -1192,7 +1193,7 @@ export const SettingsManagement: React.FC = () => {
                       <span className={`material-symbols-outlined text-sm ${isCheckingHealth ? 'animate-spin' : ''}`}>
                         refresh
                       </span>
-                      {isCheckingHealth ? 'Checking...' : 'Check Status'}
+                      {isCheckingHealth ? t('staff.settings.checking', 'Checking...') : t('staff.settings.check_status', 'Check Status')}
                     </button>
 
                     <button
@@ -1205,7 +1206,7 @@ export const SettingsManagement: React.FC = () => {
                       <span className={`material-symbols-outlined text-sm ${isSendingTest ? 'animate-spin' : ''}`}>
                         {isSendingTest ? 'progress_activity' : 'send'}
                       </span>
-                      {isSendingTest ? 'Sending...' : 'Send Test Payment'}
+                      {isSendingTest ? t('staff.settings.sending', 'Sending...') : t('staff.settings.send_test_payment', 'Send Test Payment')}
                     </button>
                   </div>
                 </div>
@@ -1216,19 +1217,19 @@ export const SettingsManagement: React.FC = () => {
                     <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
                       <span className="text-zinc-400">{t('staff.dashboard.razorpay_key_id', 'RAZORPAY_KEY_ID:')}</span>
                       <span className={healthStatus?.providers.razorpay.hasKeyId ? 'text-emerald-400' : 'text-rose-400'}>
-                        {healthStatus?.providers.razorpay.hasKeyId ? '✓ Configured' : '✗ Missing'}
+                        {healthStatus?.providers.razorpay.hasKeyId ? t('staff.settings.configured', '✓ Configured') : t('staff.settings.missing', '✗ Missing')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
                       <span className="text-zinc-400">{t('staff.dashboard.razorpay_key_secret', 'RAZORPAY_KEY_SECRET:')}</span>
                       <span className={healthStatus?.providers.razorpay.hasKeySecret ? 'text-emerald-400' : 'text-rose-400'}>
-                        {healthStatus?.providers.razorpay.hasKeySecret ? '✓ Configured' : '✗ Missing'}
+                        {healthStatus?.providers.razorpay.hasKeySecret ? t('staff.settings.configured', '✓ Configured') : t('staff.settings.missing', '✗ Missing')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
                       <span className="text-zinc-400">{t('staff.dashboard.webhook_secret', 'WEBHOOK_SECRET:')}</span>
                       <span className={healthStatus?.providers.razorpay.hasWebhookSecret ? 'text-emerald-400' : 'text-amber-400'}>
-                        {healthStatus?.providers.razorpay.hasWebhookSecret ? '✓ Configured' : '○ Optional'}
+                        {healthStatus?.providers.razorpay.hasWebhookSecret ? t('staff.settings.configured', '✓ Configured') : t('staff.settings.optional', '○ Optional')}
                       </span>
                     </div>
                   </div>
@@ -1239,20 +1240,20 @@ export const SettingsManagement: React.FC = () => {
                     <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
                       <span className="text-zinc-400">{t('staff.dashboard.stripe_secret_key', 'STRIPE_SECRET_KEY:')}</span>
                       <span className={healthStatus?.providers.stripe.hasSecretKey ? 'text-emerald-400' : 'text-rose-400'}>
-                        {healthStatus?.providers.stripe.hasSecretKey ? '✓ Configured' : '✗ Missing'}
+                        {healthStatus?.providers.stripe.hasSecretKey ? t('staff.settings.configured', '✓ Configured') : t('staff.settings.missing', '✗ Missing')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-2 rounded-lg bg-black/40 border border-white/[0.04]">
                       <span className="text-zinc-400">{t('staff.dashboard.stripe_webhook_secret', 'STRIPE_WEBHOOK_SECRET:')}</span>
                       <span className={healthStatus?.providers.stripe.hasWebhookSecret ? 'text-emerald-400' : 'text-amber-400'}>
-                        {healthStatus?.providers.stripe.hasWebhookSecret ? '✓ Configured' : '○ Optional'}
+                        {healthStatus?.providers.stripe.hasWebhookSecret ? t('staff.settings.configured', '✓ Configured') : t('staff.settings.optional', '○ Optional')}
                       </span>
                     </div>
                   </div>
                 )}
 
                 <p className="text-[10px] text-zinc-500 font-mono">
-                  🔒 Security Policy: Secret keys live strictly in Supabase Edge Function secrets. They are never stored in the database or returned to the browser.
+                  {t('staff.settings.security_policy_note', '🔒 Security Policy: Secret keys live strictly in Supabase Edge Function secrets. They are never stored in the database or returned to the browser.')}
                 </p>
               </div>
 
@@ -1263,10 +1264,10 @@ export const SettingsManagement: React.FC = () => {
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
-                    { id: 'none', title: 'None / Counter Only', sub: 'In-person cash or counter payment', icon: 'money_off' },
-                    { id: 'razorpay', title: 'Razorpay', sub: 'India UPI, Net Banking & Wallets', icon: 'account_balance' },
-                    { id: 'stripe', title: 'Stripe', sub: 'Global Cards, Apple & Google Pay', icon: 'credit_card' },
-                    ...(import.meta.env.DEV ? [{ id: 'demo', title: 'Demo Simulator', sub: 'Local Testing & Dev Demonstration', icon: 'science' }] : []),
+                    { id: 'none', title: t('staff.settings.gw_none_title', 'None / Counter Only'), sub: t('staff.settings.gw_none_sub', 'In-person cash or counter payment'), icon: 'money_off' },
+                    { id: 'razorpay', title: t('staff.settings.gw_razorpay_title', 'Razorpay'), sub: t('staff.settings.gw_razorpay_sub', 'India UPI, Net Banking & Wallets'), icon: 'account_balance' },
+                    { id: 'stripe', title: t('staff.settings.gw_stripe_title', 'Stripe'), sub: t('staff.settings.gw_stripe_sub', 'Global Cards, Apple & Google Pay'), icon: 'credit_card' },
+                    ...(import.meta.env.DEV ? [{ id: 'demo', title: t('staff.settings.gw_demo_title', 'Demo Simulator'), sub: t('staff.settings.gw_demo_sub', 'Local Testing & Dev Demonstration'), icon: 'science' }] : []),
                   ].map((p) => {
                     const isSelected = paymentProvider === p.id;
                     return (
@@ -1615,7 +1616,7 @@ export const SettingsManagement: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-stone-400 font-mono">
                   <span className="material-symbols-outlined text-sm text-emerald-400">shield</span>
-                  <span>{user?.email || 'Logged In Account'}</span>
+                  <span>{user?.email || t('staff.settings.logged_in_account', 'Logged In Account')}</span>
                 </div>
               </div>
 
@@ -1704,7 +1705,7 @@ export const SettingsManagement: React.FC = () => {
                   disabled={isSaving}
                   className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#F3C766] to-[#D4AF37] text-[#070605] font-black text-xs uppercase tracking-wider hover:shadow-[0_10px_25px_rgba(212,175,55,0.4)] active:scale-95 transition-all cursor-pointer"
                 >
-                  {isSaving ? 'Committing Changes...' : 'Save Restaurant Settings'}
+                  {isSaving ? t('staff.settings.committing_changes', 'Committing Changes...') : t('staff.settings.save_restaurant_settings', 'Save Restaurant Settings')}
                 </button>
               </div>
             </div>
@@ -1853,7 +1854,7 @@ export const SettingsManagement: React.FC = () => {
 
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Alcohol Tax Rate (%)
+                  {t('staff.settings.alcohol_tax_rate', 'Alcohol Tax Rate (%)')}
                 </label>
                 <input
                   type="number"
@@ -1882,7 +1883,7 @@ export const SettingsManagement: React.FC = () => {
 
               <div>
                 <label className="block text-[10px] uppercase font-mono font-bold tracking-wider text-zinc-400 mb-1.5">
-                  Tax ID Label & Format
+                  {t('staff.settings.tax_id_label_format', 'Tax ID Label & Format')}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <input
@@ -1936,7 +1937,7 @@ export const SettingsManagement: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm">⚖</span>
                 <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                  Certified Accountant / Tax Advisor Sign-off (Mandatory)
+                  {t('staff.settings.accountant_signoff_mandatory', 'Certified Accountant / Tax Advisor Sign-off (Mandatory)')}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-400 leading-relaxed">

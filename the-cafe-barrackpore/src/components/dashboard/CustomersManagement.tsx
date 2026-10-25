@@ -27,7 +27,7 @@ export const CustomersManagement: React.FC = () => {
       setCustomers(data);
     } catch (error) {
       console.error('Error fetching customers:', error);
-      addNotification('error', 'Error', 'Failed to load customers');
+      addNotification('error', t('staff.customers.error', 'Error'), t('staff.customers.failed_to_load', 'Failed to load customers'));
     } finally {
       setIsLoading(false);
     }
@@ -42,23 +42,23 @@ export const CustomersManagement: React.FC = () => {
       const csv = exportCustomersCSV(customers);
       const date = new Date().toISOString().split('T')[0];
       downloadCSV(csv, `customers_${date}.csv`);
-      addNotification('success', 'Export Successful', 'Customer list downloaded');
+      addNotification('success', t('staff.customers.export_successful', 'Export Successful'), t('staff.customers.customer_list_downloaded', 'Customer list downloaded'));
     } catch (error) {
       console.error('Export error:', error);
-      addNotification('error', 'Export Failed', 'Could not generate CSV');
+      addNotification('error', t('staff.customers.export_failed', 'Export Failed'), t('staff.customers.could_not_generate_csv', 'Could not generate CSV'));
     }
   };
 
   const handleToggleConsent = async (customer: Customer) => {
     const newConsent = !customer.marketing_consent;
-    if (!window.confirm(`Are you sure you want to ${newConsent ? 'opt-in' : 'opt-out'} ${customer.name} from marketing?`)) {
+    if (!window.confirm(t('staff.customers.confirm_consent_toggle', 'Are you sure you want to update marketing consent for {name}?').replace('{name}', customer.name))) {
       return;
     }
 
     try {
       const { success, error } = await updateCustomerConsent(customer.id, newConsent);
       if (success) {
-        addNotification('success', 'Updated', `Marketing consent updated for ${customer.name}`);
+        addNotification('success', t('staff.customers.updated', 'Updated'), t('staff.customers.marketing_consent_updated', 'Marketing consent updated for {name}').replace('{name}', customer.name));
         if (selectedCustomer?.id === customer.id) {
           setSelectedCustomer({ ...selectedCustomer, marketing_consent: newConsent });
         }
@@ -68,7 +68,7 @@ export const CustomersManagement: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Consent update error:', err);
-      addNotification('error', 'Update Failed', err.message);
+      addNotification('error', t('staff.customers.update_failed', 'Update Failed'), err.message);
     }
   };
 

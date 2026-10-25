@@ -310,7 +310,7 @@ export const ContentManagement: React.FC = () => {
   const handleTabSwitch = (targetTab: ContentTab) => {
     if (isCurrentTabDirty) {
       const confirmLeave = window.confirm(
-        'You have unsaved changes in this section. Discard unsaved changes and switch sections?'
+        t('staff.content.confirm_discard_unsaved', 'You have unsaved changes in this section. Discard unsaved changes and switch sections?')
       );
       if (!confirmLeave) return;
     }
@@ -373,17 +373,17 @@ export const ContentManagement: React.FC = () => {
         setSaveStatus('saved');
         addNotification(
           'success',
-          'Website Content Persisted',
-          'Your updates have been securely saved to Supabase and are immediately live on the customer website.'
+          t('staff.content.content_persisted', 'Website Content Persisted'),
+          t('staff.content.content_persisted_desc', 'Your updates have been securely saved to Supabase and are immediately live on the customer website.')
         );
         setTimeout(() => setSaveStatus('idle'), 3000);
       } else {
         setSaveStatus('error');
-        addNotification('error', 'Save Failed', 'We couldn\'t save these changes. Please try again.');
+        addNotification('error', t('staff.content.save_failed', 'Save Failed'), t('staff.content.save_failed_retry', "We couldn't save these changes. Please try again."));
       }
     } catch {
       setSaveStatus('error');
-      addNotification('error', 'Save Failed', 'An error occurred while saving website content.');
+      addNotification('error', t('staff.content.save_failed', 'Save Failed'), t('staff.content.error_saving_content', 'An error occurred while saving website content.'));
     }
   };
 
@@ -396,12 +396,12 @@ export const ContentManagement: React.FC = () => {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      addNotification('error', 'File Too Large', 'Please select an image smaller than 5 MB.');
+      addNotification('error', t('staff.content.file_too_large', 'File Too Large'), t('staff.content.select_image_smaller_5mb', 'Please select an image smaller than 5 MB.'));
       return;
     }
 
     setIsUploadingImage(true);
-    addNotification('info', 'Uploading Asset', `Uploading "${file.name}" to storage...`);
+    addNotification('info', t('staff.content.uploading_asset', 'Uploading Asset'), t('staff.content.uploading_file_to_storage', 'Uploading "{name}" to storage...').replace('{name}', file.name));
 
     const result = await uploadSiteImage(file, folder);
     setIsUploadingImage(false);
@@ -409,9 +409,9 @@ export const ContentManagement: React.FC = () => {
     if (result.success && result.url) {
       setImageCallback(result.url);
       setSaveStatus('idle');
-      addNotification('success', 'Image Uploaded', `"${file.name}" uploaded to site-images storage.`);
+      addNotification('success', t('staff.content.image_uploaded', 'Image Uploaded'), t('staff.content.file_uploaded_to_storage', '"{name}" uploaded to site-images storage.').replace('{name}', file.name));
     } else {
-      addNotification('error', 'Upload Failed', result.error || 'Failed to upload image.');
+      addNotification('error', t('staff.content.upload_failed', 'Upload Failed'), result.error || t('staff.content.failed_to_upload_image', 'Failed to upload image.'));
     }
   };
 
@@ -503,13 +503,13 @@ export const ContentManagement: React.FC = () => {
       <div className="w-full p-1.5 rounded-2xl bg-[#090807] border border-white/[0.08] shadow-xl">
         <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-1.5">
           {[
-            { id: 'hero' as ContentTab, label: 'Hero Visuals', icon: 'wallpaper', dirty: isHeroDirty },
-            { id: 'about' as ContentTab, label: 'Our Story', icon: 'auto_stories', dirty: isAboutDirty },
-            { id: 'vibe' as ContentTab, label: 'Atmosphere & Vibe', icon: 'local_fire_department', dirty: isVibeDirty },
-            { id: 'specials' as ContentTab, label: 'Banquets & Platters', icon: 'dinner_dining', dirty: isSpecialsDirty },
-            { id: 'gallery' as ContentTab, label: 'Ambiance Gallery', icon: 'photo_library', dirty: isGalleryDirty },
-            { id: 'vip' as ContentTab, label: 'VIP Speakeasy', icon: 'hotel_class', dirty: isVipDirty },
-            { id: 'branding' as ContentTab, label: 'Brand & Logo', icon: 'badge', dirty: isBrandingDirty },
+            { id: 'hero' as ContentTab, label: t('staff.content.tab_hero', 'Hero Visuals'), icon: 'wallpaper', dirty: isHeroDirty },
+            { id: 'about' as ContentTab, label: t('staff.content.tab_about', 'Our Story'), icon: 'auto_stories', dirty: isAboutDirty },
+            { id: 'vibe' as ContentTab, label: t('staff.content.tab_vibe', 'Atmosphere & Vibe'), icon: 'local_fire_department', dirty: isVibeDirty },
+            { id: 'specials' as ContentTab, label: t('staff.content.tab_specials', 'Banquets & Platters'), icon: 'dinner_dining', dirty: isSpecialsDirty },
+            { id: 'gallery' as ContentTab, label: t('staff.content.tab_gallery', 'Ambiance Gallery'), icon: 'photo_library', dirty: isGalleryDirty },
+            { id: 'vip' as ContentTab, label: t('staff.content.tab_vip', 'VIP Speakeasy'), icon: 'hotel_class', dirty: isVipDirty },
+            { id: 'branding' as ContentTab, label: t('staff.content.tab_branding', 'Brand & Logo'), icon: 'badge', dirty: isBrandingDirty },
           ].map((tab, idx) => (
             <button
               key={tab.id}
@@ -548,12 +548,12 @@ export const ContentManagement: React.FC = () => {
 
               {/* ASSET SPECIFICATION GUIDE */}
               <ImageSpecGuide
-                sectionTitle="Hero Showcase Banner"
-                recommendedResolution="1920 × 1080 px (Desktop) • 1080 × 1920 px (Mobile)"
-                aspectRatio="16:9 Landscape"
-                maxFileSize="Under 500 KB"
-                recommendedFormats="WebP (recommended) or JPG"
-                framingAdvice="Atmospheric cinematic establishing photograph of the dining retreat or cocktail lounge. Keep the center-left clear of intense visual distractions so the main brand headline remains razor-sharp."
+                sectionTitle={t('staff.content.spec_hero_title', 'Hero Showcase Banner')}
+                recommendedResolution={t('staff.content.spec_hero_res', '1920 × 1080 px (Desktop) • 1080 × 1920 px (Mobile)')}
+                aspectRatio={t('staff.content.spec_hero_aspect', '16:9 Landscape')}
+                maxFileSize={t('staff.content.spec_under_500kb', 'Under 500 KB')}
+                recommendedFormats={t('staff.content.spec_webp_or_jpg', 'WebP (recommended) or JPG')}
+                framingAdvice={t('staff.content.spec_hero_framing', 'Atmospheric cinematic establishing photograph of the dining retreat or cocktail lounge. Keep the center-left clear of intense visual distractions so the main brand headline remains razor-sharp.')}
               />
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
@@ -686,12 +686,12 @@ export const ContentManagement: React.FC = () => {
 
               {/* ASSET SPECIFICATION GUIDE */}
               <ImageSpecGuide
-                sectionTitle="Our Story Chapters (Flagship Carousel)"
-                recommendedResolution="1920 × 1080 px"
-                aspectRatio="16:9 Landscape"
-                maxFileSize="Under 350 KB"
-                recommendedFormats="WebP (recommended) or JPG"
-                framingAdvice="Keep primary visual subjects towards the center-left (30%–55%) as the frosted dark glass editorial chapter card floats on the right on desktop screens. Ensure warm lighting and rich contrast."
+                sectionTitle={t('staff.content.spec_story_title', 'Our Story Chapters (Flagship Carousel)')}
+                recommendedResolution={t('staff.content.spec_story_res', '1920 × 1080 px')}
+                aspectRatio={t('staff.content.spec_story_aspect', '16:9 Landscape')}
+                maxFileSize={t('staff.content.spec_under_350kb', 'Under 350 KB')}
+                recommendedFormats={t('staff.content.spec_webp_or_jpg', 'WebP (recommended) or JPG')}
+                framingAdvice={t('staff.content.spec_story_framing', 'Keep primary visual subjects towards the center-left (30%–55%) as the frosted dark glass editorial chapter card floats on the right on desktop screens. Ensure warm lighting and rich contrast.')}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -962,12 +962,12 @@ export const ContentManagement: React.FC = () => {
 
               {/* ASSET SPECIFICATION GUIDE */}
               <ImageSpecGuide
-                sectionTitle="Atmosphere & Vibe Feature Cards"
-                recommendedResolution="1200 × 900 px (or 1200 × 1200 px)"
-                aspectRatio="4:3 Standard or 1:1 Square"
-                maxFileSize="Under 250 KB"
-                recommendedFormats="WebP (recommended) or JPG"
-                framingAdvice="Focus on intimate textural vignettes—sapphire velvet booth stitching, warm tungsten filament bulbs, barista extractions, or hand-painted colonial decor. Avoid ultra-wide distant shots."
+                sectionTitle={t('staff.content.spec_vibe_title', 'Atmosphere & Vibe Feature Cards')}
+                recommendedResolution={t('staff.content.spec_vibe_res', '1200 × 900 px (or 1200 × 1200 px)')}
+                aspectRatio={t('staff.content.spec_vibe_aspect', '4:3 Standard or 1:1 Square')}
+                maxFileSize={t('staff.content.spec_under_250kb', 'Under 250 KB')}
+                recommendedFormats={t('staff.content.spec_webp_or_jpg', 'WebP (recommended) or JPG')}
+                framingAdvice={t('staff.content.spec_vibe_framing', 'Focus on intimate textural vignettes—sapphire velvet booth stitching, warm tungsten filament bulbs, barista extractions, or hand-painted colonial decor. Avoid ultra-wide distant shots.')}
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 pt-2">
@@ -979,7 +979,7 @@ export const ContentManagement: React.FC = () => {
                     <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-white/[0.08]">
                       <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
                       <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-mono text-[#D4AF37] font-bold">
-                        Feature Card #{idx + 1}
+                        {t('staff.content.feature_card_num', 'Feature Card #{num}').replace('{num}', String(idx + 1))}
                       </div>
                     </div>
 
@@ -1057,12 +1057,12 @@ export const ContentManagement: React.FC = () => {
 
               {/* ASSET SPECIFICATION GUIDE */}
               <ImageSpecGuide
-                sectionTitle="Chef's Specials & Banquet Platters"
-                recommendedResolution="1200 × 800 px"
-                aspectRatio="3:2 Landscape"
-                maxFileSize="Under 250 KB"
-                recommendedFormats="WebP (recommended) or JPG"
-                framingAdvice="Mouthwatering 45° angle or top-down food photography. Capture generous group-sharing portions on dark stone or rustic wooden tableware with vibrant fresh herbs and steam."
+                sectionTitle={t('staff.content.spec_specials_title', "Chef's Specials & Banquet Platters")}
+                recommendedResolution={t('staff.content.spec_specials_res', '1200 × 800 px')}
+                aspectRatio={t('staff.content.spec_specials_aspect', '3:2 Landscape')}
+                maxFileSize={t('staff.content.spec_under_250kb', 'Under 250 KB')}
+                recommendedFormats={t('staff.content.spec_webp_or_jpg', 'WebP (recommended) or JPG')}
+                framingAdvice={t('staff.content.spec_specials_framing', 'Mouthwatering 45° angle or top-down food photography. Capture generous group-sharing portions on dark stone or rustic wooden tableware with vibrant fresh herbs and steam.')}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1225,12 +1225,12 @@ export const ContentManagement: React.FC = () => {
 
               {/* ASSET SPECIFICATION GUIDE */}
               <ImageSpecGuide
-                sectionTitle="Visual Chronicles Gallery (4 Carousel Slots)"
-                recommendedResolution="1920 × 1080 px"
-                aspectRatio="16:9 Widescreen"
-                maxFileSize="Under 300 KB"
-                recommendedFormats="WebP (recommended) or JPG"
-                framingAdvice="High-emotion nocturnal moments—couples dining in velvet booths, artisan pizzas emerging from wood flames, golden coffee crema, or acoustic jazz guitarists under warm tungsten lighting."
+                sectionTitle={t('staff.content.spec_gallery_title', 'Visual Chronicles Gallery (4 Carousel Slots)')}
+                recommendedResolution={t('staff.content.spec_gallery_res', '1920 × 1080 px')}
+                aspectRatio={t('staff.content.spec_gallery_aspect', '16:9 Widescreen')}
+                maxFileSize={t('staff.content.spec_under_300kb', 'Under 300 KB')}
+                recommendedFormats={t('staff.content.spec_webp_or_jpg', 'WebP (recommended) or JPG')}
+                framingAdvice={t('staff.content.spec_gallery_framing', 'High-emotion nocturnal moments—couples dining in velvet booths, artisan pizzas emerging from wood flames, golden coffee crema, or acoustic jazz guitarists under warm tungsten lighting.')}
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 pt-2">
@@ -1318,12 +1318,12 @@ export const ContentManagement: React.FC = () => {
 
               {/* ASSET SPECIFICATION GUIDE */}
               <ImageSpecGuide
-                sectionTitle="VIP Speakeasy Salon Background"
-                recommendedResolution="1920 × 1080 px"
-                aspectRatio="16:9 Landscape"
-                maxFileSize="Under 350 KB"
-                recommendedFormats="WebP (recommended) or JPG"
-                framingAdvice="An exclusive, dimly lit private speakeasy lounge with 2200K amber lighting, dark walnut surfaces, and subtle gold accents to evoke elite membership prestige."
+                sectionTitle={t('staff.content.spec_vip_title', 'VIP Speakeasy Salon Background')}
+                recommendedResolution={t('staff.content.spec_vip_res', '1920 × 1080 px')}
+                aspectRatio={t('staff.content.spec_vip_aspect', '16:9 Landscape')}
+                maxFileSize={t('staff.content.spec_under_350kb', 'Under 350 KB')}
+                recommendedFormats={t('staff.content.spec_webp_or_jpg', 'WebP (recommended) or JPG')}
+                framingAdvice={t('staff.content.spec_vip_framing', 'An exclusive, dimly lit private speakeasy lounge with 2200K amber lighting, dark walnut surfaces, and subtle gold accents to evoke elite membership prestige.')}
               />
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
@@ -1457,12 +1457,12 @@ export const ContentManagement: React.FC = () => {
 
               {/* ASSET SPECIFICATION GUIDE */}
               <ImageSpecGuide
-                sectionTitle="Brand Logo & Official Insignia"
-                recommendedResolution="512 × 512 px (or SVG vector)"
-                aspectRatio="1:1 Square"
-                maxFileSize="Under 150 KB"
-                recommendedFormats="Transparent PNG, WebP, or SVG"
-                framingAdvice="Export with a 100% transparent background. Use gold, cream, or monochrome white line work so the crest renders cleanly across the dark nocturnal header bar, receipts, and table QR codes."
+                sectionTitle={t('staff.content.spec_logo_title', 'Brand Logo & Official Insignia')}
+                recommendedResolution={t('staff.content.spec_logo_res', '512 × 512 px (or SVG vector)')}
+                aspectRatio={t('staff.content.spec_logo_aspect', '1:1 Square')}
+                maxFileSize={t('staff.content.spec_under_150kb', 'Under 150 KB')}
+                recommendedFormats={t('staff.content.spec_logo_formats', 'Transparent PNG, WebP, or SVG')}
+                framingAdvice={t('staff.content.spec_logo_framing', 'Export with a 100% transparent background. Use gold, cream, or monochrome white line work so the crest renders cleanly across the dark nocturnal header bar, receipts, and table QR codes.')}
               />
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">

@@ -143,7 +143,7 @@ const QRContent: React.FC = () => {
           </div>
         </main>
 
-        <footer className="text-center text-zinc-600 text-xs py-4 border-t border-white/[0.06] font-mono">
+        <footer className="text-center text-zinc-400 text-xs py-4 border-t border-white/[0.06] font-mono">
           {restaurantConfig.businessName} • {restaurantConfig.address.city}
         </footer>
       </div>
@@ -161,7 +161,7 @@ const QRContent: React.FC = () => {
           <h1 className="text-xl sm:text-2xl font-serif font-semibold tracking-wider text-white">
             {restaurantConfig.businessName}
           </h1>
-          <p className="text-zinc-500 text-xs font-mono tracking-wider uppercase mt-1">
+          <p className="text-zinc-400 text-xs font-mono tracking-wider uppercase mt-1">
             {t('qr.tableVerification', 'Table Verification Protocol')}
           </p>
         </header>
@@ -192,7 +192,7 @@ const QRContent: React.FC = () => {
           </div>
         </main>
 
-        <footer className="text-center text-zinc-600 text-xs py-4 border-t border-white/[0.06] font-mono">
+        <footer className="text-center text-zinc-400 text-xs py-4 border-t border-white/[0.06] font-mono">
           {restaurantConfig.businessName} • {t('qr.conciergeHelp', 'Concierge Help Available')}
         </footer>
       </div>
@@ -257,7 +257,7 @@ const QRContent: React.FC = () => {
                 {cartCount}
               </span>
             ) : (
-              <span className="text-[10px] font-mono text-stone-500 hidden sm:inline">0</span>
+              <span className="text-[10px] font-mono text-stone-400 hidden sm:inline">0</span>
             )}
           </button>
         </div>
@@ -469,7 +469,7 @@ const QRContent: React.FC = () => {
               </a>
             </div>
 
-            <div className="w-full pt-4 mt-2 border-t border-white/[0.06] flex flex-wrap items-center justify-center gap-4 text-[11px] text-stone-500 font-mono">
+            <div className="w-full pt-4 mt-2 border-t border-white/[0.06] flex flex-wrap items-center justify-center gap-4 text-[11px] text-stone-300 font-mono">
               <span>{t('qr.wifiGuest', 'Wi-Fi: TheCafe_Guest')}</span>
               <span>•</span>
               <span>{t('qr.zeroWaitDispatch', 'Zero-Wait Line Dispatch')}</span>
@@ -481,14 +481,14 @@ const QRContent: React.FC = () => {
       </section>
 
       {/* Discrete Legal & Brand Signature */}
-      <footer className="text-center text-zinc-600 text-xs max-w-7xl mx-auto px-4 font-mono pb-6">
-        <p className="font-serif uppercase tracking-[0.2em] text-[#D4AF37]/80 text-xs font-semibold mb-1">
+      <footer className="text-center text-zinc-400 text-xs max-w-7xl mx-auto px-4 font-mono pb-6">
+        <p className="font-serif uppercase tracking-[0.2em] text-[#D4AF37] text-xs font-semibold mb-1">
           {restaurantConfig.businessName}
         </p>
-        <p className="text-zinc-500 text-[11px]">
+        <p className="text-zinc-400 text-[11px]">
           {restaurantConfig.address.line1} • {t('qr.handcraftedSanctuary', 'Handcrafted Culinary Sanctuary')}
         </p>
-        <div className="mt-2 flex items-center justify-center gap-3 text-[10px] text-zinc-600">
+        <div className="mt-2 flex items-center justify-center gap-3 text-[10px] text-zinc-400">
           <span>© {new Date().getFullYear()} {t('footer.allRightsReserved', 'All rights reserved')}</span>
           <span>•</span>
           <span>{t('cart.dineIn', 'Dine-In')} {t('qr.tableLabel', 'Table')} {tableNumber}</span>

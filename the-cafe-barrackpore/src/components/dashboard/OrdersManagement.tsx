@@ -91,13 +91,13 @@ export const OrdersManagement: React.FC = () => {
       const res = await createOrder(testOrder);
       if (res.success) {
         playKitchenOrderBell();
-        addNotification('success', 'Order Dispatched', `Table 07 test order #${res.orderRef} placed successfully!`);
+        addNotification('success', t('staff.orders.order_dispatched', 'Order Dispatched'), t('staff.orders.test_order_placed_success', 'Table 07 test order #{ref} placed successfully!').replace('{ref}', res.orderRef));
         await loadOrders();
       } else {
-        addNotification('error', 'Simulation Failed', res.error || 'Could not place test order.');
+        addNotification('error', t('staff.orders.simulation_failed', 'Simulation Failed'), res.error || t('staff.orders.could_not_place_test_order', 'Could not place test order.'));
       }
     } catch {
-      addNotification('error', 'Error', 'Failed to simulate test order.');
+      addNotification('error', t('common.error', 'Error'), t('staff.orders.failed_simulate_test_order', 'Failed to simulate test order.'));
     }
   };
 
@@ -138,18 +138,18 @@ export const OrdersManagement: React.FC = () => {
       if (res.success) {
         addNotification(
           'success',
-          'Order Updated',
-          `Order #${activeOrder?.order_ref || orderId} status changed to ${newStatus.toUpperCase()}`
+          t('staff.orders.order_updated', 'Order Updated'),
+          t('staff.orders.order_status_changed_to', 'Order #{ref} status changed to {status}').replace('{ref}', activeOrder?.order_ref || orderId).replace('{status}', newStatus.toUpperCase())
         );
         if (activeOrder && activeOrder.id === orderId) {
           setActiveOrder({ ...activeOrder, status: newStatus });
         }
         await loadOrders();
       } else {
-        addNotification('error', 'Update Failed', res.error || 'Could not update order status.');
+        addNotification('error', t('staff.orders.update_failed', 'Update Failed'), res.error || t('staff.orders.could_not_update_order_status', 'Could not update order status.'));
       }
     } catch {
-      addNotification('error', 'Error', 'Failed to update order status.');
+      addNotification('error', t('common.error', 'Error'), t('staff.orders.failed_update_order_status', 'Failed to update order status.'));
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -163,30 +163,30 @@ export const OrdersManagement: React.FC = () => {
       if (res.success) {
         addNotification(
           'success',
-          'Refund Processed',
-          `Order #${activeOrder.order_ref} refunded successfully.${res.refundId ? ` (Refund ID: ${res.refundId})` : ''}`
+          t('staff.orders.refund_processed', 'Refund Processed'),
+          `${t('staff.orders.order_refunded_success', 'Order #{ref} refunded successfully.').replace('{ref}', activeOrder.order_ref)}${res.refundId ? ' (Refund ID: ' + res.refundId + ')' : ''}`
         );
         setShowRefundModal(false);
         setActiveOrder({ ...activeOrder, payment_status: 'refunded' });
         await loadOrders();
       } else {
-        addNotification('error', 'Refund Failed', res.error || 'Failed to process refund.');
+        addNotification('error', t('staff.orders.refund_failed', 'Refund Failed'), res.error || t('staff.orders.failed_process_refund', 'Failed to process refund.'));
       }
     } catch (err: any) {
-      addNotification('error', 'Refund Error', err.message || 'Unexpected refund error.');
+      addNotification('error', t('staff.orders.refund_error', 'Refund Error'), err.message || t('staff.orders.unexpected_refund_error', 'Unexpected refund error.'));
     } finally {
       setIsRefunding(false);
     }
   };
 
   const statusTabs: Array<{ id: string; label: string }> = [
-    { id: 'all', label: 'All Tickets' },
-    { id: 'pending', label: 'Pending' },
-    { id: 'confirmed', label: 'Confirmed' },
-    { id: 'preparing', label: 'Kitchen Prep' },
-    { id: 'ready', label: 'Ready' },
-    { id: 'completed', label: 'Served' },
-    { id: 'cancelled', label: 'Voided' },
+    { id: 'all', label: t('staff.orders.all_tickets', 'All Tickets') },
+    { id: 'pending', label: t('staff.orders.pending', 'Pending') },
+    { id: 'confirmed', label: t('staff.orders.confirmed', 'Confirmed') },
+    { id: 'preparing', label: t('staff.orders.kitchen_prep', 'Kitchen Prep') },
+    { id: 'ready', label: t('staff.orders.ready', 'Ready') },
+    { id: 'completed', label: t('staff.orders.served', 'Served') },
+    { id: 'cancelled', label: t('staff.orders.voided', 'Voided') },
   ];
 
   const getStatusColor = (status: string) => {
@@ -466,7 +466,7 @@ export const OrdersManagement: React.FC = () => {
 
                     <div className="flex items-center justify-between text-[11px] text-stone-400">
                       <span>
-                        {order.order_type === 'dine_in' ? `Table ${order.table_number || '--'}` : 'Takeaway'}
+                        {order.order_type === 'dine_in' ? `${t('staff.orders.table', 'Table')} ${order.table_number || '--'}` : t('staff.orders.takeaway', 'Takeaway')}
                       </span>
                       <span className="font-mono">{formatTime(order.created_at)}</span>
                     </div>
@@ -611,7 +611,7 @@ export const OrdersManagement: React.FC = () => {
                 className="w-full mb-3 py-3 px-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] hover:from-[#c29f2f] hover:to-[#e0b555] text-black font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">point_of_sale</span>
-                {activeOrder.payment_status === 'paid' ? 'Manage Settlement & Splits' : 'Settle Payment / Split Bill'}
+                {activeOrder.payment_status === 'paid' ? t('staff.orders.manage_settlement_splits', 'Manage Settlement & Splits') : t('staff.orders.settle_payment_split_bill', 'Settle Payment / Split Bill')}
               </button>
 
               {/* Thermal Print Station */}
@@ -645,18 +645,18 @@ export const OrdersManagement: React.FC = () => {
                       setPrintedKotOrders(prev => new Set([...prev, activeOrder.id]));
                       addNotification(
                         'success',
-                        'KOT Dispatched',
-                        isDup ? `Reprint / Duplicate KOT sent for #${activeOrder.order_ref}` : `KOT dispatched for #${activeOrder.order_ref}`
+                        t('staff.orders.kot_dispatched', 'KOT Dispatched'),
+                        isDup ? t('staff.orders.reprint_kot_sent', 'Reprint / Duplicate KOT sent for #{ref}').replace('{ref}', activeOrder.order_ref) : t('staff.orders.kot_dispatched_for', 'KOT dispatched for #{ref}').replace('{ref}', activeOrder.order_ref)
                       );
                     } catch (err: any) {
-                      addNotification('error', 'Print Error', err?.message || 'Failed to dispatch KOT');
+                      addNotification('error', t('staff.orders.print_error', 'Print Error'), err?.message || t('staff.orders.failed_dispatch_kot', 'Failed to dispatch KOT'));
                     }
                   }}
                   className="py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   title={t('staff.orders.print_kitchen_order_ticket_80mm_', 'Print Kitchen Order Ticket (80mm/58mm thermal roll)')}
                 >
                   <span className="material-symbols-outlined text-sm">soup_kitchen</span>
-                  {printedKotOrders.has(activeOrder.id) ? 'Reprint KOT (Dup)' : 'Print KOT'}
+                  {printedKotOrders.has(activeOrder.id) ? t('staff.orders.reprint_kot_dup', 'Reprint KOT (Dup)') : t('staff.orders.print_kot', 'Print KOT')}
                 </button>
                 <button
                   type="button"
@@ -695,9 +695,9 @@ export const OrdersManagement: React.FC = () => {
                           ratesAsOf: restaurantConfig.tax?.ratesAsOf || new Date().toISOString().split('T')[0],
                         }
                       );
-                      addNotification('success', 'Bill Dispatched', `Guest receipt dispatched for #${activeOrder.order_ref}`);
+                      addNotification('success', t('staff.orders.bill_dispatched', 'Bill Dispatched'), t('staff.orders.guest_receipt_dispatched', 'Guest receipt dispatched for #{ref}').replace('{ref}', activeOrder.order_ref));
                     } catch (err: any) {
-                      addNotification('error', 'Print Error', err?.message || 'Failed to dispatch bill receipt');
+                      addNotification('error', t('staff.orders.print_error', 'Print Error'), err?.message || t('staff.orders.failed_dispatch_bill_receipt', 'Failed to dispatch bill receipt'));
                     }
                   }}
                   className="py-2.5 px-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-stone-200 border border-white/10 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
@@ -715,12 +715,12 @@ export const OrdersManagement: React.FC = () => {
                   try {
                     const res = await kickCashDrawer();
                     if (res.success) {
-                      addNotification('success', 'Cash Drawer Opened', res.message || 'Kick pulse sent to cash drawer.');
+                      addNotification('success', t('staff.orders.cash_drawer_opened', 'Cash Drawer Opened'), res.message || t('staff.orders.kick_pulse_sent', 'Kick pulse sent to cash drawer.'));
                     } else {
-                      addNotification('warning', 'Cash Drawer Notice', res.message || 'Could not send drawer kick pulse.');
+                      addNotification('warning', t('staff.orders.cash_drawer_notice', 'Cash Drawer Notice'), res.message || t('staff.orders.could_not_send_kick', 'Could not send drawer kick pulse.'));
                     }
                   } catch (err: any) {
-                    addNotification('error', 'Drawer Error', err?.message || 'Failed to trigger cash drawer.');
+                    addNotification('error', t('staff.orders.drawer_error', 'Drawer Error'), err?.message || t('staff.orders.failed_trigger_drawer', 'Failed to trigger cash drawer.'));
                   }
                 }}
                 className="w-full mb-4 py-2 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
@@ -746,11 +746,11 @@ export const OrdersManagement: React.FC = () => {
                   </span>
                   <p className="text-xs font-bold text-white mt-1">
                     {activeOrder.order_type === 'dine_in'
-                      ? `Table ${activeOrder.table_number || '--'}`
-                      : 'Takeaway Counter'}
+                      ? `${t('staff.orders.table', 'Table')} ${activeOrder.table_number || '--'}`
+                      : t('staff.orders.takeaway_counter', 'Takeaway Counter')}
                   </p>
                   <p className="text-[10px] text-stone-400 mt-0.5 uppercase tracking-wider">
-                    Source: {activeOrder.source || 'website'}
+                    {t('staff.orders.source_label', 'Source:')} {activeOrder.source || 'website'}
                   </p>
                 </div>
               </div>
@@ -773,7 +773,7 @@ export const OrdersManagement: React.FC = () => {
                 <div className="space-y-1 text-xs text-stone-300">
                   <div className="flex justify-between">
                     <span className="text-stone-400">{t('staff.orders.gateway_provider', 'Gateway Provider:')}</span>
-                    <span className="font-mono capitalize text-white">{activeOrder.payment_provider || 'Counter / Cash'}</span>
+                    <span className="font-mono capitalize text-white">{activeOrder.payment_provider || t('staff.orders.counter_cash', 'Counter / Cash')}</span>
                   </div>
                   {activeOrder.payment_reference && (
                     <div className="flex justify-between">
@@ -965,7 +965,7 @@ export const OrdersManagement: React.FC = () => {
                 <span className={`material-symbols-outlined text-sm ${isRefunding ? 'animate-spin' : ''}`}>
                   {isRefunding ? 'progress_activity' : 'check'}
                 </span>
-                {isRefunding ? 'Processing...' : 'Confirm Refund'}
+                {isRefunding ? t('staff.orders.processing', 'Processing...') : t('staff.orders.confirm_refund', 'Confirm Refund')}
               </button>
             </div>
           </div>

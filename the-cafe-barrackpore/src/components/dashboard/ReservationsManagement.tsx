@@ -80,16 +80,16 @@ export const ReservationsManagement: React.FC = () => {
     try {
       const res = await updateReservationStatus(resId, newStatus);
       if (res.success) {
-        addNotification('success', 'Reservation Updated', `Reservation marked as ${newStatus.toUpperCase()}`);
+        addNotification('success', t('staff.reservations.reservation_updated', 'Reservation Updated'), t('staff.reservations.reservation_marked_as', 'Reservation marked as {status}').replace('{status}', newStatus.toUpperCase()));
         if (activeRes && activeRes.id === resId) {
           setActiveRes({ ...activeRes, status: newStatus });
         }
         await loadReservations();
       } else {
-        addNotification('error', 'Update Failed', res.error || 'Could not update reservation.');
+        addNotification('error', t('staff.reservations.update_failed', 'Update Failed'), res.error || t('staff.reservations.could_not_update', 'Could not update reservation.'));
       }
     } catch {
-      addNotification('error', 'Error', 'Failed to update reservation status.');
+      addNotification('error', t('staff.reservations.error', 'Error'), t('staff.reservations.failed_to_update', 'Failed to update reservation status.'));
     } finally {
       setIsUpdating(false);
     }

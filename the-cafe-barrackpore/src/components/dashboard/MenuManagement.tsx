@@ -148,16 +148,16 @@ export const MenuManagement: React.FC = () => {
     if (!file) return;
 
     setIsUploadingImage(true);
-    addNotification('info', 'Uploading Image', `Uploading "${file.name}" to Storage...`);
+    addNotification('info', t('staff.menu.uploading_image', 'Uploading Image'), t('staff.menu.uploading_file_storage', 'Uploading "{name}" to Storage...').replace('{name}', file.name));
 
     const result = await uploadSiteImage(file, 'menu');
     setIsUploadingImage(false);
 
     if (result.success && result.url) {
       setFormImageUrl(result.url);
-      addNotification('success', 'Image Uploaded', 'Dish photo uploaded to site-images bucket.');
+      addNotification('success', t('staff.menu.image_uploaded', 'Image Uploaded'), t('staff.menu.dish_photo_uploaded', 'Dish photo uploaded to site-images bucket.'));
     } else {
-      addNotification('error', 'Upload Failed', result.error || 'Could not upload image.');
+      addNotification('error', t('staff.menu.upload_failed', 'Upload Failed'), result.error || t('staff.menu.could_not_upload_image', 'Could not upload image.'));
     }
   };
 
@@ -209,7 +209,7 @@ export const MenuManagement: React.FC = () => {
       setEditingItem(null);
       setIsAddingItem(false);
     } else {
-      addNotification('error', 'Save Failed', result.error || 'Failed to persist menu item to database.');
+      addNotification('error', t('staff.menu.save_failed', 'Save Failed'), result.error || t('staff.menu.failed_to_persist_menu_item', 'Failed to persist menu item to database.'));
     }
   };
 
@@ -227,29 +227,29 @@ export const MenuManagement: React.FC = () => {
     if (res.success) {
       addNotification(
         next ? 'success' : 'warning',
-        next ? 'Item In Stock' : "Item Sold Out (86'd)",
-        `"${name}" is now marked as ${next ? 'Available' : "Sold Out (86'd)"} for service across customer and QR ordering.`
+        next ? t('staff.menu.item_in_stock', 'Item In Stock') : t('staff.menu.item_sold_out_86', "Item Sold Out (86'd)"),
+        t('staff.menu.item_status_updated_service', '"{name}" is now marked as {status} for service across customer and QR ordering.').replace('{name}', name).replace('{status}', next ? t('staff.menu.available', 'Available') : t('staff.menu.sold_out_86', "Sold Out (86'd)"))
       );
     } else {
       // Revert on failure
       setItems((prev) =>
         prev.map((i) => (i.id === id ? { ...i, available: !next } : i))
       );
-      addNotification('error', 'Update Failed', res.error || 'Failed to update item availability in database.');
+      addNotification('error', t('staff.menu.update_failed', 'Update Failed'), res.error || t('staff.menu.failed_to_update_availability', 'Failed to update item availability in database.'));
     }
   };
 
   const handleDeleteItem = async (item: MenuItem) => {
-    const confirmed = window.confirm(`Are you sure you want to permanently delete "${item.name}" from the menu catalog?`);
+    const confirmed = window.confirm(t('staff.menu.confirm_delete_item', 'Are you sure you want to permanently delete "{name}" from the menu catalog?').replace('{name}', item.name));
     if (!confirmed) return;
 
     const res = await deleteMenuItem(item.id);
     if (res.success) {
       setItems((prev) => prev.filter((i) => i.id !== item.id));
-      addNotification('info', 'Item Deleted', `"${item.name}" was removed from the database.`);
+      addNotification('info', t('staff.menu.item_deleted', 'Item Deleted'), t('staff.menu.item_removed_db', '"{name}" was removed from the database.').replace('{name}', item.name));
       setEditingItem(null);
     } else {
-      addNotification('error', 'Delete Failed', res.error || 'Failed to delete menu item.');
+      addNotification('error', t('staff.menu.delete_failed', 'Delete Failed'), res.error || t('staff.menu.failed_to_delete_menu_item', 'Failed to delete menu item.'));
     }
   };
 
@@ -412,7 +412,7 @@ export const MenuManagement: React.FC = () => {
                   : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
               }`}
             >
-              {diet === 'all' ? 'All Diets' : diet === 'nv' ? 'Non-Veg' : diet}
+              {diet === 'all' ? t('staff.menu.all_diets', 'All Diets') : diet === 'nv' ? t('staff.menu.non_veg', 'Non-Veg') : diet}
             </button>
           ))}
         </div>
@@ -429,7 +429,7 @@ export const MenuManagement: React.FC = () => {
               : 'bg-white/[0.02] text-zinc-400 border-white/[0.06] hover:text-white'
           }`}
         >
-          All Categories ({items.length})
+          {t('staff.menu.all_categories', 'All Categories')} ({items.length})
         </button>
         {categories.map((cat) => {
           const count = items.filter((i) => (i.category_id || i.category) === cat.id).length;
@@ -464,8 +464,8 @@ export const MenuManagement: React.FC = () => {
           <p className="font-serif font-bold text-white text-base">{t('staff.dashboard.no_menu_items_found', 'No Menu Items Found')}</p>
           <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
             {searchQuery
-              ? `No dishes matched "${searchQuery}". Try a different keyword.`
-              : 'No items currently exist in this category.'}
+              ? t('staff.menu.no_dishes_matched', 'No dishes matched "{query}". Try a different keyword.').replace('{query}', searchQuery)
+              : t('staff.menu.no_items_in_category', 'No items currently exist in this category.')}
           </p>
         </div>
       ) : (
@@ -516,7 +516,7 @@ export const MenuManagement: React.FC = () => {
                               </p>
                               {(item.tag || item.popular) && (
                                 <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[9px] font-mono font-bold uppercase tracking-wider">
-                                  {item.tag || 'Bestseller'}
+                                  {item.tag || t('staff.menu.bestseller', 'Bestseller')}
                                 </span>
                               )}
                               {item.translations && Object.keys(item.translations).filter((k) => item.translations?.[k]?.name || item.translations?.[k]?.description).length > 0 && (
@@ -527,7 +527,7 @@ export const MenuManagement: React.FC = () => {
                               )}
                             </div>
                             <p className="text-zinc-400 text-[11px] line-clamp-1 mt-0.5 max-w-md">
-                              {item.description || 'No description provided.'}
+                              {item.description || t('staff.menu.no_description_provided', 'No description provided.')}
                             </p>
                             {item.allergens && item.allergens.length > 0 && (
                               <div className="flex items-center gap-1 flex-wrap mt-1">
@@ -603,7 +603,7 @@ export const MenuManagement: React.FC = () => {
                               item.available ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'
                             }`}
                           />
-                          <span>{item.available ? 'In Stock (Live)' : "86'd (Sold Out)"}</span>
+                          <span>{item.available ? t('staff.menu.in_stock_live', 'In Stock (Live)') : t('staff.menu.eighty_six_sold_out', "86'd (Sold Out)")}</span>
                         </button>
                       </td>
 
@@ -644,7 +644,7 @@ export const MenuManagement: React.FC = () => {
                     {t('staff.menu.catalog_mutation', 'Catalog Mutation')}
                   </span>
                   <h3 className="text-xl font-serif font-black text-white mt-0.5">
-                    {editingItem ? `Edit: ${editingItem.name}` : 'Add Menu Item'}
+                    {editingItem ? `${t('staff.menu.edit_prefix', 'Edit:')} ${editingItem.name}` : t('staff.menu.add_menu_item', 'Add Menu Item')}
                   </h3>
                 </div>
                 <button
@@ -774,7 +774,7 @@ export const MenuManagement: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-16 h-16 rounded-xl bg-black/40 border border-white/[0.1] overflow-hidden shrink-0 flex items-center justify-center">
                       {formImageUrl ? (
-                        <img src={formImageUrl} alt="Preview" className="w-full h-full object-cover" />
+                        <img src={formImageUrl} alt={t('staff.menu.preview', 'Preview')} className="w-full h-full object-cover" />
                       ) : (
                         <span className="material-symbols-outlined text-zinc-600 text-2xl">image</span>
                       )}
@@ -782,7 +782,7 @@ export const MenuManagement: React.FC = () => {
                     <div className="flex-1 space-y-1.5">
                       <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-semibold text-white transition-colors cursor-pointer">
                         <span className="material-symbols-outlined text-base">cloud_upload</span>
-                        <span>{isUploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                        <span>{isUploadingImage ? t('staff.menu.uploading', 'Uploading...') : t('staff.menu.upload_image', 'Upload Image')}</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -818,7 +818,7 @@ export const MenuManagement: React.FC = () => {
                             : 'bg-white/[0.03] text-zinc-400 border-white/[0.08] hover:text-white'
                         }`}
                       >
-                        {diet === 'nv' ? 'Non-Veg' : diet}
+                        {diet === 'nv' ? t('staff.menu.non_veg', 'Non-Veg') : diet}
                       </button>
                     ))}
                   </div>
@@ -855,7 +855,7 @@ export const MenuManagement: React.FC = () => {
                               : 'bg-white/[0.02] text-zinc-400 border-white/[0.06] hover:text-white'
                           }`}
                         >
-                          {selected ? `✓ ${alg}` : `+ ${alg}`}
+                          {selected ? `✓ ${t('staff.menu.allergen_' + alg.toLowerCase(), alg)}` : `+ ${t('staff.menu.allergen_' + alg.toLowerCase(), alg)}`}
                         </button>
                       );
                     })}
@@ -957,7 +957,7 @@ export const MenuManagement: React.FC = () => {
                       <input
                         type="text"
                         dir={LANGUAGE_META[selectedTransLang].direction}
-                        placeholder={formName ? `Default: ${formName}` : 'Enter translated name...'}
+                        placeholder={formName ? `${t('staff.menu.default_prefix', 'Default:')} ${formName}` : t('staff.menu.enter_translated_name', 'Enter translated name...')}
                         value={formTranslations[selectedTransLang]?.name || ''}
                         onChange={(e) => {
                           const val = e.target.value;
@@ -980,7 +980,7 @@ export const MenuManagement: React.FC = () => {
                       <textarea
                         rows={2}
                         dir={LANGUAGE_META[selectedTransLang].direction}
-                        placeholder={formDescription ? `Default: ${formDescription}` : 'Enter translated description...'}
+                        placeholder={formDescription ? `${t('staff.menu.default_prefix', 'Default:')} ${formDescription}` : t('staff.menu.enter_translated_desc', 'Enter translated description...')}
                         value={formTranslations[selectedTransLang]?.description || ''}
                         onChange={(e) => {
                           const val = e.target.value;
@@ -1037,7 +1037,7 @@ export const MenuManagement: React.FC = () => {
                     disabled={isSavingItem}
                     className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3C766] text-[#070605] font-black text-xs uppercase tracking-wider hover:shadow-[0_10px_25px_rgba(212,175,55,0.3)] transition-all cursor-pointer"
                   >
-                    {isSavingItem ? 'Persisting...' : 'Save Item'}
+                    {isSavingItem ? t('staff.menu.persisting', 'Persisting...') : t('staff.menu.save_item', 'Save Item')}
                   </button>
                 </div>
               </form>

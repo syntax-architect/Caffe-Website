@@ -30,7 +30,7 @@ test.describe('The Café Barrackpore - Comprehensive End-to-End Test Suite', () 
 
   test('2. Table Reservation Drawer: Open, inspect form fields, and close', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
 
     // Find and click the visible Reservation CTA (works across desktop header and mobile hero)
     const reserveBtn = page.locator('button:visible').filter({ hasText: /Reserve a Table|Book a Table/i }).first();
@@ -57,7 +57,7 @@ test.describe('The Café Barrackpore - Comprehensive End-to-End Test Suite', () 
 
   test('3. Guest Contact & Inquiry Drawer: Open and inspect fields', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
 
     // Trigger Guest Inquiry drawer
     const inquiryBtn = page.locator('button').filter({ hasText: /Guest Inquiry|Send Guest Inquiry/i }).first();

@@ -90,7 +90,7 @@ export const NotFoundPage: React.FC = () => {
       </main>
 
       {/* Footer Minimal */}
-      <footer className="border-t border-white/5 py-6 text-center text-xs text-zinc-500 font-sans">
+      <footer className="border-t border-white/5 py-6 text-center text-xs text-zinc-400 font-sans">
         <p>© {new Date().getFullYear()} {businessName}. {t('footer.allRightsReserved', 'All rights reserved.')}</p>
       </footer>
     </div>

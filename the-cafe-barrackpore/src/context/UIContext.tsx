@@ -309,10 +309,13 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
             onClick={closeModal}
           />
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ui-modal-title"
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[150] w-full max-w-md p-space-lg rounded-2xl bg-surface-container-low border border-outline-variant/30 shadow-2xl flex flex-col gap-space-md animate-fade-in"
           >
             <div className="flex items-center justify-between">
-              <h3 className="font-headline-md text-on-surface font-bold">
+              <h3 id="ui-modal-title" className="font-headline-md text-on-surface font-bold">
                 {modalState.title}
               </h3>
               <button

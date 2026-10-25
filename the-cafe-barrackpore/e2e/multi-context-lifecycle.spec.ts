@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Multi-Context Concurrent E2E Lifecycle (Customer, Staff POS, Kitchen KDS)', () => {
+  test.beforeEach(async ({}, testInfo) => {
+    if (testInfo.project.name !== 'chromium') {
+      test.skip(true, 'Concurrent multi-context lifecycle validated on desktop chromium');
+    }
+  });
 
   const setupStaffAuth = async (page: any, role: 'owner' | 'manager' | 'kitchen' = 'manager') => {
     await page.goto('/');

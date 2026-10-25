@@ -67,8 +67,8 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
   const [splitMode, setSplitMode] = useState<SplitType>('equal');
   const [equalCount, setEqualCount] = useState<number>(2);
   const [customPartsInput, setCustomPartsInput] = useState<Array<{ payer_label: string; amount: number }>>([
-    { payer_label: 'Guest 1', amount: roundToCents(order.total / 2) },
-    { payer_label: 'Guest 2', amount: roundToCents(order.total - roundToCents(order.total / 2)) },
+    { payer_label: t('staff.billing.guest_1', 'Guest 1'), amount: roundToCents(order.total / 2) },
+    { payer_label: t('staff.billing.guest_2', 'Guest 2'), amount: roundToCents(order.total - roundToCents(order.total / 2)) },
   ]);
 
   // Item split assignments: maps person index to array of items
@@ -157,13 +157,13 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
         setPaymentAmount(res.summary.parts[0]?.amount || 0);
         setTenderedAmount(res.summary.parts[0]?.amount || 0);
         setActiveTab('pay');
-        addNotification('success', 'Bill Split Applied', `Split into ${equalCount} equal shares.`);
+        addNotification('success', t('staff.billing.split_applied', 'Bill Split Applied'), t('staff.billing.split_into_equal_shares', 'Split into {n} equal shares.').replace('{n}', String(equalCount)));
         onOrderUpdated();
       } else {
-        addNotification('error', 'Split Failed', res.error || 'Could not split bill.');
+        addNotification('error', t('staff.billing.split_failed', 'Split Failed'), res.error || t('staff.billing.could_not_split_bill', 'Could not split bill.'));
       }
     } catch (e: any) {
-      addNotification('error', 'Split Error', e.message);
+      addNotification('error', t('staff.billing.split_error', 'Split Error'), e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -190,13 +190,13 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
         setPaymentAmount(res.summary.parts[0]?.amount || 0);
         setTenderedAmount(res.summary.parts[0]?.amount || 0);
         setActiveTab('pay');
-        addNotification('success', 'Custom Split Applied', `Created ${customPartsInput.length} custom parts.`);
+        addNotification('success', t('staff.billing.custom_split_applied', 'Custom Split Applied'), t('staff.billing.created_custom_parts', 'Created {n} custom parts.').replace('{n}', String(customPartsInput.length)));
         onOrderUpdated();
       } else {
-        addNotification('error', 'Split Failed', res.error || 'Could not split bill.');
+        addNotification('error', t('staff.billing.split_failed', 'Split Failed'), res.error || t('staff.billing.could_not_split_bill', 'Could not split bill.'));
       }
     } catch (e: any) {
-      addNotification('error', 'Split Error', e.message);
+      addNotification('error', t('staff.billing.split_error', 'Split Error'), e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -225,7 +225,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
         }
 
         return {
-          payer_label: `Guest ${pIdx + 1}`,
+          payer_label: `${t('staff.billing.guest_prefix', 'Guest')} ${pIdx + 1}`,
           items: pItems,
         };
       });
@@ -246,13 +246,13 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
         setPaymentAmount(res.summary.parts[0]?.amount || 0);
         setTenderedAmount(res.summary.parts[0]?.amount || 0);
         setActiveTab('pay');
-        addNotification('success', 'Item Split Applied', `Items allocated across ${itemPersonCount} guests.`);
+        addNotification('success', t('staff.billing.item_split_applied', 'Item Split Applied'), t('staff.billing.items_allocated_guests', 'Items allocated across {n} guests.').replace('{n}', String(itemPersonCount)));
         onOrderUpdated();
       } else {
-        addNotification('error', 'Split Failed', res.error || 'Could not split bill.');
+        addNotification('error', t('staff.billing.split_failed', 'Split Failed'), res.error || t('staff.billing.could_not_split_bill', 'Could not split bill.'));
       }
     } catch (e: any) {
-      addNotification('error', 'Split Error', e.message);
+      addNotification('error', t('staff.billing.split_error', 'Split Error'), e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -263,7 +263,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
     if (isProcessing) return;
 
     if (tenderType === 'cash' && !cashChange.isSufficient) {
-      addNotification('error', 'Insufficient Tender', `Tendered amount must be at least ${formatCurrency(totalChargeWithTip)}`);
+      addNotification('error', t('staff.billing.insufficient_tender', 'Insufficient Tender'), t('staff.billing.tendered_amount_min', 'Tendered amount must be at least {amt}').replace('{amt}', formatCurrency(totalChargeWithTip)));
       return;
     }
 
@@ -281,7 +281,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
         idempotencyKey: currentIdempotencyKey,
         shiftId: activeShiftId,
         actorId: user?.id,
-        actorName: user?.email || 'Staff Cashier',
+        actorName: user?.email || t('staff.billing.staff_cashier', 'Staff Cashier'),
         actorRole: role || 'staff',
       });
 
@@ -319,13 +319,13 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
         onOrderUpdated();
 
         if (res.isBillClosed) {
-          addNotification('success', 'Bill Settled', `Bill #${order.order_ref} is completely paid and closed.`);
+          addNotification('success', t('staff.billing.bill_settled', 'Bill Settled'), t('staff.billing.bill_ref_paid_closed', 'Bill #{ref} is completely paid and closed.').replace('{ref}', order.order_ref));
         }
       } else {
-        addNotification('error', 'Payment Failed', res.error || 'Failed to record payment.');
+        addNotification('error', t('staff.billing.payment_failed', 'Payment Failed'), res.error || t('staff.billing.failed_record_payment', 'Failed to record payment.'));
       }
     } catch (e: any) {
-      addNotification('error', 'Payment Error', e.message);
+      addNotification('error', t('staff.billing.payment_error', 'Payment Error'), e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -334,7 +334,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
   // Manager-Gated Refund / Void Handler
   const handleManagerRefund = async () => {
     if (!isOwner && !isManager) {
-      addNotification('error', 'Permission Denied', 'Manager or Owner role required to issue refunds or void paid tickets.');
+      addNotification('error', t('staff.billing.permission_denied', 'Permission Denied'), t('staff.billing.manager_role_required_refund', 'Manager or Owner role required to issue refunds or void paid tickets.'));
       return;
     }
 
@@ -345,21 +345,21 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
         reason: refundReason,
         amount: refundAmount,
         actorId: user?.id || 'mgr',
-        actorName: user?.email || 'Manager',
+        actorName: user?.email || t('staff.billing.manager', 'Manager'),
         actorRole: role || 'manager',
         shiftId: activeShiftId,
         isPaid: order.payment_status === 'paid',
       });
 
       if (res.success) {
-        addNotification('success', 'Refund Processed', `Order #${order.order_ref} refunded/voided and logged to audit trail.`);
+        addNotification('success', t('staff.billing.refund_processed', 'Refund Processed'), t('staff.billing.order_refunded_audit', 'Order #{ref} refunded/voided and logged to audit trail.').replace('{ref}', order.order_ref));
         onOrderUpdated();
         onClose();
       } else {
-        addNotification('error', 'Refund Rejected', res.error || 'Could not process refund.');
+        addNotification('error', t('staff.billing.refund_rejected', 'Refund Rejected'), res.error || t('staff.billing.could_not_process_refund', 'Could not process refund.'));
       }
     } catch (e: any) {
-      addNotification('error', 'Refund Error', e.message);
+      addNotification('error', t('staff.billing.refund_error', 'Refund Error'), e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -376,15 +376,15 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
             </span>
             <div>
               <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
-                Settlement Cockpit • #{order.order_ref}
+                {t('staff.billing.settlement_cockpit', 'Settlement Cockpit')} • #{order.order_ref}
                 {order.payment_status === 'paid' && (
                   <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    Paid & Closed
+                    {t('staff.billing.paid_and_closed', 'Paid & Closed')}
                   </span>
                 )}
               </h3>
               <p className="text-xs text-stone-400">
-                {order.order_type === 'dine_in' ? `Table ${order.table_number || '--'}` : 'Takeaway'} • Total: {formatCurrency(order.total)}
+                {order.order_type === 'dine_in' ? `${t('staff.billing.table', 'Table')} ${order.table_number || '--'}` : t('staff.billing.takeaway', 'Takeaway')} • {t('staff.billing.total', 'Total')}: {formatCurrency(order.total)}
               </p>
             </div>
           </div>
@@ -514,10 +514,10 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {[
-                        { type: 'cash' as const, label: 'Cash (Change)', icon: 'payments' },
-                        { type: 'card' as const, label: 'Card (POS Slip)', icon: 'credit_card' },
-                        { type: 'upi' as const, label: 'UPI / QR', icon: 'qr_code_2' },
-                        { type: 'stripe' as const, label: 'Stripe Online', icon: 'link' },
+                        { type: 'cash' as const, label: t('staff.billing.tender_cash', 'Cash (Change)'), icon: 'payments' },
+                        { type: 'card' as const, label: t('staff.billing.tender_card', 'Card (POS Slip)'), icon: 'credit_card' },
+                        { type: 'upi' as const, label: t('staff.billing.tender_upi', 'UPI / QR'), icon: 'qr_code_2' },
+                        { type: 'stripe' as const, label: t('staff.billing.tender_online', 'Stripe Online'), icon: 'link' },
                       ].map((item) => (
                         <button
                           key={item.type}
@@ -712,9 +712,9 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                   {/* Split Type Selector */}
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { mode: 'equal' as const, label: 'Equal Shares', desc: 'Divide into N equal parts' },
-                      { mode: 'item' as const, label: 'By Line Item', desc: 'Assign dishes to guests' },
-                      { mode: 'custom' as const, label: 'Custom Amount', desc: 'Enter custom values' },
+                      { mode: 'equal' as const, label: t('staff.billing.equal_shares', 'Equal Shares'), desc: t('staff.billing.equal_shares_desc', 'Divide into N equal parts') },
+                      { mode: 'item' as const, label: t('staff.billing.by_line_item', 'By Line Item'), desc: t('staff.billing.by_line_item_desc', 'Assign dishes to guests') },
+                      { mode: 'custom' as const, label: t('staff.billing.custom_amount', 'Custom Amount'), desc: t('staff.billing.custom_amount_desc', 'Enter custom values') },
                     ].map((s) => (
                       <button
                         key={s.mode}
@@ -989,7 +989,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                     <div className="p-4 rounded-xl bg-rose-950/15 border border-rose-500/20 space-y-4">
                       <div className="flex items-center gap-2 text-rose-300 text-xs font-bold">
                         <span className="material-symbols-outlined text-base">verified_user</span>
-                        Manager Clearance Verified ({user?.email || 'Manager'})
+                        {t('staff.billing.manager_clearance_verified', 'Manager Clearance Verified ({email})').replace('{email}', user?.email || t('staff.billing.manager', 'Manager'))}
                       </div>
 
                       <div>
@@ -1034,7 +1034,7 @@ export const BillSettlementModal: React.FC<BillSettlementModalProps> = ({
                         onClick={handleManagerRefund}
                         className="w-full py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer disabled:opacity-50"
                       >
-                        {isProcessing ? 'Processing Refund...' : `Authorize & Issue Refund (${formatCurrency(refundAmount)})`}
+                        {isProcessing ? t('staff.billing.processing_refund', 'Processing Refund...') : t('staff.billing.authorize_refund', 'Authorize & Issue Refund ({amt})').replace('{amt}', formatCurrency(refundAmount))}
                       </button>
                     </div>
                   )}

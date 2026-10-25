@@ -122,7 +122,7 @@ test.describe('No Dead Taps & Demo Link Verification Suite', () => {
     if (await hygieneLink.isVisible()) {
       await hygieneLink.scrollIntoViewIfNeeded();
       await hygieneLink.click();
-      const modal = page.locator('[role="dialog"], .fixed.inset-0').first();
+      const modal = page.locator('[role="dialog"]').first();
       await expect(modal).toBeVisible({ timeout: 5000 });
     }
   });

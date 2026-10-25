@@ -3,7 +3,12 @@ import re
 import sys
 import subprocess
 import shutil
-from fontTools.ttLib import TTFont
+
+try:
+    from fontTools.ttLib import TTFont
+    HAS_FONTTOOLS = True
+except ImportError:
+    HAS_FONTTOOLS = False
 
 REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 PUBLIC_FONTS_DIR = os.path.join(REPO_DIR, 'public', 'fonts')
@@ -126,6 +131,29 @@ def scan_all_tokens_in_codebase(available_ligatures):
 
 def main():
     print("=== HIGH-PRECISION MATERIAL SYMBOLS FONT SUBSET PIPELINE ===\n")
+
+    global HAS_FONTTOOLS
+    if not HAS_FONTTOOLS:
+        if os.path.exists(SUBSET_FONT) and 10_000 < os.path.getsize(SUBSET_FONT) < 500_000:
+            print("[INFO] fontTools is not installed in this environment (e.g. Render/CI).")
+            print(f"[OK] Using pre-compiled high-performance Material Symbols subset font ({os.path.getsize(SUBSET_FONT):,} bytes).")
+            dist_fonts_dir = os.path.dirname(DIST_FONT)
+            if os.path.exists(dist_fonts_dir):
+                shutil.copy2(SUBSET_FONT, DIST_FONT)
+                print(f"Synced subset font to {DIST_FONT}")
+            sys.exit(0)
+        else:
+            print("[WARN] fontTools not found and no valid pre-compiled subset font found. Attempting pip install...")
+            try:
+                res = subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', 'fonttools', 'brotli'], capture_output=True)
+                if res.returncode == 0:
+                    from fontTools.ttLib import TTFont
+                    HAS_FONTTOOLS = True
+            except Exception:
+                pass
+            if not HAS_FONTTOOLS:
+                print("ERROR: fontTools is required to build font from scratch but could not be installed.")
+                sys.exit(1)
 
     master_font_path = ensure_original_font()
     orig_size = os.path.getsize(master_font_path)

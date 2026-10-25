@@ -18,10 +18,16 @@ lighthouse-*
 *-report*.html
 *.trace.json
 *.devtoolslog.json
-test-results/
+test-results/*
+!test-results/screenshots/
+!test-results/screenshots/**
 test-results-temp/
 playwright-report/
 src/config/pendingTaxRules.json
+
+# Internal handover files
+internal/
+/internal
 
 # Environment variables
 .env

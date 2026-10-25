@@ -13,7 +13,7 @@ interface BreadcrumbProps {
 
 export const Breadcrumbs: React.FC<BreadcrumbProps> = ({ items, className = '' }) => {
   return (
-    <nav aria-label="Breadcrumb" className={`flex items-center text-xs text-on-surface/60 font-sans mb-6 ${className}`}>
+    <nav aria-label="Breadcrumb" className={`flex items-center text-xs text-on-surface/75 font-sans mb-6 ${className}`}>
       <ol className="flex items-center flex-wrap gap-1.5 list-none p-0 m-0">
         <li>
           <a
@@ -26,7 +26,7 @@ export const Breadcrumbs: React.FC<BreadcrumbProps> = ({ items, className = '' }
         </li>
         {items.map((item, idx) => (
           <li key={idx} className="flex items-center gap-1.5">
-            <span className="text-on-surface/30 select-none font-mono">/</span>
+            <span className="text-on-surface/40 select-none font-mono" aria-hidden="true">/</span>
             {item.current || !item.href ? (
               <span className="text-primary font-medium" aria-current="page">
                 {item.label}

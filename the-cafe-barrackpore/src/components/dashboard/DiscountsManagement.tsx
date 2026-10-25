@@ -135,22 +135,22 @@ export const DiscountsManagement: React.FC = () => {
     const res = await saveDiscountCode(payload);
     setIsSaving(false);
     if (res.success) {
-      addNotification('success', 'Discount Code Saved', `${payload.code} has been updated.`);
+      addNotification('success', t('staff.discounts.code_saved', 'Discount Code Saved'), t('staff.discounts.code_updated_desc', '{code} has been updated.').replace('{code}', payload.code || ''));
       setIsDcModalOpen(false);
       loadData();
     } else {
-      addNotification('error', 'Save Failed', res.error || 'Could not save discount code.');
+      addNotification('error', t('staff.discounts.save_failed', 'Save Failed'), res.error || t('staff.discounts.could_not_save_code', 'Could not save discount code.'));
     }
   };
 
   const handleDeleteDc = async (id: string, code: string) => {
-    if (!window.confirm(`Delete discount code ${code}?`)) return;
+    if (!window.confirm(t('staff.discounts.confirm_delete_code', 'Delete discount code {code}?').replace('{code}', code))) return;
     const res = await deleteDiscountCode(id);
     if (res.success) {
-      addNotification('info', 'Code Deleted', `${code} was deleted.`);
+      addNotification('info', t('staff.discounts.code_deleted', 'Code Deleted'), t('staff.discounts.code_deleted_desc', '{code} was deleted.').replace('{code}', code));
       loadData();
     } else {
-      addNotification('error', 'Delete Failed', res.error || 'Could not delete discount code.');
+      addNotification('error', t('staff.discounts.delete_failed', 'Delete Failed'), res.error || t('staff.discounts.could_not_delete_code', 'Could not delete discount code.'));
     }
   };
 
@@ -199,22 +199,22 @@ export const DiscountsManagement: React.FC = () => {
     const res = await saveHappyHourSchedule(payload);
     setIsSaving(false);
     if (res.success) {
-      addNotification('success', 'Happy Hour Saved', `${payload.label} has been updated.`);
+      addNotification('success', t('staff.discounts.happy_hour_saved', 'Happy Hour Saved'), t('staff.discounts.happy_hour_saved_desc', '{label} has been updated.').replace('{label}', payload.label || ''));
       setIsHhModalOpen(false);
       loadData();
     } else {
-      addNotification('error', 'Save Failed', res.error || 'Could not save happy hour.');
+      addNotification('error', t('staff.discounts.save_failed', 'Save Failed'), res.error || t('staff.discounts.could_not_save_hh', 'Could not save happy hour.'));
     }
   };
 
   const handleDeleteHh = async (id: string, label: string) => {
-    if (!window.confirm(`Delete happy hour schedule ${label}?`)) return;
+    if (!window.confirm(t('staff.discounts.confirm_delete_hh', 'Delete happy hour schedule {label}?').replace('{label}', label))) return;
     const res = await deleteHappyHourSchedule(id);
     if (res.success) {
-      addNotification('info', 'Schedule Deleted', `${label} was deleted.`);
+      addNotification('info', t('staff.discounts.schedule_deleted', 'Schedule Deleted'), t('staff.discounts.schedule_deleted_desc', '{label} was deleted.').replace('{label}', label));
       loadData();
     } else {
-      addNotification('error', 'Delete Failed', res.error || 'Could not delete happy hour.');
+      addNotification('error', t('staff.discounts.delete_failed', 'Delete Failed'), res.error || t('staff.discounts.could_not_delete_hh', 'Could not delete happy hour.'));
     }
   };
 

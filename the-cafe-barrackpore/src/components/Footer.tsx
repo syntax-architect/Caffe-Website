@@ -367,9 +367,11 @@ export const Footer: React.FC = () => {
 
         {/* Valmora-Inspired Monumental Edge-to-Edge Architectural Wordmark */}
         <div className="w-full overflow-hidden py-4 sm:py-6 select-none pointer-events-none flex justify-center items-center" aria-hidden="true">
-          <div className="font-serif text-[clamp(1.25rem,5.2vw,4.85rem)] leading-none tracking-tight uppercase text-center text-primary/15 select-none whitespace-nowrap">
-            {businessName.toUpperCase()}
-          </div>
+          <svg className="w-full max-w-5xl h-16 sm:h-24 select-none opacity-25" viewBox="0 0 1000 100" aria-hidden="true">
+            <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="#D4AF37" className="font-serif font-bold tracking-tight uppercase" fontSize="64">
+              {businessName.toUpperCase()}
+            </text>
+          </svg>
         </div>
 
         {/* Bottom Legal & Discrete Staff Login */}

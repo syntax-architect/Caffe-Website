@@ -109,7 +109,7 @@ export const POSManagement: React.FC = () => {
 
   // Void Modal
   const [voidingItem, setVoidingItem] = useState<POSBillItem | null>(null);
-  const [voidReason, setVoidReason] = useState<string>('Guest changed mind');
+  const [voidReason, setVoidReason] = useState<string>(t('staff.pos.void_guest_changed_mind', 'Guest changed mind'));
   const [voidCustomReason, setVoidCustomReason] = useState<string>('');
   const [voidManagerPin, setVoidManagerPin] = useState<string>('');
   const [isSubmittingVoid, setIsSubmittingVoid] = useState<boolean>(false);
@@ -404,12 +404,12 @@ export const POSManagement: React.FC = () => {
     if (isPunchingKOT) return;
 
     if (draftItems.length === 0) {
-      addNotification('warning', 'No Items', 'Please select at least one item before sending a KOT.');
+      addNotification('warning', t('staff.pos.no_items', 'No Items'), t('staff.pos.select_at_least_one_item_kot', 'Please select at least one item before sending a KOT.'));
       return;
     }
 
     if (orderType === 'dine_in' && !selectedTable?.table_number && !activeBill?.table_number) {
-      addNotification('warning', 'Missing Table', 'Please pick a dining table for Dine-In orders.');
+      addNotification('warning', t('staff.pos.missing_table', 'Missing Table'), t('staff.pos.pick_dining_table_dinein', 'Please pick a dining table for Dine-In orders.'));
       return;
     }
 
@@ -433,14 +433,14 @@ export const POSManagement: React.FC = () => {
       });
 
       if (!res.success) {
-        addNotification('error', 'KOT Failed', res.error || 'Failed to dispatch KOT ticket.');
+        addNotification('error', t('staff.pos.kot_failed', 'KOT Failed'), res.error || t('staff.pos.failed_to_dispatch_kot', 'Failed to dispatch KOT ticket.'));
         return;
       }
 
       addNotification(
         'success',
-        `KOT #${res.kotBatch.batch_index} Sent`,
-        `Fired ticket ${res.kotBatch.kot_number} to Kitchen Display.`
+        t('staff.pos.kot_sent', 'KOT #{n} Sent').replace('{n}', String(res.kotBatch.batch_index)),
+        t('staff.pos.fired_ticket_kds', 'Fired ticket {num} to Kitchen Display.').replace('{num}', res.kotBatch.kot_number)
       );
 
       // Print KOT automatically or optionally if thermal printing is enabled
@@ -450,7 +450,7 @@ export const POSManagement: React.FC = () => {
           order_ref: res.kotBatch.kot_number,
           order_type: orderType,
           table_number: tableNum,
-          customer_name: customerName || (tableNum ? `Table ${tableNum}` : 'Counter Guest'),
+          customer_name: customerName || (tableNum ? `Table ${tableNum}` : t('staff.pos.counter_guest', 'Counter Guest')),
           created_at: new Date().toISOString(),
           special_requests: specialInstructions || undefined,
           items: draftItems.map((it) => ({
@@ -473,7 +473,7 @@ export const POSManagement: React.FC = () => {
       setSpecialInstructions('');
       await refreshFloorData();
     } catch (err: any) {
-      addNotification('error', 'Execution Error', err?.message || 'Error creating KOT.');
+      addNotification('error', t('staff.pos.execution_error', 'Execution Error'), err?.message || t('staff.pos.error_creating_kot', 'Error creating KOT.'));
     } finally {
       setIsPunchingKOT(false);
     }
@@ -489,7 +489,7 @@ export const POSManagement: React.FC = () => {
     try {
       const res = await validateDiscountCode(code, liveTotals.subtotal);
       if (!res.valid) {
-        addNotification('error', 'Invalid Code', res.error || 'Discount code cannot be applied.');
+        addNotification('error', t('staff.pos.invalid_code', 'Invalid Code'), res.error || t('staff.pos.discount_cannot_be_applied', 'Discount code cannot be applied.'));
         return;
       }
 
@@ -500,15 +500,15 @@ export const POSManagement: React.FC = () => {
         amount: res.discount_amount || 0,
       });
       setDiscountCodeInput('');
-      addNotification('success', 'Discount Applied', `Promo code ${code} applied successfully!`);
+      addNotification('success', t('staff.pos.discount_applied', 'Discount Applied'), t('staff.pos.promo_code_applied', 'Promo code applied successfully!'));
     } catch {
-      addNotification('error', 'Error', 'Failed to validate discount code.');
+      addNotification('error', t('common.error', 'Error'), t('staff.pos.failed_to_validate_discount', 'Failed to validate discount code.'));
     }
   };
 
   const handleApplyManualDiscount = () => {
     if (!manualDiscountReason.trim()) {
-      addNotification('warning', 'Reason Required', 'Please provide an audit reason for manual discount.');
+      addNotification('warning', t('staff.pos.reason_required', 'Reason Required'), t('staff.pos.provide_audit_reason_manual_discount', 'Please provide an audit reason for manual discount.'));
       return;
     }
 
@@ -517,7 +517,7 @@ export const POSManagement: React.FC = () => {
     if (!isPrivileged) {
       const isPinOk = verifyManagerPinLocally(manualDiscountPin);
       if (!isPinOk) {
-        addNotification('error', 'Unauthorized', 'Invalid Manager PIN.');
+        addNotification('error', t('staff.pos.unauthorized', 'Unauthorized'), t('staff.pos.invalid_manager_pin', 'Invalid Manager PIN.'));
         return;
       }
     }
@@ -533,13 +533,13 @@ export const POSManagement: React.FC = () => {
       type: 'manual',
       value: manualDiscountValue,
       amount: amt,
-      approvedBy: isPrivileged ? 'Manager (Authenticated Role)' : `Manager (PIN Verified) - ${manualDiscountReason}`,
+      approvedBy: isPrivileged ? t('staff.pos.manager_auth_role', 'Manager (Authenticated Role)') : `${t('staff.pos.manager_pin_verified', 'Manager (PIN Verified)')} - ${manualDiscountReason}`,
     });
 
     setIsManualDiscountModalOpen(false);
     setManualDiscountPin('');
     setManualDiscountReason('');
-    addNotification('success', 'Manager Discount Approved', `Manual discount of ${currencySymbol}${amt} applied.`);
+    addNotification('success', t('staff.pos.manager_discount_approved', 'Manager Discount Approved'), t('staff.pos.manual_discount_applied', 'Manual discount applied.'));
   };
 
   // -------------------------------------------------------------
@@ -552,7 +552,7 @@ export const POSManagement: React.FC = () => {
       voidReason === 'Other' ? voidCustomReason.trim() : voidReason.trim();
 
     if (!chosenReason) {
-      addNotification('warning', 'Reason Required', 'Please specify a valid reason for voiding this item.');
+      addNotification('warning', t('staff.pos.reason_required', 'Reason Required'), t('staff.pos.specify_valid_void_reason', 'Please specify a valid reason for voiding this item.'));
       return;
     }
 
@@ -568,14 +568,14 @@ export const POSManagement: React.FC = () => {
       });
 
       if (!res.success) {
-        addNotification('error', 'Void Denied', res.error || 'Failed to void item.');
+        addNotification('error', t('staff.pos.void_denied', 'Void Denied'), res.error || t('staff.pos.failed_to_void_item', 'Failed to void item.'));
         return;
       }
 
       addNotification(
         'success',
-        'Item Voided',
-        `"${voidingItem.item_name}" has been removed and audited.`
+        t('staff.pos.item_voided', 'Item Voided'),
+        t('staff.pos.item_removed_audited', '"{name}" has been removed and audited.').replace('{name}', voidingItem.item_name)
       );
 
       setVoidingItem(null);
@@ -583,7 +583,7 @@ export const POSManagement: React.FC = () => {
       setVoidCustomReason('');
       await refreshFloorData();
     } catch (err: any) {
-      addNotification('error', 'Void Error', err?.message || 'Error processing void.');
+      addNotification('error', t('staff.pos.void_error', 'Void Error'), err?.message || t('staff.pos.error_processing_void', 'Error processing void.'));
     } finally {
       setIsSubmittingVoid(false);
     }
@@ -598,21 +598,21 @@ export const POSManagement: React.FC = () => {
     try {
       const res = await transferTable(activeBill.id, transferTargetTable.trim());
       if (!res.success) {
-        addNotification('error', 'Transfer Failed', res.error || 'Could not transfer table.');
+        addNotification('error', t('staff.pos.transfer_failed', 'Transfer Failed'), res.error || t('staff.pos.could_not_transfer_table', 'Could not transfer table.'));
         return;
       }
 
       addNotification(
         'success',
-        'Table Transferred',
-        `Bill moved from Table ${activeBill.table_number} to Table ${transferTargetTable}.`
+        t('staff.pos.table_transferred', 'Table Transferred'),
+        t('staff.pos.bill_moved_table', 'Bill moved from Table {src} to Table {dst}.').replace('{src}', String(activeBill.table_number)).replace('{dst}', transferTargetTable)
       );
 
       setIsTransferModalOpen(false);
       setTransferTargetTable('');
       await refreshFloorData();
     } catch (err: any) {
-      addNotification('error', 'Error', err?.message || 'Table transfer failed.');
+      addNotification('error', t('common.error', 'Error'), err?.message || t('staff.pos.table_transfer_failed', 'Table transfer failed.'));
     }
   };
 
@@ -625,14 +625,14 @@ export const POSManagement: React.FC = () => {
     try {
       const res = await mergeTables(activeBill.id, mergeTargetBillId);
       if (!res.success) {
-        addNotification('error', 'Merge Failed', res.error || 'Could not merge tables.');
+        addNotification('error', t('staff.pos.merge_failed', 'Merge Failed'), res.error || t('staff.pos.could_not_merge_tables', 'Could not merge tables.'));
         return;
       }
 
       addNotification(
         'success',
-        'Tables Merged',
-        `Table ${activeBill.table_number} successfully merged into target table.`
+        t('staff.pos.tables_merged', 'Tables Merged'),
+        t('staff.pos.table_merged_into_target', 'Table {num} successfully merged into target table.').replace('{num}', String(activeBill.table_number))
       );
 
       setIsMergeModalOpen(false);
@@ -641,7 +641,7 @@ export const POSManagement: React.FC = () => {
       setSelectedTable(null);
       await refreshFloorData();
     } catch (err: any) {
-      addNotification('error', 'Error', err?.message || 'Table merge failed.');
+      addNotification('error', t('common.error', 'Error'), err?.message || t('staff.pos.table_merge_failed', 'Table merge failed.'));
     }
   };
 
@@ -654,14 +654,14 @@ export const POSManagement: React.FC = () => {
     try {
       const res = await moveItemsBetweenBills(activeBill.id, moveTargetBillId, moveSelectedItems);
       if (!res.success) {
-        addNotification('error', 'Move Failed', res.error || 'Could not move items.');
+        addNotification('error', t('staff.pos.move_failed', 'Move Failed'), res.error || t('staff.pos.could_not_move_items', 'Could not move items.'));
         return;
       }
 
       addNotification(
         'success',
-        'Items Moved',
-        `Moved ${moveSelectedItems.length} item(s) to destination table.`
+        t('staff.pos.items_moved', 'Items Moved'),
+        t('staff.pos.moved_items_to_dest', 'Moved {n} item(s) to destination table.').replace('{n}', String(moveSelectedItems.length))
       );
 
       setIsMoveItemsModalOpen(false);
@@ -669,7 +669,7 @@ export const POSManagement: React.FC = () => {
       setMoveSelectedItems([]);
       await refreshFloorData();
     } catch (err: any) {
-      addNotification('error', 'Error', err?.message || 'Moving items failed.');
+      addNotification('error', t('common.error', 'Error'), err?.message || t('staff.pos.moving_items_failed', 'Moving items failed.'));
     }
   };
 
@@ -686,7 +686,7 @@ export const POSManagement: React.FC = () => {
         order_ref: activeBill.bill_number,
         order_type: activeBill.order_type,
         table_number: activeBill.table_number,
-        customer_name: activeBill.customer_name || (activeBill.table_number ? `Table ${activeBill.table_number}` : 'Guest'),
+        customer_name: activeBill.customer_name || (activeBill.table_number ? `Table ${activeBill.table_number}` : t('staff.pos.guest', 'Guest')),
         customer_phone: activeBill.customer_phone || undefined,
         created_at: activeBill.created_at,
         subtotal: liveTotals.subtotal,
@@ -708,11 +708,11 @@ export const POSManagement: React.FC = () => {
       };
 
       printCustomerReceipt(printableData);
-      addNotification('success', 'Bill Printed', 'Sent bill receipt to thermal printer.');
+      addNotification('success', t('staff.pos.bill_printed', 'Bill Printed'), t('staff.pos.sent_bill_receipt_printer', 'Sent bill receipt to thermal printer.'));
       await refreshFloorData();
     } catch (err) {
       console.error('Print error:', err);
-      addNotification('error', 'Print Error', 'Failed to generate printable bill.');
+      addNotification('error', t('staff.pos.print_error', 'Print Error'), t('staff.pos.failed_to_generate_printable_bill', 'Failed to generate printable bill.'));
     }
   };
 
@@ -736,14 +736,18 @@ export const POSManagement: React.FC = () => {
       });
 
       if (!res.success) {
-        addNotification('error', 'Settlement Failed', res.error || 'Failed to settle bill.');
+        addNotification('error', t('staff.pos.settlement_failed', 'Settlement Failed'), res.error || t('staff.pos.failed_to_settle_bill', 'Failed to settle bill.'));
         return;
       }
 
       addNotification(
         'success',
-        'Bill Paid & Settled',
-        `Bill ${activeBill.bill_number} settled via ${paymentMethod.toUpperCase()} (${currencySymbol}${res.grandTotal}). Table freed!`
+        t('staff.pos.bill_paid_settled', 'Bill Paid & Settled'),
+        t('staff.pos.bill_settled_via_method', 'Bill {num} settled via {method} ({cur}{amt}). Table freed!')
+          .replace('{num}', activeBill.bill_number)
+          .replace('{method}', paymentMethod.toUpperCase())
+          .replace('{cur}', currencySymbol)
+          .replace('{amt}', String(res.grandTotal))
       );
 
       // Print final customer paid receipt
@@ -752,7 +756,7 @@ export const POSManagement: React.FC = () => {
           order_ref: activeBill.bill_number,
           order_type: activeBill.order_type,
           table_number: activeBill.table_number,
-          customer_name: activeBill.customer_name || 'Guest',
+          customer_name: activeBill.customer_name || t('staff.pos.guest', 'Guest'),
           customer_phone: activeBill.customer_phone || undefined,
           created_at: activeBill.created_at,
           paid_at: new Date().toISOString(),
@@ -782,7 +786,7 @@ export const POSManagement: React.FC = () => {
       setAppliedDiscount(null);
       await refreshFloorData();
     } catch (err: any) {
-      addNotification('error', 'Error', err?.message || 'Payment settlement failed.');
+      addNotification('error', t('common.error', 'Error'), err?.message || t('staff.pos.payment_settlement_failed', 'Payment settlement failed.'));
     } finally {
       setIsSettling(false);
     }
@@ -924,7 +928,7 @@ export const POSManagement: React.FC = () => {
                           : 'text-stone-400 hover:text-white'
                       }`}
                     >
-                      {st === 'printed' ? 'Bill Printed' : st}
+                      {st === 'printed' ? t('staff.pos.bill_printed', 'Bill Printed') : st}
                     </button>
                   ))}
                 </div>
@@ -1108,7 +1112,7 @@ export const POSManagement: React.FC = () => {
                                   ? 'border-emerald-500 bg-emerald-500/20'
                                   : 'border-red-500 bg-red-500/20'
                               }`}
-                              title={isVeg ? 'Vegetarian' : 'Non-Vegetarian'}
+                              title={isVeg ? t('staff.pos.vegetarian', 'Vegetarian') : t('staff.pos.non_vegetarian', 'Non-Vegetarian')}
                             />
                             <p className="text-xs font-bold text-white line-clamp-2 leading-tight">
                               {item.name}
@@ -1165,11 +1169,11 @@ export const POSManagement: React.FC = () => {
               <div>
                 <h3 className="text-sm font-bold text-white">
                   {orderType === 'dine_in'
-                    ? `Table ${activeBill?.table_number || selectedTable?.table_number || 'Select'}`
+                    ? `Table ${activeBill?.table_number || selectedTable?.table_number || t('staff.pos.select', 'Select')}`
                     : `${orderType.toUpperCase()} BILL`}
                 </h3>
                 <p className="text-[11px] font-mono text-stone-400">
-                  {activeBill?.bill_number || 'New Bill Draft'}
+                  {activeBill?.bill_number || t('staff.pos.new_bill_draft', 'New Bill Draft')}
                 </p>
               </div>
 
@@ -1186,7 +1190,7 @@ export const POSManagement: React.FC = () => {
                         : 'text-stone-400 hover:text-white'
                     }`}
                   >
-                    {ot === 'dine_in' ? 'Dine-In' : ot}
+                    {ot === 'dine_in' ? t('staff.pos.dine_in', 'Dine-In') : ot === 'takeaway' ? t('staff.pos.takeaway', 'Takeaway') : ot === 'delivery' ? t('staff.pos.delivery', 'Delivery') : ot}
                   </button>
                 ))}
               </div>
@@ -1415,8 +1419,8 @@ export const POSManagement: React.FC = () => {
                 {appliedDiscount ? (
                   <div className="flex-1 flex items-center justify-between px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-300 font-mono">
                     <span>
-                      Discount: -{currencySymbol}{liveTotals.discountAmount} (
-                      {appliedDiscount.code || 'Manual Approval'})
+                      {t('staff.pos.discount_label', 'Discount:')} -{currencySymbol}{liveTotals.discountAmount} (
+                      {appliedDiscount.code || t('staff.pos.manual_approval', 'Manual Approval')})
                     </span>
                     <button
                       type="button"
@@ -1603,7 +1607,7 @@ export const POSManagement: React.FC = () => {
                     >
                       <span>{mod.name}</span>
                       <span className="font-mono text-[10px] text-[#F3C766]">
-                        {mod.price > 0 ? `+${currencySymbol}${mod.price}` : 'Free'}
+                        {mod.price > 0 ? `+${currencySymbol}${mod.price}` : t('staff.pos.free', 'Free')}
                       </span>
                     </button>
                   );
@@ -1706,7 +1710,7 @@ export const POSManagement: React.FC = () => {
                 onClick={handleConfirmVoid}
                 className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-xs font-bold text-white shadow-lg disabled:opacity-50"
               >
-                {isSubmittingVoid ? 'Auditing...' : 'Confirm Void'}
+                {isSubmittingVoid ? t('staff.pos.auditing', 'Auditing...') : t('staff.pos.confirm_void', 'Confirm Void')}
               </button>
             </div>
           </div>
