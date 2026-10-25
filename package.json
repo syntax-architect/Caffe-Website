@@ -15,7 +15,8 @@
     "preview": "npm run preview --workspace=the-cafe-barrackpore",
     "docker:build": "docker build -t caffe-platform:latest .",
     "docker:run": "docker run -p 80:80 caffe-platform:latest",
-    "docker:compose": "docker compose up -d"
+    "docker:compose": "docker compose up -d",
+    "demo:ireland": "npm run demo:ireland --workspace=the-cafe-barrackpore"
   },
   "overrides": {
     "chokidar": "^4.0.3",

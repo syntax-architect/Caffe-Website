@@ -57,7 +57,9 @@ node_modules/
 dist/
 dist-server/
 *.log
+test-results/
 *-report*.json
+*lighthouse*
 lighthouse-report*.json
 *.trace.json
 *.devtoolslog.json
